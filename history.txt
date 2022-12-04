@@ -1,0 +1,38 @@
+# Home-brew
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+echo '# Set PATH, MANPATH, etc., for Homebrew.' >> /Users/mclix8/.zprofile
+echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> /Users/mclix8/.zprofile
+eval "$(/opt/homebrew/bin/brew shellenv)"
+
+# Apps
+brew install --cask google-chrome
+brew install --cask visual-studio-code
+brew install --cask r
+brew install --cask rstudio   
+brew install --cask miniconda  
+brew install pandoc
+# Java
+echo 'export PATH="/opt/homebrew/opt/openjdk/bin:$PATH"' >> ~/.zshrc
+export CPPFLAGS="-I/opt/homebrew/opt/openjdk/include"
+
+# Python
+% sudo shutdown -r now
+
+brew install --cask miniconda
+conda create --name datacamp python=3.8.13
+conda init bash
+exec bash -l
+conda deactivate
+conda activate datacamp
+
+
+brew info icu4c
+pip install -r requirements.txt
+Pip install spicy 1.4.1
+# R
+install.packages(c("rmarkdown","bookdown","pandoc","downlit", "xml2","servr","usethis"))
+bookdown::create_bs4_book(".")
+bookdown:::serve_book()
+
+savehistory("~/Documents/datacamp/history.Rhistory")
+install.packages(read.csv("https://raw.githubusercontent.com/dattransg801/datacamp/master/ip.csv")$Package)
