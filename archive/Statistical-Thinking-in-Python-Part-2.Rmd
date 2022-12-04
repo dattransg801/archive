@@ -1,0 +1,833 @@
+---
+title: "Statistical Thinking in Python (Part 2)"
+subtitle: "Justin Bois - DataCamp"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+author:
+  - name: "Dat Tran"
+output:
+  rmdformats::robobook:
+    keep_md: true
+    thumbnails: true
+    lightbox: true
+    gallery: true
+    use_bookdown: true
+---
+
+***
+
+**Course Description**
+
+<p class="course__description">After completing Statistical Thinking in Python (Part 1), you have the probabilistic mindset and foundational hacker stats skills to dive into data sets and extract useful information from them. In this course, you will do just that, expanding and honing your hacker stats toolbox to perform the two key tasks in statistical inference, parameter estimation and hypothesis testing. You will work with real data sets as you learn, culminating with analysis of measurements of the beaks of the Darwin's famous finches. You will emerge from this course with new knowledge and lots of practice under your belt, ready to attack your own inference problems out in the world.</p>
+
+<style>
+
+h1,h2,h3,h4,h5,h6,h {
+  font-family: Futura;
+}
+
+body {
+  font-family: "Georgia";
+  text-align: justify;
+}
+
+p {
+  font-family: "Georgia";
+  color: black;
+  font-style: normal;
+}
+</style>
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE,message=F,warning=F)
+library(reticulate)
+```
+
+# Parameter estimation by optimization
+
+<p class="chapter__description">
+    When doing statistical inference, we speak the language of probability. A probability distribution that describes your data has parameters. So, a major goal of statistical inference is to estimate the values of these parameters, which allows us to concisely and unambiguously describe our data and draw conclusions from it. In this chapter, you will learn how to find the optimal parameters, those that best describe your data.
+  </p>
+
+## Optimal parameters
+
+
+
+### How often do we get no-hitters?
+
+
+<div class>
+<p>The number of games played between each no-hitter in the modern era (1901-2015) of Major League Baseball is stored in the array <code>nohitter_times</code>. </p>
+<p>If you assume that no-hitters are described as a Poisson process, then the time between no-hitters is Exponentially distributed. As you have seen, the Exponential distribution has a single parameter, which we will call \(\tau\), the typical interval time. The value of the parameter \(\tau\) that makes the exponential distribution best match the data is the mean interval time (where time is in units of number of games) between no-hitters. </p>
+<p>Compute the value of this parameter from the data. Then, use <code>np.random.exponential()</code> to "repeat" the history of Major League Baseball by drawing inter-no-hitter times from an exponential distribution with the \(\tau\) you found and plot the histogram as an approximation to the PDF.</p>
+<p>NumPy, pandas, matplotlib.pyplot, and seaborn have been imported for you as <code>np</code>, <code>pd</code>, <code>plt</code>, and <code>sns</code>, respectively.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Seed the random number generator with <code>42</code>.</li>
+<li>Compute the mean time (in units of number of games) between no-hitters.</li>
+<li>Draw 100,000 samples from an Exponential distribution with the parameter you computed from the mean of the inter-no-hitter times.</li>
+<li>Plot the theoretical PDF using <code>plt.hist()</code>. Remember to use keyword arguments <code>bins=50</code>, <code>normed=True</code>, and <code>histtype='step'</code>. Be sure to label your axes.</li>
+<li>Show your plot.</li>
+</ul></div>
+
+
+### Do the data follow our story?
+
+
+<div class>
+<p>You have modeled no-hitters using an Exponential distribution. Create an ECDF of the real data. Overlay the theoretical CDF with the ECDF from the data. This helps you to verify that the Exponential distribution describes the observed data.</p>
+<p>It may be helpful to remind yourself of the <a href="https://campus.datacamp.com/courses/statistical-thinking-in-python-part-1/graphical-exploratory-data-analysis?ex=12">function you created in the previous course</a> to compute the ECDF, as well as the code you wrote to <a href="https://campus.datacamp.com/courses/statistical-thinking-in-python-part-1/graphical-exploratory-data-analysis?ex=13">plot it</a>.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Compute an ECDF from the actual time between no-hitters (<code>nohitter_times</code>). Use the <code>ecdf()</code> function you wrote in the prequel course.</li>
+<li>Create a CDF from the theoretical samples you took in the last exercise (<code>inter_nohitter_time</code>).</li>
+<li>Plot <code>x_theor</code> and <code>y_theor</code> as a line using <code>plt.plot()</code>. Then overlay the ECDF of the real data <code>x</code> and <code>y</code> as points. To do this, you have to specify the keyword arguments <code>marker = '.'</code> and <code>linestyle = 'none'</code> in addition to <code>x</code> and <code>y</code> inside <code>plt.plot()</code>.</li>
+<li>Set a 2% margin on the plot.</li>
+<li>Show the plot.</li>
+</ul></div>
+
+
+### How is this parameter optimal?
+
+
+<div class>
+<p>Now sample out of an exponential distribution with \(\tau\) being twice as large as the optimal \(\tau\). Do it again for \(\tau\) half as large. Make CDFs of these samples and overlay them with your data. You can see that they do not reproduce the data as well. Thus, the \(\tau\) you computed from the mean inter-no-hitter times is optimal in that it best reproduces the data.</p>
+<p><em>Note</em>: In this and all subsequent exercises, the random number generator is pre-seeded for you to save you some typing.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Take <code>10000</code> samples out of an Exponential distribution with parameter \(\tau_{1/2}\) = <code>tau/2</code>.</li>
+<li>Take <code>10000</code> samples out of an Exponential distribution with parameter \(\tau_{2}\) = <code>2*tau</code>.</li>
+<li>Generate CDFs from these two sets of samples using your <code>ecdf()</code> function.</li>
+<li>Add these two CDFs as lines to your plot. This has been done for you, so hit submit to view the plot!</li>
+</ul></div>
+
+
+## Linear regression by least squares
+
+
+
+### EDA of literacy/fertility data
+
+
+<div class>
+<p>In the next few exercises, we will look at the correlation between female literacy and fertility (defined as the average number of children born per woman) throughout the world. For ease of analysis and interpretation, we will work with the <em>il</em>literacy rate.</p>
+<p>It is always a good idea to do some EDA ahead of our analysis. To this end, plot the fertility versus illiteracy and compute the Pearson correlation coefficient. The NumPy array <code>illiteracy</code> has the illiteracy rate among females for most of the world's nations. The array <code>fertility</code> has the corresponding fertility data.</p>
+<p>Here, it may be useful to refer back to the <a href="https://campus.datacamp.com/courses/statistical-thinking-in-python-part-1/quantitative-exploratory-data-analysis?ex=15">function you wrote in the previous course</a> to compute the Pearson correlation coefficient.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Plot <code>fertility</code> (y-axis) versus <code>illiteracy</code> (x-axis) as a scatter plot.</li>
+<li>Set a 2% margin.</li>
+<li>Compute and print the Pearson correlation coefficient between <code>illiteracy</code> and <code>fertility</code>.</li>
+</ul></div>
+
+
+### Linear regression
+
+
+<div class>
+<p>We will assume that fertility is a linear function of the female illiteracy rate. That is, \(f = a i + b\), where \(a\) is the slope and \(b\) is the intercept. We can think of the intercept as the minimal fertility rate, probably somewhere between one and two. The slope tells us how the fertility rate varies with illiteracy. We can find the best fit line using <code>np.polyfit()</code>.</p>
+<p>Plot the data and the best fit line. Print out the slope and intercept. (Think: what are their units?)</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Compute the slope and intercept of the regression line using <code>np.polyfit()</code>. Remember, <code>fertility</code> is on the y-axis and <code>illiteracy</code> on the x-axis.</li>
+<li>Print out the slope and intercept from the linear regression.</li>
+<li>To plot the best fit line, create an array <code>x</code> that consists of 0 and 100 using <code>np.array()</code>. Then, compute the theoretical values of <code>y</code> based on your regression parameters. I.e., <code>y = a * x + b</code>.</li>
+<li>Plot the data and the regression line on the same plot. Be sure to label your axes.</li>
+<li>Hit submit to display your plot.</li>
+</ul></div>
+
+
+### How is it optimal?
+
+
+<div class><p>The function <code>np.polyfit()</code> that you used to get your regression parameters finds the <em>optimal</em> slope and intercept. It is optimizing the sum of the squares of the residuals, also known as RSS (for residual sum of squares). In this exercise, you will plot the function that is being optimized, the RSS, versus the slope parameter <code>a</code>. To do this, fix the intercept to be what you found in the optimization. Then, plot the RSS versus the slope. Where is it minimal?</p></div>
+<div class="exercise--instructions__content"><ul>
+<li>Specify the values of the slope to compute the RSS. Use <code>np.linspace()</code> to get <code>200</code> points in the range between <code>0</code> and <code>0.1</code>. For example, to get <code>100</code> points in the range between <code>0</code> and <code>0.5</code>, you could use <code>np.linspace()</code> like so: <code>np.linspace(0, 0.5, 100)</code>.</li>
+<li>Initialize an array, <code>rss</code>, to contain the RSS using <code>np.empty_like()</code> and the array you created above. The <code>empty_like()</code> function returns a new array with the same shape and type as a given array (in this case, <code>a_vals</code>).</li>
+<li>Write a <code>for</code> loop to compute the sum of RSS of the slope. <em>Hint</em>: the RSS is given by <code>np.sum((y_data - a * x_data - b)**2)</code>. The variable <code>b</code> you computed in the last exercise is already in your namespace. Here, <code>fertility</code> is the <code>y_data</code> and <code>illiteracy</code> the <code>x_data</code>.</li>
+<li>Plot the RSS (<code>rss</code>) versus slope (<code>a_vals</code>). </li>
+<li>Hit submit to see the plot!</li>
+</ul></div>
+
+
+## The importance of EDA: Anscombe's quartet
+
+
+
+### The importance of EDA
+
+
+
+### Linear regression on appropriate Anscombe data
+
+
+<div class><p>For practice, perform a linear regression on the data set from Anscombe's quartet that is most reasonably interpreted with linear regression.</p></div>
+<div class="exercise--instructions__content"><ul>
+<li>Compute the parameters for the slope and intercept using <code>np.polyfit()</code>. The Anscombe data are stored in the arrays <code>x</code> and <code>y</code>.</li>
+<li>Print the slope <code>a</code> and intercept <code>b</code>.</li>
+<li>Generate theoretical \(x\) and \(y\) data from the linear regression. Your \(x\) array, which you can create with <code>np.array()</code>, should consist of <code>3</code> and <code>15</code>. To generate the \(y\) data, multiply the slope by <code>x_theor</code> and add the intercept.</li>
+<li>Plot the Anscombe data as a scatter plot and then plot the theoretical line. Remember to include the <code>marker='.'</code> and <code>linestyle='none'</code> keyword arguments in addition to <code>x</code> and <code>y</code> when to plot the Anscombe data as a scatter plot. You do not need these arguments when plotting the theoretical line.</li>
+<li>Hit submit to see the plot!</li>
+</ul></div>
+
+
+### Linear regression on all Anscombe data
+
+
+<div class><p>Now, to verify that all four of the Anscombe data sets have the same slope and intercept from a linear regression, you will compute the slope and intercept for each set. The data are stored in lists; <code>anscombe_x = [x1, x2, x3, x4]</code> and <code>anscombe_y = [y1, y2, y3, y4]</code>, where, for example, <code>x2</code> and <code>y2</code> are the \(x\) and \(y\) values for the second Anscombe data set.</p></div>
+<div class="exercise--instructions__content"><ul>
+<li>Write a <code>for</code> loop to do the following for each Anscombe data set.<ul>
+<li>Compute the slope and intercept.</li>
+<li>Print the slope and intercept.</li>
+</ul>
+</li>
+</ul></div>
+
+# Bootstrap confidence intervals
+
+<p class="chapter__description">
+    To "pull yourself up by your bootstraps" is a classic idiom meaning that you achieve a difficult task by yourself with no help at all. In statistical inference, you want to know what would happen if you could repeat your data acquisition an infinite number of times. This task is impossible, but can we use only the data we actually have to get close to the same result as an infinitude of experiments? The answer is yes! The technique to do it is aptly called bootstrapping. This chapter will introduce you to this extraordinarily powerful tool.
+  </p>
+
+## Generating bootstrap replicates
+
+
+
+### Getting the terminology down
+
+
+
+### Bootstrapping by hand
+
+
+<div class>
+<p>To help you gain intuition about how bootstrapping works, imagine you have a data set that has only three points, <code>[-1, 0, 1]</code>. How many unique bootstrap samples can be drawn (e.g., <code>[-1, 0, 1]</code> and <code>[1, 0, -1]</code> <em>are</em> unique), and what is the maximum mean you can get from a bootstrap sample? It might be useful to jot down the samples on a piece of paper.</p>
+<p>(These are too few data to get meaningful results from bootstrap procedures, but this example is useful for intuition.)</p>
+</div>
+
+### Visualizing bootstrap samples
+
+
+<div class><p>In this exercise, you will generate bootstrap samples from the set of annual rainfall data measured at the Sheffield Weather Station in the UK from 1883 to 2015. The data are stored in the NumPy array <code>rainfall</code> in units of millimeters (mm). By graphically displaying the bootstrap samples with an ECDF, you can get a feel for how bootstrap sampling allows probabilistic descriptions of data.</p></div>
+<div class="exercise--instructions__content"><ul>
+<li>Write a <code>for</code> loop to acquire <code>50</code> bootstrap samples of the rainfall data and plot their ECDF.<ul>
+<li>Use <code>np.random.choice()</code> to generate a bootstrap sample from the NumPy array <code>rainfall</code>. Be sure that the <code>size</code> of the resampled array is <code>len(rainfall)</code>.</li>
+<li>Use the function <code>ecdf()</code> that you wrote in the prequel to this course to generate the <code>x</code> and <code>y</code> values for the ECDF of the bootstrap sample <code>bs_sample</code>.</li>
+<li>Plot the ECDF values. Specify <code>color='gray'</code> (to make gray dots) and <code>alpha=0.1</code> (to make them semi-transparent, since we are overlaying so many) in addition to the <code>marker='.'</code> and <code>linestyle='none'</code> keyword arguments.</li>
+</ul>
+</li>
+<li>Use <code>ecdf()</code> to generate <code>x</code> and <code>y</code> values for the ECDF of the original rainfall data available in the array <code>rainfall</code>.</li>
+<li>Plot the ECDF values of the original data.</li>
+<li>Hit submit to visualize the samples!</li>
+</ul></div>
+
+
+## Bootstrap confidence intervals
+
+
+
+### Generating many bootstrap replicates
+
+
+<div class>
+<p>The function <code>bootstrap_replicate_1d()</code> from the video is available in your namespace. Now you'll write another function, <code>draw_bs_reps(data, func, size=1)</code>, which generates many bootstrap replicates from the data set. This function will come in handy for you again and again as you compute confidence intervals and later when you do hypothesis tests.</p>
+<p>For your reference, the <code>bootstrap_replicate_1d()</code> function is provided below:</p>
+<pre><code>def bootstrap_replicate_1d(data, func):
+    """Generate bootstrap replicate of 1D data."""
+    bs_sample = np.random.choice(data, len(data))
+    return func(bs_sample)
+</code></pre>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Define a function with call signature <code>draw_bs_reps(data, func, size=1)</code>.<ul>
+<li>Using <code>np.empty()</code>, initialize an array called <code>bs_replicates</code> of size <code>size</code> to hold all of the bootstrap replicates.</li>
+<li>Write a <code>for</code> loop that ranges over <code>size</code> and computes a replicate using <code>bootstrap_replicate_1d()</code>. Refer to the exercise description above to see the function signature of <code>bootstrap_replicate_1d()</code>. Store the replicate in the appropriate index of <code>bs_replicates</code>.</li>
+<li>Return the array of replicates <code>bs_replicates</code>. This has already been done for you.</li>
+</ul>
+</li>
+</ul></div>
+
+
+### Bootstrap replicates of the mean and the SEM
+
+
+<div class>
+<p>In this exercise, you will compute a bootstrap estimate of the probability density function of the mean annual rainfall at the Sheffield Weather Station. Remember, we are estimating the mean annual rainfall we would get if the Sheffield Weather Station could repeat all of the measurements from 1883 to 2015 over and over again. This is a <em>probabilistic</em> estimate of the mean. You will plot the PDF as a histogram, and you will see that it is Normal.</p>
+<p>In fact, it can be shown theoretically that under not-too-restrictive conditions, the value of the mean will always be Normally distributed. (This does not hold in general, just for the mean and a few other statistics.) The standard deviation of this distribution, called the <strong>standard error of the mean</strong>, or SEM, is given by the standard deviation of the data divided by the square root of the number of data points. I.e., for a data set, <code>sem = np.std(data) / np.sqrt(len(data))</code>. Using hacker statistics, you get this same result without the need to derive it, but you will verify this result from your bootstrap replicates.</p>
+<p>The dataset has been pre-loaded for you into an array called <code>rainfall</code>.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Draw <code>10000</code> bootstrap replicates of the <strong>mean</strong> annual rainfall using your <code>draw_bs_reps()</code> function and the <code>rainfall</code> array. <em>Hint</em>: Pass in <code>np.mean</code> for <code>func</code> to compute the mean.<ul><li>As a reminder, <code>draw_bs_reps()</code> accepts 3 arguments: <code>data</code>, <code>func</code>, and <code>size</code>.</li></ul>
+</li>
+<li>Compute and print the standard error of the mean of <code>rainfall</code>.<ul><li>The formula to compute this is <code>np.std(data) / np.sqrt(len(data))</code>.</li></ul>
+</li>
+<li>Compute and print the standard deviation of your bootstrap replicates <code>bs_replicates</code>.</li>
+<li>Make a histogram of the replicates using the <code>normed=True</code> keyword argument and <code>50</code> bins.</li>
+<li>Hit submit to see the plot!</li>
+</ul></div>
+
+
+### Confidence intervals of rainfall data
+
+
+<div class>
+<p>A <em>confidence interval</em> gives upper and lower bounds on the range of parameter values you might expect to get if we repeat our measurements. For named distributions, you can compute them analytically or look them up, but one of the many beautiful properties of the bootstrap method is that you can take percentiles of your bootstrap replicates to get your confidence interval. Conveniently, you can use the <code>np.percentile()</code> function.</p>
+<p>Use the bootstrap replicates you just generated to compute the 95% confidence interval. That is, give the 2.5th and 97.5th percentile of your bootstrap replicates stored as <code>bs_replicates</code>. What is the 95% confidence interval?</p>
+</div>
+
+### Bootstrap replicates of other statistics
+
+
+<div class>
+<p>We saw in a previous exercise that the mean is Normally distributed. This does not necessarily hold for other statistics, but no worry: as hackers, we can always take bootstrap replicates! In this exercise, you'll generate bootstrap replicates for the variance of the annual rainfall at the Sheffield Weather Station and plot the histogram of the replicates.</p>
+<p>Here, you will make use of the <code>draw_bs_reps()</code> function you defined a few exercises ago. It is provided below for your reference:</p>
+<pre><code>def draw_bs_reps(data, func, size=1):
+    """Draw bootstrap replicates."""
+    # Initialize array of replicates
+    bs_replicates = np.empty(size)
+    # Generate replicates
+    for i in range(size):
+        bs_replicates[i] = bootstrap_replicate_1d(data, func)
+    return bs_replicates
+</code></pre>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Draw <code>10000</code> bootstrap replicates of the <strong>variance</strong> in annual rainfall, stored in the <code>rainfall</code> dataset, using your <code>draw_bs_reps()</code> function. <em>Hint</em>: Pass in <code>np.var</code> for computing the variance.</li>
+<li>Divide your variance replicates (<code>bs_replicates</code>) by <code>100</code> to put the variance in units of square centimeters for convenience.</li>
+<li>Make a histogram of <code>bs_replicates</code> using the <code>normed=True</code> keyword argument and <code>50</code> bins.</li>
+</ul></div>
+
+
+### Confidence interval on the rate of no-hitters
+
+
+<div class><p>Consider again the inter-no-hitter intervals for the modern era of baseball. Generate 10,000 bootstrap replicates of the optimal parameter \(\tau\). Plot a histogram of your replicates and report a 95% confidence interval.</p></div>
+<div class="exercise--instructions__content"><ul>
+<li>Generate <code>10000</code> bootstrap replicates of \(\tau\) from the <code>nohitter_times</code> data using your <code>draw_bs_reps()</code> function. Recall that the optimal \(\tau\) is calculated as the <strong>mean</strong> of the data. </li>
+<li>Compute the 95% confidence interval using <code>np.percentile()</code> and passing in two arguments: The array <code>bs_replicates</code>, and the list of percentiles - in this case <code>2.5</code> and <code>97.5</code>.</li>
+<li>Print the confidence interval.</li>
+<li>Plot a histogram of your bootstrap replicates. This has been done for you, so hit submit to see the plot!</li>
+</ul></div>
+
+
+## Pairs bootstrap
+
+
+
+### A function to do pairs bootstrap
+
+
+<div class><p>As discussed in the video, pairs bootstrap involves resampling pairs of data. Each collection of pairs fit with a line, in this case using <code>np.polyfit()</code>. We do this again and again, getting bootstrap replicates of the parameter values. To have a useful tool for doing pairs bootstrap, you will write a function to perform pairs bootstrap on a set of <code>x,y</code> data.</p></div>
+<div class="exercise--instructions__content"><ul>
+<li>Define a function with call signature <code>draw_bs_pairs_linreg(x, y, size=1)</code> to perform pairs bootstrap estimates on linear regression parameters.<ul>
+<li>Use <code>np.arange()</code> to set up an array of indices going from <code>0</code> to <code>len(x)</code>. These are what you will resample and use them to pick values out of the <code>x</code> and <code>y</code> arrays.</li>
+<li>Use <code>np.empty()</code> to initialize the slope and intercept replicate arrays to be of size <code>size</code>.</li>
+<li>Write a <code>for</code> loop to:<ul>
+<li>Resample the indices <code>inds</code>. Use <code>np.random.choice()</code> to do this.</li>
+<li>Make new \(x\) and \(y\) arrays <code>bs_x</code> and <code>bs_y</code> using the the resampled indices <code>bs_inds</code>. To do this, slice <code>x</code> and <code>y</code> with <code>bs_inds</code>.</li>
+<li>Use <code>np.polyfit()</code> on the new \(x\) and \(y\) arrays and store the computed slope and intercept.</li>
+</ul>
+</li>
+<li>Return the pair bootstrap replicates of the slope and intercept.</li>
+</ul>
+</li>
+</ul></div>
+
+
+### Pairs bootstrap of literacy/fertility data
+
+
+<div class>
+<p>Using the function you just wrote, perform pairs bootstrap to plot a histogram describing the estimate of the slope from the illiteracy/fertility data. Also report the 95% confidence interval of the slope. The data is available to you in the NumPy arrays <code>illiteracy</code> and <code>fertility</code>.</p>
+<p>As a reminder, <code>draw_bs_pairs_linreg()</code> has a function signature of <code>draw_bs_pairs_linreg(x, y, size=1)</code>, and it returns two values: <code>bs_slope_reps</code> and <code>bs_intercept_reps</code>.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Use your <code>draw_bs_pairs_linreg()</code> function to take <code>1000</code> bootstrap replicates of the slope and intercept. The x-axis data is <code>illiteracy</code> and y-axis data is <code>fertility</code>.</li>
+<li>Compute and print the 95% bootstrap confidence interval for the slope.</li>
+<li>Plot and show a histogram of the slope replicates. Be sure to label your axes. This has been done for you, so click submit to see your histogram!</li>
+</ul></div>
+
+
+### Plotting bootstrap regressions
+
+
+<div class><p>A nice way to visualize the variability we might expect in a linear regression is to plot the line you would get from each bootstrap replicate of the slope and intercept. Do this for the first 100 of your bootstrap replicates of the slope and intercept (stored as <code>bs_slope_reps</code> and <code>bs_intercept_reps</code>).</p></div>
+<div class="exercise--instructions__content"><ul>
+<li>Generate an array of \(x\)-values consisting of <code>0</code> and <code>100</code> for the plot of the regression lines. Use the <code>np.array()</code> function for this.</li>
+<li>Write a <code>for</code> loop in which you plot a regression line with a slope and intercept given by the pairs bootstrap replicates. Do this for <code>100</code> lines.<ul>
+<li>When plotting the regression lines in each iteration of the <code>for</code> loop, recall the regression equation <code>y = a*x + b</code>. Here, <code>a</code> is <code>bs_slope_reps[i]</code> and <code>b</code> is <code>bs_intercept_reps[i]</code>.</li>
+<li>Specify the keyword arguments <code>linewidth=0.5</code>, <code>alpha=0.2</code>, and <code>color='red'</code> in your call to <code>plt.plot()</code>.</li>
+</ul>
+</li>
+<li>Make a scatter plot with <code>illiteracy</code> on the x-axis and <code>fertility</code> on the y-axis. Remember to specify the <code>marker='.'</code> and <code>linestyle='none'</code> keyword arguments.</li>
+<li>Label the axes, set a 2% margin, and show the plot. This has been done for you, so hit submit to visualize the bootstrap regressions!</li>
+</ul></div>
+
+# Introduction to hypothesis testing
+
+<p class="chapter__description">
+    You now know how to define and estimate parameters given a model. But the question remains: how reasonable is it to observe your data if a model is true? This question is addressed by hypothesis tests. They are the icing on the inference cake. After completing this chapter, you will be able to carefully construct and test hypotheses using hacker statistics.
+  </p>
+
+## Formulating and simulating a hypothesis
+
+
+
+### Generating a permutation sample
+
+
+<div class>
+<p>In the video, you learned that permutation sampling is a great way to simulate the hypothesis that two variables have identical probability distributions. This is often a hypothesis you want to test, so in this exercise, you will write a function to generate a permutation sample from two data sets. </p>
+<p>Remember, a permutation sample of two arrays having respectively <code>n1</code> and <code>n2</code> entries is constructed by concatenating the arrays together, scrambling the contents of the concatenated array, and then taking the first <code>n1</code> entries as the permutation sample of the first array and the last <code>n2</code> entries as the permutation sample of the second array.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Concatenate the two input arrays into one using <code>np.concatenate()</code>. Be sure to pass in <code>data1</code> and <code>data2</code> as one argument <code>(data1, data2)</code>.</li>
+<li>Use <code>np.random.permutation()</code> to permute the concatenated array.</li>
+<li>Store the first <code>len(data1)</code> entries of <code>permuted_data</code> as <code>perm_sample_1</code> and the last <code>len(data2)</code> entries of <code>permuted_data</code> as <code>perm_sample_2</code>. In practice, this can be achieved by using <code>:len(data1)</code> and <code>len(data1):</code> to slice <code>permuted_data</code>. </li>
+<li>Return <code>perm_sample_1</code> and <code>perm_sample_2</code>.</li>
+</ul></div>
+
+
+### Visualizing permutation sampling
+
+
+<div class>
+<p>To help see how permutation sampling works, in this exercise you will generate permutation samples and look at them graphically. </p>
+<p>We will use the Sheffield Weather Station data again, this time considering the monthly rainfall in June (a dry month) and November (a wet month). We expect these might be differently distributed, so we will take permutation samples to see how their ECDFs <em>would look if</em> they were identically distributed. </p>
+<p>The data are stored in the NumPy arrays <code>rain_june</code> and <code>rain_november.</code></p>
+<p>As a reminder, <code>permutation_sample()</code> has a function signature of <code>permutation_sample(data_1, data_2)</code> with a return value of <code>permuted_data[:len(data_1)], permuted_data[len(data_1):]</code>, where <code>permuted_data = np.random.permutation(np.concatenate((data_1, data_2)))</code>.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Write a <code>for</code> loop to generate 50 permutation samples, compute their ECDFs, and plot them.<ul>
+<li>Generate a permutation sample pair from <code>rain_june</code> and <code>rain_november</code> using your <code>permutation_sample()</code> function.</li>
+<li>Generate the <code>x</code> and <code>y</code> values for an ECDF for each of the two permutation samples for the ECDF using your <code>ecdf()</code> function.</li>
+<li>Plot the ECDF of the first permutation sample (<code>x_1</code> and <code>y_1</code>) as dots. Do the same for the second permutation sample (<code>x_2</code> and <code>y_2</code>).</li>
+</ul>
+</li>
+<li>Generate <code>x</code> and <code>y</code> values for ECDFs for the <code>rain_june</code> and <code>rain_november</code> data and plot the ECDFs using respectively the keyword arguments <code>color='red'</code> and <code>color='blue'</code>.</li>
+<li>Label your axes, set a 2% margin, and show your plot. This has been done for you, so just hit submit to view the plot!</li>
+</ul></div>
+
+
+## Test statistics and p-values
+
+
+
+### Test statistics
+
+
+
+### What is a p-value?
+
+
+
+### Generating permutation replicates
+
+
+<div class>
+<p>As discussed in the video, a permutation replicate is a single value of a statistic computed from a permutation sample. As the <code>draw_bs_reps()</code> function <a href="https://campus.datacamp.com/courses/statistical-thinking-in-python-part-2/bootstrap-confidence-intervals?ex=6">you wrote in chapter 2</a> is useful for you to generate bootstrap replicates, it is useful to have a similar function, <code>draw_perm_reps()</code>, to generate permutation replicates. You will write this useful function in this exercise.</p>
+<p>The function has call signature <code>draw_perm_reps(data_1, data_2, func, size=1)</code>. Importantly, <code>func</code> must be a function that takes <em>two</em> arrays as arguments. In most circumstances, <code>func</code> will be a function you write yourself.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Define a function with this signature: <code>draw_perm_reps(data_1, data_2, func, size=1)</code>.<ul>
+<li>Initialize an array to hold the permutation replicates using <code>np.empty()</code>.</li>
+<li>Write a <code>for</code> loop to:<ul>
+<li>Compute a permutation sample using your <code>permutation_sample()</code> function</li>
+<li>Pass the samples into <code>func()</code> to compute the replicate and store the result in your array of replicates.</li>
+</ul>
+</li>
+<li>Return the array of replicates.</li>
+</ul>
+</li>
+</ul></div>
+
+
+### Look before you leap: EDA before hypothesis testing
+
+
+<div class>
+<p>Kleinteich and Gorb (<em>Sci. Rep.</em>, <strong>4</strong>, 5225, 2014) performed an interesting experiment with South American horned frogs. They held a plate connected to a force transducer, along with a bait fly, in front of them. They then measured the impact force and adhesive force of the frog's tongue when it struck the target.</p>
+<p>Frog A is an adult and Frog B is a juvenile. The researchers measured the impact force of 20 strikes for each frog. In the next exercise, we will test the hypothesis that the two frogs have the same distribution of impact forces. But, remember, it is important to do EDA first! Let's make a bee swarm plot for the data. They are stored in a pandas DataFrame, <code>df</code>, where column <code>ID</code> is the identity of the frog and column <code>impact_force</code> is the impact force in Newtons (N).</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Use <code>sns.swarmplot()</code> to make a bee swarm plot of the data by specifying the <code>x</code>, <code>y</code>, and <code>data</code> keyword arguments.</li>
+<li>Label your axes.</li>
+<li>Show the plot.</li>
+</ul></div>
+
+
+### Permutation test on frog data
+
+
+<div class>
+<p>The average strike force of Frog A was 0.71 Newtons (N), and that of Frog B was 0.42 N for a difference of 0.29 N. It is possible the frogs strike with the same force and this observed difference was by chance. You will compute the probability of getting at least a 0.29 N difference in mean strike force under the hypothesis that the distributions of strike forces for the two frogs are identical. We use a permutation test with a test statistic of the difference of means to test this hypothesis.</p>
+<p>For your convenience, the data has been stored in the arrays <code>force_a</code> and <code>force_b</code>.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Define a function with call signature <code>diff_of_means(data_1, data_2)</code> that returns the differences in means between two data sets, mean of <code>data_1</code> minus mean of <code>data_2</code>.</li>
+<li>Use this function to compute the empirical difference of means that was observed in the frogs.</li>
+<li>Draw 10,000 permutation replicates of the difference of means.</li>
+<li>Compute the p-value.</li>
+<li>Print the p-value.</li>
+</ul></div>
+
+
+## Bootstrap hypothesis tests
+
+
+
+### A one-sample bootstrap hypothesis test
+
+
+<div class>
+<p>Another juvenile frog was studied, Frog C, and you want to see if Frog B and Frog C have similar impact forces. Unfortunately, you do not have Frog C's impact forces available, but you know they have a mean of 0.55 N. Because you don't have the original data, you cannot do a permutation test, and you cannot assess the hypothesis that the forces from Frog B and Frog C come from the same distribution. You will therefore test another, less restrictive hypothesis: The mean strike force of Frog B is equal to that of Frog C.</p>
+<p>To set up the bootstrap hypothesis test, you will take the mean as our test statistic. Remember, your goal is to calculate the probability of getting a mean impact force less than or equal to what was observed for Frog B <em>if the hypothesis that the true mean of Frog B's impact forces is equal to that of Frog C is true</em>. You first translate all of the data of Frog B such that the mean is 0.55 N. This involves adding the mean force of Frog C and subtracting the mean force of Frog B from each measurement of Frog B. This leaves other properties of Frog B's distribution, such as the variance, unchanged.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Translate the impact forces of Frog B such that its mean is 0.55 N.</li>
+<li>Use your <code>draw_bs_reps()</code> function to take 10,000 bootstrap replicates of the mean of your translated forces.</li>
+<li>Compute the p-value by finding the fraction of your bootstrap replicates that are less than the observed mean impact force of Frog B. Note that the variable of interest here is <code>force_b</code>.</li>
+<li>Print your p-value.</li>
+</ul></div>
+
+
+### A two-sample bootstrap hypothesis test for difference of means
+
+
+<div class>
+<p>We now want to test the hypothesis that Frog A and Frog B have the same mean impact force, but not necessarily the same distribution, which is also impossible with a permutation test.</p>
+<p>To do the two-sample bootstrap test, we shift <em>both</em> arrays to have the same mean, since we are simulating the hypothesis that their means are, in fact, equal. We then draw bootstrap samples out of the shifted arrays and compute the difference in means. This constitutes a bootstrap replicate, and we generate many of them. The p-value is the fraction of replicates with a difference in means greater than or equal to what was observed.</p>
+<p>The objects <code>forces_concat</code> and <code>empirical_diff_means</code> are already in your namespace.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Compute the mean of all forces (from <code>forces_concat</code>) using <code>np.mean()</code>.</li>
+<li>Generate shifted data sets for <em>both</em> <code>force_a</code> <em>and</em> <code>force_b</code> such that the mean of each is the mean of the concatenated array of impact forces.</li>
+<li>Generate 10,000 bootstrap replicates of the mean each for the two shifted arrays. </li>
+<li>Compute the bootstrap replicates of the difference of means by subtracting the replicates of the shifted impact force of Frog B from those of Frog A.</li>
+<li>Compute and print the p-value from your bootstrap replicates.</li>
+</ul></div>
+
+# Hypothesis test examples
+
+<p class="chapter__description">
+    As you saw from the last chapter, hypothesis testing can be a bit tricky. You need to define the null hypothesis, figure out how to simulate it, and define clearly what it means to be "more extreme" in order to compute the p-value. Like any skill, practice makes perfect, and this chapter gives you some good practice with hypothesis tests.
+  </p>
+
+## A/B testing
+
+
+
+### The vote for the Civil Rights Act in 1964
+
+
+<div class>
+<p>The Civil Rights Act of 1964 was one of the most important pieces of legislation ever passed in the USA. Excluding "present" and "abstain" votes, 153 House Democrats and 136 Republicans voted yea. However, 91 Democrats and 35 Republicans voted nay. Did party affiliation make a difference in the vote?</p>
+<p>To answer this question, you will evaluate the hypothesis that the party of a House member has no bearing on his or her vote. You will use the fraction of Democrats voting in favor as your test statistic and evaluate the probability of observing a fraction of Democrats voting in favor at least as small as the observed fraction of 153/244. (That's right, at least as <em>small</em> as. In 1964, it was the <em>Democrats</em> who were less progressive on civil rights issues.) To do this, permute the party labels of the House voters and then arbitrarily divide them into "Democrats" and "Republicans" and compute the fraction of Democrats voting yea.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Construct Boolean arrays, <code>dems</code> and <code>reps</code> that contain the votes of the respective parties; e.g., <code>dems</code> has 153 <code>True</code> entries and 91 <code>False</code> entries.</li>
+<li>Write a function, <code>frac_yea_dems(dems, reps)</code> that returns the fraction of Democrats that voted yea. The first input is an array of Booleans, Two inputs are required to use your <code>draw_perm_reps()</code> function, but the second is not used.</li>
+<li>Use your <code>draw_perm_reps()</code> function to draw 10,000 permutation replicates of the fraction of Democrat yea votes.</li>
+<li>Compute and print the p-value.</li>
+</ul></div>
+
+
+### What is equivalent?
+
+
+
+### A time-on-website analog
+
+
+<div class>
+<p>It turns out that you already did a hypothesis test analogous to an A/B test where you are interested in how much time is spent on the website before and after an ad campaign. The frog tongue force (a continuous quantity like time on the website) is an analog. "Before" = Frog A and "after" = Frog B. Let's practice this again with something that actually is a before/after scenario.</p>
+<p>We return to the no-hitter data set. In 1920, Major League Baseball implemented important rule changes that ended the so-called dead ball era. Importantly, the pitcher was no longer allowed to spit on or scuff the ball, an activity that greatly favors pitchers. In this problem you will perform an A/B test to determine if these rule changes resulted in a slower rate of no-hitters (i.e., longer average time between no-hitters) using the difference in mean inter-no-hitter time as your test statistic. The inter-no-hitter times for the respective eras are stored in the arrays <code>nht_dead</code> and <code>nht_live</code>, where "nht" is meant to stand for "no-hitter time."</p>
+<p>Since you will be using your <code>draw_perm_reps()</code> function in this exercise, it may be useful to remind yourself of its call signature: <code>draw_perm_reps(d1, d2, func, size=1)</code> or even <a href="https://campus.datacamp.com/courses/statistical-thinking-in-python-part-2/introduction-to-hypothesis-testing?ex=7">referring back</a> to the chapter 3 exercise in which you defined it.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Compute the observed difference in mean inter-nohitter time using <code>diff_of_means()</code>.</li>
+<li>Generate 10,000 permutation replicates of the difference of means using <code>draw_perm_reps()</code>.</li>
+<li>Compute and print the p-value.</li>
+</ul></div>
+
+
+### What should you have done first?
+
+
+
+## Test of correlation
+
+
+
+### Simulating a null hypothesis concerning correlation
+
+
+
+### Hypothesis test on Pearson correlation
+
+
+<div class>
+<p>The observed correlation between female illiteracy and fertility may just be by chance; the fertility of a given country may actually be totally independent of its illiteracy. You will test this hypothesis. To do so, permute the illiteracy values but leave the fertility values fixed. This simulates the hypothesis that they are totally independent of each other. For each permutation, compute the Pearson correlation coefficient and assess how many of your permutation replicates have a Pearson correlation coefficient greater than the observed one. </p>
+<p>The function <code>pearson_r()</code> that you <a href="https://campus.datacamp.com/courses/statistical-thinking-in-python-part-1/quantitative-exploratory-data-analysis?ex=15">wrote in the prequel to this course</a> for computing the Pearson correlation coefficient is already available for you.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Compute the observed Pearson correlation between <code>illiteracy</code> and <code>fertility</code>.</li>
+<li>Initialize an array to store your permutation replicates.</li>
+<li>Write a <code>for</code> loop to draw 10,000 replicates:<ul>
+<li>Permute the <code>illiteracy</code> measurements using <code>np.random.permutation()</code>.</li>
+<li>Compute the Pearson correlation between the permuted illiteracy array, <code>illiteracy_permuted</code>, and <code>fertility</code>.</li>
+</ul>
+</li>
+<li>Compute and print the p-value from the replicates.</li>
+</ul></div>
+
+
+### Do neonicotinoid insecticides have unintended consequences?
+
+
+<div class>
+<p>As a final exercise in hypothesis testing before we put everything together in our case study in the next chapter, you will investigate the effects of neonicotinoid insecticides on bee reproduction. These insecticides are very widely used in the United States to combat aphids and other pests that damage plants. </p>
+<p>In a recent study, Straub, et al. (<a href="http://dx.doi.org/10.1098/rspb.2016.0506"><em>Proc. Roy. Soc. B</em>, 2016</a>) investigated the effects of neonicotinoids on the sperm of pollinating bees. In this and the next exercise, you will study how the pesticide treatment affected the count of live sperm per half milliliter of semen.</p>
+<p>First, we will do EDA, as usual. Plot ECDFs of the alive sperm count for untreated bees (stored in the NumPy array <code>control</code>) and bees treated with pesticide (stored in the NumPy array <code>treated</code>).</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Use your <code>ecdf()</code> function to generate <code>x,y</code> values from the <code>control</code> and <code>treated</code> arrays for plotting the ECDFs.</li>
+<li>Plot the ECDFs on the same plot.</li>
+<li>The margins have been set for you, along with the legend and axis labels. Hit submit to see the result!</li>
+</ul></div>
+
+
+### Bootstrap hypothesis test on bee sperm counts
+
+
+<div class>
+<p>Now, you will test the following hypothesis: On average, male bees treated with neonicotinoid insecticide have the same number of active sperm per milliliter of semen than do untreated male bees. You will use the difference of means as your test statistic.</p>
+<p>For your reference, the call signature for the <code>draw_bs_reps()</code> function <a href="https://campus.datacamp.com/courses/statistical-thinking-in-python-part-2/bootstrap-confidence-intervals?ex=6">you wrote in chapter 2</a> is <code>draw_bs_reps(data, func, size=1)</code>.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Compute the mean alive sperm count of <code>control</code> minus that of <code>treated</code>.</li>
+<li>Compute the mean of all alive sperm counts. To do this, first concatenate <code>control</code> and <code>treated</code> and take the mean of the concatenated array.</li>
+<li>Generate shifted data sets for both <code>control</code> and <code>treated</code> such that the shifted data sets have the same mean. This has already been done for you.</li>
+<li>Generate 10,000 bootstrap replicates of the mean each for the two shifted arrays. Use your <code>draw_bs_reps()</code> function.</li>
+<li>Compute the bootstrap replicates of the difference of means.</li>
+<li>The code to compute and print the p-value has been written for you. Hit submit to see the result!</li>
+</ul></div>
+
+# Putting it all together: a case study
+
+<p class="chapter__description">
+    Every year for the past 40-plus years, Peter and Rosemary Grant have gone to the Galápagos island of Daphne Major and collected data on Darwin's finches. Using your skills in statistical inference, you will spend this chapter with their data, and witness first hand, through data, evolution in action. It's an exhilarating way to end the course!
+  </p>
+  
+## Finch beaks and the need for statistics
+
+
+
+### EDA of beak depths of Darwin's finches
+
+
+<div class>
+<p>For your first foray into the Darwin finch data, you will study how the beak depth (the distance, top to bottom, of a closed beak) of the finch species <em>Geospiza scandens</em> has changed over time. The Grants have noticed some changes of beak geometry depending on the types of seeds available on the island, and they also noticed that there was some interbreeding with another major species on Daphne Major, <em>Geospiza fortis</em>. These effects can lead to changes in the species over time.</p>
+<p>In the next few problems, you will look at the beak depth of <em>G. scandens</em> on Daphne Major in 1975 and in 2012. To start with, let's plot all of the beak depth measurements in 1975 and 2012 in a bee swarm plot. </p>
+<p>The data are stored in a pandas DataFrame called <code>df</code> with columns <code>'year'</code> and <code>'beak_depth'</code>. The units of beak depth are millimeters (mm).</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Create the beeswarm plot.</li>
+<li>Label the axes.</li>
+<li>Show the plot.</li>
+</ul></div>
+
+
+### ECDFs of beak depths
+
+
+<div class>
+<p>While bee swarm plots are useful, we found that ECDFs are often even better when doing EDA. Plot the ECDFs for the 1975 and 2012 beak depth measurements on the same plot. </p>
+<p>For your convenience, the beak depths for the respective years has been stored in the NumPy arrays <code>bd_1975</code> and <code>bd_2012</code>.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Compute the ECDF for the 1975 and 2012 data.</li>
+<li>Plot the two ECDFs.</li>
+<li>Set a 2% margin and add axis labels and a legend to the plot.</li>
+<li>Hit submit to view the plot!</li>
+</ul></div>
+
+
+### Parameter estimates of beak depths
+
+
+<div class>
+<p>Estimate the <em>difference</em> of the mean beak depth of the <em>G. scandens</em> samples from 1975 and 2012 and report a 95% confidence interval.</p>
+<p>Since in this exercise you will use the <code>draw_bs_reps()</code> function you wrote in chapter 2, it may be helpful to <a href="https://campus.datacamp.com/courses/statistical-thinking-in-python-part-2/bootstrap-confidence-intervals?ex=6">refer back to it</a>.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Compute the difference of the sample means.</li>
+<li>Take 10,000 bootstrap replicates of the mean for the 1975 beak depths using your <code>draw_bs_reps()</code> function. Also get 10,000 bootstrap replicates of the mean for the 2012 beak depths.</li>
+<li>Subtract the 1975 replicates from the 2012 replicates to get bootstrap replicates of the difference of means.</li>
+<li>Use the replicates to compute the 95% confidence interval.</li>
+<li>Hit submit to view the results!</li>
+</ul></div>
+
+
+### Hypothesis test: Are beaks deeper in 2012?
+
+
+<div class>
+<p>Your plot of the ECDF and determination of the confidence interval make it pretty clear that the beaks of <em>G. scandens</em> on Daphne Major have gotten deeper. But is it possible that this effect is just due to random chance? In other words, what is the probability that we would get the observed difference in mean beak depth if the means were the same?</p>
+<p>Be careful! The hypothesis we are testing is <em>not</em> that the beak depths come from the same distribution. For that we could use a permutation test. The hypothesis is that the means are equal. To perform this hypothesis test, we need to shift the two data sets so that they have the same mean and then use bootstrap sampling to compute the difference of means.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Make a concatenated array of the 1975 and 2012 beak depths and compute and store its mean.</li>
+<li>Shift <code>bd_1975</code> and <code>bd_2012</code> such that their means are equal to the one you just computed for the combined data set.</li>
+<li>Take 10,000 bootstrap replicates of the mean each for the 1975 and 2012 beak depths.</li>
+<li>Subtract the 1975 replicates from the 2012 replicates to get bootstrap replicates of the difference.</li>
+<li>Compute and print the p-value. The observed difference in means you computed in the last exercise is still in your namespace as <code>mean_diff</code>.</li>
+</ul></div>
+
+
+## Variation in beak shapes
+
+
+
+### EDA of beak length and depth
+
+
+<div class><p>The beak length data are stored as <code>bl_1975</code> and <code>bl_2012</code>, again with units of millimeters (mm). You still have the beak depth data stored in <code>bd_1975</code> and <code>bd_2012</code>. Make scatter plots of beak depth (y-axis) versus beak length (x-axis) for the 1975 and 2012 specimens.</p></div>
+<div class="exercise--instructions__content"><ul>
+<li>Make a scatter plot of the 1975 data. Use the <code>color='blue'</code> keyword argument. Also use an <code>alpha=0.5</code> keyword argument to have transparency in case data points overlap.</li>
+<li>Do the same for the 2012 data, but use the <code>color='red'</code> keyword argument.</li>
+<li>Add a legend and label the axes.</li>
+<li>Show your plot.</li>
+</ul></div>
+
+
+### Linear regressions
+
+
+<div class>
+<p>Perform a linear regression for both the 1975 and 2012 data. Then, perform pairs bootstrap estimates for the regression parameters. Report 95% confidence intervals on the slope and intercept of the regression line.</p>
+<p>You will use the <code>draw_bs_pairs_linreg()</code> function you <a href="https://campus.datacamp.com/courses/statistical-thinking-in-python-part-2/bootstrap-confidence-intervals?ex=12">wrote back in chapter 2</a>.</p>
+<p>As a reminder, its call signature is <code>draw_bs_pairs_linreg(x, y, size=1)</code>, and it returns <code>bs_slope_reps</code> and <code>bs_intercept_reps</code>. The beak length data are stored as <code>bl_1975</code> and <code>bl_2012</code>, and the beak depth data is stored in <code>bd_1975</code> and <code>bd_2012</code>.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Compute the slope and intercept for both the 1975 and 2012 data sets.</li>
+<li>Obtain 1000 pairs bootstrap samples for the linear regressions using your <code>draw_bs_pairs_linreg()</code> function. </li>
+<li>Compute 95% confidence intervals for the slopes and the intercepts.</li>
+</ul></div>
+
+
+### Displaying the linear regression results
+
+
+<div class><p>Now, you will display your linear regression results on the scatter plot, the code for which is already pre-written for you from your previous exercise. To do this, take the first 100 bootstrap samples (stored in <code>bs_slope_reps_1975</code>, <code>bs_intercept_reps_1975</code>, <code>bs_slope_reps_2012</code>, and <code>bs_intercept_reps_2012</code>) and plot the lines with <code>alpha=0.2</code> and <code>linewidth=0.5</code> keyword arguments to <code>plt.plot()</code>.</p></div>
+<div class="exercise--instructions__content"><ul>
+<li>Generate the \(x\)-values for the bootstrap lines using <code>np.array()</code>. They should consist of 10 mm and 17 mm.</li>
+<li>Write a <code>for</code> loop to plot 100 of the bootstrap lines for the 1975 and 2012 data sets. The lines for the 1975 data set should be <code>'blue'</code> and those for the 2012 data set should be <code>'red'</code>.</li>
+<li>Hit submit to view the plot!</li>
+</ul></div>
+
+
+### Beak length to depth ratio
+
+
+<div class>
+<p>The linear regressions showed interesting information about the beak geometry. The slope was the same in 1975 and 2012, suggesting that for every millimeter gained in beak length, the birds gained about half a millimeter in depth in both years. However, if we are interested in the shape of the beak, we want to compare the <em>ratio</em> of beak length to beak depth. Let's make that comparison. </p>
+<p>Remember, the data are stored in <code>bd_1975</code>, <code>bd_2012</code>, <code>bl_1975</code>, and <code>bl_2012</code>.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Make arrays of the beak length to depth ratio of each bird for 1975 and for 2012.</li>
+<li>Compute the mean of the length to depth ratio for 1975 and for 2012.</li>
+<li>Generate 10,000 bootstrap replicates each for the mean ratio for 1975 and 2012 using your <code>draw_bs_reps()</code> function.</li>
+<li>Get a <strong>99%</strong> bootstrap confidence interval for the length to depth ratio for 1975 and 2012.</li>
+<li>Print the results.</li>
+</ul></div>
+
+
+### How different is the ratio?
+
+
+<div class><p>In the previous exercise, you computed the mean beak length to depth ratio with 99% confidence intervals for 1975 and for 2012. The results of that calculation are shown graphically in the plot accompanying this problem. In addition to these results, what would you say about the ratio of beak length to depth?</p></div>
+
+## Calculation of heritability
+
+
+
+### EDA of heritability
+
+
+<div class>
+<p>The array <code>bd_parent_scandens</code> contains the average beak depth (in mm) of two parents of the species <code>G. scandens</code>. The array <code>bd_offspring_scandens</code> contains the average beak depth of the offspring of the respective parents. The arrays <code>bd_parent_fortis</code> and <code>bd_offspring_fortis</code> contain the same information about measurements from <em>G. fortis</em> birds.</p>
+<p>Make a scatter plot of the average offspring beak depth (y-axis) versus average parental beak depth (x-axis) for both species. Use the <code>alpha=0.5</code> keyword argument to help you see overlapping points.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Generate scatter plots for both species. Display the data for <em>G. fortis</em> in blue and <em>G. scandens</em> in red.</li>
+<li>Set the axis labels, make a legend, and show the plot.</li>
+</ul></div>
+
+
+### Correlation of offspring and parental data
+
+
+<div class>
+<p>In an effort to quantify the correlation between offspring and parent beak depths, we would like to compute statistics, such as the Pearson correlation coefficient, between parents and offspring. To get confidence intervals on this, we need to do a pairs bootstrap. </p>
+<p>You have <a href="https://campus.datacamp.com/courses/statistical-thinking-in-python-part-2/bootstrap-confidence-intervals?ex=12">already written</a> a function to do pairs bootstrap to get estimates for parameters derived from linear regression. Your task in this exercise is to make a new function with call signature <code>draw_bs_pairs(x, y, func, size=1)</code> that performs pairs bootstrap and computes a single statistic on pairs samples defined. The statistic of interest is computed by calling <code>func(bs_x, bs_y)</code>. In the next exercise, you will use <code>pearson_r</code> for <code>func</code>.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Set up an array of indices to sample from. (Remember, when doing pairs bootstrap, we randomly choose indices and use those to get the pairs.)</li>
+<li>Initialize the array of bootstrap replicates. This should be a one-dimensional array of length <code>size</code>.</li>
+<li>Write a <code>for</code> loop to draw the samples.</li>
+<li>Randomly choose indices from the array of indices you previously set up.</li>
+<li>Extract <code>x</code> values and <code>y</code> values from the input array using the indices you just chose to generate a bootstrap sample.</li>
+<li>Use <code>func</code> to compute the statistic of interest from the bootstrap samples of <code>x</code> and <code>y</code> and store it in your array of bootstrap replicates.</li>
+<li>Return the array of bootstrap replicates.</li>
+</ul></div>
+
+
+### Pearson correlation of offspring and parental data
+
+
+<div class>
+<p>The Pearson correlation coefficient seems like a useful measure of how strongly the beak depth of parents are inherited by their offspring. Compute the Pearson correlation coefficient between parental and offspring beak depths for <em>G. scandens</em>. Do the same for <em>G. fortis</em>. Then, use the function you wrote in the last exercise to compute a 95% confidence interval using pairs bootstrap. </p>
+<p>Remember, the data are stored in <code>bd_parent_scandens</code>, <code>bd_offspring_scandens</code>, <code>bd_parent_fortis</code>, and <code>bd_offspring_fortis</code>.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Use the <code>pearson_r()</code> function <a href="https://campus.datacamp.com/courses/statistical-thinking-in-python-part-1/quantitative-exploratory-data-analysis?ex=15">you wrote in the prequel to this course</a> to compute the Pearson correlation coefficient for <em>G. scandens</em> and <em>G. fortis</em>.</li>
+<li>Acquire 1000 pairs bootstrap replicates of the Pearson correlation coefficient using the <code>draw_bs_pairs()</code> function you wrote in the previous exercise for <em>G. scandens</em> and <em>G. fortis</em>.</li>
+<li>Compute the 95% confidence interval for both using your bootstrap replicates.</li>
+</ul></div>
+
+
+### Measuring heritability
+
+
+<div class>
+<p>Remember that the Pearson correlation coefficient is the ratio of the covariance to the geometric mean of the variances of the two data sets. This is a measure of the correlation between parents and offspring, but might not be the best estimate of heritability. If we stop and think, it makes more sense to define heritability as the ratio of the covariance between parent and offspring to the <em>variance of the parents alone</em>. In this exercise, you will estimate the heritability and perform a pairs bootstrap calculation to get the 95% confidence interval.</p>
+<p>This exercise highlights a very important point. Statistical inference (and data analysis in general) is not a plug-n-chug enterprise. You need to think carefully about the questions you are seeking to answer with your data and analyze them appropriately. If you are interested in how heritable traits are, the quantity we defined as the heritability is more apt than the off-the-shelf statistic, the Pearson correlation coefficient.</p>
+<p>Remember, the data are stored in <code>bd_parent_scandens</code>, <code>bd_offspring_scandens</code>, <code>bd_parent_fortis</code>, and <code>bd_offspring_fortis</code>.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Write a function <code>heritability(parents, offspring)</code> that computes heritability defined as the ratio of the covariance of the trait in parents and offspring divided by the variance of the trait in the parents. <em>Hint</em>: Remind yourself of the <code>np.cov()</code> function we covered in the prequel to this course.</li>
+<li>Use this function to compute the heritability for <em>G. scandens</em> and <em>G. fortis</em>.</li>
+<li>Acquire 1000 bootstrap replicates of the heritability using pairs bootstrap for <em>G. scandens</em> and <em>G. fortis</em>.</li>
+<li>Compute the 95% confidence interval for both using your bootstrap replicates.</li>
+<li>Print the results.</li>
+</ul></div>
+
+
+### Is beak depth heritable at all in G. scandens?
+
+
+<div class><p>The heritability of beak depth in <em>G. scandens</em> seems low. It could be that this observed heritability was just achieved by chance and beak depth is actually not really heritable in the species. You will test that hypothesis here. To do this, you will do a pairs permutation test.</p></div>
+<div class="exercise--instructions__content"><ul>
+<li>Initialize your array of replicates of heritability. We will take 10,000 pairs permutation replicates.</li>
+<li>Write a <code>for</code> loop to generate your replicates.<ul>
+<li>Permute the <code>bd_parent_scandens</code> array using <code>np.random.permutation()</code>.</li>
+<li>Compute the heritability between the permuted array and the <code>bd_offspring_scandens</code> array using the <code>heritability()</code> function you wrote in the last exercise. Store the result in the replicates array.</li>
+</ul>
+</li>
+<li>Compute the p-value as the number of replicates that are greater than the observed <code>heritability_scandens</code> you computed in the last exercise.</li>
+</ul></div>
+
+
+## Final thoughts
+
+

@@ -1,0 +1,1296 @@
+# Text Processing {.unnumbered}
+
+## NLP {.unnumbered}
+
+<h3 class="course__description-title">Kasey Jones</h3>
+<p class="course__instructor-description display-none-mobile-course-page-experiment">
+    Kasey Jones is a research data scientist at RTI International. His work focuses primarily on agent-based model simulations and natural language processing analysis. He also enjoys creating unique visualizations using D3, and building R-Shiny and python Dash dashboards. Outside of RTI he spends his time working through leet code problems, playing chess, and traveling all over the world. 
+  </p>
+
+**Course Description**
+
+<p class="course__description">As with any fundamentals course, Introduction to Natural Language Processing in R is designed to equip you with the necessary tools to begin your adventures in analyzing text. Natural language processing (NLP) is a constantly growing field in data science, with some very exciting advancements over the last decade. This course will cover the basics of these topics and prepare you for expanding your analysis capabilities. We dive into regular expressions, topic modeling, named entity recognition, and others, all while providing thorough examples that can be used to kick start your future analysis.</p>
+
+### True Fundamentals {.unnumbered}
+
+<p class="chapter__description">
+    Chapter 1 of Introduction to Natural Langauge Processing prepares you for running your first analysis on text. You will explore regular expressions and tokenization, two of the most common components of most analysis tasks. With regular expressions, you can search for any pattern you can think of, and with tokenization, you can prepare and clean text for more sophisticated analysis. This chapter is necessary for tackling the techniques we will learn in the remaining chapters of this course.
+  </p>
+
+#### Regular expression basics {.unnumbered}
+
+
+
+##### Practicing syntax with grep {.unnumbered}
+
+
+<div class>
+<p>You have just completed an ice-breaker exercise at work and you recorded 10 facts about your boss. You saved these 10 facts into a vector named <code>text</code>. Using regular expressions, you want to summarize your bosses' responses. </p>
+<p>A few notes on regular expressions in R:</p>
+<ul>
+<li>When using <code>grep()</code>, setting <code>value = TRUE</code> will print the text instead of the indices. </li>
+<li>You can combine patterns such as a digit, <code>"\\d"</code>, followed by a period <code>"\\."</code>, with <code>"\\d\\."</code>
+</li>
+<li>Spaces can be found using <code>"\\s"</code>.</li>
+<li>You can search for a word by simply using the word as your pattern. <code>pattern = 'word'</code>
+</li>
+</ul>
+</div>
+
+<li>Using <code>grep()</code>, print the text of the responses that contained a numeric number.</li>
+<li>Find all items with a number followed by a space. Use a regular expression for the number and the space.</li>
+<li>Use <code>length()</code> and <code>grep()</code> to find out how many times you wrote down the word <code>"favorite"</code>.</li>
+```{r}
+# edited/added
+text = c("John's favorite color two colors are blue and red.",
+"John's favorite number is 1111."                   ,
+"John lives at P Sherman, 42 Wallaby Way, Sydney"   ,
+"He is 7 feet tall"                                 ,
+"John has visited 30 countries"                     ,
+"John only has nine fingers."                       ,
+"John has worked at eleven different jobs"          ,
+"He can speak 3 languages"                          ,
+"john's favorite food is pizza"                     ,
+"John can name 10 facts about himself.")
+
+# Print off each item that contained a numeric number
+grep(pattern = "\\d", x = text, value = TRUE)
+
+# Find all items with a number followed by a space
+grep(pattern = "\\d\\s", x = text)
+
+# How many times did you write down 'favorite'?
+length(grep(pattern = "favorite", x = text))
+```
+
+<p class="">Nice. Simple and basic, but extremely powerful. Regular expressions are used all the time in text analysis.
+</p>
+
+##### Exploring regular expression functions. {.unnumbered}
+
+
+<div class><p>You have a vector of ten facts about your boss saved as a vector called <code>text</code>. In order to create a new ice-breaker for your team at work, you need to remove the name of your boss, John, from each fact that you have written down. This can easily be done using regular expressions (as well as other search/replace functions). Use regular expressions to correctly replace <code>"John"</code> from the facts you have written about him.</p></div>
+
+<li>Use <code>grep()</code> to find all items in <code>text</code> that contain your boss's name, John. Print off the text instead of the index.</li>
+<li>Run the code as it is. Pay careful attention to what happens to <code>"John"</code>.</li>
+<li>Replace all occurrences of <code>"John "</code> with <code>"He "</code>. Be sure to use <code>\\s</code> for the space following John's name.</li>
+<li>Replace <code>"John's"</code> with <code>"His"</code>. Use <code>\\'s</code> within your regular expression to find the apostrophe and the "s".</li>
+```{r}
+# Print off the text for every time you used your boss's name, John
+grep('John', x = text, value = TRUE)
+
+# Try replacing all occurences of "John" with "He"
+gsub(pattern = 'John', replacement = 'He ', x = text)
+
+# Replace all occurences of "John " with 'He '.
+clean_text <- gsub(pattern = 'John\\s', replacement = 'He ', x = text)
+clean_text
+
+# Replace all occurences of "John's" with 'His'
+gsub(pattern = "John\\'s", replacement = 'His', x = clean_text)
+```
+
+<p class="">Great work. Regular expressions do get a lot more complex, but being able to think through the syntax and how it effects the base text is important.
+</p>
+
+#### Tokenization {.unnumbered}
+
+
+
+##### tidytext functions {.unnumbered}
+
+<div class=""><p>What function is used to split text into tokens when using <code>tidytext</code>?</p></div>
+
+- [ ] <code>tokenize_characters()</code>
+- [x] <code>unnest_tokens()</code>
+- [ ] <code>tokenize()</code>
+- [ ] <code>re.split()</code>
+
+<p class="dc-completion-pane__message dc-u-maxw-100pc">Correct! Although <code>tokenize_characters()</code> and <code>tokenize()</code> can be used for similar purposes when using other packages.</p>
+
+##### Tokenization: sentences {.unnumbered}
+
+
+<div class><p>Animal Farm is a popular book for middle school English teachers to assign to their students. You have decided to do some exploration on the text and provide summary statistics for teachers to use when assigning this book to their students. You already know that there are 10 chapters, but you also know that you can use tokenization to help count the number of sentences, words, and even paragraphs. In this exercise, you will use the tokenization techniques learned in the video to help split Animal Farm into sentences and count them by chapter.</p></div>
+
+<li>Split the code into sentences.</li>
+<li>In step 1 you split the text by sentences. Now use <code>count</code> to count the number of sentences per chapter.</li>
+<li>Using a regular expression, split the text of Animal Farm into sentences whenever a period (<code>\\.</code>) is found.</li>
+```{r}
+# edited/added
+library(tidytext)
+library(tidyverse)
+animal_farm = read.csv("https://assets.datacamp.com/production/repositories/4966/datasets/a3968804c57e7178b6000e0499ac241728b3c73a/animal_farm.csv")
+
+# Split the text_column into sentences
+animal_farm %>%
+  unnest_tokens(output = "sentences", input = text_column, token = "sentences") %>%
+  # Count sentences, per chapter
+  count(chapter)
+
+# Split the text_column using regular expressions
+animal_farm %>%
+  unnest_tokens(output = "sentences", input = text_column,
+                token = "regex", pattern = "\\.") %>%
+  count(chapter)
+```
+
+<p class="">Great job. Notice how the two methods produce slightly different results. You'll notice that a lot when processing text. It's all about the technique used to do the analysis.
+</p>
+
+#### Text cleaning basics {.unnumbered}
+
+
+
+##### Text preprocessing: remove stop words {.unnumbered}
+
+
+<div class>
+<p>Stop words are unavoidable in writing. However, to determine how similar two pieces of text are to each other are or when trying to find themes within text, stop words can make things difficult. In the book Animal Farm, the first chapter contains only 2,636 words, while almost 200 of them are the word "the". </p>
+<p>Usually, "the" will not help us in text analysis projects. In this exercise you will remove the stop words from the first chapter of Animal Farm.</p>
+</div>
+
+<li>Tokenize the text of column <code>text_column</code> into words.</li>
+<li>Print out the word frequencies of <code>tidy_animal_farm</code>.</li>
+<li>Start the text cleaning process by removing the stop words from <code>tidy_animal_farm</code>. Specify <code>stop_words</code> from <code>tidytext</code> as the words to remove.</li>
+```{r}
+# Tokenize animal farm's text_column column
+tidy_animal_farm <- animal_farm %>%
+  unnest_tokens(word, text_column) 
+
+# Print the word frequencies
+tidy_animal_farm %>%
+  count(word, sort = TRUE) %>%
+  head(20) # edited/added
+
+# Remove stop words, using `stop_words` from tidytext
+tidy_animal_farm %>%
+  anti_join(stop_words) %>%
+  head(20) # edited/added
+```
+
+<p class="">Excellent. You should always consider removing stop words before performing text analysis. They muddy your results and can increase computation time for large analysis tasks.
+</p>
+
+##### Text preprocessing: Stemming {.unnumbered}
+
+
+<div class>
+<p>The root of words are often more important than their endings, especially when it comes to text analysis. The book Animal Farm is obviously about animals. However, knowing that the book mentions <strong>animal's</strong> 248 times, and <strong>animal</strong> 107 times might not be helpful for your analysis. </p>
+<p><code>tidy_animal_farm</code> contains a tibble of the words from Animal Farm, tokenized and without stop words. The next step is to stem the words and explore the results.</p>
+</div>
+
+<li>Use <code>dplyr</code> and <code>SnowballC</code> to stem the words from <code>tidy_animal_farm</code>.</li>
+<li>Print the old word frequencies from <code>tidy_animal_farm</code>.</li>
+<li>Print the new word frequencies from <code>stemmed_animal_farm</code>.</li>
+```{r}
+# edited/added
+library(SnowballC)
+
+# Perform stemming on tidy_animal_farm
+stemmed_animal_farm <- tidy_animal_farm %>%
+  mutate(word = wordStem(word))
+
+# Print the old word frequencies 
+tidy_animal_farm %>%
+  count(word, sort = TRUE) %>%
+  head(20) # edited/added
+
+# Print the new word frequencies
+stemmed_animal_farm %>%
+  count(word, sort = TRUE) %>%
+  head(20) # edited/added
+```
+
+<p class="">Nice job. There is a clear difference in word frequencies after we performed stemming. Comrade is used throughout Animal Farm but until you stemmed the words, it didn't show up in the top 10! In Chapter 2 you will expand this analysis and start building your first text analysis models.
+</p>
+
+### Representations of Text {.unnumbered}
+
+<p class="chapter__description">
+    In this chapter, you will learn the most common and studied ways to analyze text. You will look at creating a text corpus, expanding a bag-of-words representation into a TFIDF matrix, and use cosine-similarity metrics to determine how similar two pieces of text are to each other.  You build on your foundations for practicing NLP before you dive into applications of NLP in chapters 3 and  4. 
+  </p>
+
+#### Understanding an R corpus {.unnumbered}
+
+
+
+##### Explore an R corpus {.unnumbered}
+
+
+<div class><p>One of your coworkers has prepared a corpus of 20 documents discussing crude oil, named <code>crude</code>. This is only a sample of several thousand articles you will receive next week. In order to get ready for running text analysis on these documents, you have decided to explore their content and metadata. Remember that in R, a <code>VCorpus</code> contains both <code>meta</code> and <code>content</code> regarding each text. In this lesson, you will explore these two objects.</p></div>
+
+<li>Print out <code>crude</code> and review the output.</li>
+<li>Print the content of the 10th article.</li>
+<li>Print out the ID of the first article in <code>crude</code>.</li>
+<li>Using the provided for loop, make a vector of the IDs from the corpus.</li>
+```{r}
+# edited/added
+library(tm)
+crude_df = read.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vT5pJVvzxVnFyaBcSf_znyXmgfNihy9PHJ6pEe5wnDTy-45XdJb1uQhdSYRMqulctKtlnu6slB8sQvg/pub?gid=63864419&single=true&output=csv")
+crude = crude_df$text %>%
+  VectorSource %>%
+  VCorpus
+for(i in 1:length(crude)) {
+  crude[[i]]$meta$article_id    = crude_df$article_id   [i]
+  crude[[i]]$meta$author        = crude_df$author       [i]
+  crude[[i]]$meta$datetimestamp = crude_df$datetimestamp[i]
+  crude[[i]]$meta$description   = crude_df$description  [i]
+  crude[[i]]$meta$heading       = crude_df$heading      [i]
+  crude[[i]]$meta$id            = crude_df$id           [i]
+  crude[[i]]$meta$language      = crude_df$language     [i]
+  crude[[i]]$meta$origin        = crude_df$origin       [i]
+  crude[[i]]$meta$topics        = crude_df$topics       [i]
+  crude[[i]]$meta$lewissplit    = crude_df$lewissplit   [i]
+  crude[[i]]$meta$cgisplit      = crude_df$cgisplit     [i]
+  crude[[i]]$meta$oldid         = crude_df$oldid        [i]
+  crude[[i]]$meta$places        = crude_df$places       [i]
+  crude[[i]]$meta$people        = crude_df$people       [i]
+  crude[[i]]$meta$orgs          = crude_df$orgs         [i]
+  crude[[i]]$meta$exchanges     = crude_df$exchanges    [i]
+}
+
+
+# Print out the corpus
+print(crude)
+
+# Print the content of the 10th article
+crude[[10]]$content
+
+# Find the first ID
+crude[[1]]$meta$id
+
+# Make a vector of IDs
+ids <- c()
+for(i in c(1:20)){
+  ids <- append(ids, crude[[i]]$meta$id)
+}
+```
+
+<p class="">Well done. You now understand the basics of an R corpus. However, creating the ID vector was a bit of work. Let's use the tidy() function to help make this process easier.
+</p>
+
+##### Creating a tibble from a corpus {.unnumbered}
+
+
+<div class><p>To further explore the corpus on crude oil data that you received from a coworker, you have decided to create a pipeline to clean the text contained in the documents. Instead of exploring how to do this with the <code>tm</code> package, you have decided to transform the corpus into a tibble so you can use the functions <code>unnest_tokens()</code>, <code>count()</code>, and <code>anti_join()</code> that you are already familiar with. The corpus <code>crude</code> contains both the metadata and the text of each document.</p></div>
+
+<li>Convert the corpus into a tibble.</li>
+<li>Use <code>names</code> to print out the column names.</li>
+<li>Tokenize (by word), count, and remove stop words from the <code>text</code> column of <code>crude_tibble</code>.</li>
+```{r}
+# Create a tibble & Review
+crude_tibble <- tidy(crude)
+names(crude_tibble)
+
+crude_counts <- crude_tibble %>%
+  # Tokenize by word
+  unnest_tokens(word, text) %>%
+  # Count by word
+  count(word, sort = TRUE) %>%
+  # Remove stop words
+  anti_join(stop_words)
+```
+
+<p class="">Excellent job. Being able to use the <code>tm</code> and <code>tidytext</code> packages interchangeably is a great technique to have.
+</p>
+
+##### Creating a corpus {.unnumbered}
+
+
+<div class>
+<p>You have created a tibble called <code>russian_tweets</code> that contains around 20,000 tweets auto generated by bots during the 2016 U.S. election cycle so that you can preform text analysis. However, when searching through the available options for performing the analysis you have chosen to do, you believe that the <code>tm</code> package offers the easiest path forward. In order to conduct the analysis, you first must create a corpus and attach potentially useful metadata.</p>
+<p><em>Be aware that this is real data from Twitter and as such there is always a risk that it may contain profanity or other offensive content (in this exercise, and any following exercises that also use real Twitter data).</em></p>
+</div>
+
+<li>Create a corpus using the <code>content</code> column of <code>russian_tweets</code>.</li>
+<li>Attach both the <code>following</code> and <code>followers</code> columns as metadata to <code>tweet_corpus</code>.</li>
+<li>Print the first few rows of the metadata table.</li>
+```{r}
+# edited/added
+russian_tweets = read.csv("https://assets.datacamp.com/production/repositories/4966/datasets/125d845e6fe39bb0eb7799e0b91725f424510f16/russian_1.csv")
+
+# Create a corpus
+tweet_corpus <- VCorpus(VectorSource(russian_tweets$content))
+
+# Attach following and followers
+meta(tweet_corpus, 'following') <- russian_tweets$following
+meta(tweet_corpus, 'followers') <- russian_tweets$followers
+
+# Review the meta data
+head(meta(tweet_corpus))
+```
+
+<p class="">Nice job! You can now create a corpus if you need to use analysis functions that require a corpus object.
+</p>
+
+#### The bag-of-words representation {.unnumbered}
+
+
+
+##### Practice BoW {.unnumbered}
+
+<div class=""><p>Given the following texts:</p>
+<ul>
+<li><code>t1 &lt;- c("Today will be an awesome day. The best day of the week")</code></li>
+<li><code>t2 &lt;- c("Yesterday was an awesome day. Better than today.")</code></li>
+<li><code>t3 &lt;- c("Tomorrow will be the best day. Better than yesterday and today.")</code></li>
+</ul>
+<p>You have created a word vector:</p>
+<p><code>word_vector &lt;- c("today", "awesome", "day", "best", "week", "yesterday", "better", "tomorrow")</code>.</p>
+<p>What is one possible bag-of-words vector representation of <code>t3</code>?</p></div>
+
+- [ ] 0, 0, 0, 0, 0, 0, 0, 0
+- [x] 1, 0, 1, 1, 0, 1, 1, 1
+- [ ] 1, 1, 2, 1, 1, 0, 0, 0
+- [ ] 1, 1, 1, 0, 0, 1, 1, 0
+
+<p class="dc-completion-pane__message dc-u-maxw-100pc">Well done. We represent words that appear in the text with 1's, and those that do not with 0's.</p>
+
+##### BoW Example {.unnumbered}
+
+
+<div class><p>In literature reviews, researchers read and summarize as many available texts about a subject as possible. Sometimes they end up reading duplicate articles, or summaries of articles they have already read. You have been given 20 articles about crude oil as an R object named <code>crude_tibble</code>. Instead of jumping straight to reading each article, you have decided to see what words are shared across these articles. To do so, you will start by building a bag-of-words representation of the text.</p></div>
+
+<li>Create a BoW representation by counting the number of words by article using the column <code>article_id</code>.</li>
+<li>Use the output to determine how many unique unique article/word combinations were created.</li>
+<li>Filter the results to mentions of <code>'prices'</code>. </li>
+<li>How many articles have the word <code>prices</code> used in them?</li>
+```{r}
+# Count occurrence by article_id and word
+words <- crude_tibble %>%
+  unnest_tokens(output = "word", token = "words", input = text) %>%
+  anti_join(stop_words) %>%
+  count(article_id, word, sort=TRUE)
+
+# How many different word/article combinations are there?
+unique_combinations <- nrow(words)
+
+# Filter to responses with the word "prices"
+words_with_prices <- words %>%
+  filter(word == 'prices')
+
+# How many articles had the word "prices"?
+number_of_price_articles <- nrow(words_with_prices)
+```
+
+<p class="">Excellent job. BOW representations are one of the quickest ways to start analyzing text. Several more advanced techniques also start by simply looking at which words are used in each piece of text.
+</p>
+
+##### Sparse matrices {.unnumbered}
+
+
+<div class>
+<p>During the video lesson you learned about sparse matrices. Sparse matrices can become computational nightmares as the number of text documents and the number of unique words grow. Creating word representations with tweets can easily create sparse matrices because emojis, slang, acronyms, and other forms of language are used. </p>
+<p>In this exercise you will walk through the steps to calculate how sparse the Russian tweet dataset is. Note that this is a small example of how quickly text analysis can become a major computational problem.</p>
+</div>
+
+<li>Use tokenization remove stop-words to find the total number of unique words in the dataset.</li>
+<li>This time, count the words by tweet (represented as <code>tweet_id</code> in the dataset) and <code>word</code>. This will be the sum of the unique words for each chapter.</li>
+<li>Calculate the size of the matrix. You will need the number of rows from <code>russian_tweets</code> and the number of unique words.</li>
+<li>Calculate the percent of matrix entries that contain a number other than 0. You will need the number of unique words by tweet as completed in step 2.</li>
+```{r}
+# Tokenize and remove stop words
+tidy_tweets <- russian_tweets %>%
+  unnest_tokens(word, content) %>%
+  anti_join(stop_words)
+# Count by word
+unique_words <- tidy_tweets %>%
+  count(word)
+# Count by tweet (tweet_id) and word
+unique_words_by_tweet <- tidy_tweets %>%
+  count(tweet_id, word)
+# Find the size of matrix
+size <- nrow(russian_tweets) * nrow(unique_words)
+# Find percent of entries that would have a value
+percent <- nrow(unique_words_by_tweet) / size
+percent
+```
+
+<p class="">Well done! This percent is tiny - indicating that we are dealing with a very sparse matrix. Imagine if we looked at a million tweets instead of just 20,000.
+</p>
+
+#### The TFIDF {.unnumbered}
+
+
+
+##### Manual calculations {.unnumbered}
+
+<div class=""><p>Given the following 4 cleaned statements below:</p>
+<pre><code>t1 &lt;- "government turtle blue ocean"
+t2 &lt;- "crazy turtle ocean waves"
+t3 &lt;- "massive turtle washington lion"
+t4 &lt;- "lion pride massive ocean dinner"
+</code></pre>
+<p>The <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" role="presentation" tabindex="0" ctxtmenu_counter="0" style="font-size: 116.7%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D447 TEX-I"></mjx-c></mjx-mi><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D439 TEX-I"></mjx-c></mjx-mi><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D43C TEX-I"></mjx-c></mjx-mi><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D437 TEX-I"></mjx-c></mjx-mi><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D439 TEX-I"></mjx-c></mjx-mi></mjx-math><mjx-assistive-mml role="presentation" unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>T</mi><mi>F</mi><mi>I</mi><mi>D</mi><mi>F</mi></math></mjx-assistive-mml></mjx-container> for <code>"lion"</code> in <code>t4</code> can be calculated as follows:</p>
+<ul>
+<li><p><mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" role="presentation" tabindex="0" ctxtmenu_counter="1" style="font-size: 116.7%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D447 TEX-I"></mjx-c></mjx-mi><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D439 TEX-I"></mjx-c></mjx-mi><mjx-mo class="mjx-n" space="4"><mjx-c class="mjx-c3D"></mjx-c></mjx-mo><mjx-mfrac space="4"><mjx-frac><mjx-num><mjx-nstrut></mjx-nstrut><mjx-mn class="mjx-n" size="s"><mjx-c class="mjx-c31"></mjx-c></mjx-mn></mjx-num><mjx-dbox><mjx-dtable><mjx-line></mjx-line><mjx-row><mjx-den><mjx-dstrut></mjx-dstrut><mjx-mn class="mjx-n" size="s"><mjx-c class="mjx-c35"></mjx-c></mjx-mn></mjx-den></mjx-row></mjx-dtable></mjx-dbox></mjx-frac></mjx-mfrac><mjx-mo class="mjx-n" space="4"><mjx-c class="mjx-c3D"></mjx-c></mjx-mo><mjx-mn class="mjx-n" space="4"><mjx-c class="mjx-c30"></mjx-c><mjx-c class="mjx-c2E"></mjx-c><mjx-c class="mjx-c32"></mjx-c></mjx-mn></mjx-math><mjx-assistive-mml role="presentation" unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>T</mi><mi>F</mi><mo>=</mo><mfrac><mn>1</mn><mn>5</mn></mfrac><mo>=</mo><mn>0.2</mn></math></mjx-assistive-mml></mjx-container></p></li>
+<li><p><mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" role="presentation" tabindex="0" ctxtmenu_counter="2" style="font-size: 116.7%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D43C TEX-I"></mjx-c></mjx-mi><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D437 TEX-I"></mjx-c></mjx-mi><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D439 TEX-I"></mjx-c></mjx-mi><mjx-mo class="mjx-n" space="4"><mjx-c class="mjx-c3D"></mjx-c></mjx-mo><mjx-mi class="mjx-i" space="4"><mjx-c class="mjx-c1D459 TEX-I"></mjx-c></mjx-mi><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D45C TEX-I"></mjx-c></mjx-mi><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D454 TEX-I"></mjx-c></mjx-mi><mjx-mo class="mjx-n"><mjx-c class="mjx-c28"></mjx-c></mjx-mo><mjx-mn class="mjx-n"><mjx-c class="mjx-c34"></mjx-c></mjx-mn><mjx-texatom texclass="ORD"><mjx-mo class="mjx-n"><mjx-c class="mjx-c2F"></mjx-c></mjx-mo></mjx-texatom><mjx-mn class="mjx-n"><mjx-c class="mjx-c32"></mjx-c></mjx-mn><mjx-mo class="mjx-n"><mjx-c class="mjx-c29"></mjx-c></mjx-mo><mjx-mo class="mjx-n" space="4"><mjx-c class="mjx-c3D"></mjx-c></mjx-mo><mjx-mn class="mjx-n" space="4"><mjx-c class="mjx-c30"></mjx-c><mjx-c class="mjx-c2E"></mjx-c><mjx-c class="mjx-c36"></mjx-c><mjx-c class="mjx-c39"></mjx-c><mjx-c class="mjx-c33"></mjx-c></mjx-mn></mjx-math><mjx-assistive-mml role="presentation" unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>I</mi><mi>D</mi><mi>F</mi><mo>=</mo><mi>l</mi><mi>o</mi><mi>g</mi><mo stretchy="false">(</mo><mn>4</mn><mrow><mo>/</mo></mrow><mn>2</mn><mo stretchy="false">)</mo><mo>=</mo><mn>0.693</mn></math></mjx-assistive-mml></mjx-container></p></li>
+<li><p><mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" role="presentation" tabindex="0" ctxtmenu_counter="3" style="font-size: 116.7%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D447 TEX-I"></mjx-c></mjx-mi><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D439 TEX-I"></mjx-c></mjx-mi><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D43C TEX-I"></mjx-c></mjx-mi><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D437 TEX-I"></mjx-c></mjx-mi><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D439 TEX-I"></mjx-c></mjx-mi><mjx-mo class="mjx-n" space="4"><mjx-c class="mjx-c3D"></mjx-c></mjx-mo><mjx-mn class="mjx-n" space="4"><mjx-c class="mjx-c2E"></mjx-c><mjx-c class="mjx-c32"></mjx-c></mjx-mn><mjx-mo class="mjx-n" space="3"><mjx-c class="mjx-c2217"></mjx-c></mjx-mo><mjx-mn class="mjx-n" space="3"><mjx-c class="mjx-c30"></mjx-c><mjx-c class="mjx-c2E"></mjx-c><mjx-c class="mjx-c36"></mjx-c><mjx-c class="mjx-c39"></mjx-c><mjx-c class="mjx-c33"></mjx-c></mjx-mn></mjx-math><mjx-assistive-mml role="presentation" unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>T</mi><mi>F</mi><mi>I</mi><mi>D</mi><mi>F</mi><mo>=</mo><mn>.2</mn><mo>∗</mo><mn>0.693</mn></math></mjx-assistive-mml></mjx-container></p></li>
+</ul>
+<p>Calculate the <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" role="presentation" tabindex="0" ctxtmenu_counter="4" style="font-size: 116.7%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D447 TEX-I"></mjx-c></mjx-mi><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D439 TEX-I"></mjx-c></mjx-mi></mjx-math><mjx-assistive-mml role="presentation" unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>T</mi><mi>F</mi></math></mjx-assistive-mml></mjx-container> and <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" role="presentation" tabindex="0" ctxtmenu_counter="5" style="font-size: 116.7%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D43C TEX-I"></mjx-c></mjx-mi><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D437 TEX-I"></mjx-c></mjx-mi><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D439 TEX-I"></mjx-c></mjx-mi></mjx-math><mjx-assistive-mml role="presentation" unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>I</mi><mi>D</mi><mi>F</mi></math></mjx-assistive-mml></mjx-container> weights for <code>'turtle'</code> in <code>t1</code>. Use <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" role="presentation" tabindex="0" ctxtmenu_counter="6" style="font-size: 116.7%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D43C TEX-I"></mjx-c></mjx-mi><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D437 TEX-I"></mjx-c></mjx-mi><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D439 TEX-I"></mjx-c></mjx-mi><mjx-mo class="mjx-n" space="4"><mjx-c class="mjx-c3D"></mjx-c></mjx-mo><mjx-mi class="mjx-i" space="4"><mjx-c class="mjx-c1D459 TEX-I"></mjx-c></mjx-mi><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D45C TEX-I"></mjx-c></mjx-mi><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D454 TEX-I"></mjx-c></mjx-mi><mjx-mfrac><mjx-frac><mjx-num><mjx-nstrut></mjx-nstrut><mjx-mi class="mjx-i" size="s"><mjx-c class="mjx-c1D441 TEX-I"></mjx-c></mjx-mi></mjx-num><mjx-dbox><mjx-dtable><mjx-line></mjx-line><mjx-row><mjx-den><mjx-dstrut></mjx-dstrut><mjx-msub size="s"><mjx-mi class="mjx-i" noic="true"><mjx-c class="mjx-c1D45B TEX-I"></mjx-c></mjx-mi><mjx-script style="vertical-align: -0.15em;"><mjx-texatom size="s" texclass="ORD"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D461 TEX-I"></mjx-c></mjx-mi></mjx-texatom></mjx-script></mjx-msub></mjx-den></mjx-row></mjx-dtable></mjx-dbox></mjx-frac></mjx-mfrac></mjx-math><mjx-assistive-mml role="presentation" unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>I</mi><mi>D</mi><mi>F</mi><mo>=</mo><mi>l</mi><mi>o</mi><mi>g</mi><mfrac><mi>N</mi><msub><mi>n</mi><mrow><mi>t</mi></mrow></msub></mfrac></math></mjx-assistive-mml></mjx-container></p></div>
+
+- [ ] TF = .75, IDF = 1.3863
+- [ ] TF = .75, IDF = 0.2877
+- [ ] TF = .25, IDF = 1.3863
+- [x] TF = .25, IDF = 0.2877
+
+<p class="dc-completion-pane__message dc-u-maxw-100pc">Correct! Good job. You calculated the TF and the IDF weights correctly. The TFIDF value would be 0.071925 (.25 * .2877).</p>
+
+##### TFIDF Practice {.unnumbered}
+
+
+<div class>
+<p>Earlier you looked at a bag-of-words representation of articles on crude oil. Calculating TFIDF values relies on this bag-of-words representation, but takes into account how often a word appears in an article, and how often that word appears in the collection of articles. </p>
+<p>To determine how meaningful words would be when comparing different articles, calculate the TFIDF weights for the words in <code>crude</code>, a collection of 20 articles about crude oil.</p>
+</div>
+
+<li>Calculate TFIDF values for <code>crude</code> by <code>article_id</code> and by <code>word</code>. Save the resulting tibble as <code>crude_weights</code>. </li>
+<li>Sort <code>crude_weights</code> with the <code>arrange()</code> function by descending <code>tf_idf</code> values.</li>
+<li>Filter <code>crude_weights</code> to the lowest non-zero <code>tf_idf</code> values. Again, use the <code>arrange</code> function.</li>
+```{r}
+# Create a tibble with TFIDF values
+crude_weights <- crude_tibble %>%
+  unnest_tokens(output = "word", token = "words", input = text) %>%
+  anti_join(stop_words) %>%
+  count(article_id, word) %>%
+  bind_tf_idf(word, article_id, n)
+
+# Find the highest TFIDF values
+crude_weights %>%
+  arrange(desc(tf_idf))
+
+# Find the lowest non-zero TFIDF values
+crude_weights %>%
+  filter(tf_idf != 0) %>%
+  arrange(tf_idf)
+```
+
+<p class="">Excellent. We see that <code>'prices'</code> and <code>'petroleum'</code> have very low values for some articles. This could be because they were mentioned just a few times in that article, or because they were used in too many articles.
+</p>
+
+#### Cosine Similarity {.unnumbered}
+
+
+
+##### An example of failing at text analysis {.unnumbered}
+
+
+<div class>
+<p>Early on, you discussed the power of removing stop words before conducting text analysis. In this most recent chapter, you reviewed using cosine similarity to identify texts that are similar to each other. </p>
+<p>In this exercise, you will explore the very real possibility of failing to use text analysis properly. You will compute cosine similarities for the chapters in the book Animal Farm, without removing stop-words.</p>
+</div>
+
+<li>Review the provided code to create word counts. This has been completed for you.</li>
+<li>Using the <code>pairwise_similarity()</code> function from <code>widyr</code>, calculate the cosine similarities for each chapter in the <code>chapter</code> column.</li>
+<li>Arrange the results with the highest <code>similarity</code> values first.</li>
+<li>Calculate the average <code>mean</code> of the <code>similarity</code> values.</li>
+```{r}
+# edited/added
+library(widyr)
+
+# Create word counts
+animal_farm_counts <- animal_farm %>%
+  unnest_tokens(word, text_column) %>%
+  count(chapter, word)
+
+# Calculate the cosine similarity by chapter, using words
+comparisons <- animal_farm_counts %>%
+  pairwise_similarity(chapter, word, n) %>%
+  arrange(desc(similarity))
+
+# Print the mean of the similarity values
+comparisons %>%
+  summarize(mean = mean(similarity))
+```
+
+<p class="">Well done. Unfortunately, these results are useless. As every single chapter is highly similar to every other chaper. We need to remove stop words to see which chapters are more similar to each other.
+</p>
+
+##### Cosine similarity example {.unnumbered}
+
+
+<div class>
+<p>The plot of Animal Farm is pretty simple. In the beginning the animals are unhappy with following their human leaders. In the middle they overthrow those leaders, and in the end they become unhappy with the animals that eventually became their new leaders. </p>
+<p>If done correctly, cosine similarity can help identify documents (chapters) that are similar to each other. In this exercise, you will identify similar chapters in Animal Farm. Odds are, chapter 1 (the beginning) and chapter 10 (the end) will be similar.</p>
+</div>
+
+<li>Remove stop words from the <code>text_column</code> of <code>animal_farm</code>.</li>
+<li>Calculate the TFIDF values for each chapter and word in the <code>chapter</code> and <code>word</code> columns.</li>
+<li>Calculate the cosine similarity values for each chapter in Animal Farm, based on only word counts, <code>n</code>.</li>
+<li>Run the similarities again. This time using <code>tf_idf</code> instead of <code>n</code>.</li>
+```{r}
+# Create word counts 
+animal_farm_counts <- animal_farm %>%
+  unnest_tokens(word, text_column) %>%
+  anti_join(stop_words) %>%
+  count(chapter, word) %>%
+  bind_tf_idf(chapter, word, n)
+
+# Calculate cosine similarity on word counts
+animal_farm_counts %>%
+  pairwise_similarity(chapter, word, n) %>%
+  arrange(desc(similarity))
+# Calculate cosine similarity using tf_idf values
+animal_farm_counts %>%
+  pairwise_similarity(chapter, word, tf_idf) %>%
+  arrange(desc(similarity))
+```
+
+<p class="">Excellent job. Cosine similarity scores can be calculated on word counts or TFIDF values. We see drastically different results for both. Animal Farm has a very low reading level, and most chapters share the same vocabulary. This was evident in the previous exercise. You'll need to consider the context of the text you are analyzing when deciding on an approach.
+</p>
+
+### Classification and Topic Modeling {.unnumbered}
+
+<p class="chapter__description">
+    Chapter 3 focuses on two common text analysis approaches, classification modeling, and topic modeling. If you are working on text analysis projects, you will inevitably use one or both of these methods. This chapter teaches you how to perform both techniques and provides insight into how to approach these techniques from a practical point of you.
+  </p>
+  
+#### Preparing text for modeling {.unnumbered}
+
+
+
+##### Data preparation {.unnumbered}
+
+
+<div class><p>During the 2016 US election, Russian tweet bots were used to constantly distribute political rhetoric to both democrats and republicans. You have been given a dataset of such tweets called <code>russian_tweets</code>. You have decided to classify these tweets as either left- (democrat) or right-leaning(republican). Before you can build a classification model, you need to clean and prepare the text for modeling.</p></div>
+
+<li>Finalize the tokenization process by stemming the tokens.</li>
+<li>Use <code>cast_dtm()</code> to create a document-term matrix.</li>
+<li>Weight the document-term matrix using tfidf weighting.</li>
+<li>Print the matrix.</li>
+```{r}
+# Stem the tokens
+russian_tokens <- russian_tweets %>%
+  unnest_tokens(output = "word", token = "words", input = content) %>%
+  anti_join(stop_words) %>%
+  mutate(word = wordStem(word))
+
+# Create a document term matrix 
+tweet_matrix <- russian_tokens %>%
+  count(tweet_id, word) %>%
+  cast_dtm(document = tweet_id, term = word,
+           value = n, weighting = tm::weightTfIdf)
+
+# Print the matrix details 
+tweet_matrix
+```
+
+<p class="">Well done. You have successfully prepared your data for modeling! You will cover modeling techniques in the next lesson.
+</p>
+
+##### Removing sparse terms {.unnumbered}
+
+
+<div class>
+<p>Running classification models on sparse matrices can be a computational nightmare. Without access to GPUs or cloud compute resources, you might run into time and memory issues on your local computer. You have been given a document-term matrix and plan on running several different algorithms to find the best classification model. In this exercise, you will remove some of the sparse terms from the provided matrix, <code>matrix</code>, at different sparsity levels. </p>
+<p>For each level of sparsity, note the number of remaining terms in the matrix.</p>
+</div>
+
+<li>Remove sparse terms from the document-term matrix, <code>matrix</code>, using a value of .50.</li>
+
+<li>Remove sparse terms from the document-term matrix, <code>matrix</code>, using a value of .90.</li>
+
+<li>Remove sparse terms from the document-term matrix, <code>matrix</code>, using a value of .99.</li>
+
+<li>Remove sparse terms from the document-term matrix, <code>matrix</code>, using a value of .9999.</li>
+```{r}
+# edited/added
+matrix = tweet_matrix
+
+less_sparse_matrix <-
+  removeSparseTerms(matrix, sparse = .50)
+
+# Print results
+matrix
+less_sparse_matrix
+
+less_sparse_matrix <-
+  removeSparseTerms(matrix, sparse = .90)
+
+# Print results
+matrix
+less_sparse_matrix
+
+less_sparse_matrix <-
+  removeSparseTerms(matrix, sparse =.99)
+
+# Print results
+matrix
+less_sparse_matrix
+
+less_sparse_matrix <-
+  removeSparseTerms(matrix, sparse =.9999)
+
+# Print results
+matrix
+less_sparse_matrix
+```
+
+<p class="">Excellent. In order to not have just a handful of terms, you had to use a value of .9999. Tweets are short in nature and use lots of slang, emojis, and other text that might not appear frequently.
+</p>
+
+#### Classification modeling {.unnumbered}
+
+
+
+##### Classification modeling example {.unnumbered}
+
+
+<div class>
+<p>You have previously prepared a set of Russian tweets for classification. Of the 20,000 tweets, you have filtered to tweets with an <code>account_type</code> of <code>Left</code> or <code>Right</code>, and selected the first 2000 tweets of each. You have already tokenized the tweets into words, removed stop words, and performed stemming. Furthermore, you converted word counts into a document-term matrix with TFIDF values for weights and saved this matrix as: <code>left_right_matrix_small</code>. </p>
+<p>You will use this matrix to predict whether a tweet was generated from a left-leaning tweet bot, or a right-leaning tweet bot. The labels can be found in the vector, <code>left_right_labels</code>.</p>
+</div>
+```{r}
+# edited/added
+russian_tweets_left_right = russian_tweets %>%
+  filter(account_type %in% c("Left","Right")) %>%
+  group_by(account_type) %>%
+  slice_head(n = 200) %>% # edited/added
+  ungroup
+left_right_matrix_small <- russian_tweets_left_right %>%
+  unnest_tokens(output = "word", token = "words", input = content) %>%
+  anti_join(stop_words) %>%
+  mutate(word = wordStem(word)) %>%
+  count(tweet_id, word) %>%
+  cast_dtm(document = tweet_id, term = word,
+           value = n, weighting = tm::weightTfIdf) %>%
+  removeSparseTerms(sparse =.9999)
+left_right_labels = russian_tweets_left_right %>%
+  pull(account_type) %>%
+  as.factor
+```
+<li>Set the random seed to <code>1111</code> for reproducibility. </li>
+<li>Create training and test datasets. Use a 75% sample for the training data.</li>
+<li>Run a random forest model on the training data, use <code>left_right_labels</code> for the response vector <code>y</code>. </li>
+<li>Print the random forest results.</li>
+```{r}
+library(randomForest)
+
+# Create train/test split
+set.seed(1111)
+sample_size <- floor(0.75 * nrow(left_right_matrix_small))
+train_ind <- sample(nrow(left_right_matrix_small), size = sample_size)
+train <- left_right_matrix_small[train_ind, ]
+test <- left_right_matrix_small[-train_ind, ]
+
+# Create a random forest classifier
+rfc <- randomForest(x = as.data.frame(as.matrix(train)), 
+                    y = left_right_labels[train_ind],
+                    nTree = 50) # edited/added
+# Print the results
+rfc
+```
+
+<p class="">Excellent! Calssification modeling with text follows the same principals as classification models built on continuous data. You can also use all kinds of fun machine learning algorithms and are not stuck using random forest models.
+</p>
+
+##### Confusion matrices {.unnumbered}
+
+
+<div class>
+<p>You have just finished creating a classification model. This model predicts whether tweets were created by a left-leaning (democrat) or right-leaning (republican) tweet bot. You have made predictions on the test data and have the following result:</p>
+<table>
+<thead><tr>
+<th>Predictions</th>
+<th>Left</th>
+<th>Right</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>Left</td>
+<td><strong>350</strong></td>
+<td>157</td>
+</tr>
+<tr>
+<td>Right</td>
+<td>57</td>
+<td><strong>436</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Use the confusion matrix above to answer questions about the models accuracy.</p>
+</div>
+
+<li>What percentage of tweets did you successfully label as <code>Left</code>?</li>
+<li>What percentage of tweets did you successfully label as <code>Right</code>?</li>
+<li>What percentage of tweets did you successfully label?</li>
+```{r}
+# Percentage correctly labeled "Left"
+left <- (350) / (350 + 157)
+left
+
+# Percentage correctly labeled "Right"
+right <- (436) / (436 + 57)
+right
+
+# Percentage correctly labeled:
+accuracy <- (350 + 436) / (350 + 157 + 57 + 436)
+accuracy
+```
+
+<p class="">Excellent. Although accuracy is only one of many metrics to determine if an algorithm is doing a good job, it is usually a good indicator of model performance!
+</p>
+
+##### TFIDF tibble vs dtm {.unnumbered}
+
+
+<div class>
+<p>TFIDF can be used for document similarity, text classification, and tasks. Consider the tibble, <code>left_right_tfidf</code>, and the document-term matrix, <code>left_right_matrix</code>. Both have been loaded into the console. </p>
+<p>Which of the following statements is <strong>true</strong>?</p>
+<ul>
+<li>
+<strong>A</strong>: The tibble contains one row per document and a column for each word used in all of the text.</li>
+<li>
+<strong>B</strong>: The tibble contains the word counts, tf, idf, and tfidf weights for each word in each document document.</li>
+<li>
+<strong>C</strong>: The tibble and the matrix have the same number of rows.</li>
+<li>
+<strong>D</strong>: The columns of the document-term matrix can be used in classification models.</li>
+</ul>
+</div>
+
+- [ ] <strong>A</strong> &amp; <strong>B</strong>
+- [ ] <strong>A</strong>, <strong>B</strong>, &amp; <strong>D</strong>
+- [ ] <strong>C</strong>
+- [x] <strong>B</strong> &amp; <strong>D</strong>
+
+<p class="">Excellent. Although very similar, these two representations both have their purposes. Let's move on to another text analysis topic: topic modeling.
+</p>
+
+#### Introduction to topic modeling {.unnumbered}
+
+
+
+##### LDA practice {.unnumbered}
+
+
+<div class>
+<p>You are interested in the common themes surrounding the character Napoleon in your favorite new book, Animal Farm. Napoleon is a Pig who convinces his fellow comrades to overthrow their human leaders. He also eventually becomes the new leader of Animal Farm. </p>
+<p>You have extracted all of the sentences that mention Napoleon's name, <code>pig_sentences</code>, and created tokenized version of these sentences with stop words removed and stemming completed, <code>pig_tokens</code>. Complete LDA on these sentences and review the top words associated with some of the topics.</p>
+</div>
+```{r}
+# edited/added
+pig_sentences = animal_farm %>%
+  unnest_tokens(sentence, text_column, "sentences") %>%
+  group_by(chapter) %>%
+  mutate(chapter = paste(chapter, row_number())) %>%
+  ungroup %>%
+  filter(str_detect(sentence,"napoleon"))
+pig_tokens = pig_sentences %>%
+  unnest_tokens(output = "word", token = "words", input = sentence) %>%
+  anti_join(stop_words) %>%
+  mutate(word = wordStem(word))
+pig_matrix = pig_tokens %>%
+  count(chapter, word) %>%
+  cast_dtm(document = chapter, term = word,
+           value = n, weighting = tm::weightTf) %>%
+  removeSparseTerms(sparse =.9999)
+```
+<li>Perform LDA on <code>pig_matrix</code> while identifying 10 topics. Set a random seed of <code>1111</code> for reproducibility.</li>
+<li>Extract the beta matrix from the results.</li>
+<li>Filter the beta matrix to topic 2 only and arrange the values by decreasing beta values. </li>
+<li>Filter the beta matrix to topic 3 only and arrange the values by decreasing beta values.</li>
+```{r}
+library(topicmodels)
+# Perform Topic Modeling
+sentence_lda <-
+  LDA(pig_matrix, k = 10, method = 'Gibbs', control = list(seed = 1111))
+# Extract the beta matrix 
+sentence_betas <- tidy(sentence_lda, matrix = "beta")
+
+# Topic #2
+sentence_betas %>%
+  filter(topic == 2) %>%
+  arrange(-beta)
+# Topic #3
+sentence_betas %>%
+  filter(topic == 3) %>%
+  arrange(-beta)
+```
+
+<p class="">Well done. Notice the differences in words for topic 2 and topic 3. Each topic should be made up of mostly different words, otherwise all topics would end up being the same. We will give meaning to these differences in the next lesson.
+</p>
+
+##### Assigning topics to documents {.unnumbered}
+
+
+<div class>
+<p>Creating LDA models are useless unless you can interpret and use the results. You have been given the results of running an LDA model, <code>sentence_lda</code> on a set of sentences, <code>pig_sentences</code>. You need to explore both the <code>beta</code>, top words by topic, and the <code>gamma</code>, top topics per document, matrices to fully understand the results of any LDA analysis. </p>
+<p>Given what you know about these two matrices, extract the results for a specific topic and see if the output matches expectations.</p>
+</div>
+
+<li>Create a tibble for both the <code>beta</code> and <code>gamma</code> matrices. </li>
+<li>Explore topic 5 by looking at the top words for topic 5 while arranging the results decreasing <code>beta</code> values. </li>
+<li>Explore topic 5 by seeing which sentences most align with topic 5 while arranging the results by decreasing <code>gamma</code> values.</li>
+```{r}
+# Extract the beta and gamma matrices
+sentence_betas <- tidy(sentence_lda, matrix = "beta")
+sentence_gammas <- tidy(sentence_lda, matrix = "gamma")
+
+# Explore Topic 5
+sentence_betas %>%
+  filter(topic == 5) %>%
+  arrange(-beta)
+
+# Explore Topic 5 Gammas
+sentence_gammas %>%
+  filter(topic == 5) %>%
+  arrange(-gamma)
+```
+
+<p class="">Great job. These sentences most align with topic 5, but we could repeat this process for any topic.
+</p>
+
+#### LDA in practice {.unnumbered}
+
+
+
+##### Testing perplexity {.unnumbered}
+
+
+<div class><p>You have been given a dataset full of tweets that were sent by tweet bots during the 2016 US election. Your boss has identified two different account types of interest, <code>Left</code> and <code>Right</code>. Your boss has asked you to perform topic modeling on the tweets from <code>Right</code> tweet bots. Furthermore, your boss is hoping to summarize the content of these tweets with topic modeling. Perform topic modeling on 5, 15, and 50 topics to determine a general idea of how many topics are contained in the data.</p></div>
+```{r}
+# edited/added
+right_matrix = russian_tweets %>%
+  filter(account_type %in% c("Right")) %>%
+  slice_head(n = 1000) %>% # edited/added
+  unnest_tokens(output = "word", token = "words", input = content) %>%
+  anti_join(stop_words) %>%
+  mutate(word = wordStem(word)) %>%
+  count(tweet_id, word) %>%
+  cast_dtm(document = tweet_id, term = word,
+           value = n, weighting = tm::weightTf) %>%
+  removeSparseTerms(sparse =.9999)
+```
+<li>Perform LDA using the <code>'Gibbs'</code> method on 5 topics and print the perplexity score for both the <code>train</code> and <code>test</code> datasets.</li>
+<li>Perform topic modeling with 15 topics.</li>
+<li>Perform topic modeling with 50 topics.</li>
+```{r}
+library(topicmodels)
+# Setup train and test data
+sample_size <- floor(0.90 * nrow(right_matrix))
+set.seed(1111)
+train_ind <- sample(nrow(right_matrix), size = sample_size)
+train <- right_matrix[train_ind, ]
+test <- right_matrix[-train_ind, ]
+
+# Peform topic modeling 
+lda_model <- LDA(train, k = 5, method = "Gibbs",
+                 control = list(seed = 1111))
+# Train
+perplexity(lda_model, newdata = train) 
+# Test
+perplexity(lda_model, newdata = test)
+
+# Peform topic modeling 
+lda_model <- LDA(train, k = 15, method = "Gibbs",
+                 control = list(seed = 1111))
+# Train
+perplexity(lda_model, newdata = train) 
+# Test
+perplexity(lda_model, newdata = test)
+
+# Peform topic modeling 
+lda_model <- LDA(train, k = 50, method = "Gibbs",
+                 control = list(seed = 1111))
+# Train
+perplexity(lda_model, newdata = train) 
+# Test
+perplexity(lda_model, newdata = test) 
+```
+
+<p class="">Excellent. 15 topics performs much better on this dataset. 5 topics was not enough, while 50 topics is probably way too many.
+</p>
+
+##### Reviewing LDA results {.unnumbered}
+
+
+<div class>
+<p>You have developed a topic model, <code>napoleon_model</code>, with 5 topics for the sentences from the book Animal Farm that reference the main character Napoleon. You have had 5 local authors review the top words and top sentences for each topic and they have provided you with themes for each topic. </p>
+<p>To finalize your results, prepare some summary statistics about the topics. You will present these summary values along with the themes to your boss for review.</p>
+</div>
+```{r}
+# edited/added
+napoleon_model = pig_matrix %>%
+  LDA(k = 5, method = 'Gibbs', control = list(seed = 1111))
+```
+<li>Extract the gamma matrix from the topic model, <code>napoleon_model</code>. </li>
+<li>Use <code>dplyr</code> functions to create a tibble of the top topic in each sentence called <code>grouped_gammas</code>.</li>
+<li>Use <code>grouped_gammas</code> to count the number of sentences most like each topic.</li>
+<li>Use <code>grouped_gammas</code> and calculate the average gamma value for each topic.</li>
+```{r}
+# Extract the gamma matrix 
+gamma_values <- tidy(napoleon_model, matrix = "gamma")
+# Create grouped gamma tibble
+grouped_gammas <- gamma_values %>%
+  group_by(document) %>%
+  arrange(desc(gamma)) %>%
+  slice(1) %>%
+  group_by(topic)
+# Count (tally) by topic
+grouped_gammas %>% 
+  tally(topic, sort=TRUE)
+# Average topic weight for top topic for each sentence
+grouped_gammas %>% 
+  summarize(avg=mean(gamma)) %>%
+  arrange(desc(avg))
+```
+
+<p class="">Well done. Topic 5 had by far the most sentences most similar to that topic. However, notice that the average weights were very similar for each topic.
+</p>
+
+### Advanced Techniques {.unnumbered}
+
+<p class="chapter__description">
+    In chapter 4 we cover two staples of natural language processing, sentiment analysis, and word embeddings. These are two analysis techniques that are a must for anyone learning the fundamentals of text analysis. Furthermore, you will briefly learn about BERT, part-of-speech tagging, and named entity recognition. Almost 15 different analysis techniques were covered in this course, so chapter 4 ends by recapping all of the great techniques you will learn about in this course. 
+  </p>
+
+#### Sentiment analysis {.unnumbered}
+
+
+
+##### tidytext lexicons {.unnumbered}
+
+
+<div class>
+<p>Before you begin applying sentiment analysis to text, it is essential that you understand the lexicons being used to aid in your analysis. Each lexicon has advantages when used in the right context. Before running any analysis, you must decide which type of sentiment you are hoping to extract from the text available.</p>
+<p>In this exercise, you will explore the three different lexicons offered by <code>tidytext</code>'s sentiments' datasets.</p>
+</div>
+
+<li>Print the <code>bing</code> lexicon and count the different values of the <code>sentiment</code> column.</li>
+```{r}
+# Print the lexicon
+get_sentiments("bing")
+
+# Count the different sentiment types
+get_sentiments("bing") %>%
+  count(sentiment) %>%
+  arrange(desc(n))
+```
+```{r}
+# edited/added
+library(textdata)
+library(tidytext) # 0.3.2
+```
+<li>Print the <code>nrc</code> lexicon and count the different values of the <code>sentiment</code> column.</li>
+```{r}
+# Print the lexicon
+# edited/added
+nrc = read.csv("archive/Introduction-to-Natural-Language-Processing-in-R/datasets/nrc.csv")
+#get_sentiments("nrc")
+
+# Count the different sentiment types
+nrc %>% # edited/added
+  count(sentiment) %>%
+  arrange(desc(n))
+```
+
+<li>Print the <code>afinn</code> lexicon and count the different values of the <code>score</code> column.</li>
+```{r}
+# Print the lexicon
+get_sentiments("afinn")
+
+# Count the different sentiment types
+get_sentiments("afinn") %>%
+  rename(score = value) %>% # edited/added
+  count(score) %>%
+  arrange(desc(n))
+```
+
+<p class="">Great job. Each lexicon serves its own purpose. These are not the only three sentiment dictionaries available but they are great examples of the type of dictionaries you can use.
+</p>
+
+##### Sentiment scores {.unnumbered}
+
+
+<div class>
+<p>In the book Animal Farm, three main pigs are responsible for the events of the book: Napoleon, Snowball, and Squealer. Throughout the book they are spreading thoughts of rebellion and encouraging the other animals to take over the farm from Mr. Jones - the owner of the farm. </p>
+<p>Using the sentences that mention each pig, determine which character has the most negative sentiment associated with them. The <code>sentences</code> tibble contains a tibble of the sentences from the book Animal Farm.</p>
+</div>
+```{r}
+# edited/added
+sentences = animal_farm %>%
+  unnest_tokens(sentence, text_column, "sentences")
+```
+<li>Use the <code>grepl()</code> function to filter to sentences mentioning just the pigs name.</li>
+<li>Using an <code>inner_join()</code>, join the sentiment score from the <code>afinn</code> lexicon.</li>
+<li>Summarize the results by summing the <code>score</code> column.</li>
+```{r}
+# Print the overall sentiment associated with each pig's sentences
+for(name in c("napoleon", "snowball", "squealer")) {
+  # Filter to the sentences mentioning the pig
+  pig_sentences <- sentences[grepl(name, sentences$sentence), ]
+  # Tokenize the text
+  napoleon_tokens <- pig_sentences %>%
+    unnest_tokens(output = "word", token = "words", input = sentence) %>%
+    anti_join(stop_words)
+  # Use afinn to find the overall sentiment score
+  result <- napoleon_tokens %>% 
+    inner_join(get_sentiments("afinn")) %>%
+    rename(score = value) %>% # edited/added
+    summarise(sentiment = sum(score))
+  # Print the result
+  print(paste0(name, ": ", result$sentiment))
+}
+```
+
+<p class="">Excellent job. Although Napoleon is the main antagonist, the sentiment surrounding Snowball is extremely negative!
+</p>
+
+##### Sentiment and emotion {.unnumbered}
+
+
+<div class>
+<p>Within the <code>sentiments</code> dataset, the lexicon <code>nrc</code> contains a dictionary of words and an emotion associated with that word. Emotions such as joy, trust, anticipation, and others are found within this dataset. </p>
+<p>In the Russian tweet bot dataset you have been exploring, you have looked at tweets sent out by both a left- and a right-leaning tweet bot. Explore the contents of the tweets sent by the left-leaning (democratic) tweet bot by using the <code>nrc</code> lexicon. The left tweets, <code>left</code>,  have been tokenized into words, with stop-words removed.</p>
+</div>
+```{r}
+# edited/added
+left = russian_tweets %>%
+  filter(account_type %in% c("Left"))
+right = russian_tweets %>%
+  filter(account_type %in% c("Right"))
+```
+<li>Create a tibble of just the anticipation words from the <code>nrc</code> lexicon.</li>
+<li>Create a tibble of just the joy words from the <code>nrc</code> lexicon.</li>
+<li>Print the top <code>anticipation</code> words found in <code>left_tokens</code>.</li>
+<li>Print the top <code>joy</code> words found in <code>left_tokens</code>.</li>
+```{r}
+left_tokens <- left %>%
+  unnest_tokens(output = "word", token = "words", input = content) %>%
+  anti_join(stop_words)
+# Dictionaries 
+anticipation <- nrc %>% # edited/added
+  filter(sentiment == "anticipation")
+joy <- nrc %>% # edited/added
+  filter(sentiment == "joy")
+# Print top words for Anticipation and Joy
+left_tokens %>%
+  inner_join(anticipation, by = "word") %>%
+  count(word, sort = TRUE) %>%
+  head(20) # edited/added
+left_tokens %>%
+  inner_join(joy, by = "word") %>%
+  count(word, sort = TRUE) %>%
+  head(20) # edited/added
+```
+
+<p class="">Excellent work. Tweets are supposed to stir feelings of joy, fear, and others. Especially tweets meant to turn the political left against the political right.
+</p>
+
+#### Word embeddings {.unnumbered}
+
+
+
+##### h2o practice {.unnumbered}
+
+
+<div class>
+<p>There are several machine learning libraries available in R. However, the <code>h2o</code> library is easy to use and offers a word2vec implementation. <code>h2o</code> can also be used for several other machine learning tasks. In order to use the <code>h2o</code> library however, you need to take additional pre-processing steps with your data. You have a dataset called <code>left_right</code> which contains tweets that were auto-tweeted during the 2016 US election campaign.</p>
+<p>Instead of preparing your data for other text analysis techniques, prepare this dataset for use with the <code>h2o</code> library.</p>
+</div>
+```{r}
+# edited/added
+left_right = read.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vT5pJVvzxVnFyaBcSf_znyXmgfNihy9PHJ6pEe5wnDTy-45XdJb1uQhdSYRMqulctKtlnu6slB8sQvg/pub?gid=1435366144&single=true&output=csv")
+```
+<li>Import the library and initialize and <code>h2o</code> session.</li>
+<li>Create an <code>h2o</code> object.</li>
+<li>Tokenize the tweets which are stored in the <code>content</code> column.</li>
+<li>Transform the words to lowercase and remove all stop words.</li>
+```{r}
+# Initialize an h2o session
+library(h2o)
+h2o.init()
+
+# Create an h2o object
+h2o_object = as.h2o(left_right)
+
+# Tokenize the words from the column of text in left_right
+tweet_words <- h2o.tokenize(h2o_object$content, "\\\\W+")
+
+# Lowercase
+tweet_words <- h2o.tolower(tweet_words)
+# Remove stopwords but keep spaces
+tweet_words <- tweet_words[is.na(tweet_words) || (!tweet_words %in% stop_words$word),]
+tweet_words
+```
+
+<p class="">Great job. The h2o library is easy to use and intuitive, making it a great candidate for machine learning tasks such as creating word2vec models.
+</p>
+
+##### word2vec {.unnumbered}
+
+
+<div class>
+<p>You have been web-scrapping a lot of job titles from the internet and are unsure if you need to scrap additional job titles for your analysis. So far, you have collected over 13,000 job titles in a dataset called <code>job_titles</code>. You have read that word2vec generally performs best if the model has enough data to properly train, and if words are not mentioned enough in your data, the model might not be useful. </p>
+<p>In this exercise you will test how helpful additional data is by running your model 3 times; each run will use additional data.</p>
+</div>
+```{r}
+# edited/added
+job_titles = read.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vT5pJVvzxVnFyaBcSf_znyXmgfNihy9PHJ6pEe5wnDTy-45XdJb1uQhdSYRMqulctKtlnu6slB8sQvg/pub?gid=502605967&single=true&output=csv")
+```
+<li>Using 33% of the available data, print a list of synonyms for the word <code>teacher</code>.</li>
+```{r}
+library(h2o)
+h2o.init()
+
+set.seed(1111)
+# Use 33% of the available data
+sample_size <- floor(.33 * nrow(job_titles))
+sample_data <- sample(nrow(job_titles), size = sample_size)
+
+h2o_object = as.h2o(job_titles[sample_data, ])
+words <- h2o.tokenize(h2o_object$jobtitle, "\\\\W+")
+words <- h2o.tolower(words)
+words = words[is.na(words) || (!words %in% stop_words$word),]
+
+word2vec_model <- h2o.word2vec(words, min_word_freq=5, epochs = 10)
+# Find synonyms for the word "teacher"
+h2o.findSynonyms(word2vec_model, "teacher", count=10)
+```
+<li>Update the code to use 66% of the available data.</li>
+```{r}
+library(h2o)
+h2o.init()
+
+set.seed(1111)
+# Use 66% of the available data
+sample_size <- floor(.66 * nrow(job_titles))
+sample_data <- sample(nrow(job_titles), size = sample_size)
+
+h2o_object = as.h2o(job_titles[sample_data, ])
+words <- h2o.tokenize(h2o_object$jobtitle, "\\\\W+")
+words <- h2o.tolower(words)
+words = words[is.na(words) || (!words %in% stop_words$word),]
+
+word2vec_model <- h2o.word2vec(words, min_word_freq=5, epochs = 10)
+# Find synonyms for the word "teacher"
+h2o.findSynonyms(word2vec_model, "teacher", count=10)
+```
+<li>Update the code to use 100% of the available data.</li>
+```{r}
+library(h2o)
+h2o.init()
+
+set.seed(1111)
+# Use all of the available data
+sample_size <- floor(1 * nrow(job_titles))
+sample_data <- sample(nrow(job_titles), size = sample_size)
+
+h2o_object = as.h2o(job_titles[sample_data, ])
+words <- h2o.tokenize(h2o_object$jobtitle, "\\\\W+")
+words <- h2o.tolower(words)
+words = words[is.na(words) || (!words %in% stop_words$word),]
+
+word2vec_model <- h2o.word2vec(words, min_word_freq=5, epochs = 10)
+# Find synonyms for the word "teacher"
+h2o.findSynonyms(word2vec_model, "teacher", count=10)
+```
+
+<p class="">Well done. After adding additional data, the words most similar to teacher started to become more clear.
+</p>
+
+#### Additional NLP analysis {.unnumbered}
+
+
+
+##### Reviewing methods #1 {.unnumbered}
+
+
+<div class>
+<p>Text analysis is full of methods, models, and techniques that can be used to better understand text. In this exercise, you will review some of these methods.</p>
+<ul>
+<li>
+<code>a</code>: Labels each word within text as either a noun, verb, adjective, or other category.</li>
+<li>
+<code>b</code>: A model pre-trained on a vast amount of text data to create a language representation used for supervised learning.</li>
+<li>
+<code>c</code>: A type of analysis that looks to describe text as either positive or negative and can be used to find active vs passive terms.</li>
+<li>
+<code>d</code>: A modeling technique used to label entire text into a single category such as relevant or not-relevant.</li>
+</ul>
+</div>
+```{r}
+# edited/added
+a = "Labels each word within text as either a noun, verb, adjective, or other category."
+b = "A model pre-trained on a vast amount of text data to create a language representation used for supervised learning."
+c = "A type of analysis that looks to describe text as either positive or negative and can be used to find active vs passive terms."
+d = "A modeling technique used to label entire text into a single category such as relevant or not-relevant."
+```
+<li>Using the 4 descriptions above, set the model or method equal to the corresponding letter.</li>
+```{r}
+# Sentiment Analysis
+SA <- c
+
+# Classifcation Modeling
+CM <- d
+
+# BERT
+BERT <- b
+
+# Part-of-speech Tagging
+POS <- a
+```
+
+<p class="">Excellent! Although there are a lot of techniques, each one has its own usefulness. Although BERT is fairly new, and sentiment analysis is fairly old, you must select the right method for each analysis task.
+</p>
+
+##### Review methods #2 {.unnumbered}
+
+
+<div class>
+<p>In this exercise, you will review four additional methods.</p>
+<ul>
+<li>
+<code>e</code>: Modeling techniques, including LDA, used to cluster text into groups or types based on similar words being used.</li>
+<li>
+<code>f</code>: A method for searching through text and tagging words that distinguish people, locations, or organizations.</li>
+<li>
+<code>g</code>: Method used to search text for specific patterns. </li>
+<li>
+<code>h</code>: Representing words using a large vector space where similar words are close together within the vector space.</li>
+</ul>
+</div>
+```{r}
+# edited/added
+e = "Modeling techniques, including LDA, used to cluster text into groups or types based on similar words being used."
+f = "A method for searching through text and tagging words that distinguish people, locations, or organizations."
+g = "Method used to search text for specific patterns. "
+h = "Representing words using a large vector space where similar words are close together within the vector space."
+```
+<li>Using the 4 descriptions above, set the model or method equal to the corresponding letter.</li>
+```{r}
+# Named Entity Recognition
+NER <- f
+
+# Topic Modeling
+TM <- e
+
+# Word Embeddings 
+WE <- h
+
+# Regular Expressions
+REGEX <- g
+```
+
+<p class="">Great job. You have matched 8 total techniques with their proper description. You can be confident that you will know which technique to use for your next analysis project.
+</p>
+
+#### Conclusion {.unnumbered}
+
+##### Conclusion {.unnumbered}
+
+Hello for the last time - and well done! You have completed the introduction course on natural language processing in R.
+
+##### Course recap {.unnumbered}
+
+From regular expressions to word embeddings, we have just covered a wide variety of text analysis techniques. We learned how prepare your data for analysis, and which data format was appropriate for the task at hand. We learned about the most common text analysis techniques out there - including sentiment analysis, text classification, and topic modeling
+
+##### Recap continued {.unnumbered}
+
+Even as a fundamentals course, we learned about some of the most state-of-the-art techniques available today, such as word embeddings and BERT and ERNIE. As for next steps, I suggest that you simply go and practice. The techniques used for natural language processing have improved and changed dramatically over the last few years, but the basics, are the basics. Text classification may be completed using BERT and a lot of feature engineering, but at the end of the day it is still text classification.
+
+##### Course complete! {.unnumbered}
+
+And with that, we end the introduction to natural language processing in R course. Well done!

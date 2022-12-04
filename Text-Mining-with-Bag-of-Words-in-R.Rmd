@@ -1,0 +1,2140 @@
+## Bag-of-Words {.unnumbered}
+
+<h3 class="course__description-title">Ted Kwartler</h3>
+<p class="course__instructor-description display-none-mobile-course-page-experiment">
+    Ted Kwartler is the VP, Trusted AI at DataRobot.  At DataRobot, Ted sets product strategy for explainable and ethical uses of data technology in the company's application. Ted brings unique insights and experience utilizing data, business acumen and ethics to his current and previous positions at Liberty Mutual Insurance and Amazon.  In addition to having 4 DataCamp courses he teaches graduate courses at the Harvard Extension School and is the author of Text Mining in Practice with R. 
+  </p>
+
+**Course Description**
+
+<p class="course__description">It is estimated that over 70% of potentially usable business information is unstructured, often in the form of text data. Text mining provides a collection of techniques that allows us to derive actionable insights from unstructured data. In this course, we explore the basics of text mining using the bag of words method. The first three chapters introduce a variety of essential topics for analyzing and visualizing text data. The final chapter allows you to apply everything you've learned in a real-world case study to extract insights from employee reviews of two major tech companies.</p>
+
+
+### Text mining with bag of words {.unnumbered}
+
+<p class="chapter__description">
+    In this chapter, you'll learn the basics of using the bag of words method for analyzing text data.
+  </p>
+
+#### What is text mining? {.unnumbered}
+
+
+
+##### Understanding text mining {.unnumbered}
+
+<div class=""><p>What is text mining?</p></div>
+
+- [ ] Text mining is an algorithm that takes unstructured text and organizes it.
+- [x] Text mining is the process of distilling actionable insights from text.
+- [ ] Text mining is an evaluation metric used in data science for assessing machine learning algorithms on text.
+
+<p class="dc-completion-pane__message dc-u-maxw-100pc">Correct! Let's move on to the next exercise.</p>
+
+##### Quick taste of text mining {.unnumbered}
+
+
+<div class>
+<p>Sometimes we can find out the author's intent and main ideas just by looking at the most common words.</p>
+<p>At its heart, bag of words text mining represents a way to count terms, or <em>n-grams</em>, across a collection of documents. Consider the following sentences, which we've saved to <code>text</code> and made available in your workspace:</p>
+<pre><code>text &lt;- "Text mining usually involves the process of structuring the input text. The overarching goal is, essentially, to turn text into data for analysis, via the application of natural language processing (NLP) and analytical methods."
+</code></pre>
+<p>Manually counting the words in the sentences above is a pain! Fortunately, the <code>qdap</code> package offers a better alternative. You can easily find the top 4 most frequent terms (including ties) in <code>text</code> by calling the <code>freq_terms</code> function and specifying <code>4</code>.</p>
+<pre><code>frequent_terms &lt;- freq_terms(text, 4)
+</code></pre>
+<p>The <code>frequent_terms</code> object stores all unique words and their count. You can then make a bar chart simply by calling the <code>plot</code> function on the <code>frequent_terms</code> object.</p>
+<pre><code>plot(frequent_terms)
+</code></pre>
+</div>
+
+<p>We've created an object in your workspace called <code>new_text</code> containing several sentences.</p>
+
+
+<li>Load the <code>qdap</code> package.</li>
+<li>Print <code>new_text</code> to the console.</li>
+<li>Create <code>term_count</code> consisting of the 10 most frequent terms in <code>new_text</code>.</li>
+<li>Plot a bar chart with the results of <code>term_count</code>.</li>
+
+
+```{r}
+# edited/added
+new_text="DataCamp is the first online learning platform that focuses on building the best learning experience specifically for Data Science. We have offices in New York, London, and Belgium, and to date, we trained over 3.8 million (aspiring) data scientists in over 150 countries. These data science enthusiasts completed more than 185 million exercises. You can take free beginner courses, or subscribe for $29/month to get access to all premium courses."
+
+# Load qdap
+library(qdap)
+
+# Print new_text to the console
+new_text
+
+# Find the 10 most frequent terms: term_count
+term_count <- freq_terms(new_text, 10)
+
+# Plot term_count
+plot(term_count)
+```
+
+<p class="">Nice plot!  You are on your way!
+</p>
+
+#### Getting started {.unnumbered}
+
+
+
+##### Load some text {.unnumbered}
+
+
+<div class>
+<p>Text mining begins with loading some text data into R, which we'll do with the <code>read.csv()</code> function. By default, <code>read.csv()</code> treats <code>character</code> strings as <code>factor</code> levels like <code>Male</code>/<code>Female</code>. To prevent this from happening, it's very important to use the argument <code>stringsAsFactors = FALSE</code>.</p>
+<p>A best practice is to examine the object you read in to make sure you know which column(s) are important.  The <code>str()</code> function provides an efficient way of doing this.</p>
+<p>If the data frame contains columns that are not text, you may want to make a new object using only the correct column of text (e.g.,<code>some_object\$column_name</code>).</p>
+<p><em>Be aware that this is real data from Twitter and as such there is always a risk that it may contain profanity or other offensive content (in this exercise, and any following exercises that also use real Twitter data).</em></p>
+</div>
+<div class="exercise--instructions__content">
+<p>The data has been loaded for you and is available in <code>coffee_data_file</code>.</p>
+
+<li>Create a new object <code>tweets</code> using <code>read.csv()</code> on the file <code>coffee_data_file</code>, which contains tweets mentioning coffee. Remember to add <code>stringsAsFactors = FALSE</code>!</li>
+<li>Examine the <code>tweets</code> object using <code>str()</code> to determine which column has the text you'll want to analyze.</li>
+<li>Make a new <code>coffee_tweets</code> object using only the text column you identified earlier.  To do so, use the <code>$</code> operator and column name.</li>
+
+</div>
+```{r}
+# edited/added
+coffee_data_file = "https://assets.datacamp.com/production/repositories/19/datasets/27a2a8587eff17add54f4ba288e770e235ea3325/coffee.csv"
+
+# Import text data from CSV, no factors
+tweets <- read.csv(coffee_data_file, stringsAsFactors = FALSE)
+
+# View the structure of tweets
+str(tweets)
+
+# Isolate text from tweets
+coffee_tweets <- tweets$text
+```
+
+<p class="">Great job! Check out the first six tweets with <code>head(coffee_tweets)</code>.
+</p>
+
+##### Make the vector a VCorpus object (1) {.unnumbered}
+
+
+<div class>
+<p>Recall that you've loaded your text data as a vector called <code>coffee_tweets</code> in the last exercise. Your next step is to convert this vector containing the text data to a <em>corpus</em>. As you've learned in the video, a corpus is a collection of documents, but it's also important to know that in the <code>tm</code> domain, R recognizes it as a data type.</p>
+<p>There are two kinds of the corpus data type, the <em>permanent corpus</em>, <code>PCorpus</code>, and the <em>volatile corpus</em>, <code>VCorpus</code>. In essence, the difference between the two has to do with how the collection of documents is stored on your computer. In this course, we will use the volatile corpus, which is held in your computer's RAM rather than saved to disk, just to be more memory efficient.</p>
+<p>To make a volatile corpus, R needs to interpret each element in our vector of text, <code>coffee_tweets</code>, as a document. And the <code>tm</code> package provides what are called <em>Source</em> functions to do just that! In this exercise, we'll use a Source function called <code>VectorSource()</code> because our text data is contained in a vector. The output of this function is called a Source object. Give it a shot!</p>
+</div>
+
+<li>Load the <code>tm</code> package.</li>
+<li>Create a Source object from the <code>coffee_tweets</code> vector. Call this new object <code>coffee_source</code>.</li>
+```{r}
+# Load tm
+library(tm)
+
+# Make a vector source from coffee_tweets
+coffee_source <- VectorSource(coffee_tweets)
+```
+
+<p class="">Great job! Let's make the corpus in the next exercise!
+</p>
+
+##### Make the vector a VCorpus object (2) {.unnumbered}
+
+
+<div class>
+<p>Now that we've converted our vector to a Source object, we pass it to another <code>tm</code> function, <code>VCorpus()</code>, to create our volatile corpus. Pretty straightforward, right?</p>
+<p>The <code>VCorpus</code> object is a nested list or list of lists. At each index of the <code>VCorpus</code> object, there is a <code>PlainTextDocument</code> object, which is a list containing actual text data (<code>content</code>), and some corresponding metadata (<code>meta</code>). It can help to <a href="http://s3.amazonaws.com/assets.datacamp.com/production/course_935/datasets/vcorpus_visual.png"><strong>visualize</strong></a> a <code>VCorpus</code> object to conceptualize the whole thing.</p>
+<p>To review a single document object (the 10th), you subset with double square brackets.</p>
+<pre><code>coffee_corpus[[10]]
+</code></pre>
+<p>To review the actual <em>text</em>, you index the list twice. To access the document's metadata, like timestamp, change <code>[1]</code> to <code>[2]</code>.  Another way to review the plain <em>text</em> is with the <code>content()</code> function, which doesn't need the second set of brackets.</p>
+<pre><code>coffee_corpus[[10]][1]
+
+content(coffee_corpus[[10]])
+</code></pre>
+</div>
+
+<li>Call the <code>VCorpus()</code> function on the <code>coffee_source</code> object to create <code>coffee_corpus</code>.</li>
+<li>Verify <code>coffee_corpus</code> is a <code>VCorpus</code> object by printing it to the console.</li>
+<li>Print the 15th element of <code>coffee_corpus</code> to the console to verify that it's a <code>PlainTextDocument</code> that contains the content and metadata of the 15th tweet. Use double bracket subsetting.</li>
+<li>Print the content of the 15th tweet in <code>coffee_corpus</code>. Use double brackets to select the proper tweet, followed by single brackets to extract the content of that tweet.</li>
+<li>Print the <code>content()</code> of the 10th tweet within <code>coffee_corpus</code>
+</li>
+```{r}
+## coffee_source is already in your workspace
+
+# Make a volatile corpus from coffee_corpus
+coffee_corpus <- VCorpus(coffee_source)
+
+# Print out coffee_corpus
+coffee_corpus
+
+# Print the 15th tweet in coffee_corpus
+coffee_corpus[[15]]
+
+# Print the contents of the 15th tweet in coffee_corpus
+coffee_corpus[[15]][1]
+
+# Now use content to review the plain text of the 10th tweet
+content(coffee_corpus[[10]])
+```
+
+<p class="">Boom shaka-laka!  I see lots of VCorpora in your future.
+</p>
+
+##### Make a VCorpus from a data frame {.unnumbered}
+
+
+<div class>
+<p>If your text data is in a data frame, you can use <code>DataframeSource()</code> for your analysis.  The data frame passed to <code>DataframeSource()</code> must have a specific structure: </p>
+
+<li>Column <strong>one</strong> must be called <code>doc_id</code> and contain a unique string for each row.</li>
+<li>Column <strong>two</strong> must be called <code>text</code> with "UTF-8" encoding (pretty standard).</li>
+<li>Any other columns, <strong>3+</strong>, are considered metadata and will be retained as such.</li>
+
+<p>This exercise introduces <code>meta()</code> to extract the metadata associated with each document.  Often your data will have metadata such as authors, dates, topic tags, or places that can inform your analysis.  Once your text is a corpus, you can apply <code>meta()</code> to examine the additional document level information.</p>
+</div>
+
+<p>In your workspace, there's a simple data frame called <code>example_text</code> with the correct column names and some metadata.  There is also <code>vec_corpus</code> which is a volatile corpus made with <code>VectorSource()</code></p>
+
+
+<li>Create <code>df_source</code> using <code>DataframeSource()</code> with the <code>example_text</code>.</li>
+<li>Create <code>df_corpus</code> by converting <code>df_source</code> to a <em>volatile</em> corpus object with <code>VCorpus()</code>.</li>
+<li>Print out <code>df_corpus</code>. Notice how many documents it contains and the number of retained document-level metadata points.</li>
+<li>Use <code>meta()</code> on <code>df_corpus</code> to print the document associated metadata.</li>
+<li>Examine the pre-loaded <code>vec_corpus</code> object.  Compare the number of <em>documents</em> to <code>df_corpus</code>.</li>
+<li>Use <code>meta()</code> on <code>vec_corpus</code> to compare any metadata found between <code>vec_corpus</code> and <code>df_corpus</code>.</li>
+
+
+```{r}
+# edited/added
+library(tidyverse)
+example_text=tribble(
+~doc_id, ~text, ~author, ~date,
+1,        "Text mining is a great time.", "Author1", 1514953399,
+2,     "Text analysis provides insights", "Author2", 1514866998,
+3, "qdap and tm are used in text mining", "Author3", 1514780598)
+vec_corpus <- example_text %>%
+  pull(text) %>%
+  VectorSource() %>%
+  VCorpus()
+
+# Create a DataframeSource from the example text
+df_source <- DataframeSource(example_text)
+
+# Convert df_source to a volatile corpus
+df_corpus <- VCorpus(df_source)
+
+# Examine df_corpus
+df_corpus
+
+# Examine df_corpus metadata
+meta(df_corpus)
+
+# Compare the number of documents in the vector source
+vec_corpus
+
+# Compare metadata in the vector corpus
+meta(vec_corpus)
+```
+
+<p class="">Sweet! You now know how to make a corpus from a vector and a data frame!
+</p>
+
+#### Cleaning and preprocessing text {.unnumbered}
+
+
+
+##### Common cleaning functions from tm {.unnumbered}
+
+
+<div class>
+<p>Now that you know two ways to make a corpus, you can focus on cleaning, or preprocessing, the text. First, you'll clean a small piece of text; then, you will move on to larger corpora.</p>
+<p>In bag of words text mining, cleaning helps aggregate terms.  For example, it might make sense for the words "miner", "mining," and "mine" to be considered one term. Specific preprocessing steps will vary based on the project. For example, the words used in tweets are vastly different than those used in legal documents, so the cleaning process can also be quite different.</p>
+<p>Common preprocessing functions include:</p>
+
+<li>
+<code>tolower()</code>: Make all characters lowercase </li>
+<li>
+<code>removePunctuation()</code>: Remove all punctuation marks </li>
+<li>
+<code>removeNumbers()</code>: Remove numbers</li>
+<li>
+<code>stripWhitespace()</code>: Remove excess whitespace</li>
+
+<p><code>tolower()</code> is part of base R, while the other three functions come from the <code>tm</code> package. Going forward, we'll load <code>tm</code> and <code>qdap</code> for you when they are needed. Every time we introduce a new package, we'll have you load it the first time.</p>
+<p>The variable <code>text</code>, containing a sentence, is shown in the script.</p>
+</div>
+<div class="exercise--instructions__content">
+<p>Apply each of the following functions to <code>text</code>, simply printing results to the console:</p>
+<pre><code>- `tolower()`
+- `removePunctuation()`
+- `removeNumbers()`
+- `stripWhitespace()`
+</code></pre>
+</div>
+```{r}
+# Create the object: text
+text <- "<b>She</b> woke up at       6 A.M. It\'s so early!  She was only 10% awake and began drinking coffee in front of her computer."
+
+# Make lowercase
+tolower(text)
+
+# Remove punctuation
+removePunctuation(text)
+
+# Remove numbers
+removeNumbers(text)
+
+# Remove whitespace
+stripWhitespace(text)
+```
+
+<p class="">Nice one! Do you see how powerful this could be if all of the <code>tm</code> functions are applied to the same document?
+</p>
+
+##### Cleaning with qdap {.unnumbered}
+
+
+<div class>
+<p>The <code>qdap</code> package offers other text cleaning functions.  Each is useful in its own way and is particularly powerful when combined with the others.</p>
+
+<li>
+<code>bracketX()</code>: Remove all text within brackets (e.g. "It's (so) cool" becomes "It's cool")</li>
+<li>
+<code>replace_number()</code>: Replace numbers with their word equivalents (e.g. "2" becomes "two")</li>
+<li>
+<code>replace_abbreviation()</code>: Replace abbreviations with their full text equivalents (e.g. "Sr" becomes "Senior")</li>
+<li>
+<code>replace_contraction()</code>: Convert contractions back to their base words (e.g. "shouldn't" becomes "should not")</li>
+<li>
+<code>replace_symbol()</code> Replace common symbols with their word equivalents (e.g. "$" becomes "dollar")</li>
+
+</div>
+<div class="exercise--instructions__content">
+<p>Apply the following functions to the <code>text</code> object from the previous exercise:</p>
+
+<li><code>bracketX()</code></li>
+<li><code>replace_number()</code></li>
+<li><code>replace_abbreviation()</code></li>
+<li><code>replace_contraction()</code></li>
+<li><code>replace_symbol()</code></li>
+
+</div>
+```{r}
+## text is still loaded in your workspace
+
+# Remove text within brackets
+bracketX(text)
+
+# Replace numbers with words
+replace_number(text)
+
+# Replace abbreviations
+replace_abbreviation(text)
+
+# Replace contractions
+replace_contraction(text)
+
+# Replace symbols with words
+replace_symbol(text)
+```
+
+<p class="">Nice job! Do you see how powerful this could be if all of the <code>qdap</code> functions are applied to the same document?
+</p>
+
+##### All about stop words {.unnumbered}
+
+
+<div class>
+<p>Often there are words that are frequent but provide little information. These are called <em>stop words</em>, and you may want to remove them from your analysis.  Some common English stop words include "I", "she'll", "the", etc.  In the <code>tm</code> package, there are 174 common English stop words (you'll print them in this exercise!)</p>
+<p>When you are doing an analysis, you will likely need to add to this list.  In our coffee tweet example, all tweets contain "coffee", so it's important to pull out that word in addition to the common stop words.  Leaving "coffee" in doesn't add any insight and will cause it to be overemphasized in a frequency analysis. </p>
+<p>Using the <code>c()</code> function allows you to add new words to the stop words list. For example, the following would add "word1" and "word2" to the default list of English stop words:</p>
+<pre><code>all_stops &lt;- c("word1", "word2", stopwords("en"))
+</code></pre>
+<p>Once you have a list of stop words that makes sense, you will use the <code>removeWords()</code> function on your text.  <code>removeWords()</code> takes two arguments: the <code>text</code> object to which it's being applied and the list of words to remove.</p>
+</div>
+
+<li>Review standard stop words by calling <code>stopwords("en")</code>.</li>
+<li>Remove "en" stopwords from <code>text</code>.</li>
+<li>Add "coffee" and "bean" to the standard stop words, assigning to <code>new_stops</code>.</li>
+<li>Remove the <em>customized</em> stopwords, <code>new_stops</code>, from <code>text</code>.</li>
+```{r}
+## text is preloaded into your workspace
+
+# List standard English stop words
+stopwords("en")
+
+# Print text without standard stop words
+removeWords(text, stopwords("en"))
+
+# Add "coffee" and "bean" to the list: new_stops
+new_stops <- c("coffee", "bean", stopwords("en"))
+
+# Remove stop words from text
+removeWords(text, new_stops)
+```
+
+<p class="">Awesome! Let's go on to word-stemming which will help you hone your analyses.
+</p>
+
+##### Intro to word stemming and stem completion {.unnumbered}
+
+
+<div class>
+<p>Still, another useful preprocessing step involves <em>word-stemming</em> and <em>stem completion</em>. Word stemming reduces words to unify across documents.  For example, the stem of  "computational", "computers" and "computation" is "comput".  But because "comput" isn't a real word, we want to reconstruct the words so that "computational", "computers", and "computation" all refer to a recognizable word, such as "computer". The reconstruction step is called stem completion.</p>
+<p>The <code>tm</code> package provides the <code>stemDocument()</code> function to get to a word's root. This function either takes in a character vector and returns a character vector, or takes in a <code>PlainTextDocument</code> and returns a <code>PlainTextDocument</code>.</p>
+<p>For example,</p>
+<pre><code>stemDocument(c("computational", "computers", "computation"))
+</code></pre>
+<p>returns <code>"comput" "comput" "comput"</code>. </p>
+<p>You will use <code>stemCompletion()</code> to reconstruct these word roots back into a known term.  <code>stemCompletion()</code> accepts a character vector and a completion dictionary. The completion dictionary can be a character vector or a <code>Corpus</code> object. Either way, the completion dictionary for our example would need to contain the word "computer," so all instances of "comput" can be reconstructed.</p>
+</div>
+
+<li>Create a vector called <code>complicate</code> consisting of the words "complicated", "complication", and "complicatedly" in that order.</li>
+<li>Store the stemmed version of <code>complicate</code> to an object called <code>stem_doc</code>.</li>
+<li>Create <code>comp_dict</code> that contains one word, "complicate".</li>
+<li>Create <code>complete_text</code> by applying <code>stemCompletion()</code> to <code>stem_doc</code>. Re-complete the words using <code>comp_dict</code> as the reference corpus.</li>
+<li>Print <code>complete_text</code> to the console.</li>
+```{r}
+# Create complicate
+complicate <- c("complicated", "complication", "complicatedly")
+
+# Perform word stemming: stem_doc
+stem_doc <- stemDocument(complicate)
+
+# Create the completion dictionary: comp_dict
+comp_dict <- "complicate"
+
+# Perform stem completion: complete_text 
+complete_text <- stemCompletion(stem_doc, comp_dict)
+
+# Print complete_text
+complete_text
+```
+
+<p class="">Great job! Let's learn how to go about stemming and re-completing a sentence in the next exercise!
+</p>
+
+##### Word stemming and stem completion on a sentence {.unnumbered}
+
+
+<div class>
+<p>Let's consider the following sentence as our document for this exercise:</p>
+<pre><code>"In a complicated haste, Tom rushed to fix a new complication, too complicatedly."
+</code></pre>
+<p>This sentence contains the same three forms of the word "complicate" that we saw in the previous exercise. The difference here is that even if you called <code>stemDocument()</code> on this sentence, it would return the sentence without stemming any words. Take a moment and try it out in the console. Be sure to include the punctuation marks.</p>
+<p>This happens because <code>stemDocument()</code> treats the whole sentence as one word. In other words, our document is a character vector of length 1, instead of length n, where n is the number of words in the document. To solve this problem, we first remove the punctuation marks with the <code>removePunctuation()</code> function, you learned a few exercises back. We then <code>strsplit()</code> this character vector of length 1 to length n, <code>unlist()</code>, then proceed to stem and re-complete.</p>
+<p>Don't worry if that was confusing. Let's go through the process step by step!</p>
+</div>
+<div class="exercise--instructions__content">
+<p>The document <code>text_data</code> and the completion dictionary <code>comp_dict</code> are loaded in your workspace.</p>
+
+<li>Remove the punctuation marks in <code>text_data</code> using <code>removePunctuation()</code>, assigning to <code>rm_punc</code>.</li>
+<li>Call <code>strsplit()</code> on <code>rm_punc</code> with the <code>split</code> argument set equal to <code>" "</code>. Nest this inside <code>unlist()</code>, assigning to <code>n_char_vec</code>.</li>
+<li>Use <code>stemDocument()</code> again to perform word stemming on <code>n_char_vec</code>, assigning to <code>stem_doc</code>.</li>
+<li>Create <code>complete_doc</code> by re-completing your stemmed document with <code>stemCompletion()</code> and using <code>comp_dict</code> as your reference corpus. </li>
+
+<p><em>Are <code>stem_doc</code> and <code>complete_doc</code> what you expected?</em></p>
+</div>
+```{r}
+# edited/added
+text_data = "In a complicated haste, Tom rushed to fix a new complication, too complicatedly."
+comp_dict = c("In","a","complicate","haste","Tom","rush","to","fix","new","too")
+
+# Remove punctuation: rm_punc
+rm_punc <- removePunctuation(text_data)
+
+# Create character vector: n_char_vec
+n_char_vec <- unlist(strsplit(rm_punc, split = " "))
+
+# Perform word stemming: stem_doc
+stem_doc <- stemDocument(n_char_vec)
+
+# Print stem_doc
+stem_doc
+
+# Re-complete stemmed document: complete_doc
+complete_doc <- stemCompletion(stem_doc, comp_dict)
+
+# Print complete_doc
+complete_doc
+```
+
+<p class="">Well done!!  Stemming is a worthwhile skill to have when doing text mining
+</p>
+
+##### Apply preprocessing steps to a corpus {.unnumbered}
+
+
+<div class>
+<p>The <code>tm</code> package provides a function <code>tm_map()</code> to apply cleaning functions to an entire corpus, making the cleaning steps easier. </p>
+<p><code>tm_map()</code> takes two arguments, a corpus and a cleaning function. Here, <code>removeNumbers()</code> is from the <code>tm</code> package.</p>
+<pre><code>corpus &lt;- tm_map(corpus, removeNumbers)
+</code></pre>
+<p>For compatibility, base R and <code>qdap</code> functions need to be wrapped in <code>content_transformer()</code>.</p>
+<pre><code>corpus &lt;- tm_map(corpus, content_transformer(replace_abbreviation))
+</code></pre>
+<p>You may be applying the same functions over multiple corpora; using a custom function like the one displayed in the editor will save you time (and lines of code). <code>clean_corpus()</code> takes one argument, <code>corpus</code>, and applies a series of cleaning functions to it in order, then returns the updated corpus.</p>
+<p>The order of cleaning steps makes a difference. For example, if you <code>removeNumbers()</code> and then <code>replace_number()</code>, the second function won't find anything to change!  <em>Check, check, and re-check your results!</em></p>
+</div>
+
+<li>Edit the custom function <code>clean_corpus()</code> in the sample code to apply (in order): 
+<li>
+<code>tm</code>'s <code>removePunctuation()</code>.</li>
+<li>Base R's <code>tolower()</code>.</li>
+<li>Append <code>"mug"</code> to the stop words list.</li>
+<li>
+<code>tm</code>'s <code>stripWhitespace()</code>.</li>
+
+</li>
+
+<div class="exercise--instructions__content"><ul>
+<li>Create <code>clean_corp</code> by applying <code>clean_corpus()</code> to the included corpus <code>tweet_corp</code>.</li>
+<li>Print the cleaned 227th tweet in <code>clean_corp</code> using indexing <code>[[227]]</code> and <code>content()</code>.</li>
+<li>Compare it to the original tweet from <code>tweets$text</code> tweet using <code>[227]</code>.</li>
+</ul></div>
+```{r}
+# edited/added
+tweet_corp <- tweets$text %>%
+  VectorSource() %>%
+  VCorpus()
+
+# Alter the function code to match the instructions
+clean_corpus <- function(corpus) {
+  # Remove punctuation
+  corpus <- tm_map(corpus, removePunctuation)
+  # Transform to lower case
+  corpus <- tm_map(corpus, content_transformer(tolower))
+  # Add more stopwords
+  corpus <- tm_map(corpus, removeWords, words = c(stopwords("en"), "coffee", "mug"))
+  # Strip whitespace
+  corpus <- tm_map(corpus, stripWhitespace)
+  return(corpus)
+}
+
+# Apply your customized function to the tweet_corp: clean_corp
+clean_corp <- clean_corpus(tweet_corp)
+
+# Print out a cleaned up tweet
+content(clean_corp[[227]])
+
+# Print out the same tweet in the original form
+tweets$text[227]
+```
+
+<p class="">Correct! You can organize and clean text, so you are on your way to getting some insights.
+</p>
+
+#### The TDM &amp; DTM {.unnumbered}
+
+
+
+##### Understanding TDM and DTM {.unnumbered}
+
+<div class=""><p>When should you use the term-document matrix instead of the document-term matrix?</p></div>
+
+- [ ] When you have big data.
+- [ ] When you want the documents as rows and words as columns.
+- [x] When you want the words as rows and documents as columns.
+- [ ] When you need to store it on disk.
+
+<p class="dc-completion-pane__message dc-u-maxw-100pc">Correct! TDM's have row/terms and DTM's have row/documents.  The first letter specifies the row structure.</p>
+
+##### Make a document-term matrix {.unnumbered}
+
+
+<div class>
+<p>Hopefully, you are not too tired after all this basic text mining work!  Just in case, let's revisit the coffee and get some Starbucks while building a document-term matrix from coffee tweets.</p>
+<p>Beginning with the <code>coffee.csv</code> file, we have used common transformations to produce a clean corpus called <code>clean_corp</code>.</p>
+<p>The document-term matrix is used when you want to have each document represented as a row. This can be useful if you are comparing authors within rows, or the data is arranged chronologically, and you want to preserve the time series.  The <code>tm</code> package uses a "simple triplet matrix" class.  However, it is often easier to manipulate and examine the object by re-classifying the DTM with <code>as.matrix()</code></p>
+</div>
+
+<li>Create <code>coffee_dtm</code> by applying <code>DocumentTermMatrix()</code> to <code>clean_corp</code>.</li>
+<li>Create <code>coffee_m</code>, a matrix version of <code>coffee_dtm</code>, using <code>as.matrix()</code>.</li>
+<li>Print the dimensions of <code>coffee_m</code> to the console using the <code>dim()</code> function. <em>Note the number of rows and columns.</em>
+</li>
+<li>Print the subset of <code>coffee_m</code> containing documents (rows) 25 through 35 and terms (columns) <code>"star"</code> and <code>"starbucks"</code>.</li>
+```{r}
+# Create the document-term matrix from the corpus
+coffee_dtm <- DocumentTermMatrix(clean_corp)
+
+# Print out coffee_dtm data
+coffee_dtm
+
+# Convert coffee_dtm to a matrix
+coffee_m <- as.matrix(coffee_dtm)
+
+# Print the dimensions of coffee_m
+dim(coffee_m)
+
+# Review a portion of the matrix to get some Starbucks
+coffee_m[25:35, c("star", "starbucks")]
+```
+
+<p class="">Way to go! None of those coffee-related tweets talked about <code>star</code>s but several talked about <code>starbucks</code>. Now let's make a term-document matrix.  These are the basis for bag of words text mining.
+</p>
+
+##### Make a term-document matrix {.unnumbered}
+
+
+<div class>
+<p>You're almost done with the not-so-exciting foundational work before we get to some fun visualizations and analyses based on the concepts you've learned so far!</p>
+<p>In this exercise, you are performing a similar process but taking the <em>transpose</em> of the document-term matrix.  In this case, the term-document matrix has terms in the first column and documents across the top as individual column names.</p>
+<p>The TDM is often the matrix used for language analysis.  This is because you likely have more terms than authors or documents and life is generally easier when you have more rows than columns.  An easy way to start analyzing the information is to change the matrix into a simple matrix using <code>as.matrix()</code> on the TDM.</p>
+</div>
+
+<li>Create <code>coffee_tdm</code> by applying <code>TermDocumentMatrix()</code> to <code>clean_corp</code>.</li>
+<li>Create <code>coffee_m</code> by converting <code>coffee_tdm</code> to a matrix using <code>as.matrix()</code>.</li>
+<li>Print the dimensions of <code>coffee_m</code> to the console.  <em>Note the number of rows and columns.</em>
+</li>
+<li>Print the subset of <code>coffee_m</code> containing terms (rows) <code>"star"</code> and <code>"starbucks"</code> and documents (columns) 25 through 35.</li>
+```{r}
+# Create a term-document matrix from the corpus
+coffee_tdm <- TermDocumentMatrix(clean_corp)
+
+# Print coffee_tdm data
+coffee_tdm
+
+# Convert coffee_tdm to a matrix
+coffee_m <- as.matrix(coffee_tdm)
+
+# Print the dimensions of the matrix
+dim(coffee_m)
+
+# Review a portion of the matrix
+coffee_m[c("star", "starbucks"), 25:35]
+```
+
+<p class="">Great job! Did you notice that the number of rows and columns for the TDM is just the number of columns and rows of the DTM?
+</p>
+
+### Word & Pyramid clouds {.unnumbered}
+
+<p class="chapter__description">
+    This chapter will teach you how to visualize text data in a way that's both informative and engaging.
+  </p>
+  
+#### Common text mining visuals {.unnumbered}
+
+
+
+##### Test your understanding of text mining {.unnumbered}
+
+<div class=""><p>What is the best business reason to create a text mining visual like a word cloud?</p></div>
+
+- [x] Word clouds help decision-makers come to quick conclusions.
+- [ ] Visuals can be manipulated so you can lead your audience.
+- [ ] Visuals are pretty and people like colorful things.
+- [ ] Millions of words can be put into a word cloud, so it's faster.
+
+<p class="dc-completion-pane__message dc-u-maxw-100pc">Correct!</p>
+
+
+##### Frequent terms with tm {.unnumbered}
+
+
+<div class>
+<p>Now that you know how to make a term-document matrix, as well as its transpose, the document-term matrix, we will use it as the basis for some analysis.  In order to analyze it, we need to change it to a simple matrix, as we did in chapter 1 using <code>as.matrix()</code>.  </p>
+<p>Calling <code>rowSums()</code> on your newly made matrix aggregates all the terms used in a passage. Once you have the <code>rowSums()</code>, you can <code>sort()</code> them with <code>decreasing = TRUE</code>, so you can focus on the most common terms.</p>
+<p>Lastly, you can make a <code>barplot()</code> of the top 5 terms of <code>term_frequency</code> with the following code.</p>
+<pre><code>barplot(term_frequency[1:5], col = "#C0DE25")
+</code></pre>
+<p>Of course, you could take our <code>ggplot2</code> courses to learn how to customize the plot even more… :)</p>
+</div>
+
+<li>Create <code>coffee_m</code> as a matrix using the term-document matrix <code>coffee_tdm</code> from the last chapter.</li>
+<li>Create <code>term_frequency</code> using the <code>rowSums()</code> function on <code>coffee_m</code>.</li>
+<li>Sort <code>term_frequency</code> in descending order and store the result in <code>term_frequency</code>.</li>
+<li>Use single square bracket subsetting, i.e., using only one <code>[</code>, to print the top 10 terms from <code>term_frequency</code>.</li>
+<li>Make a barplot of the <strong>top 10</strong> terms.</li>
+```{r}
+# coffee_tdm is still loaded in your workspace
+
+# Convert coffee_tdm to a matrix
+coffee_m <- as.matrix(coffee_tdm)
+
+# Calculate the row sums of coffee_m
+term_frequency <- rowSums(coffee_m)
+
+# Sort term_frequency in decreasing order
+term_frequency <- sort(term_frequency, decreasing = TRUE)
+
+# View the top 10 most common words
+term_frequency[1:10]
+
+# Plot a barchart of the 10 most common words
+barplot(term_frequency[1:10], col = "tan", las = 2)
+```
+
+<p class="">Awesome!  Frequent terms alone can sometimes yield quick insights in text.
+</p>
+
+##### Frequent terms with qdap {.unnumbered}
+
+
+<div class>
+<p>If you are OK giving up some control over the exact preprocessing steps, then a fast way to get frequent terms is with <code>freq_terms()</code> from <code>qdap</code>. </p>
+<p>The function accepts a text variable, which, in our case, is the <code>tweets\$text</code> vector. You can specify the top number of terms to show with the <code>top</code> argument, a vector of stop words to remove with the <code>stopwords</code> argument, and the minimum character length of a word to be included with the <code>at.least</code> argument. <code>qdap</code> has its own list of stop words that differ from those in <code>tm</code>. Our exercise will show you how to use either and compare their results.</p>
+<p>Making a basic plot of the results is easy. Just call <code>plot()</code> on the <code>freq_terms()</code> object.</p>
+</div>
+
+<li>Create <code>frequency</code> using the <code>freq_terms()</code> function on <code>tweets$text</code>. Include arguments to accomplish the following:
+<li>Limit to the top 10 terms.</li>
+<li>At least three letters per term.</li>
+<li>Use <code>"Top200Words"</code> to define stop words.</li>
+
+</li>
+<li>Produce a <code>plot()</code> of the <code>frequency</code> object. Compare it to the plot you produced in the previous exercise.</li>
+```{r}
+# Create frequency
+frequency <- freq_terms(
+  tweets$text, 
+  top = 10, 
+  at.least = 3, 
+  stopwords = "Top200Words"
+)
+
+# Make a frequency bar chart
+plot(frequency)
+```
+
+
+<li>Again, create <code>frequency</code> using the <code>freq_terms()</code> function on <code>tweets$text</code>. Include the following arguments:
+<li>Limit to the top 10 terms.</li>
+<li>At least three letters per term.</li>
+<li>This time use <code>stopwords("english")</code> to define stop words.</li>
+
+</li>
+<li>Produce a <code>plot()</code> of <code>frequency</code>. Compare it to the plot of <code>frequency</code>. Do certain words change based on the stop words criterion?</li>
+```{r}
+# Create frequency
+frequency <- freq_terms(
+  tweets$text, 
+  top = 10, 
+  at.least = 3, 
+  stopwords = stopwords("english")
+)
+
+# Make a frequency bar chart
+plot(frequency)
+```
+
+<p class="">Nice! Be sure to toggle between the two plots you made to examine the differences.
+</p>
+
+#### Intro to word clouds {.unnumbered}
+
+
+
+##### A simple word cloud {.unnumbered}
+
+
+<div class>
+<p>At this point, you have had too much coffee.  Plus, seeing the top words such as "shop", "morning", and "drinking" among others just isn't all that insightful.  </p>
+<p>In celebration of making it this far, let's try our hand on another batch of 1000 tweets. For now, you won't know what they have in common, but let's see if you can figure it out using a word cloud. The tweets' term frequency values are preloaded in your workspace.</p>
+<p>A word cloud is a visualization of terms.  In a word cloud, size is often scaled to frequency, and in some cases, the colors may indicate another measurement.  For now, we're keeping it simple: size is related to individual word frequency, and we are just selecting a single color.</p>
+<p>As you saw in the video, the <code>wordcloud()</code> function works like this:</p>
+<pre><code>wordcloud(words, frequencies, max.words = 500, colors = "blue")
+</code></pre>
+<p>Text mining analyses often include simple word clouds.  In fact, they are probably overused, but can still be useful for quickly understanding a body of text!</p>
+<p><code>term_frequency</code> is loaded into your workspace.</p>
+</div>
+
+<li>Load the <code>wordcloud</code> package.</li>
+<li>Print out first 10 entries in <code>term_frequency</code>.</li>
+<li>Extract the terms using <code>names()</code> on <code>term_frequency</code>.  Call the vector of strings <code>terms_vec</code>.</li>
+<li>Create a <code>wordcloud()</code> using <code>terms_vec</code> as the words, and <code>term_frequency</code> as the values.  Add the parameters <code>max.words = 50</code> and <code>colors = "red"</code>.</li>
+```{r}
+# Load wordcloud package
+library(wordcloud)
+
+# Print the first 10 entries in term_frequency
+term_frequency[1:10]
+
+# Vector of terms
+terms_vec <- names(term_frequency)
+
+# Create a wordcloud for the values in word_freqs
+wordcloud(terms_vec, term_frequency, 
+          max.words = 50, colors = "red")
+```
+
+<p class="">Great job! But whoa, chardonnay looks huge!  Let's clean that up next.
+</p>
+
+##### Stop words and word clouds {.unnumbered}
+
+
+<div class>
+<p>Now that you are in the text mining mindset, sitting down for a nice glass of chardonnay, we need to dig deeper.  In the last word cloud, "chardonnay" dominated the visual.  It was so dominant that you couldn't draw out any other interesting insights.</p>
+<p>Let's change the stop words to include "chardonnay" to see what other words are common, yet were originally drowned out.</p>
+<p>Your workspace has a cleaned version of chardonnay tweets, but now let's remove some non-insightful terms.  This exercise uses <code>content()</code> to show you a specific tweet for comparison.  Remember to use double brackets to index the corpus list.</p>
+</div>
+
+<li>Apply <code>content()</code> to the 24th document in <code>chardonnay_corp</code>.</li>
+<li>Append <code>"chardonnay"</code> to the English stopwords, assigning to <code>stops</code>.  </li>
+<li>Examine the last six words in <code>stops</code>.</li>
+<li>Create <code>cleaned_chardonnay_corp</code> with <code>tm_map()</code> by passing in the <code>chardonnay_corp</code>, the function <code>removeWords()</code> and finally the stopwords, <code>stops</code>.</li>
+<li>Now examine the <code>content</code> of the <code>24</code> tweet again to compare results.</li>
+```{r}
+# edited/added
+chardonnay_tweets = read.csv("https://assets.datacamp.com/production/repositories/19/datasets/13ae5c66c3990397032b6428e50cc41ac6bc1ca7/chardonnay.csv")
+chardonnay_corp = chardonnay_tweets$text %>%
+  VectorSource() %>%
+  VCorpus() %>%
+  clean_corpus()
+
+# Review a "cleaned" tweet
+content(chardonnay_corp[[24]])
+
+# Add to stopwords
+stops <- c(stopwords(kind = 'en'), 'chardonnay')
+
+# Review last 6 stopwords 
+tail(stops)
+
+# Apply to a corpus
+cleaned_chardonnay_corp <- tm_map(chardonnay_corp, removeWords, stops)
+
+# Review a "cleaned" tweet again
+content(cleaned_chardonnay_corp[[24]])
+```
+
+<p class="">Nice! Let's plot the better word cloud in the next exercise.
+</p>
+
+##### Plot the better word cloud {.unnumbered}
+
+
+<div class>
+<p>Now that you've removed additional stopwords let's take a look at the improved word cloud!</p>
+<p>The term-document matrix from the previous exercise has been turned into matrix with <code>as.matrix()</code>, then a named vector was created with <code>rowSums()</code>.  This new object of term frequencies called <code>chardonnay_words</code> is preloaded into your workspace. Let's take a look at these new word cloud results.</p>
+</div>
+
+<p>We've loaded the <code>wordcloud</code> package for you behind the scenes and will do so for all additional exercises requiring it.</p>
+
+<li>Sort the values in <code>chardonnay_words</code> with <code>decreasing = TRUE</code>. Save as <code>sorted_chardonnay_words</code>.</li>
+<li>Look at the top 6 words in <code>sorted_chardonnay_words</code> and their values.</li>
+<li>Create <code>terms_vec</code> using <code>names()</code> on <code>chardonnay_words</code>.</li>
+<li>Pass <code>terms_vec</code> and <code>chardonnay_words</code> into the <code>wordcloud()</code> function.  Review what other words pop out now that "chardonnay" is removed.</li>
+```{r}
+# edited/added
+chardonnay_words <- cleaned_chardonnay_corp %>%
+  TermDocumentMatrix() %>%
+  as.matrix() %>%
+  rowMeans()
+
+# Sort the chardonnay_words in descending order
+sorted_chardonnay_words <- sort(chardonnay_words, decreasing = TRUE)
+
+# Print the 6 most frequent chardonnay terms
+head(sorted_chardonnay_words)
+
+# Get a terms vector
+terms_vec <- names(chardonnay_words)
+
+# Create a wordcloud for the values in word_freqs
+wordcloud(terms_vec, chardonnay_words, 
+          max.words = 50, colors = "red")
+```
+
+<p class="">Fantastic!  See how removing words is a judgment call but can be helpful?
+</p>
+
+##### Improve word cloud colors {.unnumbered}
+
+
+<div class>
+<p>So far, you have specified only a single hexadecimal color to make your word clouds.  You can easily improve the appearance of a word cloud.  Instead of the <code>#AD1DA5</code> in the code below, you can specify a vector of colors to make certain words stand out or to fit an existing color scheme.</p>
+<pre><code>wordcloud(chardonnay_freqs$term, 
+          chardonnay_freqs$num, 
+          max.words = 100, 
+          colors = "#AD1DA5")
+</code></pre>
+<p>To change the <code>colors</code> argument of the <code>wordcloud()</code> function, you can use a vector of named colors like <code>c("chartreuse", "cornflowerblue", "darkorange")</code>.  The function <code>colors()</code> will list all 657 named colors. You can also use this <a href="http://www.stat.columbia.edu/~tzheng/files/Rcolor.pdf">PDF</a> as a reference.</p>
+<p>In this exercise you will use "grey80", "darkgoldenrod1", and "tomato" as colors.  This is a good starting palette to highlight terms because "tomato" stands out more than "grey80".  It is a best practice to start with three colors, each with increasing vibrancy.  Doing so will naturally divide the term frequency into "low", "medium", and "high" for easier viewing.</p>
+</div>
+
+<li>Call the<code>colors()</code> function to list all basic colors.</li>
+<li>Create a <code>wordcloud()</code> using the predefined <code>chardonnay_freqs</code> with the colors "grey80", "darkgoldenrod1", and "tomato". Include the top 100 terms using <code>max.words</code>.</li>
+```{r}
+# edited/added
+chardonnay_freqs = data.frame(term=names(chardonnay_words),num=chardonnay_words)
+
+# Print the list of colors
+colors()
+
+# Print the wordcloud with the specified colors
+wordcloud(chardonnay_freqs$term, chardonnay_freqs$num, 
+          max.words = 100, 
+          colors = c("grey80", "darkgoldenrod1", "tomato"))
+```
+
+<p class="">Nice one!  Your tag clouds are looking better and better.
+</p>
+
+##### Use prebuilt color palettes {.unnumbered}
+
+
+<div class>
+<p>In celebration of your text mining skills, you may have had too many glasses of chardonnay while listening to Marvin Gaye.  So if you find yourself unable to pick colors on your own, you can use the <code>viridisLite</code> package. <code>viridisLite</code> color schemes are perceptually-uniform, both in regular form and when converted to black-and-white. The colors are also designed to be perceived by readers with color blindness.</p>
+<p>There are multiple color palettes, each with a convenience function.  Simply specify <code>n</code> to select the number of colors needed.</p>
+<pre><code>magma(n = 3)
+plasma(n = 5)
+inferno(n = 6)
+</code></pre>
+<p>Each function returns a vector of hexadecimal colors based on <code>n</code>.
+Here's an example used with <code>wordcloud</code>:</p>
+<pre><code>color_pal &lt;- cividis(n = 7)
+wordcloud(chardonnay_freqs$term, chardonnay_freqs$num, max.words = 100, colors = color_pal)
+</code></pre>
+</div>
+
+<li>Use <code>cividis()</code> to select <code>5</code> colors in an object called <code>color_pal</code>.</li>
+<li>Review the hexadecimal colors by printing <code>color_pal</code> to your console.</li>
+<li>Create a <code>wordcloud()</code> from the <code>chardonnay_freqs</code> <code>term</code> and <code>num</code> columns. Include the top 100 terms using <code>max.words</code>, and set the <code>colors</code> to your palette, <code>color_pal</code>.</li>
+```{r}
+# edited/added
+library(viridisLite)
+
+# Select 5 colors 
+color_pal <- cividis(n = 5)
+
+# Examine the palette output
+color_pal 
+
+# Create a wordcloud with the selected palette
+wordcloud(chardonnay_freqs$term, chardonnay_freqs$num, 
+          max.words = 100, colors = color_pal)
+```
+
+<p class="">Boom!  Sometimes its faster and you get better results using premade palettes.
+</p>
+
+#### Other clouds & word networks {.unnumbered}
+
+
+
+##### Find common words {.unnumbered}
+
+
+<div class>
+<p>Say you want to visualize common words across multiple documents.  You can do this with <code>commonality.cloud()</code>.  </p>
+<p>Each of our coffee and chardonnay corpora is composed of many individual tweets.  To treat the coffee tweets as a single document and likewise for chardonnay, you <code>paste()</code> together all the tweets in each corpus along with the parameter <code>collapse = " "</code>.  This collapses all tweets (separated by a space) into a single vector.  Then you can create a single vector containing the two collapsed documents.</p>
+<pre><code>a_single_string &lt;- paste(a_character_vector, collapse = " ")
+</code></pre>
+<p>Once you're done with these steps, you can take the same approach you've seen before to create a <code>VCorpus()</code> based on a <code>VectorSource</code> from the <code>all_tweets</code> object.</p>
+</div>
+
+<li>Create <code>all_coffee</code> by using <code>paste()</code> with <code>collapse = " "</code> on <code>coffee_tweets\$text</code>.</li>
+<li>Create <code>all_chardonnay</code> by using <code>paste()</code> with <code>collapse = " "</code> on <code>chardonnay_tweets\$text</code>.</li>
+<li>Create <code>all_tweets</code> using <code>c()</code> to combine <code>all_coffee</code> and <code>all_chardonnay</code>. Make <code>all_coffee</code> the first term.</li>
+<li>Convert <code>all_tweets</code> using <code>VectorSource()</code>.</li>
+<li>Create <code>all_corpus</code> by using <code>VCorpus()</code> on <code>all_tweets</code>.</li>
+```{r}
+# edited/added
+coffee_tweets = read.csv("https://assets.datacamp.com/production/repositories/19/datasets/27a2a8587eff17add54f4ba288e770e235ea3325/coffee.csv", stringsAsFactors = FALSE)
+
+# Create all_coffee
+all_coffee <- paste(coffee_tweets$text, collapse = " ")
+
+# Create all_chardonnay
+all_chardonnay <- paste(chardonnay_tweets$text, collapse = " ")
+
+# Create all_tweets
+all_tweets <- c(all_coffee, all_chardonnay)
+
+# Convert to a vector source
+all_tweets <- VectorSource(all_tweets)
+
+# Create all_corpus
+all_corpus <- VCorpus(all_tweets)
+```
+
+<p class="">Awesome job!  This sets you up for the next two clouds which are really neat.
+</p>
+
+##### Visualize common words {.unnumbered}
+
+
+<div class>
+<p>Now that you have a corpus filled with words used in both the chardonnay and coffee tweets files, you can clean the corpus, convert it into a <code>TermDocumentMatrix</code>, and then a matrix to prepare it for a <code>commonality.cloud()</code>.</p>
+<p>The <code>commonality.cloud()</code> function accepts this matrix object, plus additional arguments like <code>max.words</code> and <code>colors</code> to further customize the plot.</p>
+<pre><code>commonality.cloud(tdm_matrix, max.words = 100, colors = "springgreen")
+</code></pre>
+</div>
+
+<li>Create <code>all_clean</code> by applying the predefined <code>clean_corpus()</code> function to <code>all_corpus</code>.</li>
+<li>Create <code>all_tdm</code>, a <code>TermDocumentMatrix</code> from <code>all_clean</code>.</li>
+<li>Create <code>all_m</code> by converting <code>all_tdm</code> to a matrix object.</li>
+<li>Create a <code>commonality.cloud()</code> from <code>all_m</code> with <code>max.words = 100</code> and <code>colors = "steelblue1"</code>.</li>
+```{r}
+# Clean the corpus
+all_clean <- clean_corpus(all_corpus)
+
+# Create all_tdm
+all_tdm <- TermDocumentMatrix(all_clean)
+
+# Create all_m
+all_m <- as.matrix(all_tdm)
+
+# Print a commonality cloud
+commonality.cloud(all_m, max.words = 100, colors = "steelblue1")
+```
+
+<p class="">Great job!  Can you imagine how words in common can help you understand similar brands or product features?
+</p>
+
+##### Visualize dissimilar words {.unnumbered}
+
+
+<div class>
+<p>Say you want to visualize the words not in common.  To do this, you can also use <code>comparison.cloud()</code>, and the steps are quite similar with one main difference. </p>
+<p>Like when you were searching for words in common, you start by unifying the tweets into distinct corpora and combining them into their own <code>VCorpus()</code> object. Next apply a <code>clean_corpus()</code> function and organize it into a <code>TermDocumentMatrix</code>.</p>
+<p>To keep track of what words belong to <code>coffee</code> versus <code>chardonnay</code>, you can set the column names of the TDM like this:</p>
+<pre><code>colnames(all_tdm) &lt;- c("chardonnay", "coffee")
+</code></pre>
+<p>Lastly, convert the object to a matrix using <code>as.matrix()</code> for use in <code>comparison.cloud()</code>.  For every distinct corpora passed to the <code>comparison.cloud()</code> you can specify a color, as in <code>colors = c("red", "yellow", "green")</code>, to make the sections distinguishable.</p>
+</div>
+
+<p><code>all_corpus</code> is preloaded in your workspace.</p>
+
+<li>Create <code>all_clean</code> by applying the predefined <code>clean_corpus</code> function to <code>all_corpus</code>.</li>
+<li>Create <code>all_tdm</code>, a <code>TermDocumentMatrix</code>, from <code>all_clean</code>.</li>
+<li>Use <code>colnames()</code> to rename each distinct corpora within <code>all_tdm</code>. Name the first column "coffee" and the second column "chardonnay".</li>
+<li>Create <code>all_m</code> by converting <code>all_tdm</code> into matrix form.</li>
+<li>Create a <code>comparison.cloud()</code> using <code>all_m</code>, with <code>colors = c("orange", "blue")</code> and <code>max.words = 50</code>.</li>
+```{r}
+# Clean the corpus
+all_clean <- clean_corpus(all_corpus)
+
+# Create all_tdm
+all_tdm <- TermDocumentMatrix(all_clean)
+
+# Give the columns distinct names
+colnames(all_tdm) <- c("coffee", "chardonnay")
+
+# Create all_m
+all_m <- as.matrix(all_tdm)
+
+# Create comparison cloud
+comparison.cloud(all_m, colors = c("orange", "blue"), max.words = 50)
+```
+
+<p class="">Way to go!  The disjunction of terms can help companies understand differentiating features so this is a must-have word cloud!
+</p>
+
+##### Polarized tag cloud {.unnumbered}
+
+
+<div class>
+<p>Commonality clouds show words that are shared across documents. One interesting thing that they can't show you is which of those words appear more commonly in one document compared to another. For this, you need a pyramid plot; these can be generated using <code>pyramid.plot()</code> from the <code>plotrix</code> package.</p>
+<p>First, some manipulation is required to get the data in a suitable form. This is most easily done by converting it to a data frame and using <code>dplyr</code>. Given a matrix of word counts, as created by <code>as.matrix(tdm)</code>, you need to end up with a data frame with three columns:</p>
+
+<li>The words contained in each document.</li>
+<li>The counts of those words from document 1.</li>
+<li>The counts of those words from document 2.</li>
+
+<p>Then <code>pyramid.plot()</code> using</p>
+<pre><code>pyramid.plot(word_count_data$count1, word_count_data$count2, word_count_data$word)
+</code></pre>
+<p>There are some additional arguments to improve the cosmetic appearance of the plot.</p>
+<p>Now you'll explore words that are common in chardonnay tweets, but rare in coffee tweets. <code>all_dtm_m</code> is created for you.</p>
+</div>
+
+<li>Convert <code>all_tdm_m</code> to a data frame. Set the rownames to a column named <code>"word"</code>.</li>
+<li>Filter to keep rows where all columns are greater than zero, using the syntax <code>. &gt; 0</code>.</li>
+<li>Add a column named <code>difference</code>, equal to the count in the <code>chardonnay</code> column minus the count in the <code>coffee</code> column.</li>
+<li>Filter to keep the top <code>25</code> rows by <code>difference</code>.</li>
+<li>Arrange the rows by <code>desc()</code>ending order of <code>difference</code>.</li>
+
+<div class="exercise--instructions__content"><ul>
+<li>Set the left count to the <code>chardonnay</code> column.</li>
+<li>Set the right count to the <code>coffee</code> column.</li>
+<li>Set the labels to the <code>word</code> column.</li>
+</ul></div>
+```{r}
+# edited/added
+library(plotrix)
+all_tdm_m = all_corpus %>% 
+  clean_corpus() %>%
+  TermDocumentMatrix()
+colnames(all_tdm_m) <- c("coffee", "chardonnay")
+all_tdm_m <- as.matrix(all_tdm)
+
+top25_df <- all_tdm_m %>%
+  # Convert to data frame
+  as_data_frame(rownames = "word") %>% 
+  # Keep rows where word appears everywhere
+  filter_all(all_vars(. > 0)) %>% 
+  # Get difference in counts
+  mutate(difference = chardonnay - coffee) %>% 
+  # Keep rows with biggest difference
+  top_n(25, wt = difference) %>% 
+  # Arrange by descending difference
+  arrange(desc(difference))
+  
+pyramid.plot(
+  # Chardonnay counts
+  top25_df$chardonnay, 
+  # Coffee counts
+  top25_df$coffee, 
+  # Words
+  labels = top25_df$word, 
+  top.labels = c("Chardonnay", "Words", "Coffee"), 
+  main = "Words in Common", 
+  unit = NULL,
+  gap = 18, # edited/added
+)
+```
+
+<p class="">Premium pyramid plotting! Pyramid plots let you see words that are common in one document, but rare in another.
+</p>
+
+##### Visualize word networks {.unnumbered}
+
+
+<div class>
+<p>Another way to view word connections is to treat them as a network, similar to a social network. Word networks show term association and cohesion.  A word of caution: these visuals can become very dense and hard to interpret visually.</p>
+<p>In a network graph, the circles are called <em>nodes</em> and represent individual terms, while the lines connecting the circles are called <em>edges</em> and represent the connections between the terms.</p>
+<p>For the over-caffeinated text miner, <code>qdap</code> provides a shortcut for making word networks. The <code>word_network_plot()</code> and <code>word_associate()</code> functions both make word networks easy!</p>
+<p>The sample code constructs a word network for words associated with "Marvin".</p>
+</div>
+<div class="exercise--instructions__content">
+<p>Update the <code>word_associate()</code> plotting code to work with the coffee data.</p>
+
+<li>Change the vector to <code>coffee_tweets$text</code>.</li>
+<li>Change the match string to <code>"barista"</code>.</li>
+<li>Change <code>"chardonnay"</code> to <code>"coffee"</code> in the stopwords too.</li>
+<li>Change the title to <code>"Barista Coffee Tweet Associations"</code> in the sample code for the plot.</li>
+
+</div>
+```{r}
+# Word association
+word_associate(coffee_tweets$text, match.string = "barista", 
+               stopwords = c(Top200Words, "coffee", "amp"), 
+               network.plot = TRUE, cloud.colors = c("gray85", "darkred"))
+
+# Add title
+title(main = "Barista Coffee Tweet Associations")
+```
+
+<p class="">Very good!  Watch out, these can be cluttered but sometimes can help you understand relationships.
+</p>
+
+##### Teaser: simple word clustering {.unnumbered}
+
+
+<div class>
+<p>In the next chapter, we cover some miscellaneous (yet very important) text mining subjects including: </p>
+
+<li>TDM/DTM weighting</li>
+<li>Dealing with TDM/DTM sparsity</li>
+<li>Capturing metadata</li>
+<li>Simple word clustering for topics</li>
+<li>Analysis on more than one word</li>
+
+<p>For now, let's simply create a new visual called a <em>dendrogram</em> from our <code>coffee_tweets</code>.  The next chapter will explain it in detail.</p>
+</div>
+<div class="exercise--instructions__content">
+<p>A hierarchical cluster object, <code>hc</code>, has been created for you from the coffee tweets.</p>
+<p>Create a dendrogram using <code>plot()</code> on <code>hc</code>.</p>
+</div>
+```{r}
+# edited/added
+coffee_tdm <- tweets$text[1:7] %>%
+  VectorSource() %>%
+  VCorpus() %>%
+  clean_corpus() %>%
+  TermDocumentMatrix()
+hc = hclust(d = dist(coffee_tdm, method = "euclidean"), method = "complete")
+
+# Plot a dendrogram
+plot(hc)
+```
+
+<p class="">Nice! Be sure to check out your cluster dendrogram before moving on to the next chapter!
+</p>
+
+### Adding to your tm skills {.unnumbered}
+
+<p class="chapter__description">
+    In this chapter, you'll learn more basic text mining techniques based on the bag of words method.
+  </p>
+
+#### Simple word clustering {.unnumbered}
+
+
+
+##### Test your understanding of text mining {.unnumbered}
+
+<div class=""><p>Hierarchical clustering for a dendrogram reduces information.  True, false, sometimes, or "it depends"?</p></div>
+
+- [x] True
+- [ ] False
+- [ ] Sometimes
+- [ ] Depends on the situation
+
+<p class="dc-completion-pane__message dc-u-maxw-100pc">Correct! Dendrograms reduce complicated multi-dimensional datasets to simple clustering information.  This makes them a valuable tool to reduce complexity.</p>
+
+##### Distance matrix and dendrogram {.unnumbered}
+
+
+<div class>
+<p>A simple way to do word cluster analysis is with a dendrogram on your term-document matrix.  Once you have a TDM, you can call <code>dist()</code> to compute the differences between each row of the matrix.  </p>
+<p>Next, you call <code>hclust()</code> to perform cluster analysis on the dissimilarities of the distance matrix. Lastly, you can visualize the word frequency distances using a dendrogram and <code>plot()</code>.  Often in text mining, you can tease out some interesting insights or word clusters based on a dendrogram.</p>
+<p>Consider the table of annual rainfall that you saw in the last video.  Cleveland and Portland have the same amount of rainfall, so their distance is 0.  You might expect the two cities to be a cluster and for New Orleans to be on its own since it gets vastly more rain.</p>
+<pre><code>       city rainfall
+  Cleveland    39.14
+   Portland    39.14
+     Boston    43.77
+New Orleans    62.45
+</code></pre>
+</div>
+<div class="exercise--instructions__content">
+<p>The data frame <code>rain</code> has been preloaded in your workspace.</p>
+
+<li>Create <code>dist_rain</code> by using the <code>dist()</code> function on the values in the second column of <code>rain</code>.</li>
+<li>Print the <code>dist_rain</code> matrix to the console.</li>
+<li>Create <code>hc</code> by performing a cluster analysis, using <code>hclust()</code> on <code>dist_rain</code>.</li>
+<li>
+<code>plot()</code> the <code>hc</code> object with <code>labels = rain$city</code> to add the city names.</li>
+
+</div>
+```{r}
+# edited/added
+rain = tribble(~city,~rainfall,
+"Cleveland",39.14,
+"Portland",39.14,
+"Boston",43.77,
+"New Orleans",62.45,)
+
+# Create dist_rain
+dist_rain <- dist(rain[, 2])
+
+# View the distance matrix
+dist_rain
+
+# Create hc
+hc <- hclust(dist_rain)
+
+# Plot hc
+plot(hc, labels = rain$city)
+```
+
+<p class="">Amazing!  Distance measures are useful in other domains too!
+</p>
+
+##### Make a dendrogram friendly TDM {.unnumbered}
+
+
+<div class>
+<p>Now that you understand the steps in making a dendrogram, you can apply them to text.  But first, you have to limit the number of words in your TDM using <code>removeSparseTerms()</code> from <code>tm</code>.  Why would you want to adjust the sparsity of the TDM/DTM?</p>
+<p>TDMs and DTMs are sparse, meaning they contain mostly zeros.  Remember that 1000 tweets can become a TDM with over 3000 terms!  You won't be able to easily interpret a dendrogram that is so cluttered, especially if you are working on more text.</p>
+<p>In most professional settings, a good dendrogram is based on a TDM with 25 to 70 terms. Having more than 70 terms may mean the visual will be cluttered and incomprehensible.  Conversely, having less than 25 terms likely means your dendrogram may not plot relevant and insightful clusters.  </p>
+<p>When using <code>removeSparseTerms()</code>, the <code>sparse</code> parameter will adjust the total terms kept in the TDM.  The closer <code>sparse</code> is to 1; the more terms are kept.  This value represents a percentage cutoff of zeros for each term in the TDM.</p>
+</div>
+<div class="exercise--instructions__content">
+<p><code>tweets_tdm</code> has been created using the chardonnay tweets. </p>
+
+<li>Print the dimensions of <code>tweets_tdm</code> to the console.</li>
+<li>Create <code>tdm1</code> using <code>removeSparseTerms()</code> with <code>sparse = 0.95</code> on <code>tweets_tdm</code>.</li>
+<li>Create <code>tdm2</code> using <code>removeSparseTerms()</code> with <code>sparse = 0.975</code> on <code>tweets_tdm</code>.</li>
+<li>Print <code>tdm1</code> to the console to see how many terms are left.</li>
+<li>Print <code>tdm2</code> to the console to see how many terms are left.</li>
+
+</div>
+```{r}
+# edited/added
+tweets_tdm <- read.csv("https://assets.datacamp.com/production/repositories/19/datasets/13ae5c66c3990397032b6428e50cc41ac6bc1ca7/chardonnay.csv") %>%
+  pull(text) %>%
+  VectorSource() %>%
+  VCorpus() %>%
+  clean_corpus() %>%
+  tm_map(removeWords, stops) %>%
+  TermDocumentMatrix()
+
+# Print the dimensions of tweets_tdm
+dim(tweets_tdm)
+
+# Create tdm1
+tdm1 <- removeSparseTerms(tweets_tdm, sparse = 0.95)
+
+# Create tdm2
+tdm2 <- removeSparseTerms(tweets_tdm, sparse = 0.975)
+
+# Print tdm1
+tdm1
+
+# Print tdm2
+tdm2
+```
+
+<p class="">Fantastic work!  You removed enough terms and are ready to make your dendrogram next.
+</p>
+
+##### Put it all together: a text-based dendrogram {.unnumbered}
+
+
+<div class>
+<p>Its time to put your skills to work to make your first text-based dendrogram.  Remember, dendrograms reduce information to help you make sense of the data. This is much like how an average tells you something, but not everything, about a population.  Both can be misleading.  With text, there are often a lot of nonsensical clusters, but some valuable clusters may also appear.</p>
+<p>A peculiarity of TDM and DTM objects is that you have to convert them first to matrices (with <code>as.matrix()</code>), before using them with the <code>dist()</code> function.</p>
+<p>For the chardonnay tweets, you may have been surprised to see the soul music legend Marvin Gaye appears in the word cloud.  Let's see if the dendrogram picks up the same.</p>
+</div>
+
+<li>Create <code>tweets_tdm2</code> by applying <code>removeSparseTerms()</code> on <code>tweets_tdm</code>. Use <code>sparse = 0.975</code>.</li>
+<li>Create <code>tdm_m</code> by using <code>as.matrix()</code> on <code>tweets_tdm2</code> to convert it to matrix form.</li>
+<li>Create <code>tweets_dist</code> containing the distances of <code>tdm_m</code> using the <code>dist()</code> function.</li>
+<li>Create a hierarchical cluster object called <code>hc</code> using <code>hclust()</code> on <code>tweets_dist</code>.</li>
+<li>Make a dendrogram with <code>plot()</code> and <code>hc</code>.</li>
+```{r}
+# Create tweets_tdm2
+tweets_tdm2 <- removeSparseTerms(tweets_tdm, sparse = 0.975)
+
+# Create tdm_m
+tdm_m <- as.matrix(tweets_tdm2)
+
+# Create tweets_dist
+tweets_dist <- dist(tdm_m)
+
+# Create hc
+hc <- hclust(tweets_dist)
+
+# Plot the dendrogram
+plot(hc)
+```
+
+<p class="">Great work!  The dendrogram can show you insightful clusters of words amid a sea of information.
+</p>
+
+##### Dendrogram aesthetics {.unnumbered}
+
+
+<div class>
+<p>So you made a dendrogram…but it's not as eye-catching as you had hoped! </p>
+<p>The <code>dendextend</code> package can help your audience by coloring branches and outlining clusters. <code>dendextend</code> is designed to operate on dendrogram objects, so you'll have to change the hierarchical cluster from <code>hclust</code> using <code>as.dendrogram()</code>.</p>
+<p>A good way to review the terms in your dendrogram is with the <code>labels()</code> function. It will print all terms of the dendrogram. To highlight specific branches, use <code>branches_attr_by_labels()</code>.  First, pass in the dendrogram object, then a vector of terms as in <code>c("data", "camp")</code>.  Lastly, add a color such as <code>"blue"</code>.</p>
+<p>After you make your plot, you can call out clusters with <code>rect.dendrogram()</code>.  This adds rectangles for each cluster. The first argument to <code>rect.dendrogram()</code> is the dendrogram, followed by the number of clusters (<code>k</code>). You can also pass a <code>border</code> argument specifying what color you want the rectangles to be (e.g. <code>"green"</code>).</p>
+</div>
+<div class="exercise--instructions__content">
+<p>The <code>dendextend</code> package has been loaded for you, and a hierarchical cluster object, <code>hc</code>, was created from <code>tweets_dist</code>.</p>
+
+<li>Create <code>hcd</code> as a dendrogram using <code>as.dendrogram()</code> on <code>hc</code>.</li>
+<li>Print the <code>labels</code> of <code>hcd</code> to the console.</li>
+<li>Use <code>branches_attr_by_labels()</code> to color the branches. Pass it three arguments: the <code>hcd</code> object, <code>c("marvin", "gaye")</code>, and the color <code>"red"</code>. Assign to <code>hcd_colored</code>.</li>
+<li>
+<code>plot()</code> the dendrogram <code>hcd_colored</code> with the title <code>"Better Dendrogram"</code>, added using the <code>main</code> argument.</li>
+<li>Add rectangles to the plot using <code>rect.dendrogram()</code>. Specify <code>k = 2</code> clusters and a <code>border</code> color of <code>"grey50"</code>.</li>
+
+</div>
+```{r}
+# edited/added
+library(dendextend)
+
+# Create hcd
+hcd <- as.dendrogram(hc)
+
+# Print the labels in hcd
+labels(hcd)
+
+# Change the branch color to red for "marvin" and "gaye"
+hcd_colored <- branches_attr_by_labels(hcd, c("marvin", "gaye"), "red")
+
+# Plot hcd_colored
+plot(hcd_colored, main = "Better Dendrogram")
+
+# Add cluster rectangles 
+rect.dendrogram(hcd_colored, k = 2, border = "grey50")
+```
+
+<p class="">Now that's a better dendrogram! Look closely, and you can see that the “marvin” and “gaye” branches are highlighted red.
+</p>
+
+##### Using word association {.unnumbered}
+
+
+<div class>
+<p>Another way to think about word relationships is with the <code>findAssocs()</code> function in the <code>tm</code> package. For any given word, <code>findAssocs()</code> calculates its correlation with every other word in a TDM or DTM. Scores range from 0 to 1. A score of 1 means that two words always appear together in documents, while a score approaching 0 means the terms seldom appear in the same document.  </p>
+<p>Keep in mind the calculation for <code>findAssocs()</code> is done at the document level.  So for every <em>document</em> that contains the word in question, the other terms in those specific documents are associated.  Documents without the search term are ignored.  </p>
+<p>To use <code>findAssocs()</code> pass in a TDM or DTM, the search term, and a minimum correlation. The function will return a list of all other terms that meet or exceed the minimum threshold.</p>
+<pre><code>findAssocs(tdm, "word", 0.25)
+</code></pre>
+<p>Minimum correlation values are often relatively low because of word diversity.  Don't be surprised if <code>0.10</code> demonstrates a strong pairwise term association.  </p>
+<p>The coffee tweets have been cleaned and organized into <code>tweets_tdm</code> for the exercise.  You will search for a term association, and manipulate the results with <code>list_vect2df()</code> from <code>qdap</code> and then create a plot with the <code>ggplot2</code> code in the example script.</p>
+</div>
+
+<li>Create <code>associations</code> using <code>findAssocs()</code> on <code>tweets_tdm</code> to find terms associated with "venti", which meet a minimum threshold of <code>0.2</code>.   </li>
+<li>View the terms associated with "venti" by printing <code>associations</code> to the console.</li>
+<li>Create <code>associations_df</code>, by calling <code>list_vect2df()</code>, passing <code>associations</code>, then setting <code>col2</code> to <code>"word"</code> and <code>col3</code> to <code>"score"</code>.</li>
+<li>Run the <code>ggplot2</code> code to make a dot plot of the association values.</li>
+```{r}
+# edited/added
+library(ggthemes)
+tweets_tdm <- read.csv("https://assets.datacamp.com/production/repositories/19/datasets/27a2a8587eff17add54f4ba288e770e235ea3325/coffee.csv") %>%
+  pull(text) %>%
+  VectorSource() %>%
+  VCorpus() %>%
+  clean_corpus() %>%
+  tm_map(removeWords, stops) %>%
+  TermDocumentMatrix()
+
+# Create associations
+associations <- findAssocs(tweets_tdm, "venti", 0.2)
+
+# View the venti associations
+associations
+
+# Create associations_df
+associations_df <- list_vect2df(associations, col2 = "word", col3 = "score")
+
+# Plot the associations_df values
+ggplot(associations_df, aes(score, word)) + 
+  geom_point(size = 3) + 
+  theme_gdocs()
+```
+
+<p class="">Nice job! Correlation is a powerful tool at your disposal. Next up, tokenization!
+</p>
+
+#### Getting past single words {.unnumbered}
+
+
+
+##### N-gram tokenization {.unnumbered}
+
+<div class=""><p>Will increasing the n-gram length increase, decrease or make no difference for the TDM or DTM size?</p></div>
+
+- [ ] Increase
+- [ ] Decrease
+- [ ] No difference
+
+<p class="dc-completion-pane__message dc-u-maxw-100pc">Yes!</p>
+
+##### Changing n-grams {.unnumbered}
+
+
+<div class>
+<p>So far, we have only made TDMs and DTMs using single words.  The default is to make them with unigrams, but you can also focus on tokens containing two or more words. This can help extract useful phrases that lead to some additional insights or provide improved predictive attributes for a machine learning algorithm.</p>
+<p>The function below uses the <code>RWeka</code> package to create trigram (three word) tokens: <code>min</code> and <code>max</code> are both set to <code>3</code>.  </p>
+<pre><code>tokenizer &lt;- function(x) {
+  NGramTokenizer(x, Weka_control(min = 3, max = 3))
+}
+</code></pre>
+<p>Then the customized <code>tokenizer()</code> function can be passed into the <code>TermDocumentMatrix</code> or <code>DocumentTermMatrix</code> functions as an additional parameter:</p>
+<pre><code>tdm &lt;- TermDocumentMatrix(
+  corpus, 
+  control = list(tokenize = tokenizer)
+)
+</code></pre>
+</div>
+
+<p>A <code>corpus</code> has been preprocessed as before using the chardonnay tweets.  The resulting object <code>text_corp</code> is available in your workspace.</p>
+
+<li>Create a <code>tokenizer</code> function like the above which creates 2-word bigrams.</li>
+<li>Make <code>unigram_dtm</code> by calling <code>DocumentTermMatrix()</code> on <code>text_corp</code> without using the <code>tokenizer()</code> function.</li>
+<li>Make <code>bigram_dtm</code> using <code>DocumentTermMatrix()</code> on <code>text_corp</code> with the <code>tokenizer()</code> function you just made.</li>
+<li>Examine <code>unigram_dtm</code> and <code>bigram_dtm</code>. Which has more terms?</li>
+
+
+```{r}
+# edited/added
+library(textmineR)
+library(RWeka)
+text_corp = read.csv("https://assets.datacamp.com/production/repositories/19/datasets/13ae5c66c3990397032b6428e50cc41ac6bc1ca7/chardonnay.csv") %>%
+  pull(text) %>%
+  VectorSource() %>%
+  VCorpus() %>%
+  clean_corpus()
+
+# Make tokenizer function 
+tokenizer <- function(x) {
+  NGramTokenizer(x, Weka_control(min = 2, max = 2))
+}
+
+# Create unigram_dtm
+unigram_dtm <- DocumentTermMatrix(text_corp)
+
+# Create bigram_dtm
+bigram_dtm <- DocumentTermMatrix(
+  text_corp, 
+  control = list(tokenize = tokenizer)
+)
+
+# Print unigram_dtm
+unigram_dtm
+
+# Print bigram_dtm
+bigram_dtm
+```
+
+<p class="">Great work!  Bigrams are a powerful way to explore text and useful derive phrases.
+</p>
+
+##### How do bigrams affect word clouds? {.unnumbered}
+
+
+<div class>
+<p>Now that you have made a bigram DTM, you can examine it and remake a word cloud.  The new tokenization method affects not only the matrices but also any visuals or modeling based on the matrices.</p>
+<p>Remember how "Marvin" and "Gaye" were separate terms in the chardonnay word cloud?  Using bigram, tokenization grabs all two-word combinations.  Observe what happens to the word cloud in this exercise.</p>
+<p>This exercise uses <code>str_subset</code> from <code>stringr</code>.  Keep in mind, other DataCamp courses cover regular expressions in more detail.  As a reminder, the regular expression <code>^</code> matches the <em>starting</em> position within the exercise's bigrams.</p>
+</div>
+
+<p>The chardonnay tweets have been cleaned and organized into a DTM called <code>bigram_dtm</code>.  </p>
+
+<li>Create <code>bigram_dtm_m</code> by converting <code>bigram_dtm</code> to a matrix.</li>
+<li>Create an object <code>freq</code> consisting of the word frequencies by applying <code>colSums()</code> on <code>bigram_dtm_m</code>.</li>
+<li>Extract the character vector of word combinations with <code>names(freq)</code> and assign the result to <code>bi_words</code>.</li>
+<li>Pass <code>bi_words</code> to <code>str_subset()</code> with the matching pattern <code>"^marvin"</code> to review all bigrams starting with "marvin".</li>
+<li>Plot a simple <code>wordcloud()</code> passing <code>bi_words</code>, <code>freq</code> and <code>max.words = 15</code> into the function.</li>
+```{r}
+# Create bigram_dtm_m
+bigram_dtm_m <- as.matrix(bigram_dtm)
+
+# Create freq
+freq <- colSums(bigram_dtm_m)
+
+# Create bi_words
+bi_words <- names(freq)
+
+# Examine part of bi_words
+str_subset(bi_words, "^marvin")
+
+# Plot a wordcloud
+wordcloud(bi_words, freq, max.words = 15)
+```
+
+<p class="">Very good!  With bigrams the word cloud has more impact for your audience.
+</p>
+
+#### Different frequency criteria {.unnumbered}
+
+
+
+##### Changing frequency weights {.unnumbered}
+
+
+<div class>
+<p>So far, you've simply counted terms in documents in the <code>DocumentTermMatrix</code> or <code>TermDocumentMatrix</code>.  In this exercise, you'll learn about  <code>TfIdf</code> weighting instead of simple term frequency.   <code>TfIdf</code> stands for <em>term frequency-inverse document frequency</em> and is used when you have a large corpus with limited-term diversity.</p>
+<p><code>TfIdf</code> counts terms (i.e. <code>Tf</code>), normalizes the value by document length and then penalizes the value the more often a word appears among the documents.  This is common sense; if a word is commonplace, it's important <em>but</em> not insightful.  This penalty aspect is captured in the inverse document frequency (i.e., <code>Idf</code>).  </p>
+<p>For example, reviewing customer service notes may include the term "cu" as shorthand for "customer".  One note may state "the cu has a damaged package" and another as "cu called with question about delivery".  With <em>document frequency</em> weighting, "cu" appears twice, so it is expected to be informative.  However, in <code>TfIdf</code>, "cu" is penalized because it appears in all the documents.  As a result, "cu" isn't considered novel, so its value is reduced towards 0, which lets other terms have higher values for analysis.</p>
+</div>
+
+<li>Create <code>tdm</code>, a term frequency-based <code>TermDocumentMatrix()</code> using <code>text_corp</code>.</li>
+<li>Create <code>tdm_m</code> by converting <code>tdm</code> to matrix form.</li>
+<li>Examine the term frequency for "coffee", "espresso", and "latte" in a few tweets. Subset <code>tdm_m</code> to get rows <code>c("coffee", "espresso", "latte")</code> and columns 161 to 166.</li>
+
+
+
+<li>Edit the <code>TermDocumentMatrix()</code> to use <code>TfIdf</code> weighting. Pass <code>control = list(weighting = weightTfIdf)</code> as an argument to the function.</li>
+<li><em>Run the code and compare the new scores to the first part of the exercise.</em></li>
+```{r}
+# edited/added
+text_corp = (read.csv("https://assets.datacamp.com/production/repositories/19/datasets/27a2a8587eff17add54f4ba288e770e235ea3325/coffee.csv") %>%
+  pull(text) %>%
+  VectorSource())$content
+
+# Create a TDM
+tdm <- TermDocumentMatrix(text_corp)
+
+# Convert it to a matrix
+tdm_m <- as.matrix(tdm)
+
+# Examine part of the matrix
+tdm_m[c("coffee", "espresso", "latte"), 161:166]
+
+# Create a TDM
+tdm <- TermDocumentMatrix(
+  text_corp, 
+  control = list(weighting = weightTfIdf)
+)
+
+# Convert to matrix again
+tdm_m <- as.matrix(tdm)
+
+# Examine the same part: how has it changed?
+tdm_m[c("coffee", "espresso", "latte"), 161:166]
+```
+
+<p class="">Fantastic! Using TF weighting, coffee has a score of 1 in all tweets, which isn't that interesting. Using Tf-Idf, terms that are important in specific documents have a higher score.
+</p>
+
+##### Capturing metadata in tm {.unnumbered}
+
+
+<div class>
+<p>Depending on what you are trying to accomplish, you may want to keep metadata about the document when you create a corpus.</p>
+<p>To capture document-level metadata, the column names and order <strong>must</strong> be:</p>
+<ol>
+<li>
+<code>doc_id</code> - a unique string for each document</li>
+<li>
+<code>text</code> - the text to be examined</li>
+<li>
+<code>...</code> - any other columns will be <em>automatically</em> cataloged as metadata.</li>
+</ol>
+<p>Sometimes you will need to rename columns in order to fit the expectations of <code>DataframeSource()</code>. The <code>names()</code> function is helpful for this.</p>
+<p><code>tweets</code> exists in your worksapce as a data frame with columns "num", "text", "screenName", and "created".</p>
+</div>
+
+
+<li>Rename the first column of <code>tweets</code> to "doc_id".</li>
+<li>Set the document schema with <code>DataframeSource()</code> on the smaller <code>tweets</code> data frame.</li>
+<li>Make the document collection a <em>volatile</em> corpus <em>nested</em> in the custom <code>clean_corpus()</code> function.</li>
+<li>Apply <code>content()</code> to the first tweet with <em>double</em> brackets such as <code>text_corpus[[1]]</code> to see the cleaned plain text. </li>
+<li>Confirm that all metadata was captured using the <a href="https://www.rdocumentation.org/packages/tm/topics/meta"><code>meta()</code></a> function on the first document with <em>single</em> brackets.</li>
+
+<p>Remember, when accessing part of a corpus, the <em>double</em> or <em>single</em> brackets make a difference!  For this exercise, you will use double brackets with <code>content()</code> and single brackets with <code>meta()</code>.</p>
+</div>
+```{r}
+# Rename columns
+names(tweets)[1] <- "doc_id"
+
+# Set the schema: docs
+docs <- DataframeSource(tweets)
+
+# Make a clean volatile corpus: text_corpus
+text_corpus <- clean_corpus(VCorpus(docs))
+
+# Examine the first doc content
+content(text_corpus[[1]])
+
+# Access the first doc metadata
+meta(text_corpus[1])
+```
+
+<p class="">Amazing work! You are now ready to put your skills to the test in a real case study.
+</p>
+
+### Battle of the tech giants {.unnumbered}
+
+<p class="chapter__description">
+    This chapter ties everything together with a case study in text mining for HR analytics.
+  </p>
+
+#### Amazon vs. Google {.unnumbered}
+
+
+
+##### Organizing a text mining project {.unnumbered}
+
+<div class=""><p>How many well-defined steps are in the text mining process?</p></div>
+
+- [ ] 1
+- [ ] 3
+- [x] 6
+- [ ] None. They aren't needed.
+
+<p class="dc-completion-pane__message dc-u-maxw-100pc">Right! There are six well-defined steps in the text mining process.  This chapter will review those steps as a case study.</p>
+
+##### Problem definition {.unnumbered}
+
+<div class=""><p>Which of these is NOT an appropriate problem statement?</p></div>
+
+- [ ] Does Amazon or Google have better-perceived pay according to online reviews?
+- [x] Let's learn something about how employees review both Amazon and Google.
+- [ ] Does Amazon or Google have a better work-life balance according to current employees?
+
+<p class="dc-completion-pane__message dc-u-maxw-100pc">Correct! This one is too general.</p>
+
+##### Identifying the text sources {.unnumbered}
+
+
+<div class>
+<p>Employee reviews can come from various sources.  If your human resources department had the resources, you could have a third party administer focus groups to interview employees both internally and from your competitor.  </p>
+<p>Forbes and others publish articles about the "best places to work", which may mention Amazon and Google.  Another source of information might be anonymous online reviews from websites like <a href="http://www.indeed.com/cmp/Amazon.com/reviews">Indeed</a>, <a href="http://www.glassdoor.com">Glassdoor</a> or <a href="http://www.careerbliss.com/amazon/reviews/">CareerBliss</a>. </p>
+<p>Here, we'll focus on a collection of anonymous online reviews.</p>
+</div>
+
+<li>View the structure of <code>amzn</code> with <code>str()</code> to get its dimensions and a preview of the data.</li>
+<li>Create <code>amzn_pros</code> from the positive reviews column <code>amzn\$pros</code>.</li>
+<li>Create <code>amzn_cons</code> from the negative reviews column <code>amzn\$cons</code>.</li>
+
+
+<li>Print the structure of <code>goog</code> with <code>str()</code> to get its dimensions and a preview of the data.</li>
+<li>Create <code>goog_pros</code> from the positive reviews column <code>goog\$pros</code>.</li>
+<li>Create <code>goog_cons</code> from the negative reviews column <code>goog\$cons</code>.</li>
+```{r}
+# edited/added
+amzn=read.csv("https://assets.datacamp.com/production/repositories/19/datasets/92c0a61dc0ad77799c8cd46bd6e56d9429eb5ea4/500_amzn.csv") %>% na.omit
+goog=read.csv("https://assets.datacamp.com/production/repositories/19/datasets/c050b2c388dfe7e9a0478aa3f67dd0ba3c529d3e/500_goog.csv") %>% na.omit %>% slice_head(n = 496)
+
+# Print the structure of amzn
+str(amzn)
+
+# Create amzn_pros
+amzn_pros <- amzn$pros
+
+# Create amzn_cons
+amzn_cons <- amzn$cons
+
+# Print the structure of goog
+str(goog)
+
+# Create goog_pros
+goog_pros <- goog$pros
+
+# Create goog_cons
+goog_cons <- goog$cons
+```
+
+<p class="">Excellent! On to organizing text!
+</p>
+
+#### Text organization {.unnumbered}
+
+
+
+##### Text organization {.unnumbered}
+
+
+<div class></div>
+
+<li>Apply <code>qdap_clean()</code> to <code>amzn_pros</code>, assigning to <code>qdap_cleaned_amzn_pros</code>.</li>
+<li>Create a vector source (<code>VectorSource()</code>) from <code>qdap_cleaned_amzn_pros</code>, then turn it into a volatile corpus (<code>VCorpus()</code>), assigning to <code>amzn_p_corp</code>.</li>
+<li>Create <code>amzn_pros_corp</code> by applying <code>tm_clean()</code> to <code>amzn_p_corp</code>.</li>
+
+
+
+<li>Apply <code>qdap_clean()</code> to <code>amzn_cons</code>, assigning to <code>qdap_cleaned_amzn_cons</code>.</li>
+<li>Create a vector source from <code>qdap_cleaned_amzn_cons</code>, then turn it into a volatile corpus, assigning to <code>amzn_c_corp</code>.</li>
+<li>Create <code>amzn_cons_corp</code> by applying <code>tm_clean()</code> to <code>amzn_c_corp</code>.</li>
+
+
+<li>Apply <code>qdap_clean()</code> to <code>amzn_cons</code>, assigning to <code>qdap_cleaned_amzn_cons</code>.</li>
+<li>Create a vector source from <code>qdap_cleaned_amzn_cons</code>, then turn it into a volatile corpus, assigning to <code>amzn_c_corp</code>.</li>
+<li>Create <code>amzn_cons_corp</code> by applying <code>tm_clean()</code> to <code>amzn_c_corp</code>.</li>
+```{r}
+# edited/added
+qdap_clean = function(x){
+  x <- replace_abbreviation(x)
+  x <- replace_contraction(x)
+  x <- replace_number(x)
+  x <- replace_ordinal(x)
+  x <- replace_ordinal(x)
+  x <- replace_symbol(x)
+  x <- tolower(x)
+  return(x)
+}
+tm_clean = function(corpus){
+  corpus <- tm_map(corpus, removePunctuation)
+  corpus <- tm_map(corpus, stripWhitespace)
+  corpus <- tm_map(corpus, removeWords, 
+                   c(stopwords("en"), "Google", "Amazon", "company"))
+  return(corpus)
+}
+
+# qdap_clean the text
+qdap_cleaned_amzn_pros <- qdap_clean(amzn_pros)
+
+# Source and create the corpus
+amzn_p_corp <- VCorpus(VectorSource(qdap_cleaned_amzn_pros))
+
+# tm_clean the corpus
+amzn_pros_corp <- tm_clean(amzn_p_corp)
+
+# qdap_clean the text
+qdap_cleaned_amzn_cons <- qdap_clean(amzn_cons)
+
+# Source and create the corpus
+amzn_c_corp <- VCorpus(VectorSource(qdap_cleaned_amzn_cons))
+
+# tm_clean the corpus
+amzn_cons_corp <- tm_clean(amzn_c_corp)
+```
+
+<p class="">Ace Amazon ablution! Now let's clean up the Google reviews.
+</p>
+
+##### Working with Google reviews {.unnumbered}
+
+
+<div class><p>Now that the Amazon reviews have been cleaned, the same must be done for the Google reviews. <code>qdap_clean()</code> and <code>tm_clean()</code> are available in your workspace to help you clean <code>goog_pros</code> and <code>goog_cons</code>.</p></div>
+
+<li>Apply <code>qdap_clean()</code> to <code>goog_pros</code>, assigning to <code>qdap_cleaned_goog_pros</code>.</li>
+<li>Create a vector source (<code>VectorSource()</code>) from <code>qdap_cleaned_goog_pros</code>, then turn it into a volatile corpus (<code>VCorpus()</code>), assigning to <code>goog_p_corp</code>.</li>
+<li>Create <code>goog_pros_corp</code> by applying <code>tm_clean()</code> to <code>goog_p_corp</code>.</li>
+
+
+<li>Apply <code>qdap_clean()</code> to <code>goog_cons</code>, assigning to <code>qdap_cleaned_goog_cons</code>.</li>
+<li>Create a vector source from <code>qdap_cleaned_goog_cons</code>, then turn it into a volatile corpus, assigning to <code>goog_c_corp</code>.</li>
+<li>Create <code>goog_cons_corp</code> by applying <code>tm_clean()</code> to <code>goog_c_corp</code>.</li>
+```{r}
+# qdap_clean the text
+qdap_cleaned_goog_pros <- qdap_clean(goog_pros)
+
+# Source and create the corpus
+goog_p_corp <- VCorpus(VectorSource(qdap_cleaned_goog_pros))
+
+# tm_clean the corpus
+goog_pros_corp <- tm_clean(goog_p_corp)
+
+# qdap clean the text
+qdap_cleaned_goog_cons <- qdap_clean(goog_cons)
+
+# Source and create the corpus
+goog_c_corp <- VCorpus(VectorSource(qdap_cleaned_goog_cons))
+
+# tm clean the corpus
+goog_cons_corp <- tm_clean(goog_c_corp)
+```
+
+<p class="">Good work! On to the next steps in the text mining workflow.
+</p>
+
+#### Feature extraction &amp; analysis {.unnumbered}
+
+
+
+##### Feature extraction &amp; analysis: amzn_pros {.unnumbered}
+
+
+<div class>
+<p><code>amzn_pros_corp</code>, <code>amzn_cons_corp</code>, <code>goog_pros_corp</code>, and <code>goog_cons_corp</code> have all been preprocessed, so now you can extract the features you want to examine.  Since you are using the bag of words approach, you decide to create a bigram <code>TermDocumentMatrix</code> for Amazon's positive reviews corpus, <code>amzn_pros_corp</code>.  From this, you can quickly create a <code>wordcloud()</code> to understand what phrases people positively associate with working at Amazon.</p>
+<p>The function below uses <code>RWeka</code> to tokenize two terms and is used behind the scenes in this exercise.</p>
+<pre><code>tokenizer &lt;- function(x) {
+  NGramTokenizer(x, Weka_control(min = 2, max = 2))
+}
+</code></pre>
+</div>
+
+<li>Create <code>amzn_p_tdm</code> as a <code>TermDocumentMatrix</code> from <code>amzn_pros_corp</code>. Make sure to add <code>control = list(tokenize = tokenizer)</code> so that the terms are bigrams.</li>
+<li>Create <code>amzn_p_tdm_m</code> from <code>amzn_p_tdm</code> by using the <code>as.matrix()</code> function.</li>
+<li>Create <code>amzn_p_freq</code> to obtain the term frequencies from <code>amzn_p_tdm_m</code>.</li>
+<li>Create a <code>wordcloud()</code> using <code>names(amzn_p_freq)</code> as the words, <code>amzn_p_freq</code> as their frequencies, and <code>max.words = 25</code> and <code>color = "blue"</code> for aesthetics.</li>
+```{r}
+# edited/added
+tokenizer <- function(x) {
+  NGramTokenizer(x, Weka_control(min = 2, max = 2))
+}
+
+# Create amzn_p_tdm
+amzn_p_tdm <- TermDocumentMatrix(
+  amzn_pros_corp, 
+  control = list(tokenize = tokenizer)
+)
+
+# Create amzn_p_tdm_m
+amzn_p_tdm_m <- as.matrix(amzn_p_tdm)
+
+# Create amzn_p_freq
+amzn_p_freq <- rowSums(amzn_p_tdm_m)
+
+# Plot a wordcloud using amzn_p_freq values
+wordcloud(names(amzn_p_freq), amzn_p_freq, 
+          max.words = 25, color = "blue")
+```
+
+<p class="">Excellent work!  Your first visual.  Let's keep going.
+</p>
+
+##### Feature extraction &amp; analysis: amzn_cons {.unnumbered}
+
+
+<div class>
+<p>You now decide to contrast this with the <code>amzn_cons_corp</code> corpus in another bigram TDM. Of course, you expect to see some different phrases in your word cloud.  </p>
+<p>Once again, you will use this custom function to extract your bigram features for the visual:</p>
+<pre><code>tokenizer &lt;- function(x) 
+  NGramTokenizer(x, Weka_control(min = 2, max = 2))
+</code></pre>
+</div>
+
+<li>Create <code>amzn_c_tdm</code> by converting <code>amzn_cons_corp</code> into a <code>TermDocumentMatrix</code> and incorporating the bigram function <code>control = list(tokenize = tokenizer)</code>. </li>
+<li>Create <code>amzn_c_tdm_m</code> as a matrix version of <code>amzn_c_tdm</code>.</li>
+<li>Create <code>amzn_c_freq</code> by using <code>rowSums()</code> to get term frequencies from <code>amzn_c_tdm_m</code>.</li>
+<li>Create a <code>wordcloud()</code> using <code>names(amzn_c_freq)</code> and the values <code>amzn_c_freq</code>. Use the arguments <code>max.words = 25</code> and <code>color = "red"</code> as well.</li>
+```{r}
+# Create amzn_c_tdm
+amzn_c_tdm <- TermDocumentMatrix(
+  amzn_cons_corp, 
+  control = list(tokenize = tokenizer)
+)
+
+# Create amzn_c_tdm_m
+amzn_c_tdm_m <- as.matrix(amzn_c_tdm)
+
+# Create amzn_c_freq
+amzn_c_freq <- rowSums(amzn_c_tdm_m)
+
+# Plot a wordcloud of negative Amazon bigrams
+wordcloud(names(amzn_c_freq), amzn_c_freq, 
+          max.words = 25, colors = "red")
+```
+
+<p class="">Outstanding!  Some relevant terms for negative Amazon reviews should be showing up now!
+</p>
+
+##### amzn_cons dendrogram {.unnumbered}
+
+
+<div class><p>It seems there is a strong indication of long working hours and poor work-life balance in the reviews.  As a simple clustering technique, you decide to perform a hierarchical cluster and create a dendrogram to see how connected these phrases are.</p></div>
+
+<li>Create <code>amzn_c_tdm</code> as a <code>TermDocumentMatrix</code> using <code>amzn_cons_corp</code> with <code>control = list(tokenize = tokenizer)</code>.</li>
+<li>Print <code>amzn_c_tdm</code> to the console.</li>
+<li>Create <code>amzn_c_tdm2</code> by applying the <code>removeSparseTerms()</code> function to <code>amzn_c_tdm</code> with the <code>sparse</code> argument equal to <code>.993</code>.</li>
+<li>Create <code>hc</code>, a hierarchical cluster object by nesting the distance matrix <code>dist(amzn_c_tdm2)</code> inside the <code>hclust()</code> function. Make sure to also pass <code>method = "complete"</code> to the <code>hclust()</code> function. </li>
+<li>Plot <code>hc</code> to view the clustered bigrams and see how the concepts in the Amazon cons section may lead you to a conclusion.</li>
+```{r}
+# Create amzn_c_tdm
+amzn_c_tdm <- TermDocumentMatrix(
+  amzn_cons_corp,
+  control = list(tokenize = tokenizer)
+)
+
+# Print amzn_c_tdm to the console
+amzn_c_tdm
+
+# Create amzn_c_tdm2 by removing sparse terms 
+amzn_c_tdm2 <- removeSparseTerms(amzn_c_tdm, .993)
+
+# Create hc as a cluster of distance values
+hc <- hclust(dist(amzn_c_tdm2), 
+             method = "complete")
+
+# Produce a plot of hc
+plot(hc)
+```
+
+<p class="">Not bad, let's see how words are associated in the next exercise.
+</p>
+
+##### Word association {.unnumbered}
+
+
+<div class><p>As expected, you see similar topics throughout the dendrogram. Switching back to positive comments, you decide to examine top phrases that appeared in the word clouds.  You hope to find associated terms using the <code>findAssocs()</code>function from <code>tm</code>.  You want to check for something surprising now that you have learned of long hours and a lack of work-life balance.</p></div>
+<div class="exercise--instructions__content">
+<p>The <code>amzn_pros_corp</code> corpus has been cleaned using the custom functions like before.</p>
+
+<li>Construct a TDM called <code>amzn_p_tdm</code> from <code>amzn_pros_corp</code> and <code>control = list(tokenize = tokenizer)</code>.</li>
+<li>Create <code>amzn_p_m</code> by converting <code>amzn_p_tdm</code> to a matrix.</li>
+<li>Create <code>amzn_p_freq</code> by applying <code>rowSums()</code> to <code>amzn_p_m</code>.</li>
+<li>Create <code>term_frequency</code> using <code>sort()</code> on <code>amzn_p_freq</code> along with the argument <code>decreasing = TRUE</code>. </li>
+<li>Examine the first 5 bigrams using <code>term_frequency[1:5]</code>. </li>
+<li>You may be surprised to see "fast paced" as a top term because it could be a negative term related to "long hours".  Look at the terms most associated with "fast paced".  Use <code>findAssocs()</code> on <code>amzn_p_tdm</code> to examine <code>"fast paced"</code> with a <code>0.2</code> cutoff.</li>
+
+</div>
+```{r}
+# Create amzn_p_tdm
+amzn_p_tdm <- TermDocumentMatrix(
+  amzn_pros_corp, 
+  control = list(tokenize = tokenizer)
+)
+
+# Create amzn_p_m
+amzn_p_m <- as.matrix(amzn_p_tdm)
+
+# Create amzn_p_freq
+amzn_p_freq <- rowSums(amzn_p_m)
+
+# Create term_frequency
+term_frequency <- sort(amzn_p_freq, decreasing = TRUE)
+
+# Print the 5 most common terms
+term_frequency[1:5]
+
+# Find associations with fast paced
+findAssocs(amzn_p_tdm, "fast paced", 0.2)
+```
+
+<p class="">Good work! Let's start comparing Amazon to Google next.
+</p>
+
+##### Quick review of Google reviews {.unnumbered}
+
+
+<div class>
+<p>You decide to create a <code>comparison.cloud()</code> of Google's positive and negative reviews for comparison to Amazon.  This will give you a quick understanding of top terms without having to spend as much time as you did, examining the Amazon reviews in the previous exercises.</p>
+<p>We've provided you with a corpus <code>all_goog_corpus</code>, which has 500 positive and 500 negative reviews for Google. Here, you'll clean the corpus and create a comparison cloud comparing the common words in both pro and con reviews.</p>
+</div>
+<div class="exercise--instructions__content">
+<p>The <code>all_goog_corpus</code> object consisting of Google pro and con reviews, is loaded in your workspace.</p>
+
+<li>Create <code>all_goog_corp</code> by cleaning <code>all_goog_corpus</code> with the predefined <code>tm_clean()</code> function.</li>
+<li>Create <code>all_tdm</code> by converting <code>all_goog_corp</code> to a term-document matrix.</li>
+<li>Create <code>all_m</code> by converting <code>all_tdm</code> to a matrix.</li>
+<li>Construct a <code>comparison.cloud()</code> from <code>all_m</code>. Set <code>max.words</code> to <code>100</code>. The <code>colors</code> argument is specified for you.</li>
+
+</div>
+```{r}
+# edited/added
+all_goog_corpus = goog[,3:4] %>% 
+  VectorSource %>% 
+  VCorpus
+
+# Create all_goog_corp
+all_goog_corp <- tm_clean(all_goog_corpus)
+
+# Create all_tdm
+all_tdm <- TermDocumentMatrix(all_goog_corp)
+
+# Create all_m
+all_m <- as.matrix(all_tdm)
+
+# Build a comparison cloud
+comparison.cloud(all_m, 
+                 max.words = 100,
+                 colors = c("#F44336", "#2196f3"))
+```
+
+<p class="">Good work! In the final exercises you are comparing both companies side by side.
+</p>
+
+##### Cage match! Amazon vs. Google pro reviews {.unnumbered}
+
+
+<div class>
+<p>Amazon's positive reviews appear to mention bigrams such as "good benefits", while its negative reviews focus on bigrams such as "workload" and "work-life balance" issues.</p>
+<p>In contrast, Google's positive reviews mention "great food", "perks", "smart people", and "fun culture", among other things. Google's negative reviews discuss "politics", "getting big", "bureaucracy", and "middle management".</p>
+<p>You decide to make a pyramid plot lining up positive reviews for Amazon and Google so you can compare the differences between any shared bigrams.<br>
+We have preloaded a data frame, <code>all_tdm_df</code>, consisting of <code>terms</code> and corresponding <code>AmazonPro</code>, and <code>GooglePro</code> bigram frequencies.  Using this data frame, you will identify the top 5 bigrams that are shared between the two corpora.</p>
+</div>
+
+<li>Create <code>common_words</code> from <code>all_tdm_df</code> using <code>dplyr</code> functions.
+<li>
+<code>filter()</code> on the <code>AmazonPro</code> column for nonzero values.</li>
+<li>Likewise filter the <code>GooglePro</code> column for nonzero values.</li>
+<li>Then <code>mutate()</code> a new column, <code>diff</code> which is the <code>abs</code> (absolute) difference between the term frequencies columns.</li>
+
+</li>
+<li>Although we could have piped again, create <code>top5_df</code> by applying <code>top_n</code> to <code>common_words</code> to extract the top <code>5</code> values in the <code>diff</code> column.  It will print to your console for review.</li>
+<li>Create a <code>pyramid.plot</code> passing in <code>top5_df\$AmazonPro</code> then <code>top5_df\$GooglePro</code> and finally add labels with <code>top5_df\$terms</code>.</li>
+```{r}
+# edited/added
+all_tdm_df <- data.frame(
+  amzn_pros = as.character(amzn$pros),
+  goog_pros = as.character(goog$pros),
+  stringsAsFactors = F) %>%
+  clean %>%
+  VectorSource %>%
+  VCorpus %>%
+  tm_clean %>%
+  TermDocumentMatrix(control = list(tokenize = tokenizer)) %>%
+  as.matrix() %>%
+  data.frame() %>%
+  rename(AmazonPro = X1, GooglePro = X2)
+
+# Filter to words in common and create an absolute diff column
+common_words <- all_tdm_df %>% 
+  filter(
+    AmazonPro != 0,
+    GooglePro != 0
+  ) %>%
+  mutate(diff = abs(AmazonPro - GooglePro))
+
+# Extract top 5 common bigrams
+(top5_df <- top_n(common_words, 5, diff))
+
+# Create the pyramid plot
+pyramid.plot(top5_df$AmazonPro, top5_df$GooglePro, 
+             labels = rownames(top5_df), # edited/added 
+             gap = 12, 
+             top.labels = c("Amzn", "Pro Words", "Goog"), 
+             main = "Words in Common", unit = NULL)
+```
+
+<p class="">Nice one! A real duel of tech giants…notice common terms yet the frequency differences among the companies.
+</p>
+
+##### Cage match, part 2! Negative reviews {.unnumbered}
+
+
+<div class>
+<p>In both organizations, people mentioned "culture" and "smart people", so there are some similar positive aspects between the two companies. However, with the pyramid plot, you can start to infer degrees of positive features of the work environments.</p>
+<p>You now decide to turn your attention to negative reviews and make the same visual.  This time you already have the <code>common_words</code> data frame in your workspace.  However, the common bigrams in this exercise come from <em>negative</em> employee reviews.</p>
+</div>
+
+
+<li>Using <code>top_n()</code> on <code>common_words</code>, obtain the top <code>5</code> bigrams weighted on the <code>diff</code> column.  The results of the new object will print to your console.</li>
+<li>Create a <code>pyramid.plot()</code>. Pass in <code>top5_df\$AmazonNeg</code>, <code>top5_df\$GoogleNeg</code>, and <code>labels =  top5_df\$terms</code>.  For better labeling, set
+<li>
+<code>gap</code> to <code>12</code>.</li>
+<li>
+<code>top.labels</code> to <code>c("Amzn", "Neg Words", "Goog")</code>
+</li>
+
+</li>
+
+<p>The <code>main</code> and <code>unit</code> arguments are set for you.</p>
+
+```{r}
+# edited/added
+common_words <- data.frame(
+  amzn_pros = as.character(amzn$cons),
+  goog_pros = as.character(goog$cons),
+  stringsAsFactors = F) %>%
+  clean %>%
+  VectorSource %>%
+  VCorpus %>%
+  tm_clean %>%
+  TermDocumentMatrix(control = list(tokenize = tokenizer)) %>%
+  as.matrix() %>%
+  data.frame() %>%
+  rename(AmazonNeg = X1, GoogleNeg = X2) %>% 
+  filter(
+    AmazonNeg != 0,
+    GoogleNeg != 0) %>%
+  mutate(diff = abs(AmazonNeg - GoogleNeg))
+
+# Extract top 5 common bigrams
+(top5_df <- top_n(common_words, 5, diff))
+
+# Create a pyramid plot
+pyramid.plot(
+    # Amazon on the left
+    top5_df$AmazonNeg, 
+    # Google on the right
+    top5_df$GoogleNeg, 
+    # Use terms for labels
+    labels = rownames(top5_df), # edited/added 
+    # Set the gap to 12
+    gap = 12, 
+    # Set top.labels to "Amzn", "Neg Words" & "Goog"
+    top.labels = c("Amzn", "Neg Words", "Goog"), 
+    main = "Words in Common", 
+    unit = NULL)
+```
+
+<p class="">Great work! Almost there! You've made it this far…just a bit more!
+</p>
+
+#### Reach a conclusion {.unnumbered}
+
+
+
+##### Draw conclusions, insights, or recommendations {.unnumbered}
+
+
+<div class><p>Based on the visual, does Amazon or Google have a better work-life balance according to current employee reviews?</p></div>
+
+- [ ] Amazon
+- [x] Google
+
+<p class="">Excellent!  You saw that Amazon's negative reviews more often mention <em>long hours</em>.
+</p>
+
+##### Draw another conclusion, insight, or recommendation {.unnumbered}
+
+
+<div class>
+<p>Earlier, you were surprised to see "fast-paced" in the pros despite the other reviews mentioning "work-life balance".  Recall that you used <code>findAssocs()</code> to get a named vector of phrases.  These may lead you to a conclusion about the type of person who favorably views an intense workload.</p>
+<p>Given the abbreviated results of the associated phrases, what would you recommend Amazon HR recruiters look for in candidates? (You can use the snippet below to gain insight on phrases associated with "fast-paced".)</p>
+<pre><code>findAssocs(amzn_p_tdm, "fast paced", 0.2)[[1]][1:15]
+</code></pre>
+</div>
+
+- [ ] Look for candidates that like good benefits. Amazon's benefits are better than Google's.
+- [x] Identify candidates that view an intense workload as an opportunity to learn fast and give them ample opportunity.
+- [ ] You can't make a recommendation based on the text mining you have done in this chapter.
+
+<p class="">Yes! Fantastic!  You correctly saw a theme concerning learning and opportunity.
+</p>
+
+
+#### Finished! {.unnumbered}
+
+##### Finished! {.unnumbered}
+
+Congratulations! It's all over, text mining is now part of your data science tool set!
+
+##### In this course, you learned how to... {.unnumbered}
+
+In this course, you learned how to do bag of words text mining. Within the text mining workflow, you learned the technical steps of cleaning, tokenizing, building a TDM or DTM, and then extracting some features like frequent terms and word associations. You can now find top terms and make various visuals like word clouds, pyramid plots and dendrograms. My hope is that this course gives you a solid and practical foundation to build on. At this point, you should feel comfortable exploring more functions in the qdap and tm packages. Text mining is a large field and used in many disciplines including marketing, legal, human resources, and academia among others so go seek out some interesting text to work on!
+
+##### Congratulations! {.unnumbered}

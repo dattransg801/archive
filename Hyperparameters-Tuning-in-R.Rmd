@@ -1,0 +1,1261 @@
+## Hyperparameters Tuning {.unnumbered}
+
+<h3 class="course__description-title">Shirin Elsinghorst</h3>
+    I’m Shirin, a biologist turned bioinformatician turned data scientist. During my PhD and Postdoc I worked with Next Generation Sequencing data to analyze diseases like arthritis. However, I then chose to become a data scientist for a German IT company, called codecentric. In this capacity, I have been working on many different projects, e.g. building fraud detection models, creating a chatbot, implementing predictive maintenance, and more. My tool of choice for data analysis so far has been R but I also work with Python. I am also very passionate about teaching and sharing knowledge, so I give workshops, talk at conferences or meetups, write blog posts and organize the MünsteR R-users group.
+
+  </p>
+
+**Course Description**
+
+<p class="course__description">In this course you'll learn all about using linear classifiers, specifically logistic regression and support vector machines, with scikit-learn. Once you've learned how to apply these methods, you'll dive into the ideas behind them and find out what really makes them tick. At the end of this course you'll know how to train, test, and tune these linear classifiers in Python. You'll also have a conceptual foundation for understanding many other machine learning algorithms.</p>
+
+### Hyperparameters {.unnumbered}
+
+<p class="chapter__description">
+    Why do we use the strange word "hyperparameter"? What makes it hyper? Here, you will understand what model parameters are, and why they are different from hyperparameters in machine learning. You will then see why we would want to tune them and how the default setting of caret automatically includes hyperparameter tuning.
+  </p>
+
+#### Introduction {.unnumbered}
+
+
+
+##### Model parameters vs. hyperparameters {.unnumbered}
+
+
+<div class>
+<p>In order to perform hyperparameter tuning, it is important to really understand what hyperparameters are (and what they are not). So let's look at <strong>model parameters versus hyperparameters</strong> in detail.</p>
+<p>Note: The Breast Cancer Wisconsin (Diagnostic) dataset has been loaded as <code>breast_cancer_data</code> for you.</p>
+</div>
+
+```{r}
+# edited/added
+breast_cancer_data = read.csv("https://assets.datacamp.com/production/repositories/1941/datasets/61567a1cad4f0ddcc2fc39c163db54012bf869f0/breast_cancer_data.csv")
+```
+<li>Use this dataset to fit a <strong>linear model</strong> with <code>concavity_mean</code> as response and <code>symmetry_mean</code> as predictor variable.</li>
+<li>Look at the <code>summary()</code> of this linear model.</li>
+<li>Extract the <strong>coefficients</strong>.</li>
+```{r}
+# Fit a linear model on the breast_cancer_data.
+linear_model <- lm(concavity_mean ~ symmetry_mean,
+                    data = breast_cancer_data)
+# Look at the summary of the linear_model.
+summary(linear_model)
+# Extract the coefficients.
+linear_model$coefficients
+```
+
+<p class="">Good job! You know how to build a linear model and how to extract coefficients.
+</p>
+
+##### Hyperparameters in linear models {.unnumbered}
+
+
+<div class>
+<p>Which of the following is a <strong>hyperparameter</strong> in the linear model from your last exercise? The <code>breast_cancer_data</code> has again been loaded and the linear model has been built just as before:</p>
+<pre><code>linear_model &lt;- lm(concavity_mean ~ symmetry_mean,
+                    data = breast_cancer_data)
+</code></pre>
+<p>Note that hyperparameters can be found in the <strong>help section</strong> for a function, while model parameters are part of the output of a function.</p>
+</div>
+
+- [x] Weights
+- [ ] Coefficients
+- [ ] Residuals
+- [ ] Intercept
+
+<p class="">Correct! In the 'Arguments' section of the help function for <code>lm</code> we learn that weights are an optional vector to be used in the fitting process.
+</p>
+
+##### What are the coefficients? {.unnumbered}
+
+
+<div class>
+<p>To get a good feel for the difference between fitted model parameters and hyperparameters, we are going to take a closer look at those fitted parameters: in our simple linear model, the <strong>coefficients</strong>.
+The dataset <code>breast_cancer_data</code> has already been loaded for you and the linear model call was run as in the previous lesson, so you can directly access the object <code>linear_model</code>.</p>
+<p>In our linear model, we can extract the coefficients in the following way: <code>linear_model$coefficients</code>. 
+And we can <strong>visualize the relationship</strong> we modeled with a plot. </p>
+<p><strong>Remember</strong>, that a linear model has the basic formula: <code>y = x * slope + intercept</code></p>
+</div>
+
+```{r}
+# edited/added
+```
+<li>Explore the coefficients of the <code>linear_model</code> in the console.</li>
+<li>Plot the regression line with <code>ggplot2</code>.</li>
+<li>Assign the correct coefficients to <code>slope</code> and <code>intercept</code>.</li>
+```{r}
+library(ggplot2)
+# Plot linear relationship.
+ggplot(data = breast_cancer_data, 
+        aes(x = symmetry_mean, y = concavity_mean)) +
+  geom_point(color = "grey") +
+  geom_abline(slope = linear_model$coefficients[2], 
+              intercept = linear_model$coefficients[1])
+```
+
+<p class="">Perfect! You understand that coefficients represent the slope and intercept of the fitted model formula.
+</p>
+
+#### ML basics {.unnumbered}
+
+
+
+##### Machine learning with caret {.unnumbered}
+
+
+<div class>
+
+
+<p>Before we can train machine learning models and tune hyperparameters, we need to <strong>prepare the data</strong>. The data is again available as <code>breast_cancer_data</code>. The library <code>caret</code> has already been loaded.</p>
+</div>
+
+```{r}
+# edited/added
+library(caret)
+```
+<li>Use the <code>caret</code> package to create an index with 70% of the <code>breast_cancer_data</code> to create a <strong>training set</strong> and <strong>stratify the partitions</strong> by the response variable <code>diagnosis</code>.</li>
+
+<li>Use the index you created in the previous step to <strong>partition</strong> the <code>breast_cancer_data</code> in training and test sets.</li>
+
+<li>Define a <strong>repeated cross-validation</strong> scheme for <code>caret</code> with 5 folds and 3 repeats.</li>
+
+<li>Use the <code>caret</code> package to <strong>train a Stochastic Gradient Boosting model</strong> and add the <strong>repeated cross-validation</strong> scheme that you defined in the last step to the <code>train</code> function.</li>
+```{r}
+# Create partition index
+index <- createDataPartition(breast_cancer_data$diagnosis, p = 0.7, list = FALSE)
+# Subset `breast_cancer_data` with index
+bc_train_data <- breast_cancer_data[index, ]
+bc_test_data  <- breast_cancer_data[-index, ]
+# Define 3x5 folds repeated cross-validation
+fitControl <- trainControl(method = "repeatedcv", number = 5, repeats = 3)
+# Run the train() function
+gbm_model <- train(diagnosis ~ ., 
+                   data = bc_train_data, 
+                   method = "gbm", 
+                   trControl = fitControl,
+                   verbose = FALSE)
+# Look at the model
+gbm_model
+```
+
+<p class="">Very good! You know the basics of building models with caret.
+</p>
+
+##### Resampling schemes {.unnumbered}
+
+
+<div class>
+<p>In the previous exercise, you defined a 3x5 folds repeated cross-validation resampling scheme with the following code:</p>
+<pre><code>fitControl &lt;- trainControl(method = "repeatedcv", number = 5, repeats = 3)
+</code></pre>
+<p>Which of the following is <strong>NOT</strong> a valid resampling method in <code>caret</code>?</p>
+<p>Note: the <code>caret</code> package has already been loaded for you.</p>
+</div>
+
+- [ ] <code>boot</code>
+- [x] <code>adaboost</code>
+- [ ] <code>cv</code>
+- [ ] <code>LGOCV</code>
+
+<p class="">Correct! <code>adaboost</code> is an implementation of the AdaBoost optimization algorithm from Freund and Shapire (1997) and not a resampling scheme.
+</p>
+
+#### Hyperparameter tuning {.unnumbered}
+
+
+
+##### Hyperparameters in Stochastic Gradient Boosting {.unnumbered}
+
+
+<div class>
+<p>In the previous lesson, you built a Stochastic Gradient Boosting model in caret. 
+A similar model as the one from before has been preloaded as <code>gbm_model</code>. In order to optimize this model, you want to <strong>tune its hyperparameters</strong>. Which of the following is NOT a hyperparameter of the <code>gbm</code> method?</p>
+<p>Note: The library <code>caret</code> has also been preloaded.</p>
+</div>
+
+- [ ] n.trees
+- [ ] n.minobsinnode
+- [x] na.action
+- [ ] interaction.depth
+
+<p class="">Correct! <code>na.action</code> is not a hyperparameter; it is a function to specify the action to be taken if NAs are found.
+</p>
+
+##### Changing the number of hyperparameters to tune {.unnumbered}
+
+
+<div class>
+<p>When we examine the model object closely, we can see that <code>caret</code> already did some <strong>automatic hyperparameter</strong> tuning for us: <code>train</code> automatically creates a <strong>grid of tuning parameters</strong>. By default, if <code>p</code> is the number of tuning parameters, the grid size is 3^p. But we can also <strong>specify the number</strong> of different values to try for each hyperparameter.</p>
+<p>The data has again been preloaded as <code>bc_train_data</code>. The libraries <code>caret</code> and <code>tictoc</code> have also been preloaded.</p>
+</div>
+
+```{r}
+# edited/added
+library(tictoc)
+```
+<li>Test <strong>four</strong> different values for each hyperparameter with automatic tuning in <code>caret</code>.</li>
+```{r}
+# Set seed.
+set.seed(42)
+# Start timer.
+tic()
+# Train model.
+gbm_model <- train(diagnosis ~ ., 
+                   data = bc_train_data, 
+                   method = "gbm", 
+                   trControl = trainControl(method = "repeatedcv", number = 5, repeats = 3),
+                   verbose = FALSE,
+                   tuneLength = 4)
+# Stop timer.
+toc()
+```
+
+<p class="">Great! You can now perform a simple hyperparameter-tuning with caret.
+</p>
+
+##### Tune hyperparameters manually {.unnumbered}
+
+
+<div class>
+<p>If you already know which hyperparameter values you want to set, you can also <strong>manually define</strong> hyperparameters as a <strong>grid</strong>. Go to <code>modelLookup("gbm")</code> or search for <code>gbm</code> in the <a href="https://topepo.github.io/caret/available-models.html">list of available models in caret</a> and check under <strong>Tuning Parameters</strong>.</p>
+<p>Note: Just as before,<code>bc_train_data</code> and the libraries <code>caret</code> and <code>tictoc</code> have been preloaded.</p>
+</div>
+
+```{r}
+# edited/added
+```
+<li>Define the following <strong>hyperparameter grid</strong> for a Gradient Boosting Model: the number of trees as 200; the tree complexity as 1; the learning rate as 0.1 and the minimum number of training set samples in a node to commence splitting as 10.</li>
+<li>Apply the grid to the <code>train()</code> function of <code>caret</code>.</li>
+```{r}
+# Define hyperparameter grid.
+hyperparams <- expand.grid(n.trees = 200, 
+                           interaction.depth = 1, 
+                           shrinkage = 0.1, 
+                           n.minobsinnode = 10)
+set.seed(42)
+# Apply hyperparameter grid to train().
+gbm_model <- train(diagnosis ~ ., 
+                   data = bc_train_data, 
+                   method = "gbm", 
+                   trControl = trainControl(method = "repeatedcv", number = 5, repeats = 3),
+                   verbose = FALSE,
+                   tuneGrid = hyperparams)
+```
+
+<p class="">Great job! You have made it through the first chapter. Now, you will learn how to use more advanced methods to optimize hyperparameters.
+</p>
+
+### Caret {.unnumbered}
+
+<p class="chapter__description">
+    In this chapter, you will learn how to tune hyperparameters with a Cartesian grid. Then, you will implement faster and more efficient approaches. You will use Random Search and adaptive resampling to tune the parameter grid, in a way that concentrates on values in the neighborhood of the optimal settings. 
+  </p>
+
+#### Hyperparameter tuning {.unnumbered}
+
+
+
+##### Finding hyperparameters {.unnumbered}
+
+
+<div class>
+<p>Finding out <strong>which</strong> hyperparameters you can tune with a given algorithm or function is the most important prerequisite for actually tuning your models!</p>
+
+<li>Which <strong>hyperparameters</strong> can you tune with a simple <strong>Generalized Linear Model</strong> that uses the <code>glm</code> method? The <code>caret</code> library has been loaded for you.</li>
+
+</div>
+
+- [ ] tau
+- [ ] alpha, lambda
+- [x] None
+- [ ] cost, Loss
+
+<p class="">Correct! A simple glm has no hyperparameters that can be tuned.
+</p>
+
+##### Cartesian grid search in caret {.unnumbered}
+
+
+<div class>
+<p>In chapter 1, you learned how to use the <code>expand.grid()</code> function to manually define hyperparameters. The same function can also be used to <strong>define a grid of hyperparameters</strong>. </p>
+<p>The <code>voters_train_data</code> dataset has already been preprocessed to make it a bit smaller so training will run faster; it has now 80 observations and balanced classes and has been loaded for you. The <code>caret</code> and <code>tictoc</code> packages have also been loaded and the <code>trainControl</code> object has been defined with repeated cross-validation:</p>
+<pre><code>fitControl &lt;- trainControl(method = "repeatedcv",
+                           number = 3,
+                           repeats = 5)
+</code></pre>
+</div>
+
+```{r}
+# edited/added
+voters_train_data = read.csv("https://assets.datacamp.com/production/repositories/1941/datasets/2a56fe276e93054fb4a4babb71b83280232c6efe/voters_train_data.csv")
+voters_test_data = read.csv("https://assets.datacamp.com/production/repositories/1941/datasets/d5a2c8b67525f43e10e2b92bd3a171f6368ca1c0/voters_test_data.csv")
+```
+<li>Define a <strong>Cartesian grid</strong> of Support Vector Machine hyperparameters with the following combinations: <code>degree</code> should be 1, 2, or 3, <code>scale</code> should be 0.1, 0.01 or 0.001 and <code>C</code> should be held constant at 0.5.</li>
+```{r}
+# Define Cartesian grid
+man_grid <- expand.grid(degree = c(1, 2, 3), 
+                        scale = c(0.1, 0.01, 0.001), 
+                        C = 0.5)
+```
+
+<li>Use the Cartesian grid you defined in the previous step to train a <strong>Support Vector Machines with Polynomial Kernel</strong> in <code>caret</code>.</li>
+```{r}
+# Define Cartesian grid
+man_grid <- expand.grid(degree = c(1, 2, 3), 
+                        scale = c(0.1, 0.01, 0.001), 
+                        C = 0.5)
+# Start timer, set seed & train model
+tic()
+set.seed(42)
+svm_model_voters_grid <- train(turnout16_2016 ~ ., 
+                   data = voters_train_data, 
+                   method = "svmPoly", 
+                   trControl = fitControl,
+                   verbose= FALSE,
+                   tuneGrid = man_grid)
+toc()
+```
+
+<div class=""><ul>
+<li>Explore the <code>svm_model_voters_grid</code> model object: <strong>Which hyperparameter combination was best?</strong></li>
+</ul></div>
+
+- [ ] degree 3 & scale 0.010
+- [x] degree 1 & scale 0.100
+- [ ] degree 1 & scale 0.001
+- [ ] degree 2 & scale 0.100
+
+<p class="">Correct. This was the best hyperparameter combination in our model.
+</p>
+
+##### Plot hyperparameter model output {.unnumbered}
+
+
+<div class>
+<p>In the previous exercise, you defined a <strong>Cartesian grid of hyperparameters</strong> and used it to train a Support Vector Machine model.
+The same code as before has been run in the background, so you can directly work with the <code>svm_model_voters_grid</code> model object. The <code>caret</code> package has also been loaded.</p>
+</div>
+
+```{r}
+# edited/added
+```
+<li>
+<strong>Plot</strong> the model object with <strong>default arguments</strong>: Accuracy and line-plot.</li>
+
+<li>Add another plot where you <strong>plot Kappa values</strong> and use a <strong>level-plot</strong>.</li>
+ˆ
+```{r}
+# Plot default
+plot(svm_model_voters_grid)
+# Plot Kappa level-plot
+plot(svm_model_voters_grid, metric = "Kappa", plotType = "level")
+```
+
+<p class="">Very good! Plotting is generally a good way to explore your model output and hyperparameter tuning results.
+</p>
+
+#### Grid vs. Random Search {.unnumbered}
+
+
+
+##### Grid search with range of hyperparameters {.unnumbered}
+
+
+<div class>
+<p>In chapter 1, you learned how to use the <code>expand.grid()</code> function to manually define a set of hyperparameters. The same function can also be used to define a <strong>grid with ranges</strong> of hyperparameters. </p>
+<p>The <code>voters_train_data</code> dataset has been loaded for you, as have the <code>caret</code> and <code>tictoc</code> packages.</p>
+</div>
+
+```{r}
+# edited/added
+```
+<li>Define a <strong>grid</strong> with the neural network hyperparameter <strong>size ranging from 1 to 5</strong> with a <strong>step-size of 1</strong>.</li>
+
+<li>Specifically define the <code>trainControl</code> function to perform <strong>grid search</strong>.</li>
+
+<li>Train a <strong>regular Neural Network</strong> in caret.</li>
+
+<li>And finally: feed the <code>big_grid</code> to this Neural Network for tuning.</li>
+```{r}
+# Define the grid with hyperparameter ranges
+big_grid <- expand.grid(size = seq(from = 1, to = 5, by = 1), decay = c(0, 1))
+# Train control with grid search
+fitControl <- trainControl(method = "repeatedcv", number = 3, repeats = 5, search = "grid")
+# Train neural net
+tic()
+set.seed(42)
+nn_model_voters_big_grid <- train(turnout16_2016 ~ ., 
+                   data = voters_train_data, 
+                   method = "nnet", 
+                   trControl = fitControl,
+                   verbose = FALSE,
+                   tuneGrid = big_grid)
+toc()
+```
+
+<p class="">Great! You understood the complete workflow of defining a hyperparameter grid and using it in the caret <code>train()</code> function.
+</p>
+
+##### Find train() option for random search {.unnumbered}
+
+<div class=""><p>In the video for this chapter, I showed you how to perform a grid search or random search with <code>caret</code>.</p>
+<ul>
+<li>Which <strong>argument</strong> do you need to set in combination with <code>trainControl(search = "random")</code> in order to perform <strong>random search</strong>?</li>
+</ul></div>
+
+- [ ] method
+- [x] tuneLength
+- [ ] preProcess
+- [ ] tuneGrid
+
+<p class="dc-completion-pane__message dc-u-maxw-100pc">[Correct! Tune length defines the number of (randomly sampled) tuning parameter combinations to compare.]</p>
+
+##### Random search with caret {.unnumbered}
+
+
+<div class>
+<p>Now you are going to perform a <strong>random search</strong> instead of grid search!</p>
+<p>As before, the small <code>voters_train_data</code> dataset has been loaded for you, as have the <code>caret</code> and <code>tictoc</code> packages.</p>
+</div>
+
+```{r}
+# edited/added
+```
+<li>Define a training control object with <strong>random search</strong>.</li>
+```{r}
+# Train control with random search
+fitControl <- trainControl(method = "repeatedcv",
+                           number = 3,
+                           repeats = 5,
+                           search = "random")
+```
+
+<li>Compare <strong>six random hyperparameter combinations</strong> in the neural network below.</li>
+```{r}
+# Train control with random search
+fitControl <- trainControl(method = "repeatedcv",
+                           number = 3,
+                           repeats = 5,
+                           search = "random")
+# Test 6 random hyperparameter combinations
+tic()
+nn_model_voters_big_grid <- train(turnout16_2016 ~ ., 
+                   data = voters_train_data, 
+                   method = "nnet", 
+                   trControl = fitControl,
+                   verbose = FALSE,
+                   tuneLength = 6)
+toc()
+```
+
+<div class=""><p>You just performed random search with hyperparameter values that were picked by <code>caret</code>.</p>
+<ul>
+<li>How could you <strong>define your own grid</strong> of hyperparameter values from which to sample randomly?</li>
+</ul></div>
+
+- [ ] By setting both arguments <code>tuneGrid</code> and <code>tuneLength</code> in <code>caret::train</code>.
+- [ ] By changing the <code>method</code> argument in <code>trainControl</code>.
+- [x] In <code>caret</code>, it is not possible to perform a random search on a defined grid.
+- [ ] By setting the <code>randomGrid</code> argument in <code>caret::train</code>.
+
+<p class="">Correct! In <code>caret</code>, it is not possible to perform a random search on a defined grid. You will learn how to do this with other packages in the next two chapters.
+</p>
+
+#### Adaptive resampling {.unnumbered}
+
+
+
+##### Advantages of Adaptive Resampling {.unnumbered}
+
+<div class=""><p>You have heard a lot about advanced tuning with <strong>Adaptive Resampling</strong> in <code>caret</code> in the video you just saw.</p>
+<ul>
+<li>Which of the following statements about the Adaptive Resampling technique is <strong>NOT true</strong>?</li>
+</ul></div>
+
+- [x] Adaptive Resampling will find better hyperparameter combinations than grid or random search.
+- [ ] Adaptive Resampling is faster than cartesian grid search.
+- [ ] With Adaptive Resampling hyperparameter combinations are resampled near values that perform well.
+- [ ] Adaptive Resampling is more efficient than grid and random search.
+
+<p class="dc-completion-pane__message dc-u-maxw-100pc">Correct! Adaptive Resampling does not necessarily find better hyperparameter combinations, it is just more efficient at searching.</p>
+
+##### Adaptive Resampling with caret {.unnumbered}
+
+
+<div class>
+<p>Now you are going to train a model on the voter's dataset using <strong>Adaptive Resampling</strong>!</p>
+<p>As before, the small <code>voters_train_data</code> dataset has been loaded for you, as have the <code>caret</code> and <code>tictoc</code> packages.</p>
+</div>
+
+```{r}
+# edited/added
+```
+<li>Define a <code>trainControl()</code> function for <strong>performing Adaptive Resampling</strong> with 3x3 repeated cross-validation.</li>
+<li>Change the <strong>resampling scheme</strong> from the default grid method to random search for Adaptive Resampling.</li>
+<li>Define the <strong>Adaptive Resampling options</strong> <em>minimum number of resamples</em> as 3 and use the <em>Bradley Terry</em> method.</li>
+<li>Change the <strong>maximum number of tuning parameter combinations</strong> that will be generated by random search from its default of 3 to 6 and train the <strong>Neural Network</strong>.</li>
+```{r}
+# Define trainControl function
+fitControl <- trainControl(method = "adaptive_cv",
+                           number = 3, repeats = 3,
+                           adaptive = list(min = 3, alpha = 0.05, method = "BT", complete = FALSE),
+                           search = "random")
+# Start timer & train model
+tic()
+svm_model_voters_ar <- train(turnout16_2016 ~ ., 
+                   data = voters_train_data, 
+                   method = "nnet", 
+                   trControl = fitControl,
+                   verbose = FALSE,
+                   tuneLength = 6)
+toc()
+```
+
+<p class="">Good job! You have mastered the final hyperparameter tuning method in caret: Adaptive Resampling!
+</p>
+
+### Mlr {.unnumbered}
+
+<p class="chapter__description">
+    Here, you will use another package for machine learning that has very convenient hyperparameter tuning functions. You will define a Cartesian grid or perform Random Search, as well as advanced techniques. You will also learn different ways to plot and evaluate models with different hyperparameters.
+  </p>
+
+#### ML with mlr {.unnumbered}
+
+##### Machine Learning with mlr {.unnumbered}
+
+
+
+<div class=""><ul>
+<li>Which of the following is <strong>NOT</strong> a step in the <code>mlr</code> modelling workflow? Note: The <code>mlr</code> package is already loaded.</li>
+</ul></div>
+
+- [ ] Defining a learner.
+- [ ] Defining a task.
+- [ ] Fitting a model.
+- [x] Converting the response variable to a factor.
+
+<p class="">Correct! Converting the response variable to a factor is not a necessary step of the <code>mlr</code> workflow.
+</p>
+
+
+##### Modeling with mlr {.unnumbered}
+
+
+<div class>
+<p>As you have seen in the video just now, <code>mlr</code> is yet another popular machine learning package in R that comes with many functions to do hyperparameter tuning. Here, you are going to go over the <strong>basic workflow</strong> for training models with <code>mlr</code>.</p>
+<p>The <code>knowledge_train_data</code> dataset has already been loaded for you, as have the packages <code>mlr</code>, <code>tidyverse</code> and <code>tictoc</code>.
+<strong>Remember</strong> that starting to type in the console will suggest autocompleting options for functions and packages.</p>
+</div>
+
+```{r}
+# edited/added
+library(mlr)
+library(tidyverse)
+knowledge_train_data = read.csv("https://assets.datacamp.com/production/repositories/1941/datasets/3d0c20b2c46a555176d818ae682bfc8a5b2746e9/knowledge_train_data.csv")
+knowledge_train_data = read.csv("https://assets.datacamp.com/production/repositories/1941/datasets/b26cf80895fc884ea4ead20de760ecda8877bbb7/knowledge_test_data.csv")
+```
+<li>Create a <strong>regular classification task</strong> with the <code>knowledge_train_data</code> and target <code>UNS</code>.</li>
+<li>Ask for a <strong>list of all learners</strong> you can use with mlr. Note that you are converting the output to a data frame and selecting only the columns <code>class</code>, <code>short.name</code> and <code>package</code> so that the output fits the page.</li>
+<li>Find the correct classifier for <strong>Random Forest</strong> in the previous output and <strong>build a learner</strong> with this <code>randomForest</code> classifier.</li>
+<li>In your learner, change the following settings from the default: have <strong>class probabilities</strong> as output and add a <strong>factor for missing data</strong>.</li>
+```{r}
+# Create classification taks
+task <- makeClassifTask(data = knowledge_train_data, 
+                        target = "UNS")
+# Call the list of learners
+listLearners() %>%
+ as.data.frame() %>%
+ select(class, short.name, package) %>%
+ filter(grepl("classif.", class))
+# Create learner
+lrn <- makeLearner("classif.randomForest", 
+                   predict.type = "prob", 
+                   fix.factors.prediction = TRUE)
+```
+
+<p class="">Good job! You successfully trained a Random Forest with mlr. Now, let's look into hyperparameter tuning.
+</p>
+
+#### Grid & random search {.unnumbered}
+
+
+
+##### Random search with mlr {.unnumbered}
+
+
+<div class>
+<p>Now, you are going to perform <strong>hyperparameter tuning with random search</strong>. You will prepare the different functions and objects you need to tune your model in the next exercise.</p>
+<p>The <code>knowledge_train_data</code> dataset has already been loaded for you, as have the packages <code>mlr</code>, <code>tidyverse</code> and <code>tictoc</code>.
+Remember to look into the function that lists all learners if you are unsure about the name of a learner.</p>
+</div>
+
+```{r}
+# edited/added
+```
+<li>Get the <strong>parameter set</strong> for neural networks of the <code>nnet</code> package.</li>
+<li>Define a <strong>set of discrete parameters:</strong> start with defining <code>size</code> to be either 2, 3 or 5.</li>
+<li>Define a set of <strong>numeric parameters</strong>: add ranges for <code>decay</code> from 0.0001 to 0.1.</li>
+<li>Define a <strong>random search tuning method</strong> with default values.</li>
+```{r}
+# Get the parameter set for neural networks of the nnet package
+getParamSet("classif.nnet")
+# Define set of parameters
+param_set <- makeParamSet(
+  makeDiscreteParam("size", values = c(2,3,5)),
+  makeNumericParam("decay", lower = 0.0001, upper = 0.1)
+)
+# Print parameter set
+print(param_set)
+# Define a random search tuning method.
+ctrl_random <- makeTuneControlRandom()
+```
+
+<p class="">Very good! You know how to prepare hyperparameter tuning with random search in mlr.
+</p>
+
+##### Perform hyperparameter tuning with mlr {.unnumbered}
+
+
+<div class>
+<p>Now, you can combine the prepared functions and objects from the previous exercise to actually perform <strong>hyperparameter tuning with random search</strong>.
+The <code>knowledge_train_data</code> dataset has already been loaded for you, as have the packages <code>mlr</code>, <code>tidyverse</code> and <code>tictoc</code>. And the following code has also been run already:</p>
+<pre><code># Define task
+task &lt;- makeClassifTask(data = knowledge_train_data, 
+                        target = "UNS")</code>
+
+<code># Define learner
+lrn &lt;- makeLearner("classif.nnet", predict.type = "prob", fix.factors.prediction = TRUE)</code>
+
+<code># Define set of parameters
+param_set &lt;- makeParamSet(
+  makeDiscreteParam("size", values = c(2,3,5)),
+  makeNumericParam("decay", lower = 0.0001, upper = 0.1)
+)
+</code></pre>
+</div>
+
+```{r}
+# edited/added
+# Define task
+task <- makeClassifTask(data = knowledge_train_data, 
+                        target = "UNS")
+# Define learner
+lrn <- makeLearner("classif.nnet", predict.type = "prob", fix.factors.prediction = TRUE)
+# Define set of parameters
+param_set <- makeParamSet(
+  makeDiscreteParam("size", values = c(2,3,5)),
+  makeNumericParam("decay", lower = 0.0001, upper = 0.1)
+)
+```
+<li>Change the <strong>maximum number of iterations</strong> for random search to 6. Note, that 6 is a very low number; we use it so that calculation won't take forever to complete here; usually, you would set the number much higher (the default is 100).</li>
+```{r}
+# Define a random search tuning method.
+ctrl_random <- makeTuneControlRandom(maxit = 6)
+```
+<li>Define a <strong>3 x 3 repeated cross-validation</strong> scheme. Note, that these are very low numbers that we only use to keep calculation time down, in reality you would want to use larger values.</li>
+```{r}
+# Define a random search tuning method.
+ctrl_random <- makeTuneControlRandom(maxit = 6)
+# Define a 3 x 3 repeated cross-validation scheme
+cross_val <- makeResampleDesc("RepCV", folds = 3 * 3)
+```
+<li>Fill in the missing information with the <strong>appropriate objects</strong> you defined in this and the previous exercise in order to run the hyperparameter tuning. Don't be concerned if running the code will take a bit, hyperparameter tuning takes time!</li>
+```{r}
+# Define a random search tuning method.
+ctrl_random <- makeTuneControlRandom(maxit = 6)
+# Define a 3 x 3 repeated cross-validation scheme
+cross_val <- makeResampleDesc("RepCV", folds = 3 * 3)
+# Tune hyperparameters
+tic()
+lrn_tune <- tuneParams(lrn,
+                       task,
+                       resampling = cross_val,
+                       control = ctrl_random,
+                       par.set = param_set)
+toc()
+```
+<div class=""><ul>
+<li>What's the <strong>default performance metric</strong> used by <code>tuneParams()</code> in the previous exercises?</li>
+</ul></div>
+
+- [x] <code>mmce</code> (mean misclassification rate)
+- [ ] <code>acc</code> (accuracy)
+- [ ] <code>rmse</code> (root mean squared error)
+- [ ] <code>kappa</code> (Kappa)
+
+<p class="">Great! You know how to perform hyperparameter tuning with random search in mlr.
+</p>
+
+#### Evaluating hyperparameters {.unnumbered}
+
+
+
+##### Why to evaluate tuning? {.unnumbered}
+
+<div class=""><ul>
+<li>What can you learn from <strong>evaluating hyperparameter tuning</strong> results?</li>
+</ul></div>
+
+- [ ] How different model parameters were learned.
+- [x] Which hyperparameters have a strong effect on model performance.
+- [ ] Whether your hyperparameters are the best possible combination for your task.
+- [ ] Whether the learning rate converged.
+
+<p class="dc-completion-pane__message dc-u-maxw-100pc">Correct! Evaluating hyperparameter tuning results will tell you which hyperparameters have a strong effect on model performance.</p>
+
+##### Evaluating hyperparameter tuning results {.unnumbered}
+
+
+<div class>
+<p>Here, you will <strong>evaluate the results of a hyperparameter tuning run</strong> for a decision tree trained with the <code>rpart</code> package.
+The <code>knowledge_train_data</code> dataset has already been loaded for you, as have the packages <code>mlr</code> and <code>tidyverse</code>. And the following code has also been run:</p>
+<pre><code>task &lt;- makeClassifTask(data = knowledge_train_data, 
+                        target = "UNS")
+
+lrn &lt;- makeLearner(cl = "classif.rpart", fix.factors.prediction = TRUE)
+
+param_set &lt;- makeParamSet(
+  makeIntegerParam("minsplit", lower = 1, upper = 30),
+  makeIntegerParam("minbucket", lower = 1, upper = 30),
+  makeIntegerParam("maxdepth", lower = 3, upper = 10)
+)
+
+ctrl_random &lt;- makeTuneControlRandom(maxit = 10)
+</code></pre>
+</div>
+
+```{r}
+# edited/added
+task <- makeClassifTask(data = knowledge_train_data, 
+                        target = "UNS")
+lrn <- makeLearner(cl = "classif.rpart", fix.factors.prediction = TRUE)
+param_set <- makeParamSet(
+  makeIntegerParam("minsplit", lower = 1, upper = 30),
+  makeIntegerParam("minbucket", lower = 1, upper = 30),
+  makeIntegerParam("maxdepth", lower = 3, upper = 10)
+)
+ctrl_random <- makeTuneControlRandom(maxit = 10)
+```
+<li>Create a <strong>holdout validation resampling scheme</strong> with the default proportion of 2/3 to use in the tuning process below.</li>
+<li>Generate <strong>hyperparameter effect data</strong> for the <code>lrn_tune</code> object and use <strong>partial dependence</strong>.</li>
+<li><strong>Plot</strong> the hyperparameter effects with "regr.glm" to learn the partial dependence and plot <code>minsplit</code> on the x-axis against the <code>mmce</code> of the test data on the y-axis.</li>
+```{r}
+# Create holdout sampling
+holdout <- makeResampleDesc("Holdout")
+# Perform tuning
+lrn_tune <- tuneParams(learner = lrn, task = task, resampling = holdout, control = ctrl_random, par.set = param_set)
+# Generate hyperparameter effect data
+hyperpar_effects <- generateHyperParsEffectData(lrn_tune, partial.dep = TRUE)
+# Plot hyperparameter effects
+plotHyperParsEffect(hyperpar_effects, 
+                    partial.dep.learn = "regr.glm",
+                    x = "minsplit", y = "mmce.test.mean", z = "maxdepth",
+                    plot.type = "line")
+```
+
+<p class="">Good job! You know how to do evaluate hyperparameter tuning results in mlr.
+</p>
+
+#### Advanced tuning {.unnumbered}
+
+
+
+##### Define advanced tuning controls {.unnumbered}
+
+
+<div class><p>How do you define a <strong>model-based / Bayesian</strong> hyperparameter optimization strategy?</p></div>
+
+- [ ] <code>makeTuneControlCMAES</code>
+- [ ] <code>makeTuneControlGenSA</code>
+- [ ] <code>makeTuneControlIrace</code>
+- [x] <code>makeTuneControlMBO</code>
+
+<p class="">Correct! <code>makeTuneControlMBO</code> is for model-based / Bayesian optimization.
+</p>
+
+##### Define aggregated measures {.unnumbered}
+
+
+<div class>
+<p>Now, you are going to define <strong>performance measures</strong>.
+The <code>knowledge_train_data</code> dataset has already been loaded for you, as have the packages <code>mlr</code> and <code>tidyverse</code>. And the following code has also been run:</p>
+<pre><code>task &lt;- makeClassifTask(data = knowledge_train_data, 
+                        target = "UNS")
+
+lrn &lt;- makeLearner(cl = "classif.nnet", fix.factors.prediction = TRUE)
+
+param_set &lt;- makeParamSet(
+  makeIntegerParam("size", lower = 1, upper = 5),
+  makeIntegerParam("maxit", lower = 1, upper = 300),
+  makeNumericParam("decay", lower = 0.0001, upper = 1)
+)
+
+ctrl_random &lt;- makeTuneControlRandom(maxit = 10)
+</code></pre>
+</div>
+
+```{r}
+# edited/added
+task <- makeClassifTask(data = knowledge_train_data, 
+                        target = "UNS")
+lrn <- makeLearner(cl = "classif.nnet", fix.factors.prediction = TRUE)
+param_set <- makeParamSet(
+  makeIntegerParam("size", lower = 1, upper = 5),
+  makeIntegerParam("maxit", lower = 1, upper = 300),
+  makeNumericParam("decay", lower = 0.0001, upper = 1)
+)
+ctrl_random <- makeTuneControlRandom(maxit = 10)
+```
+<li>Use the <code>setAggregation</code> function, which <strong>aggregates the standard deviation</strong> of performance metrics.</li>
+<li>Apply <code>setAggregation</code> to the <strong>mean misclassification error</strong> and <strong>accuracy after resampling</strong>.</li>
+<li>
+<strong>Optimize</strong> your model by mean misclassification error. Remember that the <strong>first argument</strong> is used for optimization.</li>
+```{r}
+# Create holdout sampling
+holdout <- makeResampleDesc("Holdout", predict = "both")
+# Perform tuning
+lrn_tune <- tuneParams(learner = lrn, 
+                       task = task, 
+                       resampling = holdout, 
+                       control = ctrl_random, 
+                       par.set = param_set,
+                       measures = list(mmce, setAggregation(mmce, train.mean), acc, setAggregation(acc, train.mean)))
+```
+
+<p class="">Very good! You know how to define aggregated measures for hyperparameter optimization.
+</p>
+
+##### Setting hyperparameters {.unnumbered}
+
+
+<div class>
+<p>And finally, you are going to set specific hyperparameters, which you might have found by examining your tuning results from before,
+The <code>knowledge_train_data</code> dataset has already been loaded for you, as have the packages <code>mlr</code> and <code>tidyverse</code>. And the following code has also been run:</p>
+<pre><code>task &lt;- makeClassifTask(data = knowledge_train_data, 
+                        target = "UNS")
+
+lrn &lt;- makeLearner(cl = "classif.nnet", fix.factors.prediction = TRUE)
+</code></pre>
+</div>
+
+```{r}
+# edited/added
+task <- makeClassifTask(data = knowledge_train_data, 
+                        target = "UNS")
+lrn <- makeLearner(cl = "classif.nnet", fix.factors.prediction = TRUE)
+```
+<li>Set the following hyperparameters for a neural net: One <strong>hidden layer</strong>, <strong>maximum number of iterations</strong> of 150 and 0 <strong>decay</strong>.</li>
+```{r}
+# Set hyperparameters
+lrn_best <- setHyperPars(lrn, par.vals = list(size = 1, 
+                                              maxit = 150, 
+                                              decay = 0))
+# Train model
+model_best <- train(lrn_best, task)
+```
+
+<p class="">Great! You know how to set specific hyperparameters in mlr.
+</p>
+
+### H2O {.unnumbered}
+
+<p class="chapter__description">
+    In this final chapter, you will use h2o, another package for machine learning with very convenient hyperparameter tuning functions. You will use it to train different models and define a Cartesian grid. Then, You will implement a Random Search use stopping criteria. Finally, you will learn AutoML, an  h2o interface which allows for very fast and convenient model and hyperparameter tuning with just one function.
+  </p>
+
+#### ML with h2o {.unnumbered}
+
+
+
+##### Prepare data for modelling with h2o {.unnumbered}
+
+
+<div class>
+<p>In order to train models with <code>h2o</code>, you need to <strong>prepare the data</strong> according to h2o's specific needs. Here, you will go over a common data preparation workflow in <code>h2o</code>.</p>
+<p>The <code>h2o</code> library has already been loaded for you, as has the <code>seeds_train_data</code> object.</p>
+<p>This chapter uses functions that can take some time to run, so don't be surprised if it takes a little longer than usual to submit your answer. On rare occurrences, you may get a server error. If this is the case, just reload the page.</p>
+</div>
+
+```{r}
+# edited/added
+library(h2o)
+seeds_train_data = read.csv("https://assets.datacamp.com/production/repositories/1941/datasets/a30578866bae2bceac04dbda4d85a3e7b8cb01d8/seeds_train_data.csv")
+seeds_test_data = read.csv("https://assets.datacamp.com/production/repositories/1941/datasets/4e970f91eb51c26f9e0e0287b822559fc689fde9/seeds_test_data.csv")
+```
+<li>Convert the <code>seeds_train_data</code> object to an <strong>H2O frame</strong>. Note, that you only need to give arguments that don't have a default value in the function.</li>
+<li>Define <strong>vectors of target</strong> (<code>y</code>) and <strong>feature names</strong> (<code>x</code>).</li>
+<li>Split the <code>seeds_train_data_hf</code> into a <strong>training</strong> and <strong>validation</strong> set and use the default proportion of 75% instances in one set, 25% in the other.</li>
+<li>Calculate the <strong>ratio of the target variable</strong> in the training set using <strong>exact quantiles</strong>.</li>
+```{r}
+# Initialise h2o cluster
+h2o.init()
+# Convert data to h2o frame
+seeds_train_data_hf <- as.h2o(seeds_train_data)
+# Identify target and features
+y <- "seed_type"
+x <- setdiff(colnames(seeds_train_data_hf), y)
+# Split data into train & validation sets
+sframe <- h2o.splitFrame(seeds_train_data_hf, seed = 42)
+train <- sframe[[1]]
+valid <- sframe[[2]]
+# Calculate ratios of the target variable
+summary(train$seed_type, exact_quantiles = TRUE)
+```
+
+<p class="">Good job! You successfully prepared data for machine learning with h2o.
+</p>
+
+##### Modeling with h2o {.unnumbered}
+
+
+<div class>
+<p>In the last exercise, you successfully prepared data for modeling with h2o. Now, you can use this data to <strong>train a model</strong>.
+The <code>h2o</code> library has already been loaded for you, as has the <code>seeds_train_data</code> object and the following code has been run:</p>
+<pre><code>h2o.init()
+seeds_train_data_hf &lt;- as.h2o(seeds_train_data)
+
+y &lt;- "seed_type"
+x &lt;- setdiff(colnames(seeds_train_data_hf), y)
+
+seeds_train_data_hf[, y] &lt;- as.factor(seeds_train_data_hf[, y])
+
+sframe &lt;- h2o.splitFrame(seeds_train_data_hf, seed = 42)
+train &lt;- sframe[[1]]
+valid &lt;- sframe[[2]]
+</code></pre>
+</div>
+
+```{r}
+# edited/added
+h2o.init()
+seeds_train_data_hf <- as.h2o(seeds_train_data)
+y <- "seed_type"
+x <- setdiff(colnames(seeds_train_data_hf), y)
+seeds_train_data_hf[, y] <- as.factor(seeds_train_data_hf[, y])
+sframe <- h2o.splitFrame(seeds_train_data_hf, seed = 42)
+train <- sframe[[1]]
+valid <- sframe[[2]]
+```
+<li>Train a <strong>Random Forest</strong> model with <code>h2o</code>.</li>
+<li>Calculate <strong>model performance</strong> of the Random Forest model on the <strong>validation</strong> data.</li>
+<li>Extract the <strong>confusion matrix</strong> from the model performance object.</li>
+<li>Extract the <code>logloss</code> of the model performance object.</li>
+```{r}
+# Train random forest model
+rf_model <- h2o.randomForest(x = x,
+                             y = y,
+                             training_frame = train,
+                             validation_frame = valid)
+# Calculate model performance
+perf <- h2o.performance(rf_model, valid = TRUE)
+# Extract confusion matrix
+h2o.confusionMatrix(perf)
+# Extract logloss
+h2o.logloss(perf)
+```
+
+<p class="">Great! You know how to train a random forest model with h2o.
+</p>
+
+#### Grid & random search {.unnumbered}
+
+
+
+##### Grid search with h2o {.unnumbered}
+
+
+<div class>
+<p>Now that you successfully trained a Random Forest model with <code>h2o</code>, you can apply the same concepts to training all other algorithms, like <strong>Deep Learning</strong>. In this exercise, you are going to apply <strong>a grid search</strong> to tune a model.
+The <code>h2o</code> library has already been loaded and initialized for you.</p>
+</div>
+
+```{r}
+# edited/added
+```
+<li>Start defining a <strong>grid of hyperparameters for deep learning</strong> with <code>h2o</code>: for <strong>learning rate</strong> use the values 0.001, 0.005 and 0.01. For an overview of all hyperparameters to use, go to the <strong>help</strong> for <code>h2o.deeplearning</code>.</li>
+```{r}
+# Define hyperparameters
+dl_params <- list(rate = c(0.001, 0.005, 0.01))
+```
+<li>Add values for the <strong>number of training iterations</strong> of 5, 10 and 15 to the tuning grid.</li>
+```{r}
+# Define hyperparameters
+dl_params <- list(epochs = c(5, 10, 15),
+                  rate = c(0.001, 0.005, 0.01))
+```
+<li>And finally, add two options for the <strong>number nodes in two hidden layers</strong>: 50 &amp; 50 and 100 &amp; 100. Note that the argument takes <strong>two values</strong> here, so you need to create a <strong>list within the list</strong> for the two hidden layers of one option.</li>
+```{r}
+# Define hyperparameters
+dl_params <- list(hidden = list(c(50, 50), c(100, 100)),
+                  epochs = c(5, 10, 15),
+                  rate = c(0.001, 0.005, 0.01))
+```
+<div class=""><ul>
+<li>Which <strong>argument</strong> of the <code>h2o.grid()</code> function takes the hyperparameter grid as input?</li>
+</ul></div>
+
+- [x] <code>hyper_params</code>
+- [ ] <code>algorithm</code>
+- [ ] <code>is_supervised</code>
+- [ ] <code>do_hyper_params_check</code>
+
+<p class="">Correct! You know how to use grid search for tuning a deep learning model with h2o.
+</p>
+
+##### Random search with h2o {.unnumbered}
+
+
+<div class>
+<p>Next, you will use <strong>random search</strong>. The <code>h2o</code> library and <code>seeds_train_data</code> have already been loaded for you and the following code has been run:</p>
+<pre><code>h2o.init()
+seeds_train_data_hf &lt;- as.h2o(seeds_train_data)
+
+y &lt;- "seed_type"
+x &lt;- setdiff(colnames(seeds_train_data_hf), y)
+
+seeds_train_data_hf[, y] &lt;- as.factor(seeds_train_data_hf[, y])
+
+sframe &lt;- h2o.splitFrame(seeds_train_data_hf, seed = 42)
+train &lt;- sframe[[1]]
+valid &lt;- sframe[[2]]
+
+dl_params &lt;- list(hidden = list(c(50, 50), c(100, 100)),
+                  epochs = c(5, 10, 15),
+                  rate = c(0.001, 0.005, 0.01))
+</code></pre>
+</div>
+
+```{r}
+# edited/added
+h2o.init()
+seeds_train_data_hf <- as.h2o(seeds_train_data)
+y <- "seed_type"
+x <- setdiff(colnames(seeds_train_data_hf), y)
+seeds_train_data_hf[, y] <- as.factor(seeds_train_data_hf[, y])
+sframe <- h2o.splitFrame(seeds_train_data_hf, seed = 42)
+train <- sframe[[1]]
+valid <- sframe[[2]]
+dl_params <- list(hidden = list(c(50, 50), c(100, 100)),
+                  epochs = c(5, 10, 15),
+                  rate = c(0.001, 0.005, 0.01))
+```
+<li>Define a <strong>search criteria</strong> object that defines <strong>random search</strong> with a <strong>maximum runtime of 10 seconds</strong>.</li>
+<li>Add this search criteria object at the appropriate place in the <code>h2o.grid</code> function to <strong>train the random models</strong>.</li>
+```{r}
+# Define search criteria
+search_criteria <- list(strategy = "RandomDiscrete", 
+                        max_runtime_secs = 10, # this is way too short & only used to keep runtime short!
+                        seed = 42)
+# Train with random search
+dl_grid <- h2o.grid("deeplearning", 
+                    grid_id = "dl_grid_new", # edited/added
+                    x = x, 
+                    y = y,
+                    training_frame = train,
+                    validation_frame = valid,
+                    seed = 42,
+                    hyper_params = dl_params,
+                    search_criteria = search_criteria)
+```
+
+<p class="">Nice! You know how to use random search for tuning a deep learning model with h2o.
+</p>
+
+##### Stopping criteria {.unnumbered}
+
+
+<div class>
+<p>In random search, you can also define <strong>stopping criteria</strong> instead of a maximum runtime. 
+The <code>h2o</code> library and <code>seeds_train_data</code> has already been loaded and initialized for you.</p>
+</div>
+
+```{r}
+# edited/added
+```
+<li>Modify the hyperparameter search by <strong>adding misclassification rate</strong> as the <strong>stopping metric</strong>.</li>
+<li>Add <strong>3 stopping rounds</strong> to the search criteria object.</li>
+<li>And finally, add a <strong>stopping tolerance</strong> of 0.1 to the search criteria..</li>
+```{r}
+# Define early stopping
+stopping_params <- list(strategy = "RandomDiscrete", 
+                        stopping_metric = "misclassification",
+                        stopping_rounds = 3, # edited/added
+                        stopping_tolerance = 0.1,
+                        seed = 42)
+```
+
+<div class=""><ul>
+<li>Which <strong>argument</strong> of the <code>h2o.grid()</code> function takes the stopping criteria as input?</li>
+</ul></div>
+
+- [ ] <code>algorithm</code>
+- [ ] <code>grid_id</code>
+- [ ] <code>strategy</code>
+- [x] <code>search_criteria</code>
+
+<p class="">Correct! You know how to use stopping criteria in random search.
+</p>
+
+#### Automatic ML {.unnumbered}
+
+
+
+##### AutoML in h2o {.unnumbered}
+
+
+<div class>
+<p>A very convenient functionality of <code>h2o</code> is automatic machine learning (<strong>AutoML</strong>).
+The <code>h2o</code> library and <code>seeds_train_data</code> have already been loaded for you and the following code has been run:</p>
+<pre><code>h2o.init()
+seeds_train_data_hf &lt;- as.h2o(seeds_train_data)
+
+y &lt;- "seed_type"
+x &lt;- setdiff(colnames(seeds_train_data_hf), y)
+
+seeds_train_data_hf[, y] &lt;- as.factor(seeds_train_data_hf[, y])
+
+sframe &lt;- h2o.splitFrame(seeds_train_data_hf, seed = 42)
+train &lt;- sframe[[1]]
+valid &lt;- sframe[[2]]
+</code></pre>
+</div>
+
+```{r}
+```
+<li>Define an <strong>automatic machine learning training</strong> with <strong>maximum runtime</strong> of 10 seconds. Note: 10 seconds is of course not enough for "real-life" but training for hours would take too long for the purpose of this exercise otherwise.</li>
+<li>Use <strong>mean per class error</strong> as the sorting metric in the leaderboard.</li>
+<li>Have the leaderboard be calculated on <strong>3-fold cross-validated data</strong>.</li>
+```{r}
+# edited/added
+h2o.init()
+seeds_train_data_hf <- as.h2o(seeds_train_data)
+y <- "seed_type"
+x <- setdiff(colnames(seeds_train_data_hf), y)
+seeds_train_data_hf[, y] <- as.factor(seeds_train_data_hf[, y])
+sframe <- h2o.splitFrame(seeds_train_data_hf, seed = 42)
+train <- sframe[[1]]
+valid <- sframe[[2]]
+# Run automatic machine learning
+automl_model <- h2o.automl(x = x, 
+                           y = y,
+                           training_frame = train,
+                           max_runtime_secs = 10,
+                           sort_metric = "mean_per_class_error",
+                           nfolds = 3,
+                           seed = 42)
+```
+<li>Have the <strong>leaderboard be calculated based on the validation data</strong> instead of on cross-validation results.</li>
+```{r}
+# Run automatic machine learning
+automl_model <- h2o.automl(x = x, 
+                           y = y,
+                           training_frame = train,
+                           max_runtime_secs = 10,
+                           sort_metric = "mean_per_class_error",
+                           leaderboard_frame = valid,
+                           seed = 42)
+```
+
+<p class="">Very good! You know how to use AutoML to perform automatic machine learning with h2o.
+</p>
+
+##### Scoring the leaderboard {.unnumbered}
+
+<div class=""><p>H2O's AutoML function returns the model results in the so called <strong>leaderboard</strong>.
+<strong>Without cross-validation</strong>, which datasets do you have to define if you want to:</p>
+<ul>
+<li>use the <strong>training data</strong> as is</li>
+<li>use half of the validation data for <strong>validation</strong></li>
+<li>and use the other half of the validation data for <strong>scoring the leaderboard</strong></li>
+</ul></div>
+
+- [ ] <code>training_frame</code>
+- [ ] <code>training_frame</code> + <code>leaderboard_frame</code>
+- [x] <code>training_frame</code> + <code>validation_frame</code>
+- [ ] <code>training_frame</code> + <code>validation_frame</code> + <code>leaderboard_frame</code>
+ 
+<p class="dc-completion-pane__message dc-u-maxw-100pc">Correct! With <code>training_frame</code> + <code>validation_frame</code>, training data is used as is, validation set is split 50/50 into validation and leaderboard data.</p>
+ 
+##### Extract h2o models and evaluate performance {.unnumbered}
+
+
+<div class>
+<p>In this final exercise, you will extract the <strong>best model</strong> from the <strong>AutoML leaderboard</strong>.
+The <code>h2o</code> library and <code>test</code> data has been loaded and the following code has been run:</p>
+<pre><code>automl_model &lt;- h2o.automl(x = x, 
+                           y = y,
+                           training_frame = seeds_data_hf,
+                           nfolds = 3,
+                           max_runtime_secs = 60,
+                           sort_metric = "mean_per_class_error",
+                           seed = 42)
+</code></pre>
+</div>
+
+```{r}
+```
+<li>Extract the <strong>leaderboard</strong> from the AutoML output. Note, that you can extract subsets of objects not only with <code>$</code> but also with <code>@</code>.</li>
+```{r}
+```
+<li>Assign the <strong>best model</strong> from the leaderboard the name <code>aml_leader</code> and examine it with the <code>summary()</code> function. Remember, that you can also use the @ sign to access parts of the <code>automl_model</code> object.</li>
+```{r}
+# edited/added
+automl_model <- h2o.automl(x = x, 
+                           y = y,
+                           training_frame = seeds_train_data_hf, # edited/added
+                           nfolds = 3,
+                           max_runtime_secs = 60,
+                           sort_metric = "mean_per_class_error",
+                           seed = 42)
+# Extract the leaderboard
+lb <- automl_model@leaderboard
+head(lb)
+# Assign best model new object name
+aml_leader <- automl_model@leader
+# Look at best model
+summary(aml_leader)
+```
+
+<div class=""><ul>
+<li>Look at the <strong>summary</strong> of the best model: How high is the <strong>residual deviance</strong> of the validation data?</li>
+</ul></div>
+
+- [ ] 14.70705
+- [ ] 4.039518
+- [ ] 22.54199
+- [x] 8.085209
+
+<div class=""><ul>
+<li>The <code>aml_leader</code> object can now be treated as you would any H2O model object. How would you calculate the <strong>model performance</strong> of this best model on <code>test</code> data?</li>
+</ul></div>
+
+- [ ] <code>h2o.aggregated_frame(aml_leader, test)</code>
+- [ ] <code>h2o.varimp(aml_leader, test)</code>
+- [x] <code>h2o.performance(aml_leader, test)</code>
+- [ ] <code>h2o.cross_validation_models(aml_leader, test)</code>
+
+<p class="">Correct! You know how to extract the best model from an AutoML leaderboard and how to evaluate it on test data.
+</p>
+
+#### Wrap-up {.unnumbered}
+
+##### Congratulations! {.unnumbered}
+
+Congrats! You made it through the course!
+
+##### What you've learned in this course {.unnumbered}
+
+In this course, you learned what hyperparameters are, how they are different from model parameters and why it is useful to tune them in your machine learning models. You also learned HOW to tune hyperparameters with the R packages caret mlr and h2o.
+
+##### Terms you can understand and apply {.unnumbered}
+
+Specifically, you learned what the following terms mean and how to apply them: - Cartesian grid search for tuning all possible combinations of a hyperparameter set - Random Search for tuning with random sampling from a hyperparameter set - Adaptive Resampling for more efficient tuning of a hyperparameter search space - and Automatic Machine Learning for quick and easy model and hyperparameter optimization. - You know how to evaluate tuning results by examining and visualizing performance metrics - and how to use performance metrics in early stopping
+
+##### How you can use this knowledge {.unnumbered}
+
+With these techniques, you should now be able to find the best (or most optimal) hyperparameter combinations for your own models. You got to know three R packages for machine learning and hyperparameter tuning, so you will now have a feeling for how they work and how they differ. Maybe you even found a favorite, which you prefer to work with from now on. So, where do you start, if you want to go further? For additional information and tutorials, read the package manuals and vignettes. And of course: try it out! Maybe you already have data of your own. Or look for example datasets at the UC Irvine Machine Learning Repository or Kaggle. Follow the links to get there.
+
+##### Thank you and have fun! {.unnumbered}
+
+With this, I want to thank you for completing this course! I hope you benefit from what you've learned and that you will have a lot of fun trying things out! Bye!

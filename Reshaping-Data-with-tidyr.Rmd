@@ -1,0 +1,1874 @@
+# Reshaping Data {.unnumbered}
+
+<h3 class="course__description-title">Jeroen Boeye</h3>
+<p class="course__description">
+    Jeroen is a machine learning engineer working at Faktion, a Belgian AI company. He uses both R and Python for his analyses and has a PhD background in computational biology. His experience mostly lies in working with structured data, produced by sensors or digital processes. 
+  </p>
+
+**Course Description**
+
+<p class="course__description">Data in the wild can be scary—when confronted with a complicated and messy dataset you may find yourself wondering, where do I even start? The tidyr package allows you to wrangle such beasts into nice and tidy datasets. Inaccessible values stored in column names will be put into rows, JSON files will become data frames, and missing values will never go missing again. You'll practice these techniques on a wide range of messy datasets, learning along the way how many dogs the Soviet Union sent into space and what bird is most popular in New Zealand. With the tidyr package in your tidyverse toolkit, you'll be able to transform almost any dataset in a tidy format which will pay-off during the rest of your analysis.</p>
+
+## Tidy data {.unnumbered}
+
+<p class="chapter__description">
+    You'll be introduced to the concept of tidy data which is central to this course. In the first two lessons, you'll jump straight into the action by separating messy character columns into tidy variables and observations ready for analysis. In the final lesson, you'll learn how to overwrite and remove missing values.
+  </p>
+  
+### What is tidy data? {.unnumbered}
+
+
+
+#### Tidy data structure {.unnumbered}
+
+<p>You saw a number of tidy data concepts in the video, can you remember how they relate to a rectangular data structure?</p>
+
+<div class="">
+<li>Assign these concepts to their location in a rectangular data frame.</li>
+
+
+
+<li>Rows: Observations</li>
+<li>Columns: Variables</li>
+<li>Cells: Values</li>
+
+
+<p>Good job! This is the very foundation of tidy data.</p>
+
+#### Multiple variables per column {.unnumbered}
+
+
+<div class>
+<p>Being a busy person, you don't want to spend too much time on Netflix, so you decide to crunch some numbers on TV show and movie durations before deciding what to watch.
+You've managed to obtain a dataset named <code>netflix_df</code>, but its <code>duration</code> column has an issue. It contains strings with both a value and unit of duration (<code>"min"</code> or <code>"Season"</code>).</p>
+<p>You'll tidy this dataset so that each variable gets its own column.</p>
+<p>As will always be the case in this course, the <code>tidyr</code> package has been pre-loaded for you.</p>
+</div>
+<div class="exercise--instructions__content">
+<li>Inspect <code>netflix_df</code> by typing its name directly in the R console at the bottom-right and hitting Enter to see what string separates the value from the unit in the <code>duration</code> column.</li>
+<li>Separate the <code>duration</code> column over two variables named <code>value</code> and <code>unit</code>. Pass the string separating the number from the unit to the <code>sep</code> argument.</li>
+</div>
+```{r}
+# edited/added
+library(tidyverse)
+netflix_df <- readRDS("archive/Reshaping-Data-with-tidyr/datasets/netflix_duration.rds")
+
+netflix_df %>% 
+  # Split the duration column into value and unit columns
+  separate(duration, into = c("value", "unit"), sep = " ", convert = TRUE)
+```
+
+<p class="">Good job on creating your first tidy dataset in this course! Notice the <code>convert = TRUE</code> option? It caused the <code>value</code> column to be converted from string to integer.
+</p>
+
+### Columns with multiple values {.unnumbered}
+
+
+
+#### International phone numbers {.unnumbered}
+
+
+<div class>
+<p>You work for a multinational company that uses auto-dialer software to contact its customers. When new customers subscribe online they are asked for a phone number but they often forget to add the country code needed for international calls. You were asked to fix this issue in the database.
+You've been given a data frame with national numbers and country codes named <code>phone_nr_df</code>. Now you want to combine the <code>country_code</code> and <code>national_number</code> columns to create valid international numbers.</p>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Use the <code>unite()</code> function to create a new <code>international_number</code> column, using an empty string as the separator.</li>
+
+</div>
+```{r}
+# edited/added
+phone_nr_df=tribble(~country,	~country_code,	~national_number,
+"USA",	"+1",	"2025550117",
+"United Kingdom",	"+44",	"1632960924",
+"Brazil",	"+55",	"95552452220",
+"Australia",	"+61",	"1900654321",
+"China",	"+86",	"13555953217",
+"India",	"+91",	"8555843898")
+
+phone_nr_df %>%
+  # Unite the country_code and national_number columns
+  unite("international_number", country_code, national_number, sep = "")
+```
+
+<p class="">Well done! Being able to unite columns is a good skill to have but in practice you'll be separating them more often while tidying data.
+</p>
+
+#### Extracting observations from values {.unnumbered}
+
+<div class>
+<p>You're given a sample of the Netflix dataset containing TV shows and their casts called <code>tvshow_df</code>. You want to learn which six actors have the most appearances.</p>
+<p>However, the dataset only has one row per TV show, and multiple actors are listed in the <code>cast</code> column.</p>
+<p>Transform the data so that for each TV show, every actor has a row. The number of appearances will be calculated for you.</p>
+<p>The <code>dplyr</code> package has been pre-loaded for you.</p>
+</div>
+
+```{r}
+# edited/added
+tvshow_df=readRDS("archive/Reshaping-Data-with-tidyr/datasets/netflix_series.rds")
+tvshow_df$cast %>% head
+```
+
+<div class=""><p>Inspect <code>tvshow_df</code> in the console. What string separates actors in the <code>cast</code> column?</p></div>
+
+
+- [ ] <code>" "</code>
+- [ ] <code>","</code>
+- [x] <code>", "</code>
+
+
+
+<li>Use <code>separate_rows()</code> on the <code>cast</code> column, using the appropriate separator for the <code>sep</code> argument.</li>
+<li>Use the <code>head()</code> function to keep just the top six.</li>
+
+```{r}
+tvshow_df %>% 
+  # Separate the actors in the cast column over multiple rows
+  separate_rows(cast, sep = ", ") %>% 
+  rename(actor = cast) %>% 
+  count(actor, sort = TRUE) %>% 
+  head()
+```
+
+<p class="">Well done! Once each actor has an observation per movie, getting the top six is easy. Interestingly, these are all voice actors or narrators.
+</p>
+
+#### Separating into columns and rows {.unnumbered}
+
+
+<div class>
+<p>Remember the drink ingredients data from the video? You've been given an similar version (<code>drink_df</code>) that also includes quantities and units. Now you want to create an overview of how much of each ingredient you should buy to make these drinks. </p>
+<p>The <code>dplyr</code> package has been pre-loaded for you.</p>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Inspect <code>drink_df</code> in the console to find the right separator in the <code>ingredients</code> column.</li>
+<li>Separate the <code>ingredients</code> column so that for each drink each ingredient gets a row.</li>
+
+</div>
+
+<div class="exercise--instructions__content">
+
+<li>Inspect the output of the previous step to find the separator that splits the <code>ingredients</code> column into three columns: <code>ingredient</code>, <code>quantity</code>, and <code>unit</code>.</li>
+<li>Make sure to convert data types to numeric when possible.</li>
+
+
+
+<div class="exercise--instructions__content">
+
+<li>Group the data by <code>ingredient</code> and <code>unit</code>.</li>
+<li>Calculate the total quantity of each ingredient.</li>
+
+```{r}
+# edited/added
+drink_df=tribble(~drink, ~ingredients,
+"Chocolate milk", "milk 0.3 L; chocolate 40 g; sugar 10 g",
+"Orange juice", "oranges 3; sugar 20 g", 
+"Cappuccino", "milk 0.1 L; water 0.1 L; coffee 30 g; sugar 5 g")
+
+drink_df %>% 
+  # Separate the ingredients over rows
+  separate_rows(ingredients, sep = "; ") %>% 
+  # Separate ingredients into three columns
+  separate(
+    ingredients, 
+    into = c("ingredient", "quantity", "unit"), 
+    sep = " ", 
+    convert = TRUE
+  ) %>% 
+  # Group by ingredient and unit
+  group_by(ingredient, unit) %>% 
+  # Calculate the total quantity of each ingredient
+  summarize(quantity = sum(quantity))
+```
+
+<p class="">Good job! You separated a messy string column over both rows and columns and unlocked the data within. Note that the <code>separate()</code> function correctly added a missing value for the oranges unit.
+</p>
+
+### Missing values {.unnumbered}
+
+
+
+#### And the Oscar for best director goes to ... <NA> {.unnumbered}
+
+
+<div class>
+<p>You're working on a sample of the Netflix dataset pre-loaded as <code>director_df</code>. This time, the data frame contains just the directors and movie titles. Your goal is to identify the directors who created the most movies. Since the <code>director</code> column contains multiple names, you'll first separate its values over multiple rows and then count the directors.</p>
+<p>Since you don't want movies without directors polluting your overview, you'll apply the <code>drop_na()</code> function.</p>
+<p>The <code>dplyr</code> package has been pre-loaded for you.</p>
+</div>
+
+<li>Inspect <code>director_df</code> in the console to see what string separates directors in the <code>director</code> column.</li>
+<li>Spread the values in the <code>director</code> column over separate rows.</li>
+
+
+
+<div class="exercise--instructions__content">
+
+<li>Count the number of times each <code>director</code> appears in the data. Make sure to sort the output.</li>
+
+```{r}
+# edited/added
+director_df=readRDS("archive/Reshaping-Data-with-tidyr/datasets/netflix_directors.rds")
+
+director_df %>% 
+  # Spread the director column over separate rows
+  separate_rows(director, sep = ", ") %>% 
+  # Count the number of movies per director
+  count(director, sort = TRUE)
+```
+
+
+<li>Drop rows containing <code>NA</code> values in the <code>director</code> column.</li>
+
+```{r}
+director_df %>% 
+  # Drop rows with NA values in the director column
+  drop_na(director) %>% 
+  # Spread the director column over separate rows
+  separate_rows(director, sep = ", ") %>% 
+  # Count the number of movies per director
+  count(director, sort = TRUE)
+```
+
+<p class="">Good job! Missing values will often show up when you sort values by how often they appear in the data. Expect them to be there and remove them early on!
+</p>
+
+#### Imputing sales data {.unnumbered}
+
+
+<div class>
+<p>You've been asked to create a report that allows management to compare sales figures per quarter for two years.
+The problem is that the dataset (<code>sales_df</code>) contains missing values. You'll need to impute the values in the <code>year</code> column so that you can visualize the data.</p>
+<p>The <code>ggplot2</code> package has been pre-loaded for you.</p>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Inspect <code>sales_df</code> in the console, pay attention to the <code>year</code> column.</li>
+<li>Use the <code>fill()</code> function to impute the <code>year</code> column in the correct direction.</li>
+<li>Create a line plot where each year has a different color.</li>
+
+</div>
+```{r}
+# edited/added
+sales_df=tribble(~year,~quarter,~sales,
+NA,"Q1","12498",
+NA,"Q2","20461",
+NA,"Q3","19737",
+"2019","Q4","20314",
+NA,"Q1","13494",
+NA,"Q2","19314",
+NA,"Q3","23640",
+"2020","Q4","22920") %>% 
+  mutate(year=as.factor(year))
+
+sales_df %>% 
+  # Impute the year column
+  fill(year, .direction = "up") %>%
+  # Create a line plot with sales per quarter colored by year.
+  ggplot(aes(x = quarter, y = sales, color = year, group = year)) +
+  geom_line()
+```
+
+<p class="">Alright! Without imputing the year column first, the visual would have been all messed up.
+</p>
+
+#### Nuclear bombs per continent {.unnumbered}
+
+
+<div class>
+<p>Since WWII, a number of nations have been detonating nuclear bombs for military research. A tally of bombs detonated per nation has been calculated from the Nuclear Explosion DataBase (NEDB) and provided as <code>nuke_df</code>. You are interested in finding out how many bombs have been detonated by nations grouped per continent. To achieve this goal, <code>nuke_df</code> will be joined to <code>country_to_continent_df</code> which is a mapping of nation to continent. You will need to overwrite missing values with zeros so that you can create a nice plot.</p>
+<p>The <code>dplyr</code> and <code>ggplot2</code> packages have been pre-loaded for you.</p>
+<p><strong>Side note 1:</strong> Bombs detonated by the Soviet Union were attributed to the Russian Federation.</p>
+<p><strong>Side note 2:</strong> The Russian Federation is solely mapped to Europe for simplicity.</p>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Inspect <code>nuke_df</code> and <code>country_to_continent_df</code> in the console.</li>
+<li>Replace the missing values in the <code>n_bombs</code> columns with <code>0L</code>. Adding the <code>L</code> sets the data type to <strong>integer</strong>.</li>
+
+</div>
+```{r}
+# edited/added
+country_to_continent_df=read.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vRPCvCEPOCd5KrjlVF_iXe2oDxIiXM_2wfoJzp-Za-5PusRoqUy3dkYJ22HCyyrBmT1KMha82C_SPeP/pub?gid=1254696327&single=true&output=csv")
+nuke_df=read.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vRpPo4a7Uj9jAtdmEC3p1YixmewdMQKKsKbuu3CoF4COKX7j-y0FpiRzxLGdaWVmb7mrvWOWEaph558/pub?gid=0&single=true&output=csv")
+
+country_to_continent_df %>% 
+  left_join(nuke_df, by = "country_code") %>% 
+  # Impute the missing values in the n_bombs column with 0L
+  replace_na(list(n_bombs = 0L))
+```
+
+<div class="exercise--instructions__content">
+
+<li>Group the dataset by <code>continent</code> and aggregate the data by summing the number of bombs.</li>
+
+```{r}
+country_to_continent_df %>% 
+  left_join(nuke_df, by = "country_code") %>% 
+  # Impute the missing values in the n_bombs column with 0L
+  replace_na(list(n_bombs = 0L)) %>% 
+  # Group the dataset by continent
+  group_by(continent) %>% 
+  # Sum the number of bombs per continent
+  summarize(n_bombs_continent = sum(n_bombs))
+```
+
+<div class="exercise--instructions__content">
+
+<li>Plot the summed number of bombs detonated by nations from each continent.</li>
+
+```{r}
+country_to_continent_df %>% 
+  left_join(nuke_df, by = "country_code") %>%  
+  # Impute the missing values in the n_bombs column with 0L
+  replace_na(list(n_bombs = 0L)) %>% 
+  # Group the dataset by continent
+  group_by(continent) %>% 
+  # Sum the number of bombs per continent
+  summarize(n_bombs_continent = sum(n_bombs)) %>% 
+  # Plot the number of bombs per continent
+  ggplot(aes(x = continent, y = n_bombs_continent)) +
+  geom_col()
+```
+
+<p class="">Kaboom! You just finished Chapter 1! Because you replaced missing values with zeros for non nuclear powers, all continents show up in the plot.<br><br> Enjoying the course so far? <a href="http://twitter.com/intent/tweet?text=I%20am%20taking%20Reshaping%20Data%20with%20tidyr%20on%20@DataCamp%20taught%20by%20@JeroenBoeye!%20So%20far,%20I%E2%80%99ve%20learned%20about%20Separating%20messy%20character%20columns%20and%20dealing%20with%20missing%20values%20and%20will%20learn%20about%20pivoting,%20expanding,%20and%20rectangling%20data%20%3A&amp;url=http%3A%2F%2Fdatacamp.com/courses/reshaping-data-with-tidyr" target="_blank" rel="noopener noreferrer">Tell us what you think</a> via Twitter!
+</p>
+
+## From wide to long and back {.unnumbered}
+
+<p class="chapter__description">
+    This chapter is all about pivoting data from a wide to long format and back again using the `pivot_longer()` and `pivot_wider()` functions. You'll need these functions when variables are hidden in messy column names or when variables are stored in rows instead of columns. You'll learn about space dogs, nuclear bombs, and planet temperatures along the way.
+  </p>
+  
+### From wide to long data {.unnumbered}
+
+
+
+#### Nuclear bombs per country {.unnumbered}
+
+
+<div class>
+<p>You've been given a version of the Nuclear Explosion DataBase (NEDB) where country names are specified in the column headers (<code>nuke_df</code>). You want to visualize how many nukes were detonated per year per country. You'll need to pivot the data and replace <code>NA</code> values first.</p>
+<p>The <code>ggplot2</code> package has been pre-loaded for you.</p>
+<p><img src="https://assets.datacamp.com/production/repositories/5769/datasets/0cd60c041f217de4cb52d4b241f3a6f6e5edbdfa/nuke_bikini.jpg" alt="Nuclear explosion at Bikini"></p>
+<p><em>"A-Day" First atomic bomb explosion at Bikini in the Marshall Islands 1 July 1946.</em></p>
+<p><a href="https://unsplash.com/@scienceinhd/collections">Photo by Science in HD</a></p>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Pivot all columns except for <code>year</code> to a longer format.</li>
+
+</div>
+
+
+<div class="exercise--instructions__content">
+
+<li>The country names are now in the <code>name</code> column. Overwrite its name with <code>country</code>. The <code>value</code> column should be named <code>n_bombs</code>.</li>
+
+
+
+<div class="exercise--instructions__content">
+
+<li>Replace the <code>NA</code> values in the <code>n_bombs</code> column with <strong>integer</strong> zero values (<code>0L</code>).</li>
+
+```{r}
+# edited/added
+nuke_df=readRDS("archive/Reshaping-Data-with-tidyr/datasets/nuke_wide_country.rds")
+
+nuke_df %>% 
+  # Pivot the data to a longer format
+  pivot_longer(
+    -year, 
+    # Overwrite the names of the two new columns
+    names_to = "country", 
+    values_to = "n_bombs"
+  ) %>% 
+  # Replace NA values for n_bombs with 0L
+  replace_na(list(n_bombs = 0L))
+```
+
+<div class="exercise--instructions__content">
+
+<li>Create a line plot where the number of bombs dropped per country is plotted over time. Use country to color the lines.</li>
+
+```{r}
+nuke_df %>% 
+  # Pivot the data to a longer format
+  pivot_longer(
+    -year, 
+    # Overwrite the names of the two new columns
+    names_to = "country", 
+    values_to = "n_bombs"
+  ) %>% 
+  # Replace NA values for n_bombs with 0L
+  replace_na(list(n_bombs = 0L)) %>% 
+  # Plot the number of bombs per country over time
+  ggplot(aes(x = year, y = n_bombs, color = country)) +
+  geom_line()
+```
+
+<p class="">Good job! You can see the Cold War nuclear arms race heat up in the sixties and then gradually wane down. Knowing when and how to combine different <code>tidyr</code> functions like <code>pivot_longer()</code> and <code>replace_na()</code> is an important skill best learned through practice.
+</p>
+
+#### WHO obesity per country {.unnumbered}
+
+
+<div class>
+<p>According to the World Health Organization (WHO), worldwide obesity has nearly tripled since 1975. You're interested in the severity of this global health issue per country and whether males and females are affected differently. You'll use the WHO's obesity data (<code>obesity_df</code>) to investigate this issue. The data holds the percentage of females, males, and both sexes combined that are considered obese (BMI &gt; 30) per country. </p>
+<p>You want to create a scatterplot where, per nation, you can see the obesity data colored differently for females and males. This implies that sex should become a variable with its own column. </p>
+<p>The <code>ggplot2</code> package has been pre-loaded for you.</p>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Inspect <code>obesity_df</code> in the console.</li>
+<li>Pivot the <code>male</code> and <code>female</code> columns. The old column names should go in the <code>sex</code> column, the original values should go in the <code>pct_obese</code> column.</li>
+
+</div>
+```{r}
+# edited/added
+obesity_df=read.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vRpPo4a7Uj9jAtdmEC3p1YixmewdMQKKsKbuu3CoF4COKX7j-y0FpiRzxLGdaWVmb7mrvWOWEaph558/pub?gid=278516960&single=true&output=csv")
+
+obesity_df %>% 
+  # Pivot the male and female columns
+  pivot_longer(c(male, female),
+               names_to = "sex",
+               values_to = "pct_obese")
+```
+
+<div class="exercise--instructions__content">
+
+<li>Create a scatterplot with <code>pct_obese</code> per <code>country</code> colored by <code>sex</code>. The <code>country</code> variable has been ordered by overall obesity % and added for you.</li>
+
+```{r}
+obesity_df %>% 
+  # Pivot the male and female columns
+  pivot_longer(c(male, female),
+               names_to = "sex",
+               values_to = "pct_obese") %>% 
+  # Create a scatter plot with pct_obese per country colored by sex
+  ggplot(aes(x = pct_obese, color = sex,
+             y = forcats::fct_reorder(country, both_sexes))) +
+  geom_point() +
+  scale_y_discrete(breaks = c("India", "Nauru", "Cuba", "Brazil",
+                              "Pakistan", "Gabon", "Italy", "Oman",
+                              "China", "United States of America")) +
+  labs(x = "% Obese", y = "Country")
+```
+
+<p class="">Well done! There is a huge spread in obesity prevalence over countries. Overall, females are affected more often. Because you put the <code>sex</code> variable in its own column it became easy to add it to a <code>ggplot</code>.
+</p>
+
+#### Bond... James Bond {.unnumbered}
+
+
+<div class>
+<p>You've been given a James Bond movie dataset (<code>bond_df</code>) and want to visualize the number of movies that Bond actors have featured in per decade. However, the data is in an untidy format with the decade values captured in the column headers. You'll tidy this dataset to give each variable its own column.</p>
+<p>The <code>ggplot2</code> package has been pre-loaded for you.</p>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Pivot all columns except <code>Bond</code> to a longer format and set the names of the newly created columns to <code>decade</code> and <code>n_movies</code>.</li>
+
+</div>
+
+
+<div class="exercise--instructions__content">
+
+<li>Drop any <code>NA</code> values in the <code>n_movies</code> column while it is created.</li>
+
+```{r}
+# edited/added
+bond_df=read.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vRpPo4a7Uj9jAtdmEC3p1YixmewdMQKKsKbuu3CoF4COKX7j-y0FpiRzxLGdaWVmb7mrvWOWEaph558/pub?gid=595802601&single=true&output=csv")
+colnames(bond_df)=c("Bond",1960,	1970,	1980,	1990,	2000,	2010,	2020)
+
+bond_df %>% 
+  # Pivot the data to long format
+  pivot_longer(
+    -Bond, 
+    # Overwrite the names of the two newly created columns
+    names_to = "decade", 
+    values_to = "n_movies", 
+    # Drop na values
+    values_drop_na = TRUE
+  )
+```
+
+
+<li>Transform the <code>decade</code> column data type to integer.</li>
+
+```{r}
+bond_df %>% 
+  # Pivot the data to long format
+  pivot_longer(
+    -Bond, 
+    # Overwrite the names of the two newly created columns
+    names_to = "decade", 
+    values_to = "n_movies", 
+    # Drop na values
+    values_drop_na = TRUE, 
+    # Transform the decade column data type to integer
+    names_transform = list(decade = as.integer)
+  ) %>% 
+  ggplot(aes(x = decade + 5, y = n_movies, fill = Bond))+
+  geom_col()
+```
+
+<p class="">Well done! If you've worked with <code>tidyr</code> in the past, you may remember the <code>gather()</code> function. This is a now retired predecessor of the <code>pivot_longer()</code> function.
+</p>
+
+### Deriving variables from column headers {.unnumbered}
+
+
+
+#### New-Zealand's bird of the year {.unnumbered}
+
+
+<div class>
+<p>Every year New Zealanders vote en masse to decide which species gets the bird of the year trophy. The contest is organized by the <a href="https://www.birdoftheyear.org.nz/">Forest &amp; Bird agency</a> which allows each person to give points to up to five birds (first pick gets 5 points, second 4, …). Your job is to decide this year's winner from the messy dataset that's been pre-loaded for you as <code>bird_df</code>.</p>
+<p>The <code>dplyr</code> package has been pre-loaded for you.</p>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Inspect <code>bird_df</code> in the console.</li>
+<li>Pivot <code>bird_df</code> to longer format so that an <strong>integer</strong> column <code>points</code> and a character column <code>species</code> are created. Use the <code>names_prefix</code> argument to clean up the <code>points</code> column and make sure no <code>NA</code> values remain.</li>
+
+</div>
+```{r}
+# edited/added
+bird_df=read.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vQi_yI_hSJxlAZpWoqIrp8F9b-g6PLT0snajIporAW2hw8beu90XVaoL_SgfmZ0NAmSRqJyHcCNghPO/pub?gid=1305911804&single=true&output=csv")
+
+bird_df %>%
+  # Pivot the data to create a two column data frame
+  pivot_longer(
+    starts_with("points_"),
+    names_to = "points",
+    names_prefix = "points_",
+    names_transform = list(points = as.integer),
+    values_to = "species",
+    values_drop_na = TRUE
+  )
+```
+
+<div class="exercise--instructions__content">
+
+<li>Calculate the <code>total_points</code> each species got.</li>
+
+```{r}
+bird_df %>%
+  # Pivot the data to create a 2 column data frame
+  pivot_longer(
+    starts_with("points_"),
+    names_to = "points",
+    names_prefix = "points_",
+    names_transform = list(points = as.integer),
+    values_to = "species",
+    values_drop_na = TRUE
+  ) %>%
+  group_by(species) %>% 
+  summarize(total_points = sum(points)) %>% 
+  slice_max(total_points, n = 5)
+```
+
+<p class=""><img src="https://assets.datacamp.com/production/repositories/5769/datasets/cd99ada0ea1e2cb9ea8c888509b5e2a530628b0e/yellow_eyed_penguin.png" alt="Yellow-eyed penguin">
+<br>
+Good job! A well-deserved win for the penguin! <br>
+<br>
+<span>Photo by <a href="https://unsplash.com/@veraw04ng" target="_blank" rel="noopener noreferrer">veraw04ng</a></span>
+</p>
+
+#### Big tech stock prices {.unnumbered}
+
+
+<div class>
+<p>You're an analyst at an investment firm and want to visualize the weekly closing prices of five big tech firms' stocks.
+However, the dataset you've been handed (<code>stock_df</code>) is messy and has the year and week variables stored in the column headers.
+You'll pivot this data into a tidy format, extract the variables from the headers, and create a line plot.</p>
+<p>The <code>ggplot2</code> package has been pre-loaded for you.</p>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Inspect <code>stock_df</code> in the console.</li>
+<li>Pivot <code>stock_df</code> so that the  <strong>integer</strong> columns <code>year</code> and <code>week</code> are created from the column names and the original values are moved to the <code>price</code> column. Use the <code>names_sep</code> argument to separate the column names.</li>
+
+</div>
+```{r}
+# edited/added
+stock_df=read.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vRpPo4a7Uj9jAtdmEC3p1YixmewdMQKKsKbuu3CoF4COKX7j-y0FpiRzxLGdaWVmb7mrvWOWEaph558/pub?gid=1049805716&single=true&output=csv")
+colnames(stock_df)=c("company",paste(2019,"_week",seq(1:52),sep=""),paste(2020,"_week",seq(1:53),sep=""))
+
+stock_df %>% 
+  # Pivot the data to create 3 new columns: year, week, price
+  pivot_longer(
+    -company,
+    names_to = c("year", "week"),
+    values_to = "price",
+    names_sep = "_week",
+    names_transform = list(
+      year = as.integer,
+      week = as.integer)
+  )
+```
+
+<div class="exercise--instructions__content">
+
+<li>Create a line plot where the <code>price</code> is shown per <code>week</code> and color by <code>company</code>. The <code>year</code> variable has been dealt with for you.</li>
+
+```{r}
+stock_df %>% 
+  # Pivot the data to create 3 new columns: year, week, price
+  pivot_longer(
+    -company,
+    names_to = c("year", "week"),
+    values_to = "price",
+    names_sep = "_week",
+    names_transform = list(
+      year = as.integer,
+      week = as.integer)
+  ) %>%
+  # Create a line plot with price per week, color by company
+  ggplot(aes(x = week, y = price, color = company)) +
+  geom_line() +
+  facet_grid(. ~ year)
+```
+
+<p class="">Well done! You can now extract multiple variables from column headers. I hope you are starting to see just how powerful the <code>pivot_longer()</code> function is!
+</p>
+
+### Deriving variables from complex column headers {.unnumbered}
+
+
+
+#### Soviet space dogs, the dog perspective {.unnumbered}
+
+
+<div class>
+<p>You'll be working on an pre-processed sample of the USSR space dogs database compiled by <a href="https://airtable.com/universe/expG3z2CFykG1dZsp/soviet-space-dogs">Duncan Geere</a> and pre-loaded for you as <code>space_dogs_df</code>. Each of the 42 rows in this dataset represents a test rocket launch which had one or two very brave dogs on board. </p>
+<p>Your goal is to reshape this dataset so that for each launch, each dog has a row.</p>
+<p>The challenge is that in the column headers (<code>name_1</code>, <code>name_2</code>, <code>gender_1</code>, and <code>gender_2</code>), the part before the <code>_</code> separator can point to two different variables (name and gender), while the second part always points to the dog ID (1<sup>st</sup> or 2<sup>nd</sup> dog).</p>
+<p><img src="https://assets.datacamp.com/production/repositories/5769/datasets/6a7efa9a4f3ae76771c959bd27ce5a2a74a791c3/laika.png" alt="Laika"></p>
+<p><em>Laika, the first animal to orbit Earth in 1957</em></p>
+</div>
+<div class="exercise--instructions__content">
+
+<li>As the first argument to <code>pivot_longer()</code>, pass the columns to pivot (<code>name_1</code>, <code>name_2</code>, <code>gender_1</code>, and <code>gender_2</code>).</li>
+<li>Complete the <code>names_to</code> argument so that the first part of the column headers are reused.</li>
+<li>Make sure <code>NA</code> values are dropped since not all rockets had two dogs.</li>
+
+</div>
+```{r}
+# edited/added
+space_dogs_df=read.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vSrv7ECpC0Jwv5u4Y5KZFZOGJ2SnEruSs7xoGs_ZPLbLS5CI32JVRLAxpv0dyneZovOOQ_jyaqcZeoh/pub?gid=0&single=true&output=csv")
+
+space_dogs_df %>% 
+  pivot_longer(
+    # Add the columns to pivot
+    name_1:gender_2,
+    names_sep = "_",
+    # Complete the names_to argument to re-use the first part of the column headers
+    names_to = c(".value", "dog_id"),
+    # Make sure NA values are dropped
+    values_drop_na = TRUE
+  )
+```
+
+<p class="">Well done! Notice how the <code>"name"</code> and <code>"gender"</code> parts of the old column headers were reused in two new columns. The second part of the old headers is found as a variable in the <code>dog_id</code> column. Since most launches had two dogs, the number of rows almost doubled.
+</p>
+
+#### WHO obesity vs. life expectancy {.unnumbered}
+
+
+<div class>
+<p>You've been given a sample of WHO data (<code>who_df</code>) with obesity percentages and life expectancy data per country, year, and sex. You want to visually inspect the correlation between obesity and life expectancy.</p>
+<p>However, the data is very messy with four variables hidden in the column names. Each column name is made up of three parts separated by underscores: Values for the <code>year</code>, followed by those for <code>sex</code>, and then values for either <code>pct.obese</code> or <code>life.exp</code>. Since the third part of the column name string holds two variables you'll need to use the special <code>".value"</code> value in the <code>names_to</code> argument.</p>
+<p>You'll pivot the data into a tidy format and create the scatterplot.</p>
+<p>The <code>ggplot2</code> package has been pre-loaded for you.</p>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Inspect <code>who_df</code> in the console.</li>
+<li>Pivot the data so that each variable (<code>year</code>, <code>sex</code>, <code>pct.obese</code>, <code>life.exp</code>) has a column of the correct <strong>data type</strong>.</li>
+
+</div>
+```{r}
+# edited/added
+who_df <- read.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vQcfCvi2hNzwDKNoY_eRWN__rQqbben9J8MniIW_TNV6Gu109Fo7EFRcha6FuaaP--Bch8SAhNFjRhg/pub?gid=2094487129&single=true&output=csv", check.names = FALSE)
+
+who_df %>%
+  # Put each variable in its own column
+  pivot_longer(
+    -country,
+    names_to = c("year", "sex", ".value"),
+    names_sep = "_",
+    names_transform = list("year" = as.integer)
+  )
+```
+
+<div class="exercise--instructions__content">
+
+<li>Use <code>ggplot()</code> to create a scatterplot with <code>life.exp</code> over <code>pct.obese</code>. Color the points by <code>sex</code>.</li>
+
+```{r}
+who_df %>%
+  # Put each variable in its own column
+  pivot_longer(
+    -country,
+    names_to = c("year", "sex", ".value"),
+    names_sep = "_",
+    names_transform = list("year" = as.integer)
+  ) %>%
+  # Create a plot with life expectancy over obesity
+  ggplot(aes(x = pct.obese, y = life.exp, color = sex))+
+  geom_point()
+```
+
+<p class="">Well done, you've transformed an extremely messy dataset with a single call of the <code>pivot_longer()</code> function! Perhaps surprisingly, countries with low life expectancy often have low obesity values even though we expected to see a negative trend. This is probably due to non-obesity related health issues being more important in these countries.
+</p>
+
+#### Uncounting observations {.unnumbered}
+
+
+<div class>
+<p>You've found the job of your dreams providing technical support for a dog breed beauty contest. The jury members want a spreadsheet with the breed and id of each participating dog so that they can add the scores later on. You've only been given the number of participants per dog breed (<code>dog_df</code>) so you decide to use your <code>tidyr</code> skills to create the desired result.</p>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Inspect the data in the console.</li>
+<li>Uncount the data so that per breed, each dog gets a row and an ID. The ID should go in the <code>dog_id</code> column.</li>
+
+</div>
+```{r}
+# edited/added
+dog_df = tribble(~breed, ~n_participants,
+"Husky", 5,
+"Golden retriever", 12,
+"Poodle", 13,
+"Shiba Inu", 7)
+
+dog_df %>% 
+  # Create one row for each participant and add the id
+  uncount(n_participants, .id = "dog_id")
+```
+
+<p class="">May the prettiest dog win! Uncounting data isn't something you'll do every day, but in specific cases it's just what you need.
+</p>
+
+### From long to wide data {.unnumbered}
+
+
+
+#### Soviet space dogs, the flight perspective {.unnumbered}
+
+
+<div class>
+<p>Remember the USSR space dogs dataset<sup>1</sup>? You changed it to a long format so that for every dog in every rocket launch, there was a row. Suppose you're given this tidy dataset and are asked to answer the question, "In what percentage of flights were both dogs of the same gender?"</p>
+<p>You'll reshape and investigate <code>space_dogs_df</code> to find the answer.</p>
+<p>The <code>dplyr</code> package has been pre-loaded for you.</p>
+<p><sup>1</sup> Compiled by <a href="https://airtable.com/universe/expG3z2CFykG1dZsp/soviet-space-dogs">Duncan Geere</a>.</p>
+</div>
+
+<li>Pivot the data to a wider format, deriving new column names from the <code>dog_id</code> column and values from the <code>gender</code> column.</li>
+<li>Drop rows that contain <code>NA</code> values.</li>
+
+```{r}
+space_dogs_df=read.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vSrv7ECpC0Jwv5u4Y5KZFZOGJ2SnEruSs7xoGs_ZPLbLS5CI32JVRLAxpv0dyneZovOOQ_jyaqcZeoh/pub?gid=1588863802&single=true&output=csv")
+
+space_dogs_df %>% 
+  # Pivot the data to a wider format
+  pivot_wider(names_from = dog_id, values_from = gender, names_prefix = "gender_") %>% 
+  # Drop rows with NA values
+  drop_na() 
+```
+
+
+<li>Create a new column <code>same_gender</code>, which has a <code>TRUE</code> value when <code>gender_1</code> equals <code>gender_2</code>.</li>
+
+```{r}
+space_dogs_df %>% 
+  # Pivot the data to a wider format
+  pivot_wider(names_from = dog_id, values_from = gender, names_prefix = "gender_") %>% 
+  # Drop rows with NA values
+  drop_na() %>% 
+  # Create a Boolean column on whether both dogs have the same gender
+  mutate(same_gender = gender_1 == gender_2) %>% 
+  summarize(pct_same_gender = mean(same_gender))
+```
+
+<p class="">Good job! The answer to the question is 80%. By switching back to wide format, it was easy to remove flights with just one dog and calculate per-flight properties. If you've been using <code>tidyr</code> for some time, prior to version 1.0, the <code>pivot_wider()</code> function was named <code>spread()</code>.
+</p>
+
+#### Planet temperature &amp; distance to the Sun {.unnumbered}
+
+
+<div class>
+<p>The intensity of light radiated by a light source follows an inverse square relationship with the distance it has traveled. 
+<img src="https://assets.datacamp.com/production/repositories/5769/datasets/cb761c0970f7233078e5d991df1f0ccf983b9ad4/C2L4_Inverse_square_law.png" alt="https://en.wikipedia.org/wiki/Inverse-square_law">
+You wonder if you could observe this trend in the temperature of the planets in our Solar System given their distance to the Sun. You'll use the <code>planet_df</code> dataset from the <a href="https://devstronomy.com/#/datasets">devstronomy project</a> to investigate this.</p>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Inspect <code>planet_df</code> in the console.</li>
+<li>Use the <code>pivot_wider()</code> function to extract column names from the <code>metric</code> column and values from the <code>value</code> column.</li>
+
+</div>
+```{r}
+# edited/added
+planet_df=readRDS("archive/Reshaping-Data-with-tidyr/datasets/planet_metrics_long.rds")
+
+planet_df %>% 
+  # Give each planet variable its own column
+  pivot_wider(names_from = "metric", values_from = "value")
+```
+
+<div class="exercise--instructions__content">
+
+<li>Use the <code>ggplot()</code> function to create a plot with the <code>temperature</code> over the <code>distance_to_sun</code>.</li>
+
+```{r}
+planet_df %>% 
+  # Give each planet variable its own column
+  pivot_wider(names_from = "metric", values_from = "value") %>% 
+  # Plot planet temperature over distance to sun
+  ggplot(aes(x = distance_to_sun, y = temperature)) +
+  geom_point(aes(size = diameter)) +
+  geom_text(aes(label = planet), vjust = -1) +
+  labs(x = "Distance to sun (million km)", 
+       y = "Mean temperature (°C)") +
+  theme(legend.position = "none")
+```
+
+<p class="">Stellar! The inverse square relation is present indeed. Only Venus doesn't follow the trend as it is further from the Sun than Mercury but also hotter. Turns out it has a lot of CO<sup>2</sup> in its atmosphere trapping the heat. Let's not become like Venus ;)
+</p>
+
+#### Transposing planet data {.unnumbered}
+
+
+<div class>
+<p>You're again working on a planet dataset derived from the <a href="https://devstronomy.com/#/datasets">devstronomy project</a>. This time, you're interested in the correlation between the diameter of a planet and the number of moons circling it.</p>
+<p>However, the dataset (<code>planet_df</code>) has a row for each variable and a column for each planet (observation). You'll transpose this data in two steps and then create a plot to inspect the correlation.</p>
+<p>The <code>ggplot2</code> package has been pre-loaded for you.</p>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Inspect <code>planet_df</code> in the console.</li>
+<li>Pivot the data so that planet names are put in a column named <code>planet</code>.</li>
+
+</div>
+```{r}
+# edited/added
+planet_df=readRDS("archive/Reshaping-Data-with-tidyr/datasets/planet_metrics_wide.rds")
+
+planet_df %>%
+  # Pivot all columns except metric to long format
+  pivot_longer(-metric, names_to = "planet")
+```
+
+<div class="exercise--instructions__content">
+
+<li>Pivot the data so that each variable in the <code>metric</code> column gets its own column.</li>
+
+```{r}
+planet_df %>%
+  # Pivot all columns except metric to long format
+  pivot_longer(-metric, names_to = "planet") %>% 
+  # Put each metric in its own column
+  pivot_wider(names_from = metric, values_from = value)
+```
+
+
+<li>Use the <code>ggplot()</code> function to create a plot with the <code>number_of_moons</code> over <code>diameter</code>.</li>
+
+```{r}
+planet_df %>%
+  # Pivot all columns except metric to long format
+  pivot_longer(-metric, names_to = "planet") %>% 
+  # Put each metric in its own column
+  pivot_wider(names_from = metric, values_from = value) %>% 
+  # Plot the number of moons vs planet diameter
+  ggplot(aes(x = diameter, y = number_of_moons)) +
+  geom_point(aes(size = diameter)) +
+  geom_text(aes(label = planet), vjust = -1) +
+  labs(x = "Diameter (km)", y = "Number of moons") +
+  theme(legend.position = "none")
+```
+
+<p class="">Well done! It's clear that bigger planets tend to have more moons. Once you're able to split the messiness of a dataset into smaller, easier to fix problems, you've become a data wrangling master.
+</p>
+
+## Expanding data {.unnumbered}
+
+<p class="chapter__description">
+    Values can often be missing in your data, and sometimes entire observations are absent too. In this chapter, you'll learn how to complete your dataset with these missing observations. You'll add observations with zero values to counted data, expand time series to a full sequence of intervals, and more!
+  </p>
+  
+### Creating unique combinations of vectors {.unnumbered}
+
+
+
+#### Letters of the genetic code {.unnumbered}
+
+
+<div class>
+<p>The basic building blocks of <a href="https://en.wikipedia.org/wiki/RNA">RNA</a> are four molecules described by a single letter each: adenine (<strong>A</strong>), cytosine (<strong>C</strong>), guanine (<strong>G</strong>), and uracil (<strong>U</strong>). The information carried by an RNA strand can be represented as a long sequence of these four letters. To read this code, one has to divide this chain into sequences of three letters each (e.g. <strong>GCU</strong>, <strong>ACG</strong>, …). These three letter sequences are known as <strong>codons</strong>. The concept is illustrated in the image below.</p>
+<p><img src="https://assets.datacamp.com/production/repositories/5769/datasets/188472eee489171207fd2cbbc06d56e877328130/rna.png" alt="RNA code"></p>
+<p>Your goal for this exercise is to create a data frame with all possible three letter sequences (codons) from a vector with the four letters representing the RNA building blocks.</p>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Create a tibble with three columns called <code>letter1</code>, <code>letter2</code>, and <code>letter3</code> that holds all possible combinations of the vector <code>letters</code> using <code>expand_grid()</code>.</li>
+
+</div>
+```{r}
+# edited/added
+letters <- c("A", "C", "G", "U")
+
+# Create a tibble with all possible 3 way combinations
+codon_df <- expand_grid(
+  letter1 = letters,
+  letter2 = letters,
+  letter3 = letters
+)
+
+codon_df
+```
+
+<div class="exercise--instructions__content">
+
+<li>Use the <code>unite()</code> function from chapter one to merge these three columns into a single column named <code>codon</code>. Use an empty string as the separator.</li>
+
+```{r}
+codon_df %>%  
+  # Unite these three columns into a "codon" column
+  unite("codon", letter1:letter3, sep= "")
+```
+
+<p class="">Well done! There are 64 possible codons (64=4<sup>3</sup>). They encode 20 amino acids, the building blocks of proteins and, thus, you!
+</p>
+
+#### When did humans replace dogs in space? {.unnumbered}
+
+
+<div class>
+<p>You already know that in the early days of spaceflight, the USSR was testing rockets with dogs. You now wonder when exactly humans started replacing dogs on space flight missions. You've been given a dataset <code>space_df</code> with the number of both dogs (compiled by <a href="https://www.duncangeere.com">Duncan Geere</a>) and humans in space per year from 1951 till 1970 (collected from <a href="https://en.wikipedia.org/wiki/List_of_human_spaceflights">Wikipedia</a>).</p>
+<p>Your goal is to create a plot that shows you the number of individuals sent into space per species. Before you can create this plot, you'll first have to introduce zero values for missing combinations of <code>year</code> and <code>species</code>.</p>
+<p>The <code>dplyr</code> and <code>ggplot2</code> packages have been pre-loaded for you.</p>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Create <code>full_df</code>, a tibble with all unique combinations of the variables <code>year</code> (from 1951 to 1970) and <code>species</code> (<code>"Human"</code> and <code>"Dog"</code>).</li>
+
+</div>
+```{r}
+# Create a tibble with all combinations of years and species
+full_df <- expand_grid(
+  year = 1951:1970, 
+  species = c("Human", "Dog")
+)
+
+full_df
+```
+
+<div class="exercise--instructions__content">
+
+<li>Perform a <code>right_join()</code> between <code>space_df</code> and <code>full_df</code> on the <code>year</code> and <code>species</code> columns.</li>
+
+```{r}
+# edited/added
+space_df = read.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vSrv7ECpC0Jwv5u4Y5KZFZOGJ2SnEruSs7xoGs_ZPLbLS5CI32JVRLAxpv0dyneZovOOQ_jyaqcZeoh/pub?gid=1478550685&single=true&output=csv")
+
+space_df %>% 
+  # Join with full_df so that missing values are introduced
+  right_join(full_df, by = c("year", "species")) %>% 
+  arrange(year)
+```
+
+<div class="exercise--instructions__content">
+
+<li>Use the <code>ggplot()</code> function to create a line plot of <code>n_in_space</code> over <code>year</code>, colored by <code>species</code>.</li>
+
+```{r}
+space_df %>% 
+  # Join with full_df so that missing values are introduced
+  right_join(full_df, by = c("year", "species")) %>% 
+  # Create a line plot with n_in_space over year, color by species
+  ggplot(aes(x = year, y = n_in_space, color = species)) +
+  geom_line()
+```
+
+<div class="exercise--instructions__content">
+
+<li>Use the <code>replace_na()</code> function to overwrite <code>NA</code> values in the <code>n_in_space</code> column with zeros.</li>
+
+```{r}
+space_df %>% 
+  # Join with full_df so that missing values are introduced
+  right_join(full_df, by = c("year", "species")) %>% 
+  # Overwrite NA values for n_in_space with 0L
+  replace_na(list(n_in_space = 0L)) %>% 
+  # Create a line plot with n_in_space over year, color by species
+  ggplot(aes(x = year, y = n_in_space, color = species)) +
+  geom_line()
+```
+
+<p class="">Good job! It looks like 1961 was the year humans replaced dogs in space. Adding zero observations allowed you to create a correct and complete plot.
+</p>
+
+#### Finding missing observations {.unnumbered}
+
+
+<div class>
+<p>You're an inspector at a nuclear plant and have to validate whether every reactor has received its daily safety check over the course of a full year. The safety check logs are in <code>reactor_df</code>, a data frame with columns <code>date</code>, <code>reactor</code>, and <code>check</code>.</p>
+<p>Two vectors, <code>dates</code> and <code>reactors</code>, with all dates of the year and reactors at the plant respectively have been created for you.
+You'll use the combination of the <code>expand_grid()</code> and <code>anti_join()</code> functions to find dates where particular reactors were not checked.</p>
+<p>The <code>dplyr</code> package has been pre-loaded for you.</p>
+</div>
+<div class="exercise--instructions__content">
+<li>Use the <code>expand_grid()</code> function to create a tibble holding all combinations of the variables <code>date</code> and <code>reactor</code>. Use the <code>dates</code> and <code>reactors</code> vectors created for you.</li>
+```{r}
+# edited/added
+dates = seq(as.Date("1986-01-01"), as.Date("1986-12-31"), "days")
+reactors = c("A","B","C","D")
+reactor_df = read.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vQB7OIxd5-v86aFENVlHf5PnNtu29e-XoSnNhAUvCstZUvAYKI8Jln3GEAuWirHqrSr-5HUs7MkVslf/pub?gid=1920795650&single=true&output=csv") %>% mutate(date = as.Date(date))
+
+# Create a tibble with all combinations of dates and reactors
+full_df <- expand_grid(date = dates, reactor = reactors)
+```
+<li>Perform an anti-join between <code>full_df</code> and <code>reactor_df</code> on the <code>date</code> and <code>reactor</code> columns.</li>
+```{r}
+# Find the reactor - date combinations not present in reactor_df
+full_df %>% 
+  anti_join(reactor_df, by = c("date", "reactor"))
+```
+</div>
+
+<p class="">Well done, looks like safety was not optimal in April 1986. Sometimes the observations not in the data are more important than the ones present. The trick you just learned can help you find them.
+</p>
+
+### Completing data with all value combinations {.unnumbered}
+
+
+
+#### Completing the Solar System {.unnumbered}
+
+
+<div class>
+<p>You have been given a data frame (<code>planet_df</code>) from the <a href="https://devstronomy.com/#/datasets">devstronomy project</a> with the number of moons per planet in our Solar System. However, Mercury and Venus, the two moonless planets, are absent. You want to expand this dataset using the <code>complete()</code> function and a vector <code>planets</code> that contains all eight planet's names.</p>
+</div>
+<div class="exercise--instructions__content">
+<li>Complete the <code>planet</code> variable using the <code>planets</code> vector.</li>
+
+<li>Replace <code>NA</code> values in the <code>n_moons</code> variable with <code>0L</code> values.</li>
+```{r}
+# edited/added
+planets = c("Mercury", "Venus", "Earth", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune")
+planet_df=tribble(~planet, ~n_moons,
+"Earth", 1,
+"Mars", 2,
+"Jupiter", 79,
+"Saturn", 62,
+"Uranus", 27,
+"Neptune", 14)
+
+planet_df %>% 
+  complete(
+    # Complete the planet variable
+    planet = planets,
+    # Overwrite NA values for n_moons with 0L
+    fill = list(n_moons = 0L)
+  )
+```
+</div>
+
+<p class="">Well done! By completing with a vector of all known planets, you can be sure that each will have an observation in the output. Did you know Jupiter is circled by at least 79 moons? This number is likely to increase as new ones continue to be discovered every few years.
+</p>
+
+#### Zero Olympic medals {.unnumbered}
+
+
+<div class>
+<p>Since 1896, athletes from all over the world have been competing in the modern Olympic games. You've been given a dataset (<code>medal_df</code>) with observations for all medals won by athletes from the 10 most successful countries in Olympic history. You want to create a visual with the number of medals won per country (<code>team</code>) per <code>year</code>. However, since not all countries won medals each year, you'll have to introduce zero values before you can make an accurate visual.</p>
+<p><img src="https://assets.datacamp.com/production/repositories/5769/datasets/f22990f61f591609efe2f7e0fc33067610825f53/olympic_flag_large.png" alt="Olympic flag"></p>
+<p>The <code>ggplot2</code> and <code>dplyr</code> packages have been pre-loaded for you. In step 2 and 3 the <code>scale_color_brewer()</code> function is used to color lines in the plot with a palette that makes it easier to distinguish the different countries.</p>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Inspect <code>medal_df</code> in the console.</li>
+<li>Count the number of medals won per <code>team</code> and <code>year</code>.</li>
+
+</div>
+```{r}
+# edited/added
+medal_df=readRDS("archive/Reshaping-Data-with-tidyr/datasets/olympic_medals_top_10.rds")
+
+medal_df %>% 
+  # Count the medals won per team and year
+  count(team, year, name = "n_medals")
+```
+
+<div class="exercise--instructions__content">
+
+<li>Use <code>ggplot()</code> to create a line plot with <code>n_medals</code> over <code>year</code>, colored by <code>team</code>.</li>
+
+```{r}
+medal_df %>% 
+  # Count the medals won per team and year
+  count(team, year, name = "n_medals") %>% 
+  # Plot n_medals over year, colored by team
+  ggplot(aes(x = year, y = n_medals, color = team)) +
+  geom_line() +
+  scale_color_brewer(palette = "Paired")
+```
+
+<div class="exercise--instructions__content">
+
+<li>Complete the <code>team</code> and <code>year</code> variables, replace <code>NA</code> values in the <code>n_medals</code> column with zeros.</li>
+
+```{r}
+medal_df %>% 
+  # Count the medals won per team and year
+  count(team, year, name = "n_medals") %>% 
+  # Complete the team and year variables, fill n_medals with zeros
+  complete(team, year, fill = list(n_medals = 0)) %>% 
+  # Plot n_medals over year, colored by team
+  ggplot(aes(x = year, y = n_medals, color = team)) +
+  geom_line() +
+  scale_color_brewer(palette = "Paired")
+```
+
+<p class="">Well done! Zero values are often absent in counted data which can lead to buggy visualizations. We can now see the USA boycott of the 1980 Olympics in Moscow and the subsequent USSR boycott of the 1984 Olympics in Los Angeles.
+</p>
+
+#### Creating a sequence with full_seq() {.unnumbered}
+
+
+<div class>
+<p>The <code>full_seq()</code> function will look for the minimal and maximal values inside the vector you pass it and will then generate a full sequence of numbers with a fixed <code>period</code> in between them.
+When used inside the <code>complete()</code> function, <code>full_seq()</code> is a handy tool to make sure there are no missing observations in your data. Before combining these two functions you'll generate a few sequences with <code>full_seq()</code> on its own to get the hang of this function.</p>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Use <code>full_seq()</code> to create a sequence with all years from 2020 till 2030.</li>
+
+</div>
+
+<div class="exercise--instructions__content">
+
+<li>Use <code>full_seq()</code> to create a sequence with all decades from 1980 till 2030.</li>
+
+</div>
+
+<div class="exercise--instructions__content">
+
+<li>Use <code>full_seq()</code> to create a sequence with all dates in 1980 using the <code>outer_dates</code> vector.</li>
+
+</div>
+```{r}
+# Generate all years from 2020 to 2030
+years <- full_seq(c(2020, 2030), period = 1)
+years
+
+# Generate all decades from 1980 to 2030
+decades <- full_seq(c(1980, 2030), period = 10)
+decades
+
+outer_dates <- c(as.Date("1980-01-01"), as.Date("1980-12-31"))
+
+# Generate the dates for all days in 1980
+full_seq(outer_dates, period = 1)
+```
+
+<p class="">Well done! Now that you know how the <code>full_seq()</code> function works, you can start plugging it into the <code>complete()</code> function.
+</p>
+
+#### The Cold War's hottest year {.unnumbered}
+
+
+<div class>
+<p>In October 1962, during the <a href="https://en.wikipedia.org/wiki/Cuban_Missile_Crisis">Cuban missile crisis</a>, the world came close to a full scale nuclear war. Throughout 1962, the USA, USSR, and France together detonated a record 178 nuclear bombs for military power display and research. You've been given a sample of the Nuclear Explosion Database (NEDB) for that year (<code>cumul_nukes_1962_df</code>) with an observation for each <code>date</code> on which a bomb was detonated. The <code>total_bombs</code> variable contains the cumulative number of bombs detonated by a country up to that point in time.</p>
+<p>You'll complete the dataset to hold the full sequence of dates, and visualize the total number of bombs per country over time. You'll also use the <code>fill()</code> function from Chapter One to impute missing values.</p>
+<p>The <code>dplyr</code> and <code>ggplot2</code> packages have been pre-loaded for you.</p>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Complete the dataset so that for each <code>country</code> there is an observation of each <code>date</code> using the <code>full_seq()</code> function.</li>
+
+</div>
+```{r}
+# edited/added
+cumul_nukes_1962_df=readRDS("archive/Reshaping-Data-with-tidyr/datasets/nukes_1962.rds")
+
+cumul_nukes_1962_df %>% 
+  # Complete the dataset
+  complete(country, date = full_seq(date, period = 1))
+```
+
+<div class="exercise--instructions__content">
+
+<li>Group the data by <code>country</code>.</li>
+<li>Use the <code>fill()</code> function to overwrite <code>NA</code> values in the <code>total_bombs</code> variable with the last known value.</li>
+
+```{r}
+cumul_nukes_1962_df %>% 
+  # Complete the dataset
+  complete(country, date = full_seq(date, period = 1)) %>% 
+  # Group the data by country
+  group_by(country) %>% 
+  # Impute missing values with the last known observation
+  fill(total_bombs)
+```
+
+<div class="exercise--instructions__content">
+
+<li>Use <code>ggplot()</code> to visualize the <code>total_bombs</code> at any given <code>date</code>, color the line plot by <code>country</code>. Some code has been added for you to visualize the Cuban Missile Crisis.</li>
+
+```{r}
+cumul_nukes_1962_df %>% 
+  # Complete the dataset
+  complete(country, date = full_seq(date, period = 1)) %>% 
+  # Group the data by country
+  group_by(country) %>% 
+  # Impute missing values with the last known observation
+  fill(total_bombs) %>% 
+  # Plot the number of bombs over time, color by country
+  ggplot(aes(date, total_bombs, color = country)) +
+  # These two lines will mark the Cuban Missile Crisis 
+  geom_rect(xmin = as.Date("1962-10-16"), xmax = as.Date("1962-10-29"), ymin = -Inf, ymax = Inf, color = NA)+ 
+  geom_text(x = as.Date("1962-10-22"), y = 15, label = "Cuban Missile Crisis", angle = 90, color = "white")+
+  geom_line()
+```
+
+<p class="">Good job! Looks like the USSR only started running experiments in the second part of the year. The <code>full_seq()</code> function allowed you to add dates not yet seen in the data.
+</p>
+
+### Advanced completions {.unnumbered}
+
+
+
+#### Olympic medals per continent {.unnumbered}
+
+
+<div class>
+<p>You want to compare Olympic performance of athletes per continent over time, both on the winter and summer Olympics. You've been given a dataset <code>medal_df</code> with the average number of medals won per participant of each continent since 1928. You'll complete this data to introduce zero values for years where a continent did not win any medals. </p>
+<p><img src="https://assets.datacamp.com/production/repositories/5769/datasets/f22990f61f591609efe2f7e0fc33067610825f53/olympic_flag_large.png" alt="Olympic flag"></p>
+<p>The <code>ggplot2</code> package has been pre-loaded for you.</p>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Complete the dataset so that each <code>continent</code> has a <code>medals_per_participant</code> value at each Olympic event. Missing values should be filled with zeros.</li>
+<li>Nest the <code>season</code> and <code>year</code> variables using the <code>nesting()</code> function, since the summer and winter Olympics don't occur in the same years.</li>
+<li>Use <code>ggplot()</code> to create a line plot with the <code>medals_per_participant</code> per <code>year</code>, color the plot by <code>continent</code>.</li>
+
+</div>
+```{r}
+# edited/added
+medal_df=read.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vQ7ryL3YFNP4S9bw-F31Ejavx2ZJIBM5yWWVclfVSONfXMeTzaJaIe8yeCkma0FJuudkTUbIbRyWlDz/pub?gid=1081899654&single=true&output=csv")
+
+medal_df %>% 
+  # Give each continent an observation at each Olympic event
+  complete(
+    continent, 
+    nesting(season, year), 
+    fill = list(medals_per_participant = 0)
+  ) %>%
+  # Plot the medals_per_participant over time, colored by continent
+  ggplot(aes(x = year, y = medals_per_participant, color = continent)) +
+  geom_line() +
+  facet_grid(season ~ .)
+```
+
+<p class="">Well done! Since the nineties, North American athletes have been most proficient, especially in the winter Olympics. Nesting variables while completing is important to avoid adding nonsensical observations to your data, like summer Olympics in years where they did not happen.
+</p>
+
+#### Tracking a virus outbreak {.unnumbered}
+
+
+<div class>
+<p>You're a doctor in a remote village confronted with a virus outbreak. You have been collecting data on when your patients got infected and recovered in a data frame named <code>patient_df</code>. Your goal is to create a visual with the number of sick patients over time. You'll first have to reshape the data so that you can count the number of sick patients per day.</p>
+<p>The <code>dplyr</code> and <code>ggplot2</code> packages have been pre-loaded for you.</p>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Inspect <code>patient_df</code> in the console.</li>
+<li>Pivot the <code>infected</code> and <code>recovered</code> columns to long format, the old column names should go in the <code>status</code> variable, the values to <code>date</code>.</li>
+
+</div>
+```{r}
+# edited/added
+patient_df=read.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vQ7ryL3YFNP4S9bw-F31Ejavx2ZJIBM5yWWVclfVSONfXMeTzaJaIe8yeCkma0FJuudkTUbIbRyWlDz/pub?gid=1724949310&single=true&output=csv") %>% 
+  mutate(infected=as.Date(infected),
+         recovered=as.Date(recovered))
+
+patient_df %>% 
+  # Pivot the infected and recovered columns to long format
+  pivot_longer(-patient, names_to = "status", values_to = "date")
+```
+
+<div class="exercise--instructions__content">
+
+<li>Group the data by <code>patient</code> and then complete the <code>date</code> column so that each date between infection and recovery is added using the <code>full_seq()</code> column. At the end, ungroup the data.</li>
+
+```{r}
+patient_df %>% 
+  # Pivot the infected and recovered columns to long format
+  pivot_longer(-patient, names_to = "status", values_to = "date") %>% 
+  select(-status) %>% 
+  # Group by patient
+  group_by(patient) %>% 
+  # Complete the date range per patient using full_seq()
+  complete(date = full_seq(date, period = 1)) %>% 
+  # Ungroup the data
+  ungroup()
+```
+
+<div class="exercise--instructions__content">
+
+<li>Each <code>date</code> is now a day on which a patient was sick, count the dates and name the new variable <code>n_sick</code>.</li>
+
+```{r}
+patient_df %>% 
+  # Pivot the infected and recovered columns to long format
+  pivot_longer(-patient, names_to = "status", values_to = "date") %>% 
+  select(-status) %>% 
+  # Group by patient
+  group_by(patient) %>% 
+  # Complete the date range per patient using full_seq()
+  complete(date = full_seq(date, period = 1)) %>% 
+  # Ungroup the data
+  ungroup() %>% 
+  # Count the dates, the count goes in the n_sick variable
+  count(date, name = "n_sick") %>% 
+  ggplot(aes(x = date, y = n_sick))+
+  geom_line()
+```
+
+<p class="">Good job! Combining <code>group_by()</code> with <code>tidyr</code> functions further broadens the range of manipulations you can do.
+</p>
+
+#### Counting office occupants {.unnumbered}
+
+
+<div class>
+<p>Imagine you're an office facility manager and want to know how many people are present throughout the day. You've installed a sensor at the entrance that counts the number of people entering and leaving the building. The sensor sends an update at the end of every 20 minute time slot if at least one person passed.</p>
+<p>To create a dataset ready for visualization, you'll combine the different techniques you've learned so far.</p>
+<p>The <code>dplyr</code> and <code>ggplot2</code> packages have been pre-loaded for you.</p>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Complete the <code>time</code> variable by using the <code>seq()</code> function to create a sequence between the min and max values with an interval of <code>"20 min"</code>. Fill <code>NA</code> values of <code>enter</code> and <code>exit</code> with <code>0L</code>.</li>
+
+</div>
+
+
+<div class="exercise--instructions__content">
+
+<li>Calculate the <code>total_inside</code> variable by taking the cumulative sum of <code>enter</code> plus <code>exit</code> using the <code>cumsum()</code> function.</li>
+
+
+
+<div class="exercise--instructions__content">
+
+<li>Pivot the <code>enter</code> and <code>exit</code> columns to long format. The column names should go in the <code>direction</code> variable, the values in <code>n_people</code>.</li>
+
+```{r}
+# edited/added
+sensor_df=read.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vQ7ryL3YFNP4S9bw-F31Ejavx2ZJIBM5yWWVclfVSONfXMeTzaJaIe8yeCkma0FJuudkTUbIbRyWlDz/pub?gid=1171603308&single=true&output=csv") %>% 
+  mutate(time=as.POSIXct(time))
+
+sensor_df %>% 
+  # Complete the time column with a 20 minute interval
+  complete(time = seq(min(time), max(time), by = "20 min"),
+           fill = list(enter = 0L, exit = 0L)) %>%
+  # Calculate the total number of people inside
+  mutate(total_inside = cumsum(enter + exit)) %>% 
+  # Pivot the enter and exit columns to long format
+  pivot_longer(enter:exit, names_to = "direction", values_to = "n_people")
+```
+
+<div class="exercise--instructions__content">
+
+<li>Use <code>ggplot()</code> to visualize the <code>n_people</code> in the building over <code>time</code>. Use the <code>fill</code> argument to color the area plot by <code>direction</code>.</li>
+
+```{r}
+sensor_df %>% 
+  # Complete the time column with a 20 minute interval
+  complete(time = seq(min(time), max(time), by = "20 min"),
+           fill = list(enter = 0L, exit = 0L)) %>%
+  # Calculate the total number of people inside
+  mutate(total_inside = cumsum(enter + exit)) %>% 
+  # Pivot the enter and exit columns to long format
+  pivot_longer(enter:exit, names_to = "direction", values_to = "n_people") %>% 
+  # Plot the number of people over time, fill by direction
+  ggplot(aes(x = time, y = n_people, fill = direction)) +
+  geom_area() +
+  geom_line(aes(y = total_inside))
+```
+
+<p class="">Good job! You can see the entries and exits in the area plot and the total number of people inside in the black line. Sensor data often comes at high frequencies so being able to complete timestamps is a powerful skill.
+</p>
+
+## Rectangling data {.unnumbered}
+
+<p class="chapter__description">
+    In the final chapter, you'll learn how to turn nested data structures such as JSON and XML files into tidy, rectangular data. This skill will enable you to process data from web APIs. You'll also learn how nested data structures can be used to write elegant modeling pipelines that produce tidy outputs.
+  </p>
+  
+### Intro to non-rectangular data {.unnumbered}
+
+
+
+#### Rectangular vs non-rectangular files {.unnumbered}
+
+<p>You saw a number of file types in the video. Can you remember which store data in a rectangular format and which don't?</p>
+
+<div class="">
+<li>Group these file types and formats into the right category.</li>
+
+
+<div class="">
+<li>CSV stands for Comma Separated Values. It's often used to save raw spreadsheet data without formatting.</li>
+<li>JSON stands for JavaScript Object Notation. It aims to be both human and machine readable.</li>
+<li>XML stands for Extensible Markup Language. It aims to be both human and machine readable.</li>
+
+
+
+<li>Rectangular data: Spreadsheet, CSV</li>
+<li>Non-rectangular data: JSON, XML</li>
+
+
+<p>Great! Understanding how these file types are different will help you pick the right tools while tidying.</p>
+
+#### Rectangling Star Wars movies {.unnumbered}
+
+
+<div class>
+<p>Let's pretend you're a big Star Wars fan and decided to scrape some data from the <a href="https://swapi.dev/">Star Wars API</a>. You've already loaded the JSON-formatted response into R, and now have two lists of movies named <code>movie_list</code> and <code>movie_planets_list</code>. Your goal is to turn these into rectangular data frames with one row per movie so that you can start crunching those movie stats.</p>
+<p>The <code>dplyr</code> package has been pre-loaded for you.</p>
+</div>
+
+<li>Create a <code>tibble</code> with a single column called <code>movie</code> out of the input <code>movie_list</code>.</li>
+
+
+
+<li>Widen the dataset by unnesting the <code>movie</code> column over multiple columns.</li>
+
+```{r}
+# edited/added
+movie_list=readRDS("archive/Reshaping-Data-with-tidyr/datasets/star_wars_movie_list.rds")
+
+# Create a movie column from the movie_list
+tibble(movie = movie_list)
+
+# Create a movie column from the movie_list
+tibble(movie = movie_list) %>% 
+  # Unnest the movie column
+  unnest_wider(movie)
+```
+
+<li>Re-create the <code>tibble</code> with a single column called <code>movie</code> out of <code>movie_planets_list</code>.</li>
+
+```{r}
+# edited/added
+movie_planets_list=readRDS("archive/Reshaping-Data-with-tidyr/datasets/star_wars_movie_planet_list.rds")
+
+# Create a tibble with a movie column
+tibble(movie = movie_planets_list) %>% 
+  # Unnest the movie column
+  unnest_wider(movie)
+```
+
+<li>Unnest the <code>planets</code> column to a wider format.</li>
+
+```{r}
+# Create a tibble with a movie column
+tibble(movie = movie_planets_list) %>% 
+  # Unnest the movie column
+  unnest_wider(movie) %>% 
+  # Unnest the planets column
+  unnest_wider(planets)
+```
+
+<p class="">Interesting! You're able to unnest the full tree structure of the <code>movie_planets_list</code>, but don't end up with a tidy format. You'll learn how to fix this in the next lesson.
+</p>
+
+### From nested values to observations {.unnumbered}
+
+
+
+#### Unnesting wide or long {.unnumbered}
+
+<div class="">
+<p>In the slides, you learned some rules of thumb on when to use <code>unnest_longer()</code> or <code>unnest_wider()</code> to unnest a list column. You'll now decide which function to use for two data samples.</p></div>
+
+<div class="">
+
+<li>Assign these columns to the function that you would unnest them with.</li>
+
+
+<h5 class="dc-u-ta-center">unnest_wider()</h5>
+<div class=""><pre><code>metadata 
+&lt;list&gt;          
+&lt;named list [3]&gt;
+&lt;named list [3]&gt;
+&lt;named list [3]&gt;
+&lt;named list [3]&gt;
+</code></pre></div>
+<h5 class="dc-u-ta-center">unnest_longer()</h5>
+<div class=""><pre><code>films      
+&lt;list&gt;
+&lt;list [4]&gt;
+&lt;list [5]&gt;
+&lt;list [4]&gt;
+&lt;list [3]&gt;
+</code></pre></div>
+
+<p>Well done! These are the two situations where it is clear which unnesting function to try: named lists of fixed length = <code>unnest_wider()</code>, unnamed lists of varying length = <code>unnest_longer()</code>. There are other situations, like named lists with varying number of elements, where some trial and error will be necessary.</p>
+
+#### Rectangling Star Wars planets {.unnumbered}
+
+
+<div class>
+<p>Let's finish what we started in the last exercise of the previous lesson, exploring Star Wars planets! The <code>movie_planets_list</code> scraped from the <a href="https://swapi.dev/">Star Wars API</a> has been pre-loaded for you. You'll need two specific unnesting operations to completely rectangle this data.</p>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Create a <code>tibble</code> with a single column called <code>movie</code> out of <code>movie_planets_list</code>.</li>
+
+</div>
+
+
+<div class="exercise--instructions__content">
+
+<li>Unnest the <code>movie</code> list column which contains named lists of equal length.</li>
+
+```{r}
+# Create a tibble from movie_planets_list
+tibble(movie = movie_planets_list) %>% 
+  # Unnest the movie column in the correct direction
+  unnest_wider(movie)
+```
+
+<div class="exercise--instructions__content">
+
+<li>Unnest the <code>planets</code> list column which contains unnamed lists of unequal length.</li>
+
+```{r}
+# Create a tibble from movie_planets_list
+tibble(movie = movie_planets_list) %>% 
+  # Unnest the movie column in the correct direction
+  unnest_wider(movie) %>% 
+  # Unnest the planets column in the correct direction
+  unnest_longer(planets)
+```
+
+<p class="">Nice work! You now have a tidy dataset with one observation for every planet featured in each movie.
+</p>
+
+#### The Solar System's biggest moons {.unnumbered}
+
+
+<div class>
+<p>Most planets in our solar system are accompanied by at least one moon. You now wonder which planets are circled by the biggest moons and want to create a top five based on moon radius. However, you'll first have to unnest the <a href="https://devstronomy.com/#/datasets">devstronomy project</a> data in <code>planet_df</code> using the <code>unnest_longer()</code> and <code>unnest_wider()</code> functions.</p>
+<p>The <code>dplyr</code> package has been pre-loaded for you.</p>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Unnest the <code>moons</code> column so that each moon gets an observation.</li>
+
+</div>
+```{r}
+# edited/added
+planet_df=readRDS("archive/Reshaping-Data-with-tidyr/datasets/planet_moons_list_df.rds")
+
+planet_df %>% 
+  # Unnest the moons list column over observations
+  unnest_longer(moons)
+```
+
+<div class="exercise--instructions__content">
+
+<li>Unnest the <code>moons</code> column so that its contents are split over columns.</li>
+
+```{r}
+planet_df %>% 
+  # Unnest the moons list column over observations
+  unnest_longer(moons) %>% 
+  # Further unnest the moons column
+  unnest_wider(moons)
+```
+
+<div class="exercise--instructions__content">
+
+<li>Unnest the <code>moon_data</code> column so that its contents are split over columns.</li>
+
+```{r}
+planet_df %>% 
+  # Unnest the moons list column over observations
+  unnest_longer(moons) %>% 
+  # Further unnest the moons column
+  unnest_wider(moons) %>% 
+  # Unnest the moon_data column
+  unnest_wider(moon_data)
+```
+
+<div class="exercise--instructions__content">
+
+<li>Use <code>dplyr</code>'s <code>slice_max()</code> function on moon <code>radius</code> to get a top <code>5</code> of biggest moons.</li>
+
+```{r}
+planet_df %>% 
+  # Unnest the moons list column over observations
+  unnest_longer(moons) %>% 
+  # Further unnest the moons column
+  unnest_wider(moons) %>% 
+  # Unnest the moon_data column
+  unnest_wider(moon_data) %>% 
+  # Get the top five largest moons by radius
+  slice_max(radius, n = 5)
+```
+
+<p class="">Well done! Jupiter has three moons in the top five with Ganymede being the largest overall. We also have Saturn's Titan and our very own Moon. The more deeply nested your data is, the more iterations of <code>unnest_longer()</code> and <code>unnest_wider()</code> you'll need to fully unnest it.
+</p>
+
+### Selecting nested variables {.unnumbered}
+
+
+
+#### Hoisting Star Wars films {.unnumbered}
+
+
+<div class><p>You've been given a nested data set on Star Wars characters (<code>character_df</code>) and want to explore the films in which they appeared.
+You'll first use the <code>unnest_wider()</code> and <code>unnest_longer()</code> functions to explore the data and will then switch to <code>hoist()</code> to select a specific element in the nested data structure directly.</p></div>
+
+<li>Inspect <code>character_df</code> in the console.</li>
+<li>Unnest the <code>metadata</code> column.</li>
+
+```{r}
+# edited/added
+character_df=readRDS("archive/Reshaping-Data-with-tidyr/datasets/star_wars_characters.rds")
+
+character_df %>%
+  # Unnest the metadata column
+  unnest_wider(metadata)
+```
+
+<li>Unnest the <code>films</code> column.</li>
+
+```{r}
+character_df %>% 
+  # Unnest the metadata column
+  unnest_wider(metadata) %>% 
+  unnest_longer(films)
+```
+
+<li>As an alternative approach, use <code>hoist()</code> to select the first film from the <code>films</code> list nested in the <code>metadata</code> column.</li>
+
+```{r}
+character_df %>% 
+  hoist(metadata, first_film = list("films", 1))
+```
+
+<p class="">Nice work! You dug into multiple layers of the nested structure to fetch the data you wanted.
+</p>
+
+#### Hoisting movie ratings {.unnumbered}
+
+
+<div class>
+<p>You've written a script to scrape data on your favorite movies from the <a href="http://www.omdbapi.com/">Open Movie DataBase API</a>. Now you want to process the JSON data to extract the <a href="https://www.rottentomatoes.com/">Rotten Tomatoes</a> rating for each movie. You've been given a data frame named <code>movie_df</code> which holds the JSON respones for five movies. You'll explore this data with <code>unnest_wider()</code> and <code>unnest_longer()</code> before switching to <code>hoist()</code>.</p>
+<p>The <code>dplyr</code> package has been pre-loaded for you.</p>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Unnest the <code>movie</code> column.</li>
+
+</div>
+```{r}
+# edited/added
+movie_df = read.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vQB7OIxd5-v86aFENVlHf5PnNtu29e-XoSnNhAUvCstZUvAYKI8Jln3GEAuWirHqrSr-5HUs7MkVslf/pub?gid=1660349435&single=true&output=csv") %>% 
+  mutate(movie = 1:5) %>%
+  nest(data = c("Title"    ,  "Year"      , "Rated"     , "Released",   "Runtime" ,
+"Genre"    ,  "Director"  , "Writer"    , "Actors"  ,   "Plot"    ,
+"Language" ,  "Country"   , "Awards"    , "Poster"  ,   "Ratings" ,
+"Metascore",  "imdbRating", "imdbVotes" , "imdbID"  ,   "Type"    ,
+"DVD"      ,  "BoxOffice" , "Production", "Website" ,   "Response")) %>% 
+  select(-movie, movie=data)
+
+movie_df %>% 
+  # Unnest the movie column
+  unnest_wider(movie)
+```
+
+<div class="exercise--instructions__content">
+
+<li>Unnest the <code>Ratings</code> column.</li>
+
+```{r}
+movie_df %>% 
+  # Unnest the movie column
+  unnest_wider(movie) %>% 
+  select(Title, Year, Ratings) %>% 
+  # Unnest the Ratings column
+  unnest_wider(Ratings)
+```
+
+<div class="exercise--instructions__content">
+
+<li>Use <code>hoist()</code> on the <code>movie</code> column to extract the <code>Title</code>, <code>Year</code>, and <code>Rotten Tomatoes</code> rating. Note that this rating is nested inside the <code>Ratings</code> column.</li>
+
+```{r}
+ movie_df %>% 
+   hoist(
+     movie,
+     title = "Title",
+     year = "Year",
+     rating = list("Ratings", "Rotten Tomatoes")
+   )
+```
+
+<p class="">Well done! Most data scientists try to stay away from nested data as much as possible, that said, you now know how to get your hands dirty when you have to.
+</p>
+
+### Nesting data for modeling {.unnumbered}
+
+
+
+#### Tidy model outputs with broom {.unnumbered}
+
+
+<div class>
+<p>You're trying to predict a person's weight based on their waist circumference and stature (height). To do so you're using the US army body measurement dataset <a href="https://www.openlab.psu.edu/ansur2/">ANSUR II</a>. The model has already been trained for you using this code:</p>
+<pre><code>model &lt;- lm(weight_kg ~ waist_circum_m + stature_m, data = ansur_df)
+</code></pre>
+<p>You will use the <code>broom</code> package's <code>glance()</code> and <code>tidy()</code> functions in the console to inspect <code>model</code> outputs in a tidy format.</p>
+</div>
+```{r}
+# edited/added
+library(broom)
+model=readRDS("archive/Reshaping-Data-with-tidyr/datasets/ansur_weight_model.rds")
+tidy(model)
+glance(model)
+```
+
+<p>What is the R<sup>2</sup> value?</p>
+
+- [ ] 0
+- [x] 0.894
+- [ ] 5.09
+
+
+<p>What is the standard error on the intercept?</p>
+
+- [ ] -128.
+- [ ] 0.615
+- [x] 1.25
+
+
+<p class="">Correct!
+</p>
+#### Nesting tibbles {.unnumbered}
+
+
+<div class>
+<p>You're pre-processing the US army body measurement dataset <a href="https://www.openlab.psu.edu/ansur2/">ANSUR II</a> to train multiple models in a single pipeline. You'll experiment with the <code>nest()</code> function to create a list column with nested tibbles containing sub-sets of the data.</p>
+<p>the <code>dplyr</code> package has been pre-loaded for you.</p>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Group the data by army <code>branch</code> and then nest it.</li>
+
+</div>
+```{r}
+ansur_df = read.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vQB7OIxd5-v86aFENVlHf5PnNtu29e-XoSnNhAUvCstZUvAYKI8Jln3GEAuWirHqrSr-5HUs7MkVslf/pub?gid=241862935&single=true&output=csv")
+
+ansur_df %>% 
+ # Group the data by branch, then nest
+ group_by(branch) %>% 
+ nest()
+```
+
+<p>What is the shape of the Combat Arms branch nested dataset?</p>
+
+- [ ] <code>1,312 × 5</code>
+- [x] <code>1,582 × 5</code>
+- [ ] <code>3,174 × 5</code>
+
+
+<div class="exercise--instructions__content">
+
+<li>Group the data by both <code>branch</code> and <code>sex</code>, then nest it.</li>
+
+```{r}
+ansur_df %>% 
+  # Group the data by branch and sex, then nest
+  group_by(branch, sex) %>% 
+  nest()
+```
+
+<p>What is the nested tibble shape for females in the Combat Arms branch?</p>
+
+- [x] <code>43 × 4</code>
+- [ ] <code>687 × 4</code>
+- [ ] <code>1,539 × 4</code>
+
+
+<p class="">Well done! Now that you know how to nest your data and how to use the <code>broom</code> package to tidy model outputs, it's time to put things together.
+</p>
+
+#### Modeling on nested data frames {.unnumbered}
+
+
+<div class>
+<p>You'll be working on the US Army <a href="https://www.openlab.psu.edu/ansur2/">ANSUR II</a> body measurement dataset, which has been pre-loaded as <code>ansur_df</code>. The goal is to nest the data for both sexes so that you can simultaneously train two linear models, one for each sex. These models will derive a person's weight from their stature (height) and waist circumference. You'll then unnest the data to inspect the model's statistics produced by the <code>glance()</code> function from the <code>broom</code> package.</p>
+<p>The <code>dplyr</code>, <code>broom</code>, and <code>purrr</code> packages have been pre-loaded for you.</p>
+<p><strong>Side note:</strong> In the provided code, the <code>purrr</code> package's <code>map()</code> function applies functions on each nested data frame. Check out this package if you like using functions inside pipes!</p>
+</div>
+
+<li>Group the data by <code>sex</code>.</li>
+<li>Nest the data.</li>
+<li>Unnest the <code>glanced</code> column.</li>
+
+```{r}
+ansur_df = read.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vQB7OIxd5-v86aFENVlHf5PnNtu29e-XoSnNhAUvCstZUvAYKI8Jln3GEAuWirHqrSr-5HUs7MkVslf/pub?gid=241862935&single=true&output=csv")
+
+ansur_df %>%
+  # Group the data by sex
+  group_by(sex) %>% 
+  # Nest the data
+  nest() %>%
+  mutate(
+    fit = map(data, function(df) lm(weight_kg ~ waist_circum_m + stature_m, data = df)),
+    glanced = map(fit, glance)
+  ) %>% 
+  # Unnest the glanced column
+  unnest(glanced)
+```
+
+<p class="">Well done! You've trained multiple models and created tidy outputs in a single pipeline making it easy to compare them. <br><br> Congratulations! You did it! You’re now able to reshape data in R using <code>tidyr</code>. <a href="http://twitter.com/intent/tweet?text=I%20just%20finished%20Reshaping%20Data%20with%20tidyr%20on%20@DataCamp%20taught%20by%20@jeroenboeye!%20I%20highly%20recommend%20it%3A&amp;url=http%3A%2F%2Fdatacamp.com/courses/reshaping-data-with-tidyr" target="_blank" rel="noopener noreferrer">Tweet us your feedback</a> and tell us what you think.
+</p>
+
+### Congratulations! {.unnumbered}
+
+#### Congratulations! {.unnumbered}
+
+Congratulations! You learned so much in this course! Let's do a quick recap.
+
+#### Separating messy string columns {.unnumbered}
+
+We jumped into the action with the separate() and separate_rows() functions to turn messy string columns into variables or observations. The first chapter also taught us different ways of dealing with missing values.
+
+#### Pivoting data {.unnumbered}
+
+The second chapter was all about pivoting data. The pivot_longer() function allowed you to move variables hidden in column headers into columns, while pivot_wider() did the opposite.
+
+#### Expanding data {.unnumbered}
+
+We then moved on to expanding data in chapter three, where the complete() function allowed you to add observations that were missing in the data.
+
+#### Unnesting data {.unnumbered}
+
+In the final chapter, we saw how to turn nested data structures into tidy data frames using the unnest_wider() and unnest_longer() functions. We also saw an upside to nested data structures, as they allowed us to elegantly train multiple models in a single pipeline.
+
+#### The end {.unnumbered}
+
+It's now up to you to use the tools in the tidyr package to tidy your datasets. Remember that the trick to solving a complex problem is to divide it into many smaller ones. My name is Jeroen Boeye, and I thank you for sticking with me to the end. Well done!

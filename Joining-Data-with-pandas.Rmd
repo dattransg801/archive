@@ -1,0 +1,1388 @@
+---
+title: "Joining Data with pandas"
+subtitle: "Aaren Stubberfield - DataCamp"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+author:
+  - name: "Dat Tran"
+output:
+  rmdformats::robobook:
+    keep_md: true
+    thumbnails: true
+    lightbox: true
+    gallery: true
+    use_bookdown: true
+---
+***
+
+<a href="https://colab.research.google.com/drive/1SGcdPHo4EXY9RP6s0DiSn4pk2jnBZRsL?usp=sharing" target="_blank"><h3>Open in Colab</h3></a>
+
+<a href="https://github.com/mclix8/DataCamp/tree/master/Data%20Manipulation%20with%20Python/Joining%20Data%20with%20pandas" target="_blank"><h3>Open in Github</h3></a>
+
+<h3 class="course__description-title">Course Description</h3>
+<p class="course__description">Being able to combine and work with multiple datasets is an essential skill for any aspiring Data Scientist. pandas is a crucial cornerstone of the Python data science ecosystem, with Stack Overflow recording 5 million views for pandas questions. Learn to handle multiple DataFrames by combining, organizing, joining, and reshaping them using pandas. You'll work with datasets from the World Bank and the City Of Chicago. You will finish the course with a solid skillset for data-joining in pandas.</p>
+
+<style>
+
+h1,h2,h3,h4,h5,h6,h {
+  font-family: Futura;
+}
+
+body {
+  font-family: "Georgia";
+  text-align: justify;
+}
+
+p {
+  font-family: "Georgia";
+  color: black;
+  font-style: normal;
+}
+</style>
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE,message=F,warning=F)
+library(reticulate)
+```
+
+# Data Merging Basics
+
+<p class="chapter__description">
+    Learn how you can merge disparate data using inner joins. By combining information from multiple sources you’ll uncover compelling insights that may have previously been hidden. You’ll also learn how the relationship between those sources, such as one-to-one or one-to-many, can affect your result. 
+  </p>
+  
+## Inner join
+
+
+
+### What column to merge on?
+
+
+<div class>
+<p>Chicago provides a list of taxicab owners and vehicles licensed to operate within the city, for public safety. Your goal is to merge two tables together. One table is called <code>taxi_owners</code>, with info about the taxi cab company owners, and one is called <code>taxi_veh</code>, with info about each taxi cab vehicle. Both the <code>taxi_owners</code> and <code>taxi_veh</code> tables have been loaded for you and you can explore them in the IPython shell.</p>
+<p>Choose the column you would use to merge the two tables on using the <code>.merge()</code> method.</p>
+</div>
+
+- [ ] <code>on='rid'</code>
+- [x] <code>on='vid'</code>
+- [ ] <code>on='year'</code>
+- [ ] <code>on='zip'</code>
+
+<p class="">Yes, great job! Both DataFrames contained the column <code>vid</code>. Now continue on to the next exercise where you will using this information to merge the tables.</p>
+
+### Your first inner join
+
+
+<div class>
+<p>You have been tasked with figuring out what the most popular types of fuel used in Chicago taxis are. To complete the analysis, you need to merge the <code>taxi_owners</code> and <code>taxi_veh</code> tables together on the <code>vid</code> column. You can then use the merged table along with the <code>.value_counts()</code> method to find the most common <code>fuel_type</code>.</p>
+<p>Since you'll be working with <code>pandas</code> throughout the course, the package will be preloaded for you as <code>pd</code> in each exercise in this course. Also the <code>taxi_owners</code> and <code>taxi_veh</code> DataFrames are loaded for you.</p>
+</div>
+```{python,warning=F,message=F}
+# edited by mclix8
+import pandas as pd
+
+taxi_owners = pd.read_pickle("https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Joining%20Data%20with%20pandas/datasets/taxi_owners.p")
+taxi_veh = pd.read_pickle("https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Joining%20Data%20with%20pandas/datasets/taxi_vehicles.p")
+```
+
+<li>Merge <code>taxi_owners</code> with <code>taxi_veh</code> on the column <code>vid</code>, and save the result to <code>taxi_own_veh</code>.</li>
+```{python,warning=F,message=F}
+# Merge the taxi_owners and taxi_veh tables
+taxi_own_veh = taxi_owners.merge(taxi_veh, on='vid')
+
+# Print the column names of the taxi_own_veh
+print(taxi_own_veh.columns)
+```
+
+
+
+<li>Set the left and right table suffixes for overlapping columns of the merge to <code>_own</code> and <code>_veh</code>, respectively.</li>
+```{python,warning=F,message=F}
+# Merge the taxi_owners and taxi_veh tables setting a suffix
+taxi_own_veh = taxi_owners.merge(taxi_veh, on='vid', suffixes=('_own','_veh'))
+
+# Print the column names of taxi_own_veh
+print(taxi_own_veh.columns)
+```
+
+
+<li>Select the <code>fuel_type</code> column from <code>taxi_own_veh</code> and print the <code>value_counts()</code> to find the most popular <code>fuel_type</code>s used.</li>
+```{python,warning=F,message=F}
+# Merge the taxi_owners and taxi_veh tables setting a suffix
+taxi_own_veh = taxi_owners.merge(taxi_veh, on='vid', suffixes=('_own','_veh'))
+
+# Print the value_counts to find the most popular fuel_type
+print(taxi_own_veh['fuel_type'].value_counts())
+```
+
+<p class="">Bravo! You correctly merged the two tables together and found out that the most common fuel type for taxis in Chicago are hybrids.</p>
+
+### Inner joins and number of rows returned
+
+
+<div class>
+<p>All of the merges you have studied to this point are called inner joins. It is necessary to understand that inner joins only return the rows with matching values in both tables. You will explore this further by reviewing the merge between the <code>wards</code> and <code>census</code> tables, then comparing it to merges of copies of these tables that are slightly altered, named <code>wards_altered</code>, and <code>census_altered</code>. The first row of the <code>wards</code> column has been changed in the altered tables. You will examine how this affects the merge between them. The tables have been loaded for you.</p>
+<p>For this exercise, it is important to know that the <code>wards</code> and <code>census</code> tables start with <strong>50</strong> rows.</p>
+</div>
+
+```{python,warning=F,message=F}
+# edited by mclix8
+wards = pd.read_csv("https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Joining%20Data%20with%20pandas/datasets/wards.csv")
+census = pd.read_csv("https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Joining%20Data%20with%20pandas/datasets/census.csv")
+wards_altered = pd.read_csv("https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Joining%20Data%20with%20pandas/datasets/wards_altered.csv")
+census_altered = pd.read_csv("https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Joining%20Data%20with%20pandas/datasets/census_altered.csv")
+
+wards = wards.astype(str)
+census = census.astype(str)
+wards_altered = wards_altered.astype(str)
+census_altered = census_altered.astype(str)
+```
+
+<li>Merge <code>wards</code> and <code>census</code> on the <code>ward</code> column and save the result to <code>wards_census</code>.</li>
+```{python,warning=F,message=F}
+# Merge the wards and census tables on the ward column
+wards_census = wards.merge(census, on='ward')
+
+# Print the shape of wards_census
+print('wards_census table shape:', wards_census.shape)
+```
+
+
+
+<li>Merge the <code>wards_altered</code> and <code>census</code> tables on the <code>ward</code> column, and notice the difference in returned rows.</li>
+<div>
+```{python,warning=F,message=F}
+# Print the first few rows of the wards_altered table to view the change 
+print(wards_altered[['ward']].head())
+```
+</div>
+<div>
+```{python,warning=F,message=F}
+# Merge the wards_altered and census tables on the ward column
+wards_altered_census = wards_altered.merge(census, on='ward')
+
+# Print the shape of wards_altered_census
+print('wards_altered_census table shape:', wards_altered_census.shape)
+```
+</div>
+
+<li>Merge the <code>wards</code> and <code>census_altered</code> tables on the <code>ward</code> column, and notice the difference in returned rows.</li>
+```{python,warning=F,message=F}
+# Print the first few rows of the census_altered table to view the change 
+print(census_altered[['ward']].head())
+
+# Merge the wards and census_altered tables on the ward column
+wards_census_altered = wards.merge(census_altered, on='ward')
+
+# Print the shape of wards_census_altered
+print('wards_census_altered table shape:', wards_census_altered.shape)
+```
+
+<p class="">Great job! In step 1, the <code>.merge()</code> returned a table with the same number of rows as the original <code>wards</code> table. However, in steps 2 and 3, using the altered tables with the altered first row of the <code>ward</code> column, the number of returned rows was fewer. There was not a matching value in the <code>ward</code> column of the other table. <em>Remember that <code>.merge()</code> only returns rows where the values match in both tables.</em></p>
+
+## One-to-many relationships
+
+
+
+### One-to-many classification
+
+<p>Understanding the difference between a one-to-one and one-to-many relationship is a useful skill. In this exercise, consider a set of tables from an e-commerce website. The hypothetical tables are the following:</p>
+
+<ul>
+<li>A <code>customer</code> table with information about each customer</li>
+<li>A <code>cust_tax_info</code> table with customers unique tax IDs</li>
+<li>An <code>orders</code> table with information about each order</li>
+<li>A <code>products</code> table with details about each unique product sold</li>
+<li>An <code>inventory</code> table with information on how much total inventory is available to sell for each product</li>
+</ul>
+
+<li>Select the relationship type that is most appropriate for the relationship between the different tables: <strong>One-to-one</strong>, or <strong>One-to-many</strong>.</li>
+
+<div class="dc-u-ifx dc-u-h-100pc dc-u-mt-16"><div style="height: 100%; width: 51%;"><div class="dc-u-h-100pc dc-u-fx dc-u-fx-fdc dc-u-fx-aic dc-u-p-12 droppable-container" data-cy="droppable-container"><h5 class="dc-u-ta-center">One-to-one</h5><div class="dc-u-brad-all dc-u-maxw-640 droppable-area " data-cy="droppable-area" style="border: 2px dashed rgba(5, 25, 45, 0.3); height: 100%; margin-top: 16px; min-height: 192px; overflow: hidden auto; padding: 8px 8px 0px; width: 100%;"><div><div data-rbd-draggable-context-id="0" data-rbd-draggable-id="prod_inv" tabindex="0" role="button" aria-describedby="rbd-hidden-text-0-hidden-text-0" data-rbd-drag-handle-draggable-id="prod_inv" data-rbd-drag-handle-context-id="0" draggable="false" data-cy="draggable-item" style="margin: 0px 0px 8px;"><div class="dc-u-fx dc-u-fx-fdr dc-u-fx-jcc dc-u-fx-aic dc-u-brad-all dc-u-pos-relative dc-u-of-hidden css-18rjr21-StyledItem ecyjiz20" offset="0"><div class="dc-u-fxi-f-auto dc-u-ta-left dc-u-ph-12 dc-u-p-16 item-text dc-u-of-hidden css-1giyo6-ItemContentDiv eamqpiv0"><div class=""><p>The relationship between <code>products</code> and <code>inventory</code>.</p></div></div><svg aria-label="arrow_left icon" class="dc-icon-arrow_left dc-u-color-white dc-u-mh-4" fill="currentColor" height="15" role="Img" width="15" style="cursor: pointer; display: none; flex: 0 0 auto; height: 40px; opacity: 0.3;"><use xlink:href="/campus/static/media/symbols.e369b265.svg#arrow_left"></use></svg><svg aria-label="arrow_right icon" class="dc-icon-arrow_right dc-u-color-white" fill="currentColor" height="15" role="Img" width="15" style="cursor: pointer; display: none; flex: 0 0 auto; height: 40px; margin-right: -4px; opacity: 0.3;"><use xlink:href="/campus/static/media/symbols.e369b265.svg#arrow_right"></use></svg><svg aria-label="bars icon" class="dc-icon-bars dc-u-color-navy" fill="currentColor" height="12" role="Img" width="12" style="flex: 0 0 auto; margin: 12px 18px; opacity: 0.3; position: absolute; right: -12px; top: -7px;"><use xlink:href="/campus/static/media/symbols.e369b265.svg#bars"></use></svg></div></div></div><div><div data-rbd-draggable-context-id="0" data-rbd-draggable-id="cust_tax" tabindex="0" role="button" aria-describedby="rbd-hidden-text-0-hidden-text-0" data-rbd-drag-handle-draggable-id="cust_tax" data-rbd-drag-handle-context-id="0" draggable="false" data-cy="draggable-item" style="margin: 0px 0px 8px;"><div class="dc-u-fx dc-u-fx-fdr dc-u-fx-jcc dc-u-fx-aic dc-u-brad-all dc-u-pos-relative dc-u-of-hidden css-18rjr21-StyledItem ecyjiz20" offset="0"><div class="dc-u-fxi-f-auto dc-u-ta-left dc-u-ph-12 dc-u-p-16 item-text dc-u-of-hidden css-1giyo6-ItemContentDiv eamqpiv0"><div class=""><p>The relationship between <code>customer</code> and <code>cust_tax_info</code>.</p></div></div><svg aria-label="arrow_left icon" class="dc-icon-arrow_left dc-u-color-white dc-u-mh-4" fill="currentColor" height="15" role="Img" width="15" style="cursor: pointer; display: none; flex: 0 0 auto; height: 40px; opacity: 0.3;"><use xlink:href="/campus/static/media/symbols.e369b265.svg#arrow_left"></use></svg><svg aria-label="arrow_right icon" class="dc-icon-arrow_right dc-u-color-white" fill="currentColor" height="15" role="Img" width="15" style="cursor: pointer; display: none; flex: 0 0 auto; height: 40px; margin-right: -4px; opacity: 0.3;"><use xlink:href="/campus/static/media/symbols.e369b265.svg#arrow_right"></use></svg><svg aria-label="bars icon" class="dc-icon-bars dc-u-color-navy" fill="currentColor" height="12" role="Img" width="12" style="flex: 0 0 auto; margin: 12px 18px; opacity: 0.3; position: absolute; right: -12px; top: -7px;"><use xlink:href="/campus/static/media/symbols.e369b265.svg#bars"></use></svg></div></div></div></div></div></div><div style="height: 100%; width: 51%;"><div class="dc-u-h-100pc dc-u-fx dc-u-fx-fdc dc-u-fx-aic dc-u-p-12 droppable-container" data-cy="droppable-container"><h5 class="dc-u-ta-center">One-to-many</h5><div class="dc-u-brad-all dc-u-maxw-640 droppable-area " data-cy="droppable-area" style="border: 2px dashed rgba(5, 25, 45, 0.3); height: 100%; margin-top: 16px; min-height: 192px; overflow: hidden auto; padding: 8px 8px 0px; width: 100%;"><div><div data-rbd-draggable-context-id="0" data-rbd-draggable-id="prod_ord" tabindex="0" role="button" aria-describedby="rbd-hidden-text-0-hidden-text-0" data-rbd-drag-handle-draggable-id="prod_ord" data-rbd-drag-handle-context-id="0" draggable="false" data-cy="draggable-item" style="margin: 0px 0px 8px;"><div class="dc-u-fx dc-u-fx-fdr dc-u-fx-jcc dc-u-fx-aic dc-u-brad-all dc-u-pos-relative dc-u-of-hidden css-18rjr21-StyledItem ecyjiz20" offset="0"><div class="dc-u-fxi-f-auto dc-u-ta-left dc-u-ph-12 dc-u-p-16 item-text dc-u-of-hidden css-1giyo6-ItemContentDiv eamqpiv0"><div class=""><p>The relationship between the <code>products</code> and <code>orders</code>.</p></div></div><svg aria-label="arrow_left icon" class="dc-icon-arrow_left dc-u-color-white dc-u-mh-4" fill="currentColor" height="15" role="Img" width="15" style="cursor: pointer; display: none; flex: 0 0 auto; height: 40px; opacity: 0.3;"><use xlink:href="/campus/static/media/symbols.e369b265.svg#arrow_left"></use></svg><svg aria-label="arrow_right icon" class="dc-icon-arrow_right dc-u-color-white" fill="currentColor" height="15" role="Img" width="15" style="cursor: pointer; display: none; flex: 0 0 auto; height: 40px; margin-right: -4px; opacity: 0.3;"><use xlink:href="/campus/static/media/symbols.e369b265.svg#arrow_right"></use></svg><svg aria-label="bars icon" class="dc-icon-bars dc-u-color-navy" fill="currentColor" height="12" role="Img" width="12" style="flex: 0 0 auto; margin: 12px 18px; opacity: 0.3; position: absolute; right: -12px; top: -7px;"><use xlink:href="/campus/static/media/symbols.e369b265.svg#bars"></use></svg></div></div></div><div><div data-rbd-draggable-context-id="0" data-rbd-draggable-id="prod_cust" tabindex="0" role="button" aria-describedby="rbd-hidden-text-0-hidden-text-0" data-rbd-drag-handle-draggable-id="prod_cust" data-rbd-drag-handle-context-id="0" draggable="false" data-cy="draggable-item" style="margin: 0px 0px 8px;"><div class="dc-u-fx dc-u-fx-fdr dc-u-fx-jcc dc-u-fx-aic dc-u-brad-all dc-u-pos-relative dc-u-of-hidden css-18rjr21-StyledItem ecyjiz20" offset="0"><div class="dc-u-fxi-f-auto dc-u-ta-left dc-u-ph-12 dc-u-p-16 item-text dc-u-of-hidden css-1giyo6-ItemContentDiv eamqpiv0"><div class=""><p>The relationship between the <code>customers</code> and <code>orders</code>.</p></div></div><svg aria-label="arrow_left icon" class="dc-icon-arrow_left dc-u-color-white dc-u-mh-4" fill="currentColor" height="15" role="Img" width="15" style="cursor: pointer; display: none; flex: 0 0 auto; height: 40px; opacity: 0.3;"><use xlink:href="/campus/static/media/symbols.e369b265.svg#arrow_left"></use></svg><svg aria-label="arrow_right icon" class="dc-icon-arrow_right dc-u-color-white" fill="currentColor" height="15" role="Img" width="15" style="cursor: pointer; display: none; flex: 0 0 auto; height: 40px; margin-right: -4px; opacity: 0.3;"><use xlink:href="/campus/static/media/symbols.e369b265.svg#arrow_right"></use></svg><svg aria-label="bars icon" class="dc-icon-bars dc-u-color-navy" fill="currentColor" height="12" role="Img" width="12" style="flex: 0 0 auto; margin: 12px 18px; opacity: 0.3; position: absolute; right: -12px; top: -7px;"><use xlink:href="/campus/static/media/symbols.e369b265.svg#bars"></use></svg></div></div></div></div></div></div></div>
+
+<p>Great job on classifying the relationships into the right categories. Knowing if a relationship should be a one-to-one or one-to-many will allow you to troubleshoot a merge that appears incorrect.</p>
+
+### One-to-many merge
+
+
+<div class>
+<p>A business may have one or multiple owners. In this exercise, you will continue to gain experience with one-to-many merges by merging a table of business owners, called <code>biz_owners</code>, to the <code>licenses</code> table. Recall from the video lesson, with a one-to-many relationship, a row in the left table may be repeated if it is related to multiple rows in the right table. In this lesson, you will explore this further by finding out what is the most common business owner title. (i.e., secretary, CEO, or vice president)</p>
+<p>The <code>licenses</code> and <code>biz_owners</code> DataFrames are loaded for you.</p>
+</div>
+```{python,warning=F,message=F}
+# edited by mclix8
+licenses = pd.read_pickle("https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Joining%20Data%20with%20pandas/datasets/licenses.p")
+biz_owners = pd.read_pickle("https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Joining%20Data%20with%20pandas/datasets/business_owners.p")
+```
+
+<li>Starting with the <code>licenses</code> table on the left, merge it to the <code>biz_owners</code> table on the column <code>account</code>, and save the results to a variable named <code>licenses_owners</code>.</li>
+```{python,warning=F,message=F}
+# Merge the licenses and biz_owners table on account
+licenses_owners = licenses.merge(biz_owners, on='account')
+```
+<li>Group <code>licenses_owners</code> by <code>title</code> and count the number of accounts for each title. Save the result as <code>counted_df</code>
+</li>
+```{python,warning=F,message=F}
+# Group the results by title then count the number of accounts
+counted_df = licenses_owners.groupby('title').agg({'account':'count'})
+```
+<li>Sort <code>counted_df</code> by the number of <strong>accounts</strong> in <strong>descending order</strong>, and save this as a variable named <code>sorted_df</code>.</li>
+```{python,warning=F,message=F}
+# Sort the counted_df in desending order
+sorted_df = counted_df.sort_values(by='account', ascending=False)
+```
+<li>Use the <code>.head()</code> method to print the first few rows of the <code>sorted_df</code>.</li>
+```{python,warning=F,message=F}
+# Use .head() method to print the first few rows of sorted_df
+print(sorted_df.head())
+```
+
+<p class="">Wonderful! After merging the tables together, you counted the number of repeated rows with the combination of <code>.groupby()</code> and <code>.agg()</code> statements. You see that president, followed by secretary, are the most common business owner titles.</p>
+
+## Merging multiple DataFrames
+
+
+
+### Total riders in a month
+
+
+<div class>
+<p>Your goal is to find the total number of rides provided to passengers passing through the Wilson station (<code>station_name == 'Wilson'</code>) when riding Chicago's public transportation system on weekdays (<code>day_type == 'Weekday'</code>) in July (<code>month == 7</code>). Luckily, Chicago provides this detailed data, but it is in three different tables. You will work on merging these tables together to answer the question. This data is different from the business related data you have seen so far, but all the information you need to answer the question is provided.</p>
+<p>The <code>cal</code>, <code>ridership</code>, and <code>stations</code> DataFrames have been loaded for you. The relationship between the tables can be seen in the diagram below.</p>
+<p><img src="https://assets.datacamp.com/production/repositories/5486/datasets/56b5ecb2edcdc896c69effdf05ef65e5454ff996/cta_L_diagram.png" alt="Table diagram. The cal table relates to ridership via year, month, and day. The ridership table relates to the stations table via station_id."></p>
+</div>
+```{python,warning=F,message=F}
+# edited by mclix8
+ridership = pd.read_pickle("https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Joining%20Data%20with%20pandas/datasets/cta_ridership.p")
+cal = pd.read_pickle("https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Joining%20Data%20with%20pandas/datasets/cta_calendar.p")
+stations = pd.read_pickle("https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Joining%20Data%20with%20pandas/datasets/stations.p")
+```
+
+<li>Merge the <code>ridership</code> and <code>cal</code> tables together, starting with the <code>ridership</code> table on the left and save the result to the variable <code>ridership_cal</code>. If you code takes too long to run, your merge conditions might be incorrect.</li>
+```{python,warning=F,message=F}
+# Merge the ridership and cal tables
+ridership_cal = ridership.merge(cal, on=['year','month','day'])
+```
+
+<li>Extend the previous merge to three tables by also merging the <code>stations</code> table.</li>
+```{python,warning=F,message=F}
+# Merge the ridership, cal, and stations tables
+ridership_cal_stations = ridership.merge(cal, on=['year','month','day']).merge(stations, on='station_id')
+```
+
+<li>Create a variable called <code>filter_criteria</code> to select the appropriate rows from the merged table so that you can sum the <code>rides</code> column.</li>
+```{python,warning=F,message=F}
+# Create a filter to filter ridership_cal_stations
+filter_criteria = ((ridership_cal_stations['month'] == 7) & (ridership_cal_stations['day_type'] == 'Weekday') & (ridership_cal_stations['station_name'] == 'Wilson'))
+
+# Use .loc and the filter to select for rides
+print(ridership_cal_stations.loc[filter_criteria, 'rides'].sum())
+```
+
+<p class="">Awesome work! You merged three DataFrames together, including merging two tables on multiple columns. Once the tables were merged, you filtered and selected just like any other DataFrame. Finally, you found out that the Wilson station had 140,005 riders during weekdays in July.</p>
+
+### Three table merge
+
+
+<div class>
+<p>To solidify the concept of a three DataFrame merge, practice another exercise. A reasonable extension of our review of Chicago business data would include looking at demographics information about the neighborhoods where the businesses are. A table with the median income by zip code has been provided to you. You will merge the <code>licenses</code> and <code>wards</code> tables with this new income-by-zip-code table called <code>zip_demo</code>.</p>
+<p>The <code>licenses</code>, <code>wards</code>, and <code>zip_demo</code> DataFrames have been loaded for you.</p>
+</div>
+```{python,warning=F,message=F}
+# edited by mclix8
+wards = pd.read_pickle("https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Joining%20Data%20with%20pandas/datasets/ward.p")
+licenses = pd.read_pickle("https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Joining%20Data%20with%20pandas/datasets/licenses.p")
+zip_demo = pd.read_pickle("https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Joining%20Data%20with%20pandas/datasets/zip_demo.p")
+
+import numpy as np
+wards = wards.astype(str)
+licenses = licenses.astype(str)
+zip_demo = zip_demo.astype(str)
+```
+
+<li>Starting with the <code>licenses</code> table, merge to it the <code>zip_demo</code> table on the <code>zip</code> column. Then merge the resulting table to the <code>wards</code> table on the <code>ward</code> column. Save result of the three merged tables to a variable named <code>licenses_zip_ward</code>.</li>
+```{python,warning=F,message=F}
+# Merge licenses and zip_demo, on zip; and merge the wards on ward
+licenses_zip_ward = licenses.merge(zip_demo, on='zip').merge(wards, on='ward')
+```
+<li>Group the results of the three merged tables by the column <code>alderman</code> and find the median <code>income</code>.</li>
+```{python,warning=F,message=F}
+# Print the results by alderman and show median income
+print(licenses_zip_ward.groupby('alderman').agg({'income':'median'}))
+```
+
+<p class="">Nice work! You successfully merged three tables together. With the merged data, you can complete your income analysis. You see that only a few aldermen represent businesses in areas where the median income is greater than $62,000, which is the median income for the state of Illinois.</p>
+
+### One-to-many merge with multiple tables
+
+
+<div class>
+<p>In this exercise, assume that you are looking to start a business in the city of Chicago. Your perfect idea is to start a company that uses goats to mow the lawn for other businesses. However, you have to choose a location in the city to put your goat farm. You need a location with a great deal of space and relatively few businesses and people around to avoid complaints about the smell. You will need to merge three tables to help you choose your location. The <code>land_use</code> table has info on the percentage of vacant land by city ward. The <code>census</code> table has population by ward, and the <code>licenses</code> table lists businesses by ward.</p>
+<p>The <code>land_use</code>, <code>census</code>, and <code>licenses</code> tables have been loaded for you.</p>
+</div>
+```{python,warning=F,message=F}
+# edited by mclix8
+land_use = pd.read_pickle("https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Joining%20Data%20with%20pandas/datasets/land_use.p")
+land_use = land_use.astype(str)
+```
+
+<li>Merge <code>land_use</code> and <code>census</code> on the <code>ward</code> column. Merge the result of this with <code>licenses</code> on the <code>ward</code> column, using the suffix <code>_cen</code> for the left table and <code>_lic</code> for the right table. Save this to the variable <code>land_cen_lic</code>.</li>
+```{python,warning=F,message=F}
+# Merge land_use and census and merge result with licenses including suffixes
+land_cen_lic = land_use.merge(census, on='ward').merge(licenses, on='ward', suffixes=('_cen','_lic'))
+```
+
+<li>Group <code>land_cen_lic</code> by  <code>ward</code>, <code>pop_2010</code> (the population in 2010), and <code>vacant</code>, then count the number of <code>accounts</code>. Save the results to <code>pop_vac_lic</code>.</li>
+```{python,warning=F,message=F}
+# Group by ward, pop_2010, and vacant, then count the # of accounts
+pop_vac_lic = land_cen_lic.groupby(['ward','pop_2010','vacant'], as_index=False).agg({'account':'count'})
+```
+
+<li>Sort <code>pop_vac_lic</code> by <code>vacant</code>, <code>account</code>, and<code>pop_2010</code> in descending, ascending, and ascending order respectively. Save it as <code>sorted_pop_vac_lic</code>.</li>
+```{python,warning=F,message=F}
+# Sort pop_vac_lic and print the results
+sorted_pop_vac_lic = pop_vac_lic.sort_values(['vacant', 'account', 'pop_2010'], ascending=[False, True, True])
+
+# Print the top few rows of sorted_pop_vac_lic
+print(sorted_pop_vac_lic.head())
+```
+
+<p class="">Great job putting your new skills into action. You merged multiple tables with varying relationships and added suffixes to make your column names clearer. Using your skills, you were able to pull together information from different tables to see that the 7th ward would be a good place to build your goat farm!</p>
+
+# Merging With Different Join Types
+
+<p class="chapter__description">
+    Take your knowledge of joins to the next level. In this chapter, you’ll work with TMDb movie data as you learn about left, right, and outer joins. You’ll also discover how to merge a table to itself and merge on a DataFrame index. 
+  </p>
+  
+## Left join
+
+
+
+### Counting missing rows with left join
+
+
+<div class>
+<p>The Movie Database is supported by volunteers going out into the world, collecting data, and entering it into the database. This includes financial data, such as movie budget and revenue. If you wanted to know which movies are still missing data, you could use a left join to identify them. Practice using a left join by merging the <code>movies</code> table and the <code>financials</code> table.</p>
+<p>The <code>movies</code> and <code>financials</code> tables have been loaded for you.</p>
+</div>
+
+<p>What column is likely the best column to merge the two tables on?</p>
+
+- [ ] <code>on='budget'</code>
+- [ ] <code>on='popularity'</code>
+- [x] <code>on='id'</code>
+
+```{python,warning=F,message=F}
+# edited by mclix8
+movies = pd.read_pickle("https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Joining%20Data%20with%20pandas/datasets/movies.p")
+movies = movies.astype(str)
+
+financials = pd.read_pickle("https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Joining%20Data%20with%20pandas/datasets/financials.p")
+financials = financials.astype(str)
+```
+
+<li>Merge the <code>movies</code> table, as the left table, with the <code>financials</code> table using a left join, and save the result to <code>movies_financials</code>.</li>
+```{python,warning=F,message=F}
+# Merge movies and financials with a left join
+movies_financials = movies.merge(financials, on='id', how='left')
+```
+<li>Count the number of rows in <code>movies_financials</code> with a null value in the <code>budget</code> column.</li>
+```{python,warning=F,message=F}
+# Count the number of rows in the budget column that are missing
+number_of_missing_fin = movies_financials['budget'].isnull().sum()
+
+# Print the number of movies missing financials
+print(number_of_missing_fin)
+```
+
+<p class="">Great job! You used a left join to find out which rows in the <code>financials</code> table were missing data. When performing a left join, the <code>.merge()</code> method returns a row full of null values for columns in the right table if the key column does not have a matching value in both tables. We see that there are at least 1,500 rows missing data. Wow! That sounds like a lot of work.</p>
+
+### Enriching a dataset
+
+
+<div class>
+<p>Setting <code>how='left'</code> with the <code>.merge()</code>method is a useful technique for enriching or enhancing a dataset with additional information from a different table. In this exercise, you will start off with a sample of movie data from the movie series <em>Toy Story</em>. Your goal is to enrich this data by adding the marketing tag line for each movie. You will compare the results of a left join versus an inner join.</p>
+<p>The <code>toy_story</code> DataFrame contains the <em>Toy Story</em> movies. The <code>toy_story</code> and <code>taglines</code> DataFrames have been loaded for you.</p>
+</div>
+```{python,warning=F,message=F}
+# edited by mclix8
+toy_story = movies[movies['title'].str.contains("Toy Story")]
+
+taglines = pd.read_pickle("https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Joining%20Data%20with%20pandas/datasets/taglines.p")
+taglines = taglines.astype(str)
+```
+
+<li>Merge <code>toy_story</code> and <code>taglines</code> on the <code>id</code> column with a <strong>left join</strong>, and save the result as <code>toystory_tag</code>.</li>
+```{python,warning=F,message=F}
+# Merge the toy_story and taglines tables with a left join
+toystory_tag = toy_story.merge(taglines, on='id', how='left')
+
+# Print the rows and shape of toystory_tag
+print(toystory_tag)
+print(toystory_tag.shape)
+```
+
+
+
+<li>With <code>toy_story</code> as the left table, merge to it <code>taglines</code> on the <code>id</code> column with an <strong>inner join</strong>, and save as <code>toystory_tag</code>.</li>
+```{python,warning=F,message=F}
+# Merge the toy_story and taglines tables with a inner join
+toystory_tag = toy_story.merge(taglines, on='id', how='inner')
+
+# Print the rows and shape of toystory_tag
+print(toystory_tag)
+print(toystory_tag.shape)
+```
+
+<p class="">That's fantastic work! If your goal is to enhance or enrich a dataset, then you do not want to lose any of your original data. A left join will do that by returning all of the rows of your left table, while using an inner join may result in lost data if it does not exist in both tables.</p>
+
+### How many rows with a left join?
+
+
+<div class>
+<p>Select the <strong>true</strong> statement about left joins. </p>
+<p>Try running the following code statements in the IPython shell. </p>
+<ul>
+<li><code>left_table.merge(one_to_one, on='id', how='left').shape</code></li>
+
+<li><code>left_table.merge(one_to_many, on='id', how='left').shape</code></li>
+
+</ul>
+<p>Note that the <code>left_table</code> starts out with <strong>4</strong> rows.</p>
+</div>
+
+- [ ] The output of a one-to-one merge with a left join will have more rows than the left table.
+- [ ] The output of a one-to-one merge with a left join will have fewer rows than the left table.
+- [x] The output of a one-to-many merge with a left join will have greater than or equal rows than the left table.
+
+<p class="">That's correct! A left join will return all of the rows from the left table. If those rows in the left table match multiple rows in the right table, then all of those rows will be returned. Therefore, the returned rows must be equal to if not greater than the left table. Knowing what to expect is useful in troubleshooting any suspicious merges.</p>
+
+## Other joins
+
+
+
+### Right join to find unique movies
+
+
+<div class>
+<p>Most of the recent big-budget science fiction movies can also be classified as action movies. You are given a table of science fiction movies called <code>scifi_movies</code> and another table of action movies called <code>action_movies</code>. Your goal is to find which movies are considered only science fiction movies. Once you have this table, you can merge the <code>movies</code> table in to see the movie names. Since this exercise is related to science fiction movies, use a right join as your superhero power to solve this problem.</p>
+<p>The <code>movies</code>, <code>scifi_movies</code>, and <code>action_movies</code> tables have been loaded for you.</p>
+</div>
+```{python,warning=F,message=F}
+# edited by mclix8
+movie_to_genres = pd.read_pickle("https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Joining%20Data%20with%20pandas/datasets/movie_to_genres.p")
+movie_to_genres = movie_to_genres.astype(str)
+
+action_movies = movie_to_genres[movie_to_genres['genre'] == 'Action']
+scifi_movies = movie_to_genres[movie_to_genres['genre'] == 'Science Fiction']
+```
+
+<li>Merge <code>action_movies</code> and <code>scifi_movies</code> tables with a <strong>right join</strong> on <code>movie_id</code>. Save the result as <code>action_scifi</code>.</li>
+```{python,warning=F,message=F}
+# Merge action_movies to scifi_movies with right join
+action_scifi = action_movies.merge(scifi_movies, on='movie_id', how='right')
+```
+
+
+
+<li>Update the merge to add suffixes, where <code>'_act'</code> and <code>'_sci'</code> are suffixes for the left and right tables, respectively.</li>
+```{python,warning=F,message=F}
+# Merge action_movies to scifi_movies with right join
+action_scifi = action_movies.merge(scifi_movies, on='movie_id', how='right',suffixes=('_act','_sci'))
+
+# Print the first few rows of action_scifi to see the structure
+print(action_scifi.head())
+```
+
+
+<li>From <code>action_scifi</code>, subset only the rows where the <code>genre_act</code> column is null.</li>
+```{python,warning=F,message=F}
+# From action_scifi, select only the rows where the genre_act column is null
+scifi_only = action_scifi[action_scifi['genre_act'].isnull()]
+```
+
+
+<li>Merge <code>movies</code> and <code>scifi_only</code> using the <code>id</code> column in the left table and the <code>movie_id</code> column in the right table with an inner join.</li>
+```{python,warning=F,message=F}
+# Merge the movies and scifi_only tables with an inner join
+movies_and_scifi_only = movies.merge(scifi_only, how='inner', left_on='id', right_on='movie_id')
+
+# Print the first few rows and shape of movies_and_scifi_only
+print(movies_and_scifi_only.head())
+print(movies_and_scifi_only.shape)
+```
+
+<p class="">Well done, right join to the rescue! You found over 250 action only movies by merging <code>action_movies</code> and <code>scifi_movies</code> using a right join. With this, you were able to find the rows not found in the <code>action_movies</code> table. Additionally, you used the <code>left_on</code> and <code>right_on</code> arguments to merge in the <code>movies</code> table. Wow! You are a superhero.</p>
+
+### Popular genres with right join
+
+
+<div class>
+<p>What are the genres of the most popular movies? To answer this question, you need to merge data from the <code>movies</code> and <code>movie_to_genres</code> tables. In a table called <code>pop_movies</code>, the top 10 most popular movies in the <code>movies</code> table have been selected. To ensure that you are analyzing all of the popular movies, merge it with the <code>movie_to_genres</code> table using a right join. To complete your analysis, count the number of different genres. Also, the two tables can be merged by the movie ID. However, in <code>pop_movies</code> that column is called <code>id</code>, and in <code>movies_to_genres</code> it's called <code>movie_id</code>.</p>
+<p>The <code>pop_movies</code> and <code>movie_to_genres</code> tables have been loaded for you.</p>
+</div>
+```{python,warning=F,message=F}
+# edited by mclix8
+pop_movies = pd.read_csv("https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Joining%20Data%20with%20pandas/datasets/pop_movies.csv")
+pop_movies = pop_movies.astype(str)
+```
+
+<li>Merge <code>movie_to_genres</code> and <code>pop_movies</code> using a right join. Save the results as <code>genres_movies</code>.</li>
+```{python,warning=F,message=F}
+# Use right join to merge the movie_to_genres and pop_movies tables
+genres_movies = movie_to_genres.merge(pop_movies, how='right', left_on='movie_id', right_on='id')
+```
+<li>Group <code>genres_movies</code> by <code>genre</code> and count the number of <code>id</code> values.</li>
+```{python,warning=F,message=F}
+import matplotlib.pyplot as plt
+# Count the number of genres
+genre_count = genres_movies.groupby('genre').agg({'id':'count'})
+
+# Plot a bar chart of the genre_count
+genre_count.plot(kind='bar')
+plt.show()
+```
+
+<p class="">Nice job! The right join ensured that you were analyzing all of the <code>pop_movies</code>. You see from the results that adventure and action are the most popular genres.</p>
+
+### Using outer join to select actors
+
+
+<div class>
+<p>One cool aspect of using an outer join is that, because it returns all rows from both merged tables and null where they do not match, you can use it to find rows that do not have a match in the other table. To try for yourself, you have been given two tables with a list of actors from two popular movies: <em>Iron Man 1</em> and <em>Iron Man 2</em>. Most of the actors played in both movies. Use an outer join to find actors who <strong><em>did not</em></strong> act in both movies.</p>
+<p>The <em>Iron Man 1</em> table is called <code>iron_1_actors</code>, and <em>Iron Man 2</em> table is called <code>iron_2_actors</code>. Both tables have been loaded for you and a few rows printed so you can see the structure.</p>
+<p><img src="https://assets.datacamp.com/production/repositories/5486/datasets/c5d02ebba511e90ae132f89ff091e6729c040bd2/noJoin.png" alt="Venn graph with no overlap"></p>
+</div>
+```{python,warning=F,message=F}
+# edited by mclix8
+iron_1_actors = pd.read_csv("https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Joining%20Data%20with%20pandas/datasets/iron_1_actors.csv")
+iron_1_actors = iron_1_actors.astype(str)
+
+iron_2_actors = pd.read_csv("https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Joining%20Data%20with%20pandas/datasets/iron_2_actors.csv")
+iron_2_actors = iron_2_actors.astype(str)
+```
+
+<li>Save to <code>iron_1_and_2</code> the merge of <code>iron_1_actors</code> (left) with <code>iron_2_actors</code> tables with an outer join on the <code>id</code> column, and set suffixes to <code>('_1','_2')</code>.</li>
+```{python,warning=F,message=F}
+# Merge iron_1_actors to iron_2_actors on id with outer join using suffixes
+iron_1_and_2 = iron_1_actors.merge(iron_2_actors, on='id', how='outer', suffixes=('_1','_2'))
+```
+<li>Create an index that returns <code>True</code> if <code>name_1</code> or <code>name_2</code> are null, and <code>False</code> otherwise.</li>
+```{python,warning=F,message=F}
+# Create an index that returns true if name_1 or name_2 are null
+m = ((iron_1_and_2['name_1'].isnull()) | (iron_1_and_2['name_2'].isnull()))
+
+# Print the first few rows of iron_1_and_2
+print(iron_1_and_2[m].head())
+```
+
+<p class="">Nice job! Using an outer join, you were able to pick only those rows where the actor played in only one of the two movies.</p>
+
+## Merging a table to itself
+
+
+
+### Self join
+
+
+<div class>
+<p>Merging a table to itself can be useful when you want to compare values in a column to other values in the same column. In this exercise, you will practice this by creating a table that for each movie will list the movie director and a member of the crew on one row. You have been given a table called <code>crews</code>, which has columns <code>id</code>, <code>job</code>, and <code>name</code>. First, merge the table to itself using the movie ID. This merge will give you a larger table where for each movie, every job is matched against each other. Then select only those rows with a director in the left table, and avoid having a row where the director's job is listed in both the left and right tables. This filtering will remove job combinations that aren't with the director.  </p>
+<p>The <code>crews</code> table has been loaded for you.</p>
+</div>
+```{python,warning=F,message=F}
+# edited by mclix8
+crews = pd.read_pickle("https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Joining%20Data%20with%20pandas/datasets/crews.p")
+crews = crews.astype(str)
+```
+
+<li>To a variable called <code>crews_self_merged</code>, merge the <code>crews</code> table to itself on the <code>id</code> column using an inner join, setting the suffixes to <code>'_dir'</code> and <code>'_crew'</code> for the left and right tables respectively.</li>
+```{python,warning=F,message=F}
+# Merge the crews table to itself
+crews_self_merged = crews.merge(crews, on='id', how='inner', suffixes=('_dir','_crew'))
+```
+
+<li>Create a Boolean index, named <code>boolean_filter</code>, that selects rows from the left table with the <em>job</em> of <code>'Director'</code> and avoids rows with the <em>job</em> of <code>'Director'</code> in the right table.</li>
+```{python,warning=F,message=F}
+# Create a Boolean index to select the appropriate rows
+boolean_filter = ((crews_self_merged['job_dir'] == 'Director') & (crews_self_merged['job_crew'] != 'Director'))
+direct_crews = crews_self_merged[boolean_filter]
+```
+
+<li>Use the <code>.head()</code> method to print the first few rows of <code>direct_crews</code>.</li>
+```{python,warning=F,message=F}
+# Print the first few rows of direct_crews
+print(direct_crews.head())
+```
+
+<p class="">Great job! By merging the table to itself, you compared the value of the <strong>director</strong> from the <code>jobs</code> column to other values from the <code>jobs</code> column. With the output, you can quickly see different movie directors and the people they worked with in the same movie.</p>
+
+### How does pandas handle self joins?
+
+<p>Select the <strong>false</strong> statement about merging a table to itself.</p>
+
+- [ ] You can merge a table to itself with a right join.
+- [ ] Merging a table to itself can allow you to compare values in a column to other values in the same column.
+- [x] The pandas module limits you to one merge where you merge a table to itself. You cannot repeat this process over and over.
+- [ ] Merging a table to itself is like working with two separate tables.
+
+<p class="dc-completion-pane__message dc-u-maxw-100pc">Perfect! This statement is <strong>false</strong>. pandas treats a merge of a table to itself the same as any other merge. Therefore, it does not limit you from chaining multiple <code>.merge()</code> methods together.</p>
+
+## Merging on indexes
+
+
+
+### Index merge for movie ratings
+
+
+<div class>
+<p>To practice merging on indexes, you will merge <code>movies</code> and a table called <code>ratings</code> that holds info about movie ratings. Make sure your merge returns <strong>all</strong> of the rows from the <code>movies</code> table and not all the rows of <code>ratings</code> table need to be included in the result.</p>
+<p>The <code>movies</code> and <code>ratings</code> tables have been loaded for you.</p>
+</div>
+```{python,warning=F,message=F}
+# edited by mclix8
+ratings = pd.read_pickle("https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Joining%20Data%20with%20pandas/datasets/ratings.p")
+ratings = ratings.astype(str)
+```
+
+<li>Merge <code>movies</code> and <code>ratings</code> on the index and save to a variable called <code>movies_ratings</code>, ensuring that all of the rows from the <code>movies</code> table are returned.</li>
+```{python,warning=F,message=F}
+# Merge to the movies table the ratings table on the index
+movies_ratings = movies.merge(ratings, on='id', how='left')
+
+# Print the first few rows of movies_ratings
+print(movies_ratings.head())
+```
+
+<p class="">Good work! Merging on indexes is just like merging on columns, so if you need to merge based on indexes, there's no need to turn the indexes into columns first.</p>
+
+### Do sequels earn more?
+
+
+<div class>
+<p>It is time to put together many of the aspects that you have learned in this chapter. In this exercise, you'll find out which movie sequels earned the most compared to the original movie. To answer this question, you will merge a modified version of the <code>sequels</code> and <code>financials</code> tables where their index is the movie ID. You will need to choose a merge type that will return all of the rows from the <code>sequels</code> table and not all the rows of <code>financials</code> table need to be included in the result. From there, you will join the resulting table to itself so that you can compare the revenue values of the original movie to the sequel. Next, you will calculate the difference between the two revenues and sort the resulting dataset. </p>
+<p>The <code>sequels</code> and <code>financials</code> tables have been provided.</p>
+</div>
+```{python,warning=F,message=F}
+# edited by mclix8
+financials = pd.read_pickle("https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Joining%20Data%20with%20pandas/datasets/financials.p")
+sequels = pd.read_pickle("https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Joining%20Data%20with%20pandas/datasets/sequels.p")
+```
+
+<li>With the <code>sequels</code> table on the left, merge to it the <code>financials</code> table on index named <code>id</code>, ensuring that all the rows from the <code>sequels</code> are returned and some rows from the other table may not be returned, Save the results to <code>sequels_fin</code>.</li>
+```{python,warning=F,message=F}
+# Merge sequels and financials on index id
+sequels_fin = sequels.merge(financials, on='id', how='left')
+```
+
+<li>Merge the <code>sequels_fin</code> table to itself with an inner join, where the left and right tables merge on <code>sequel</code> and <code>id</code> respectively with suffixes equal to <code>('_org','_seq')</code>, saving to <code>orig_seq</code>.</li>
+
+```{python,warning=F,message=F}
+# Self merge with suffixes as inner join with left on sequel and right on id
+orig_seq = sequels_fin.merge(sequels_fin, how='inner', left_on='id', right_on='sequel', right_index=False, suffixes=('_seq','_org'))
+
+# Add calculation to subtract revenue_org from revenue_seq 
+orig_seq['diff'] = orig_seq['revenue_seq'] - orig_seq['revenue_org']
+```
+
+<li>Select the <code>title_org</code>, <code>title_seq</code>, and <code>diff</code> columns of <code>orig_seq</code> and save this as <code>titles_diff</code>.</li>
+```{python,warning=F,message=F}
+# Select the title_org, title_seq, and diff 
+titles_diff = orig_seq[['title_org','title_seq','diff']]
+```
+
+
+# Advanced Merging and Concatenating
+
+<p class="chapter__description">
+    In this chapter, you’ll leverage powerful filtering techniques, including semi-joins and anti-joins. You’ll also learn how to glue DataFrames by vertically combining and using the pandas.concat function to create new datasets. Finally, because data is rarely clean, you’ll also learn how to validate your newly combined data structures.
+  </p>
+  
+## Filtering joins
+
+
+
+### Steps of a semi join
+
+
+
+### Performing an anti join
+
+
+<div class>
+<p>In our music streaming company dataset, each customer is assigned an employee representative to assist them. In this exercise, filter the employee table by a table of top customers, returning only those employees who are <strong>not</strong> assigned to a customer. The results should resemble the results of an anti join. The company's leadership will assign these employees additional training so that they can work with high valued customers.</p>
+<p>The <code>top_cust</code> and <code>employees</code> tables have been provided for you.</p>
+</div>
+```{python,warning=F,message=F}
+# edited by mclix8
+employees = pd.read_csv("https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Joining%20Data%20with%20pandas/datasets/employees.csv")
+employees = employees.astype(str)
+
+top_cust = pd.read_csv("https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Joining%20Data%20with%20pandas/datasets/top_cust.csv")
+top_cust = top_cust.astype(str)
+```
+
+<li>Merge <code>employees</code> and <code>top_cust</code> with a left join, setting <code>indicator</code> argument to <code>True</code>. Save the result to <code>empl_cust</code>.</li>
+```{python,warning=F,message=F}
+# Merge employees and top_cust
+empl_cust = employees.merge(top_cust, on='srid', how='left', indicator=True)
+```
+
+<li>Select the <code>srid</code> column of <code>empl_cust</code> and the rows where <code>_merge</code> is <code>'left_only'</code>. Save the result to <code>srid_list</code>.</li>
+```{python,warning=F,message=F}
+# Select the srid column where _merge is left_only
+srid_list = empl_cust.loc[empl_cust['_merge'] == 'left_only', 'srid']
+```
+
+<li>Subset the <code>employees</code> table and select those rows where the <code>srid</code> is in the variable <code>srid_list</code> and print the results.</li>
+```{python,warning=F,message=F}
+# Get employees not working with top customers
+print(employees[employees['srid'].isin(srid_list)])
+```
+
+<p class="">Success! You performed an anti join by first merging the tables with a left join, selecting the ID of those employees who did not support a top customer, and then subsetting the original employee's table. From that, we can see that there are five employees not supporting top customers. Anti joins are a powerful tool to filter a main table (i.e. <code>employees</code>) by another (i.e. <code>customers</code>).</p>
+
+### Performing a semi join
+
+
+<div class>
+<p>Some of the tracks that have generated the most significant amount of revenue are from TV-shows or are other non-musical audio. You have been given a table of invoices that include top revenue-generating items. Additionally, you have a table of non-musical tracks from the streaming service. In this exercise, you'll use a semi join to find the top revenue-generating non-musical tracks..</p>
+<p>The tables <code>non_mus_tcks</code>, <code>top_invoices</code>, and <code>genres</code> have been loaded for you.</p>
+</div>
+```{python,warning=F,message=F}
+# edited by mclix8
+non_mus_tcks = pd.read_csv("https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Joining%20Data%20with%20pandas/datasets/non_mus_tcks.csv")
+non_mus_tcks = non_mus_tcks.astype(str)
+
+top_invoices = pd.read_csv("https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Joining%20Data%20with%20pandas/datasets/top_invoices.csv")
+top_invoices = top_invoices.astype(str)
+
+genres = pd.read_csv("https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Joining%20Data%20with%20pandas/datasets/genres.csv")
+genres = genres.astype(str)
+```
+
+<li>Merge <code>non_mus_tcks</code> and <code>top_invoices</code> on <code>tid</code> using an inner join. Save the result as <code>tracks_invoices</code>.</li>
+```{python,warning=F,message=F}
+# Merge the non_mus_tck and top_invoices tables on tid
+tracks_invoices = non_mus_tcks.merge(top_invoices, on='tid')
+```
+<li>Use <code>.isin()</code> to subset the rows of <code>non_mus_tck</code> where <code>tid</code> is in the <code>tid</code> column of  <code>tracks_invoices</code>. Save the result as <code>top_tracks</code>.</li>
+```{python,warning=F,message=F}
+# Use .isin() to subset non_mus_tcsk to rows with tid in tracks_invoices
+top_tracks = non_mus_tcks[non_mus_tcks['tid'].isin(tracks_invoices['tid'])]
+```
+<li>Group <code>top_tracks</code> by <code>gid</code> and count the <code>tid</code> rows. Save the result to <code>cnt_by_gid</code>.</li>
+```{python,warning=F,message=F}
+# Group the top_tracks by gid and count the tid rows
+cnt_by_gid = top_tracks.groupby(['gid'], as_index=False).agg({'tid':'count'})
+```
+<li>Merge <code>cnt_by_gid</code> with the <code>genres</code> table on <code>gid</code> and print the result.</li>
+```{python,warning=F,message=F}
+# edited by mclix8
+cnt_by_gid = cnt_by_gid.astype(str)
+genres = genres.astype(str)
+
+# Merge the genres table to cnt_by_gid on gid and print
+print(cnt_by_gid.merge(genres, on='gid'))
+```
+
+<p class="">Nice job! In this exercise, you replicated a semi join to filter the table of tracks by the table of invoice items to find the top revenue non-musical tracks. With some additional data manipulation, you discovered that <em>'TV-shows'</em> is the non-musical genre that has the most top revenue-generating tracks. Now that you've done both semi- and anti joins, it's time to move to the next topic.</p>
+
+## Concatenate vertically
+
+
+
+### Concatenation basics
+
+
+<div class>
+<p>You have been given a few tables of data with musical track info for different albums from the metal band, <em>Metallica</em>. The track info comes from their <em>Ride The Lightning</em>, <em>Master Of Puppets</em>, and <em>St. Anger</em> albums. Try various features of the <code>.concat()</code> method by concatenating the tables vertically together in different ways.</p>
+<p>The tables <code>tracks_master</code>, <code>tracks_ride</code>, and <code>tracks_st</code> have loaded for you.</p>
+</div>
+```{python,warning=F,message=F}
+# edited by mclix8
+tracks_master = pd.read_csv("https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Joining%20Data%20with%20pandas/datasets/tracks_master.csv")
+tracks_master = tracks_master.astype(str)
+
+tracks_ride = pd.read_csv("https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Joining%20Data%20with%20pandas/datasets/tracks_ride.csv")
+tracks_ride = tracks_ride.astype(str)
+
+tracks_st = pd.read_csv("https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Joining%20Data%20with%20pandas/datasets/tracks_st.csv")
+tracks_st = tracks_st.astype(str)
+```
+
+<li>Concatenate <code>tracks_master</code>, <code>tracks_ride</code>, and <code>tracks_st</code>, in that order, setting <code>sort</code> to <code>True</code>.</li>
+```{python,warning=F,message=F}
+# Concatenate the tracks
+tracks_from_albums = pd.concat([tracks_master, tracks_ride, tracks_st], sort=True)
+print(tracks_from_albums)
+```
+
+
+
+<li>Concatenate <code>tracks_master</code>, <code>tracks_ride</code>, and <code>tracks_st</code>, where the index goes from 0 to n-1.</li>
+```{python,warning=F,message=F}
+# Concatenate the tracks so the index goes from 0 to n-1
+tracks_from_albums = pd.concat([tracks_master, tracks_ride, tracks_st], ignore_index=True, sort=True)
+print(tracks_from_albums)
+```
+
+
+<li>Concatenate <code>tracks_master</code>, <code>tracks_ride</code>, and <code>tracks_st</code>, showing only columns that are in all tables.</li>
+```{python,warning=F,message=F}
+# Concatenate the tracks, show only columns names that are in all tables
+tracks_from_albums = pd.concat([tracks_master, tracks_ride, tracks_st], join='inner', sort=True)
+print(tracks_from_albums)
+```
+
+<p class="">Great job! You've concatenated your first set of tables, adjusted the index, and altered the columns shown in the output. The <code>.concat()</code> method is a very flexible tool that is useful for combining data into a new dataset.</p>
+
+### Concatenating with keys
+
+
+<div class>
+<p>The leadership of the music streaming company has come to you and asked you for assistance in analyzing sales for a recent business quarter. They would like to know which month in the quarter saw the highest average invoice total. 
+You have been given three tables with invoice data named <code>inv_jul</code>, <code>inv_aug</code>, and <code>inv_sep</code>. Concatenate these tables into one to create a graph of the average monthly invoice total.</p>
+</div>
+```{python,warning=F,message=F}
+# edited by mclix8
+inv_jul = pd.read_csv("https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Joining%20Data%20with%20pandas/datasets/inv_jul.csv")
+inv_aug = pd.read_csv("https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Joining%20Data%20with%20pandas/datasets/inv_aug.csv")
+inv_sep = pd.read_csv("https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Joining%20Data%20with%20pandas/datasets/inv_sep.csv")
+
+```
+
+<li>Concatenate the three tables together vertically in order with the oldest month first, adding <code>'7Jul'</code>, <code>'8Aug'</code>, and <code>'9Sep'</code> as <code>keys</code> for their respective months, and save to variable <code>avg_inv_by_month</code>.</li>
+```{python,warning=F,message=F}
+# Concatenate the tables and add keys
+inv_jul_thr_sep = pd.concat([inv_jul, inv_aug, inv_sep], keys=['7Jul','8Aug','9Sep'])
+```
+<li>Use the <code>.agg()</code> method to find the average of the <code>total</code> column from the grouped invoices.</li>
+```{python,warning=F,message=F}
+# Group the invoices by the index keys and find avg of the total column
+avg_inv_by_month = inv_jul_thr_sep.groupby(level=0).agg({'total':'mean'})
+```
+<li>Create a bar chart of <code>avg_inv_by_month</code>.</li>
+```{python,warning=F,message=F}
+# Bar plot of avg_inv_by_month
+avg_inv_by_month.plot(kind='bar')
+plt.show()
+```
+
+<p class="">Way to come through! There are many ways to write code for this task. However, concatenating the tables with a key provides a hierarchical index that can be used for grouping. Once grouped, you can average the groups and create plots. You were able to find out that September had the highest average invoice total.</p>
+
+### Using the append method
+
+
+<div class>
+<p>The <code>.concat()</code> method is excellent when you need a lot of control over how concatenation is performed. However, if you do not need as much control, then the <code>.append()</code> method is another option. You'll try this method out by appending the track lists together from different <em>Metallica</em> albums. From there, you will merge it with the <code>invoice_items</code> table to determine which track sold the most.</p>
+<p>The tables <code>tracks_master</code>, <code>tracks_ride</code>, <code>tracks_st</code>, and <code>invoice_items</code> have loaded for you.</p>
+</div>
+```{python,warning=F,message=F}
+# edited by mclix8
+invoice_items = pd.read_csv("https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Joining%20Data%20with%20pandas/datasets/invoice_items.csv")
+invoice_items = invoice_items.astype(str)
+```
+
+<li>Use the <code>.append()</code> method to combine (<strong>in this order</strong>) <code>tracks_ride</code>, <code>tracks_master</code>, and <code>tracks_st</code> together vertically, and save to <code>metallica_tracks</code>.</li>
+```{python,warning=F,message=F}
+# Use the .append() method to combine the tracks tables
+metallica_tracks = tracks_ride.append([tracks_master, tracks_st], sort=False)
+```
+<li>Merge <code>metallica_tracks</code> and <code>invoice_items</code> on <code>tid</code> with an inner join, and save to <code>tracks_invoices</code>.</li>
+```{python,warning=F,message=F}
+# Merge metallica_tracks and invoice_items
+tracks_invoices = metallica_tracks.merge(invoice_items, on='tid')
+```
+<li>For each <code>tid</code> and <code>name</code> in <code>tracks_invoices</code>, sum the quantity sold column, and save as <code>tracks_sold</code>.</li>
+```{python,warning=F,message=F}
+# For each tid and name sum the quantity sold
+tracks_sold = tracks_invoices.groupby(['tid','name']).agg({'quantity':'sum'})
+```
+<li>Sort <code>tracks_sold</code> in descending order by the <code>quantity</code> column, and print the table.</li>
+```{python,warning=F,message=F}
+# Sort in decending order by quantity and print the results
+print(tracks_sold.sort_values(['quantity'], ascending=False))
+```
+
+<p class="">Great work!  Even though <code>.append()</code> is less flexible, it's also simpler than <code>.concat()</code>. It looks like <em>Battery</em>, and <em>For Whom The Bell Tolls</em> were the most sold tracks.</p>
+
+## Verifying integrity
+
+
+
+### Validating a merge
+
+
+<div class>
+<p>You have been given 2 tables, <code>artists</code>, and <code>albums</code>. Use the IPython shell to merge them using <code>artists.merge(albums, on='artid').head()</code>. Adjust the <code>validate</code> argument to answer which statement is <strong><em>False</em></strong>.</p>
+</div>
+
+- [ ] You can use  <code>'many_to_many'</code> without an error, since there is a duplicate key in one of the tables.
+- [ ] You can use  <code>'one_to_many'</code> without error, since there is a duplicate key in the right table.
+- [x] You can use <code>'many_to_one'</code> without an error, since there is a duplicate key in the left table.
+
+<p class="">That's correct! This statement is false. There is a duplicate value in the <code>artid</code> column in the <code>albums</code> table, which is the right table in this merge. Therefore, setting <code>validate</code> equal to <code>'many_to_one'</code> or <code>'one_to_one'</code> will raise an error, making this statement false.</p>
+
+### Concatenate and merge to find common songs
+
+
+<div class>
+<p>The senior leadership of the streaming service is requesting your help again. You are given the historical files for a popular playlist in the classical music genre in 2018 and 2019. Additionally, you are given a similar set of files for the most popular pop music genre playlist on the streaming service in 2018 and 2019. Your goal is to concatenate the respective files to make a large classical playlist table and overall popular music table. Then filter the classical music table using a semi join to return only the most popular classical music tracks.</p>
+<p>The tables <code>classic_18</code>, <code>classic_19</code>, and <code>pop_18</code>, <code>pop_19</code> have been loaded for you. Additionally, <code>pandas</code> has been loaded as <code>pd</code>.</p>
+</div>
+```{python,warning=F,message=F}
+# edited by mclix8
+classic_18 = pd.read_csv("https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Joining%20Data%20with%20pandas/datasets/classic_18.csv")
+classic_18 = classic_18.astype(str)
+
+classic_19 = pd.read_csv("https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Joining%20Data%20with%20pandas/datasets/classic_19.csv")
+classic_19 = classic_19.astype(str)
+
+pop_18 = pd.read_csv("https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Joining%20Data%20with%20pandas/datasets/pop_18.csv")
+pop_18 = pop_18.astype(str)
+
+pop_19 = pd.read_csv("https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Joining%20Data%20with%20pandas/datasets/pop_19.csv")
+pop_19 = pop_19.astype(str)
+```
+
+<li>Concatenate the <code>classic_18</code> and <code>classic_19</code> tables vertically where the index goes from 0 to n-1, and save to <code>classic_18_19</code>.</li>
+```{python,warning=F,message=F}
+# Concatenate the classic tables vertically
+classic_18_19 = pd.concat([classic_18, classic_19], ignore_index=True)
+```
+<li>Concatenate the <code>pop_18</code> and <code>pop_19</code> tables vertically where the index goes from 0 to n-1, and save to <code>pop_18_19</code>.</li>
+```{python,warning=F,message=F}
+# Concatenate the pop tables vertically
+pop_18_19 = pd.concat([pop_18, pop_19], ignore_index=True)
+```
+
+
+<li>With <code>classic_18_19</code> on the left, merge it with <code>pop_18_19</code> on <code>tid</code> using an inner join.</li>
+```{python,warning=F,message=F}
+# Concatenate the classic tables vertically
+classic_18_19 = pd.concat([classic_18, classic_19], ignore_index=True)
+
+# Concatenate the pop tables vertically
+pop_18_19 = pd.concat([pop_18, pop_19], ignore_index=True)
+
+# Merge classic_18_19 with pop_18_19
+classic_pop = classic_18_19.merge(pop_18_19, on='tid')
+```
+
+<li>Use <code>.isin()</code> to filter <code>classic_18_19</code> where <code>tid</code> is in <code>classic_pop</code>.</li>
+```{python,warning=F,message=F}
+# Using .isin(), filter classic_18_19 rows where tid is in classic_pop
+popular_classic = classic_18_19[classic_18_19['tid'].isin(classic_pop['tid'])]
+
+# Print popular chart
+print(popular_classic)
+```
+
+<p class="">Excellent work! In this exercise, you demonstrated many of the concepts discussed in this chapter, including concatenation, and semi joins. You now have experience combining data vertically and using semi- and anti joins. Time to move on to the next chapter!</p>
+
+# Merging Ordered and Time-Series Data
+
+<p class="chapter__description">
+    In this final chapter, you’ll step up a gear and learn to apply pandas' specialized methods for merging time-series and ordered data together with real-world financial and economic data from the city of Chicago. You’ll also learn how to query resulting tables using a SQL-style format, and unpivot data using the melt method.
+  </p>
+
+## Using merge_ordered()
+
+
+
+### Correlation between GDP and S&amp;P500
+
+
+<div class>
+<p>In this exercise, you want to analyze stock returns from the S&amp;P 500. You believe there may be a relationship between the returns of the S&amp;P 500 and the GDP of the US. Merge the different datasets together to compute the correlation.</p>
+<p>Two tables have been provided for you, named <code>sp500</code>, and <code>gdp</code>. As always, <code>pandas</code> has been imported for you as <code>pd</code>.</p>
+</div>
+```{python,warning=F,message=F}
+# edited by mclix8
+gdp = pd.read_csv("https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Joining%20Data%20with%20pandas/datasets/gdp1.csv")
+gdp = gdp.astype(str)
+gdp.columns= gdp.columns.str.lower()
+
+sp500 = pd.read_csv("https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Joining%20Data%20with%20pandas/datasets/sp500.csv")
+sp500 = sp500.astype(str)
+sp500.columns= sp500.columns.str.lower()
+```
+
+<li>Use <code>merge_ordered()</code> to merge <code>gdp</code> and <code>sp500</code> using a left join on <code>year</code> and <code>date</code>. Save the results as <code>gdp_sp500</code>.</li>
+```{python,warning=F,message=F}
+# Use merge_ordered() to merge gdp and sp500 on year and date
+gdp_sp500 = pd.merge_ordered(gdp, sp500, left_on='year', right_on='date', how='left')
+```
+<li>Print <code>gdp_sp500</code> and look at the returns for the year 2018.</li>
+```{python,warning=F,message=F}
+# Print gdp_sp500
+print(gdp_sp500)
+```
+
+<li>Use <code>merge_ordered()</code>, again similar to before, to merge <code>gdp</code> and <code>sp500</code> use the function's ability to interpolate missing data to forward fill the missing value for returns, assigning this table to the variable <code>gdp_sp500</code>.</li>
+```{python,warning=F,message=F}
+# Use merge_ordered() to merge gdp and sp500, interpolate missing value
+gdp_sp500 = pd.merge_ordered(gdp, sp500, left_on='year', right_on='date', how='left',  fill_method='ffill')
+
+# Print gdp_sp500
+print (gdp_sp500)
+```
+
+
+<li>Subset the <code>gdp_sp500</code> table, select the <code>gdp</code> and <code>returns</code> columns, and save as <code>gdp_returns</code>.</li>
+```{python,warning=F,message=F}
+# Subset the gdp and returns columns
+gdp_returns = gdp_sp500[['gdp','returns']]
+gdp_returns = gdp_returns.astype(float)
+```
+
+<li>Print the correlation matrix of the <code>gdp_returns</code> table.</li>
+```{python,warning=F,message=F}
+# Print gdp_returns correlation
+print(gdp_returns.corr())
+```
+
+<p class="">Awesome work! You can see the different aspects of <code>merge_ordered()</code> and how you might use it on data that can be ordered. By using this function, you were able to fill in the missing data from 2019. Finally, the correlation of 0.21 between the GDP and S&amp;P500 is low to moderate at best. You may want to find another predictor if you plan to play in the stock market.</p>
+
+### Phillips curve using merge_ordered()
+
+
+<div class>
+<p>There is an economic theory developed by A. W. Phillips which states that inflation and unemployment have an inverse relationship. The theory claims that with economic growth comes inflation, which in turn should lead to more jobs and less unemployment. </p>
+<p>You will take two tables of data from the U.S. Bureau of Labor Statistics, containing unemployment and inflation data over different periods, and create a Phillips curve. The tables have different frequencies. One table has a data entry every six months, while the other has a data entry every month. You will need to use the entries where you have data within both tables. </p>
+<p>The tables <code>unemployment</code> and <code>inflation</code> have been loaded for you.</p>
+</div>
+```{python,warning=F,message=F}
+# edited by mclix8
+inflation = pd.read_csv("https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Joining%20Data%20with%20pandas/datasets/inflation.csv")
+unemployment = pd.read_csv("https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Joining%20Data%20with%20pandas/datasets/unemployment.csv")
+```
+
+<li>Use <code>merge_ordered()</code> to merge the <code>inflation</code> and <code>unemployment</code> tables on <code>date</code> with an inner join, and save the results as <code>inflation_unemploy</code>.</li>
+```{python,warning=F,message=F}
+# Use merge_ordered() to merge inflation, unemployment with inner join
+inflation_unemploy = pd.merge_ordered(inflation, unemployment, on='date', how='inner')
+```
+<li>Print the <code>inflation_unemploy</code> variable.</li>
+```{python,warning=F,message=F}
+# Print inflation_unemploy 
+print(inflation_unemploy)
+```
+<li>Using <code>inflation_unemploy</code>, create a scatter plot with <code>unemployment_rate</code> on the horizontal axis and <code>cpi</code> (inflation) on the vertical axis.</li>
+```{python,warning=F,message=F}
+# Plot a scatter plot of unemployment_rate vs cpi of inflation_unemploy
+inflation_unemploy.plot(kind='scatter', x='unemployment_rate', y='cpi')
+plt.show()
+```
+
+<p class="">Great work! You created a Phillips curve. There are critics of the curve, but what is more important in this example is that you were able to use entries where you had entries in both tables by using an inner join. You might ask why not use the default outer join and use forward fill to fill to estimate the missing variables. You might choose differently. In this case, instead of showing an estimated unemployment rate (which is a continually changing measure) for five periods, that data was dropped from the plot.</p>
+
+### merge_ordered() caution, multiple columns
+
+
+<div class>
+<p>When using <code>merge_ordered()</code> to merge on multiple columns, the order is important when you combine it with the forward fill feature. The function sorts the merge on columns in the order provided. In this exercise, we will merge GDP and population data from the World Bank for the Australia and Sweden, reversing the order of the merge on columns. The frequency of the series are different, the GDP values are quarterly, and the population is yearly. Use the forward fill feature to fill in the missing data. Depending on the order provided, the fill forward will use unintended data to fill in the missing values. </p>
+<p>The tables <code>gdp</code> and <code>pop</code> have been loaded.</p>
+</div>
+```{python,warning=F,message=F}
+# edited by mclix8
+gdp = pd.read_csv("https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Joining%20Data%20with%20pandas/datasets/gdp2.csv")
+
+pop = pd.read_csv("https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Joining%20Data%20with%20pandas/datasets/pop1.csv")
+```
+
+<li>Use <code>merge_ordered()</code> on <code>gdp</code> and <code>pop</code>, merging on columns <code>date</code> and <code>country</code> with the fill feature, save to <code>ctry_date</code>.</li>
+```{python,warning=F,message=F}
+# Merge gdp and pop on date and country with fill and notice rows 2 and 3
+ctry_date = pd.merge_ordered(gdp, pop, on=['date','country'], fill_method='ffill')
+
+# Print ctry_date
+print(ctry_date)
+```
+
+
+
+<li>Perform the same merge of <code>gdp</code> and <code>pop</code>, but join on <code>country</code> and <code>date</code> (<strong>reverse of step 1</strong>) with the fill feature, saving this as <code>date_ctry</code>.</li>
+```{python,warning=F,message=F}
+# Merge gdp and pop on country and date with fill
+date_ctry = pd.merge_ordered(gdp, pop, on=['country','date'], fill_method='ffill')
+
+# Print date_ctry
+print(date_ctry)
+```
+
+<p class="">Nice! When you merge on <code>date</code> first, the table is sorted by <code>date</code> then <code>country</code>. When forward fill is applied, Sweden's population value in January is used to fill in the missing values for both Australia and the Sweden for the remainder of the year. This is not what you want. The fill forward is using unintended data to fill in the missing values. However, when you merge on country first, the table is sorted by <code>country</code> then date, so the forward fill is applied appropriately in this situation.</p>
+
+## Using merge_asof()
+
+
+
+### Using merge_asof() to study stocks
+
+
+<div class>
+<p>You have a feed of stock market prices that you record. You attempt to track the price every five minutes. Still, due to some network latency, the prices you record are roughly every 5 minutes. You pull your price logs for three banks, <em>JP Morgan</em> (JPM), <em>Wells Fargo</em> (WFC), and <em>Bank Of America</em> (BAC). You want to know how the price change of the two other banks compare to JP Morgan. Therefore, you will need to merge these three logs into one table. Afterward, you will use the <code>pandas</code> <code>.diff()</code> method to compute the price change over time. Finally, plot the price changes so you can review your analysis. </p>
+<p>The three log files have been loaded for you as tables named <code>jpm</code>, <code>wells</code>, and <code>bac</code>.</p>
+</div>
+```{python,warning=F,message=F}
+# edited by mclix8
+jpm = pd.read_csv("https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Joining%20Data%20with%20pandas/datasets/jpm.csv")
+jpm["date_time"] = pd.to_datetime(jpm["date_time"])
+
+wells = pd.read_csv("https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Joining%20Data%20with%20pandas/datasets/wells.csv")
+wells["date_time"] = pd.to_datetime(wells["date_time"])
+
+bac = pd.read_csv("https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Joining%20Data%20with%20pandas/datasets/bac.csv")
+bac["date_time"] = pd.to_datetime(bac["date_time"])
+```
+
+<li>Use <code>merge_asof()</code> to merge <code>jpm</code> (left table) and <code>wells</code> together on the <code>date_time</code> column, where the rows with the <strong><em>nearest</em></strong> times are matched, and with <code>suffixes=('', '_wells')</code>. Save to <code>jpm_wells</code>.</li>
+```{python,warning=F,message=F}
+# Use merge_asof() to merge jpm and wells
+jpm_wells = pd.merge_asof(jpm, wells, on='date_time', suffixes=('', '_wells'), direction='nearest')
+```
+<li>Use <code>merge_asof()</code> to merge <code>jpm_wells</code> (left table) and <code>bac</code> together on the <code>date_time</code> column, where the rows with the closest times are matched, and with <code>suffixes=('_jpm', '_bac')</code>. Save to <code>jpm_wells_bac</code>.</li>
+```{python,warning=F,message=F}
+# Use merge_asof() to merge jpm_wells and bac
+jpm_wells_bac = pd.merge_asof(jpm_wells, bac, on='date_time', suffixes=('_jpm', '_bac'), direction='nearest')
+```
+<li>Using <code>price_diffs</code>, create a line plot of the close price of JPM, WFC, and BAC only.</li>
+```{python,warning=F,message=F}
+# Compute price diff
+price_diffs = jpm_wells_bac.diff()
+
+# Plot the price diff of the close of jpm, wells and bac only
+price_diffs.plot(y=['close_jpm','close_wells','close_bac'])
+plt.show()
+```
+
+<p class="">Fabulous! You can see that during this period, the price change for these bank stocks was roughly the same, although the price change for <em>JP Morgan</em> was more variable. The critical point here is that the <code>merge_asof()</code> function is very useful in performing the fuzzy matching between the timestamps of all the tables.</p>
+
+### Using merge_asof() to create dataset
+
+
+<div class>
+<p>The <code>merge_asof()</code> function can be used to create datasets where you have a table of start and stop dates, and you want to use them to create a flag in another table. You have been given <code>gdp</code>, which is a table of quarterly GDP values of the US during the 1980s. Additionally, the table <code>recession</code> has been given to you. It holds the starting date of every US recession since 1980, and the date when the recession was declared to be over. Use <code>merge_asof()</code> to merge the tables and create a status flag if a quarter was during a recession. Finally, to check your work, plot the data in a bar chart.</p>
+<p>The tables <code>gdp</code> and <code>recession</code> have been loaded for you.</p>
+</div>
+```{python,warning=F,message=F}
+# edited by mclix8
+gdp = pd.read_csv("https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Joining%20Data%20with%20pandas/datasets/gdp3.csv")
+gdp["date"] = pd.to_datetime(gdp["date"])
+
+recession = pd.read_csv("https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Joining%20Data%20with%20pandas/datasets/recession.csv")
+recession["date"] = pd.to_datetime(recession["date"])
+```
+
+<li>Using <code>merge_asof()</code>, merge <code>gdp</code> and <code>recession</code> on <code>date</code>, with <code>gdp</code> as the left table. Save to the variable <code>gdp_recession</code>.</li>
+```{python,warning=F,message=F}
+# Merge gdp and recession on date using merge_asof()
+gdp_recession = pd.merge_asof(gdp, recession, on='date')
+```
+<li>Create a <code>list</code> using a list comprehension and a conditional expression, named <code>is_recession</code>, where for each row if the <code>gdp_recession['econ_status']</code> value is equal to 'recession' then enter <code>'r'</code> else <code>'g'</code>.</li>
+```{python,warning=F,message=F}
+# Create a list based on the row value of gdp_recession['econ_status']
+is_recession = ['r' if s=='recession' else 'g' for s in gdp_recession['econ_status']]
+```
+<li>Using <code>gdp_recession</code>, plot a bar chart of <code>gdp</code> versus <code>date</code>, setting the <code>color</code> argument equal to <code>is_recession</code>.</li>
+```{python,warning=F,message=F}
+# Plot a bar chart of gdp_recession
+gdp_recession.plot(kind='bar', y='gdp', x='date', color=is_recession, rot=90)
+plt.show()
+```
+
+<p class="">Terrific work! You can see from the chart that there were a number of quarters early in the 1980s where a recession was an issue. <code>merge_asof()</code> allowed you to quickly add a flag to the <code>gdp</code> dataset by matching between two different dates, in one line of code! If you were to perform the same task using subsetting, it would have taken a lot more code.</p>
+
+### merge_asof() and merge_ordered() differences
+
+<p>The <code>merge_asof()</code> and <code>merge_ordered()</code> functions are similar in the type of merge they perform and the input arguments they use. In this exercise, think about how the functions are different.</p>
+
+<li>Drag and drop the statement into the appropriate box for either the <code>merge_asof()</code> function, the <code>merge_ordered()</code> function, or both if it applies to both functions.</li>
+
+<div class="dc-u-ifx dc-u-h-100pc dc-u-mt-16"><div style="height: 100%; width: 34%;"><div class="dc-u-h-100pc dc-u-fx dc-u-fx-fdc dc-u-fx-aic dc-u-p-12 droppable-container" data-cy="droppable-container"><h5 class="dc-u-ta-center">merge_asof()</h5><div class="dc-u-brad-all dc-u-maxw-640 droppable-area " data-cy="droppable-area" style="border: 2px dashed rgba(5, 25, 45, 0.3); height: 100%; margin-top: 16px; min-height: 192px; overflow: hidden auto; padding: 8px 8px 0px; width: 100%;"><div><div data-rbd-draggable-context-id="0" data-rbd-draggable-id="ma_1" tabindex="0" role="button" aria-describedby="rbd-hidden-text-0-hidden-text-0" data-rbd-drag-handle-draggable-id="ma_1" data-rbd-drag-handle-context-id="0" draggable="false" data-cy="draggable-item" style="margin: 0px 0px 8px;"><div class="dc-u-fx dc-u-fx-fdr dc-u-fx-jcc dc-u-fx-aic dc-u-brad-all dc-u-pos-relative dc-u-of-hidden css-18rjr21-StyledItem ecyjiz20" offset="0"><div class="dc-u-fxi-f-auto dc-u-ta-left dc-u-ph-12 dc-u-p-16 item-text dc-u-of-hidden css-1giyo6-ItemContentDiv eamqpiv0"><div class=""><p>Has an argument that can be set to <code>'forward'</code> to select the first row in the right table whose key column is greater than or equal to the left’s.</p></div></div><svg aria-label="arrow_left icon" class="dc-icon-arrow_left dc-u-color-white dc-u-mh-4" fill="currentColor" height="15" role="Img" width="15" style="cursor: pointer; display: none; flex: 0 0 auto; height: 40px; opacity: 0.3;"><use xlink:href="/campus/static/media/symbols.e369b265.svg#arrow_left"></use></svg><svg aria-label="arrow_right icon" class="dc-icon-arrow_right dc-u-color-white" fill="currentColor" height="15" role="Img" width="15" style="cursor: pointer; display: none; flex: 0 0 auto; height: 40px; margin-right: -4px; opacity: 0.3;"><use xlink:href="/campus/static/media/symbols.e369b265.svg#arrow_right"></use></svg><svg aria-label="bars icon" class="dc-icon-bars dc-u-color-navy" fill="currentColor" height="12" role="Img" width="12" style="flex: 0 0 auto; margin: 12px 18px; opacity: 0.3; position: absolute; right: -12px; top: -7px;"><use xlink:href="/campus/static/media/symbols.e369b265.svg#bars"></use></svg></div></div></div><div><div data-rbd-draggable-context-id="0" data-rbd-draggable-id="ma_2" tabindex="0" role="button" aria-describedby="rbd-hidden-text-0-hidden-text-0" data-rbd-drag-handle-draggable-id="ma_2" data-rbd-drag-handle-context-id="0" draggable="false" data-cy="draggable-item" style="margin: 0px 0px 8px;"><div class="dc-u-fx dc-u-fx-fdr dc-u-fx-jcc dc-u-fx-aic dc-u-brad-all dc-u-pos-relative dc-u-of-hidden css-18rjr21-StyledItem ecyjiz20" offset="0"><div class="dc-u-fxi-f-auto dc-u-ta-left dc-u-ph-12 dc-u-p-16 item-text dc-u-of-hidden css-1giyo6-ItemContentDiv eamqpiv0"><div class=""><p>It can be used to do fuzzy matching of dates between tables.</p></div></div><svg aria-label="arrow_left icon" class="dc-icon-arrow_left dc-u-color-white dc-u-mh-4" fill="currentColor" height="15" role="Img" width="15" style="cursor: pointer; display: none; flex: 0 0 auto; height: 40px; opacity: 0.3;"><use xlink:href="/campus/static/media/symbols.e369b265.svg#arrow_left"></use></svg><svg aria-label="arrow_right icon" class="dc-icon-arrow_right dc-u-color-white" fill="currentColor" height="15" role="Img" width="15" style="cursor: pointer; display: none; flex: 0 0 auto; height: 40px; margin-right: -4px; opacity: 0.3;"><use xlink:href="/campus/static/media/symbols.e369b265.svg#arrow_right"></use></svg><svg aria-label="bars icon" class="dc-icon-bars dc-u-color-navy" fill="currentColor" height="12" role="Img" width="12" style="flex: 0 0 auto; margin: 12px 18px; opacity: 0.3; position: absolute; right: -12px; top: -7px;"><use xlink:href="/campus/static/media/symbols.e369b265.svg#bars"></use></svg></div></div></div><div><div data-rbd-draggable-context-id="0" data-rbd-draggable-id="ma_3" tabindex="0" role="button" aria-describedby="rbd-hidden-text-0-hidden-text-0" data-rbd-drag-handle-draggable-id="ma_3" data-rbd-drag-handle-context-id="0" draggable="false" data-cy="draggable-item" style="margin: 0px 0px 8px;"><div class="dc-u-fx dc-u-fx-fdr dc-u-fx-jcc dc-u-fx-aic dc-u-brad-all dc-u-pos-relative dc-u-of-hidden css-18rjr21-StyledItem ecyjiz20" offset="0"><div class="dc-u-fxi-f-auto dc-u-ta-left dc-u-ph-12 dc-u-p-16 item-text dc-u-of-hidden css-1giyo6-ItemContentDiv eamqpiv0"><div class=""><p>After matching two tables, if there are missing values at the top of the table from the right table, this function can fill them in.</p></div></div><svg aria-label="arrow_left icon" class="dc-icon-arrow_left dc-u-color-white dc-u-mh-4" fill="currentColor" height="15" role="Img" width="15" style="cursor: pointer; display: none; flex: 0 0 auto; height: 40px; opacity: 0.3;"><use xlink:href="/campus/static/media/symbols.e369b265.svg#arrow_left"></use></svg><svg aria-label="arrow_right icon" class="dc-icon-arrow_right dc-u-color-white" fill="currentColor" height="15" role="Img" width="15" style="cursor: pointer; display: none; flex: 0 0 auto; height: 40px; margin-right: -4px; opacity: 0.3;"><use xlink:href="/campus/static/media/symbols.e369b265.svg#arrow_right"></use></svg><svg aria-label="bars icon" class="dc-icon-bars dc-u-color-navy" fill="currentColor" height="12" role="Img" width="12" style="flex: 0 0 auto; margin: 12px 18px; opacity: 0.3; position: absolute; right: -12px; top: -7px;"><use xlink:href="/campus/static/media/symbols.e369b265.svg#bars"></use></svg></div></div></div></div></div></div><div style="height: 100%; width: 34%;"><div class="dc-u-h-100pc dc-u-fx dc-u-fx-fdc dc-u-fx-aic dc-u-p-12 droppable-container" data-cy="droppable-container"><h5 class="dc-u-ta-center">both</h5><div class="dc-u-brad-all dc-u-maxw-640 droppable-area " data-cy="droppable-area" style="border: 2px dashed rgba(5, 25, 45, 0.3); height: 100%; margin-top: 16px; min-height: 192px; overflow: hidden auto; padding: 8px 8px 0px; width: 100%;"><div><div data-rbd-draggable-context-id="0" data-rbd-draggable-id="b_1" tabindex="0" role="button" aria-describedby="rbd-hidden-text-0-hidden-text-0" data-rbd-drag-handle-draggable-id="b_1" data-rbd-drag-handle-context-id="0" draggable="false" data-cy="draggable-item" style="margin: 0px 0px 8px;"><div class="dc-u-fx dc-u-fx-fdr dc-u-fx-jcc dc-u-fx-aic dc-u-brad-all dc-u-pos-relative dc-u-of-hidden css-18rjr21-StyledItem ecyjiz20" offset="0"><div class="dc-u-fxi-f-auto dc-u-ta-left dc-u-ph-12 dc-u-p-16 item-text dc-u-of-hidden css-1giyo6-ItemContentDiv eamqpiv0"><div class=""><p>This function can set the suffix for overlapping column names.</p></div></div><svg aria-label="arrow_left icon" class="dc-icon-arrow_left dc-u-color-white dc-u-mh-4" fill="currentColor" height="15" role="Img" width="15" style="cursor: pointer; display: none; flex: 0 0 auto; height: 40px; opacity: 0.3;"><use xlink:href="/campus/static/media/symbols.e369b265.svg#arrow_left"></use></svg><svg aria-label="arrow_right icon" class="dc-icon-arrow_right dc-u-color-white" fill="currentColor" height="15" role="Img" width="15" style="cursor: pointer; display: none; flex: 0 0 auto; height: 40px; margin-right: -4px; opacity: 0.3;"><use xlink:href="/campus/static/media/symbols.e369b265.svg#arrow_right"></use></svg><svg aria-label="bars icon" class="dc-icon-bars dc-u-color-navy" fill="currentColor" height="12" role="Img" width="12" style="flex: 0 0 auto; margin: 12px 18px; opacity: 0.3; position: absolute; right: -12px; top: -7px;"><use xlink:href="/campus/static/media/symbols.e369b265.svg#bars"></use></svg></div></div></div><div><div data-rbd-draggable-context-id="0" data-rbd-draggable-id="b_2" tabindex="0" role="button" aria-describedby="rbd-hidden-text-0-hidden-text-0" data-rbd-drag-handle-draggable-id="b_2" data-rbd-drag-handle-context-id="0" draggable="false" data-cy="draggable-item" style="margin: 0px 0px 8px;"><div class="dc-u-fx dc-u-fx-fdr dc-u-fx-jcc dc-u-fx-aic dc-u-brad-all dc-u-pos-relative dc-u-of-hidden css-18rjr21-StyledItem ecyjiz20" offset="0"><div class="dc-u-fxi-f-auto dc-u-ta-left dc-u-ph-12 dc-u-p-16 item-text dc-u-of-hidden css-1giyo6-ItemContentDiv eamqpiv0"><div class=""><p>This function can be used when working with ordered or time-series data.</p></div></div><svg aria-label="arrow_left icon" class="dc-icon-arrow_left dc-u-color-white dc-u-mh-4" fill="currentColor" height="15" role="Img" width="15" style="cursor: pointer; display: none; flex: 0 0 auto; height: 40px; opacity: 0.3;"><use xlink:href="/campus/static/media/symbols.e369b265.svg#arrow_left"></use></svg><svg aria-label="arrow_right icon" class="dc-icon-arrow_right dc-u-color-white" fill="currentColor" height="15" role="Img" width="15" style="cursor: pointer; display: none; flex: 0 0 auto; height: 40px; margin-right: -4px; opacity: 0.3;"><use xlink:href="/campus/static/media/symbols.e369b265.svg#arrow_right"></use></svg><svg aria-label="bars icon" class="dc-icon-bars dc-u-color-navy" fill="currentColor" height="12" role="Img" width="12" style="flex: 0 0 auto; margin: 12px 18px; opacity: 0.3; position: absolute; right: -12px; top: -7px;"><use xlink:href="/campus/static/media/symbols.e369b265.svg#bars"></use></svg></div></div></div></div></div></div><div style="height: 100%; width: 34%;"><div class="dc-u-h-100pc dc-u-fx dc-u-fx-fdc dc-u-fx-aic dc-u-p-12 droppable-container" data-cy="droppable-container"><h5 class="dc-u-ta-center">.merge_ordered</h5><div class="dc-u-brad-all dc-u-maxw-640 droppable-area " data-cy="droppable-area" style="border: 2px dashed rgba(5, 25, 45, 0.3); height: 100%; margin-top: 16px; min-height: 192px; overflow: hidden auto; padding: 8px 8px 0px; width: 100%;"><div><div data-rbd-draggable-context-id="0" data-rbd-draggable-id="mo_1" tabindex="0" role="button" aria-describedby="rbd-hidden-text-0-hidden-text-0" data-rbd-drag-handle-draggable-id="mo_1" data-rbd-drag-handle-context-id="0" draggable="false" data-cy="draggable-item" style="margin: 0px 0px 8px;"><div class="dc-u-fx dc-u-fx-fdr dc-u-fx-jcc dc-u-fx-aic dc-u-brad-all dc-u-pos-relative dc-u-of-hidden css-18rjr21-StyledItem ecyjiz20" offset="0"><div class="dc-u-fxi-f-auto dc-u-ta-left dc-u-ph-12 dc-u-p-16 item-text dc-u-of-hidden css-1giyo6-ItemContentDiv eamqpiv0"><div class=""><p>It allows for a right join during the merge.</p></div></div><svg aria-label="arrow_left icon" class="dc-icon-arrow_left dc-u-color-white dc-u-mh-4" fill="currentColor" height="15" role="Img" width="15" style="cursor: pointer; display: none; flex: 0 0 auto; height: 40px; opacity: 0.3;"><use xlink:href="/campus/static/media/symbols.e369b265.svg#arrow_left"></use></svg><svg aria-label="arrow_right icon" class="dc-icon-arrow_right dc-u-color-white" fill="currentColor" height="15" role="Img" width="15" style="cursor: pointer; display: none; flex: 0 0 auto; height: 40px; margin-right: -4px; opacity: 0.3;"><use xlink:href="/campus/static/media/symbols.e369b265.svg#arrow_right"></use></svg><svg aria-label="bars icon" class="dc-icon-bars dc-u-color-navy" fill="currentColor" height="12" role="Img" width="12" style="flex: 0 0 auto; margin: 12px 18px; opacity: 0.3; position: absolute; right: -12px; top: -7px;"><use xlink:href="/campus/static/media/symbols.e369b265.svg#bars"></use></svg></div></div></div><div><div data-rbd-draggable-context-id="0" data-rbd-draggable-id="mo_2" tabindex="0" role="button" aria-describedby="rbd-hidden-text-0-hidden-text-0" data-rbd-drag-handle-draggable-id="mo_2" data-rbd-drag-handle-context-id="0" draggable="false" data-cy="draggable-item" style="margin: 0px 0px 8px;"><div class="dc-u-fx dc-u-fx-fdr dc-u-fx-jcc dc-u-fx-aic dc-u-brad-all dc-u-pos-relative dc-u-of-hidden css-18rjr21-StyledItem ecyjiz20" offset="0"><div class="dc-u-fxi-f-auto dc-u-ta-left dc-u-ph-12 dc-u-p-16 item-text dc-u-of-hidden css-1giyo6-ItemContentDiv eamqpiv0"><div class=""><p>If it cannot match the rows of the tables exactly, it can use forward fill to interpolate the missing data.</p></div></div><svg aria-label="arrow_left icon" class="dc-icon-arrow_left dc-u-color-white dc-u-mh-4" fill="currentColor" height="15" role="Img" width="15" style="cursor: pointer; display: none; flex: 0 0 auto; height: 40px; opacity: 0.3;"><use xlink:href="/campus/static/media/symbols.e369b265.svg#arrow_left"></use></svg><svg aria-label="arrow_right icon" class="dc-icon-arrow_right dc-u-color-white" fill="currentColor" height="15" role="Img" width="15" style="cursor: pointer; display: none; flex: 0 0 auto; height: 40px; margin-right: -4px; opacity: 0.3;"><use xlink:href="/campus/static/media/symbols.e369b265.svg#arrow_right"></use></svg><svg aria-label="bars icon" class="dc-icon-bars dc-u-color-navy" fill="currentColor" height="12" role="Img" width="12" style="flex: 0 0 auto; margin: 12px 18px; opacity: 0.3; position: absolute; right: -12px; top: -7px;"><use xlink:href="/campus/static/media/symbols.e369b265.svg#bars"></use></svg></div></div></div></div></div></div></div>
+
+## Selecting data with .query()
+
+
+
+### Explore financials with .query()
+
+
+<div class>
+<p>You have been given a table of financial data from some popular social network companies called <code>social_fin</code>. All of the values are in thousands of US dollars.</p>
+<p>Use the <code>.query()</code> method and the IPython shell to explore <code>social_fin</code> and select the <strong>True</strong> statement.</p>
+</div>
+
+
+
+- [ ] There 2 rows where the <code>value</code> is greater than $50,000,000K.
+- [ ] There are 3 rows for total revenue for Facebook.
+- [x] There are 6 rows where the net income has a negative value.
+- [ ] There are 45 rows, where the gross profit is greater than $100K.
+
+<p class="">That's correct! To check this answer you needed to select <code>financial</code> equal to net income and <code>value</code> &lt; 0.</p>
+
+### Subsetting rows with .query()
+
+
+<div class>
+<p>In this exercise, you will revisit GDP and population data for Australia and Sweden from the World Bank and expand on it using the <code>.query()</code> method. You'll merge the two tables and compute the GDP per capita. Afterwards, you'll use the <code>.query()</code> method to sub-select the rows and create a plot. Recall that you will need to merge on multiple columns in the proper order. </p>
+<p>The tables <code>gdp</code> and <code>pop</code> have been loaded for you.</p>
+</div>
+```{python,warning=F,message=F}
+# edited by mclix8
+gdp = pd.read_csv("https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Joining%20Data%20with%20pandas/datasets/gdp4.csv")
+gdp["date"] = pd.to_datetime(gdp["date"])
+
+pop = pd.read_csv("https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Joining%20Data%20with%20pandas/datasets/pop2.csv")
+pop["date"] = pd.to_datetime(pop["date"])
+```
+
+<li>Use <code>merge_ordered()</code> on <code>gdp</code> and <code>pop</code> on columns <code>country</code> and <code>date</code> with the fill feature, save to <code>gdp_pop</code> and print.</li>
+```{python,warning=F,message=F}
+# Merge gdp and pop on date and country with fill
+gdp_pop = pd.merge_ordered(gdp, pop, on=['country','date'], fill_method='ffill')
+```
+
+<li>Add a column named <code>gdp_per_capita</code> to <code>gdp_pop</code> that divides <code>gdp</code> by <code>pop</code>.</li>
+```{python,warning=F,message=F}
+# Add a column named gdp_per_capita to gdp_pop that divides the gdp by pop
+gdp_pop['gdp_per_capita'] = gdp_pop['gdp'] / gdp_pop['pop']
+```
+
+<li>Pivot <code>gdp_pop</code> so <code>values='gdp_per_capita'</code>, <code>index='date'</code>, and <code>columns='country'</code>, save as <code>gdp_pivot</code>.</li>
+```{python,warning=F,message=F}
+# Pivot table of gdp_per_capita, where index is date and columns is country
+gdp_pivot = gdp_pop.pivot_table('gdp_per_capita', 'date', 'country')
+```
+
+<li>Use <code>.query()</code> to select rows from <code>gdp_pivot</code> where <code>date</code> is greater than equal to <code>"1991-01-01"</code>. Save as <code>recent_gdp_pop</code>.</li>
+```{python,warning=F,message=F}
+# Select dates equal to or greater than 1991-01-01
+recent_gdp_pop = gdp_pivot.query('date >= "1991-01-01"')
+
+# Plot recent_gdp_pop
+recent_gdp_pop.plot(rot=90)
+plt.show()
+```
+
+<p class="">Amazing! You can see from the plot that the per capita GDP of Australia passed Sweden in 1992. By using the <code>.query()</code> method, you were able to select the appropriate rows easily. The <code>.query()</code> method is easy to read and straightforward.</p>
+
+## Reshaping data with .melt()
+
+
+
+### Select the right .melt() arguments
+
+
+<div class>
+<p>You are given a table named <code>inflation</code>. Chose the option to get the <em><strong>same</strong></em> output as the table below.</p>
+<pre><code>   country    indicator  year  annual
+0   Brazil  Inflation %  2017    3.45
+1   Canada  Inflation %  2017    1.60
+2   France  Inflation %  2017    1.03
+3    India  Inflation %  2017    2.49
+4   Brazil  Inflation %  2018    3.66
+5   Canada  Inflation %  2018    2.27
+6   France  Inflation %  2018    1.85
+7    India  Inflation %  2018    4.86
+8   Brazil  Inflation %  2019    3.73
+9   Canada  Inflation %  2019    1.95
+10  France  Inflation %  2019    1.11
+11   India  Inflation %  2019    7.66
+</code></pre>
+</div>
+
+- [ ] <code>inflation.melt(id_vars=['country','indicator'], var_name='annual')</code>
+- [ ] <code>inflation.melt(id_vars=['country'], var_name='indicator', value_name='annual')</code>
+- [x] <code>inflation.melt(id_vars=['country','indicator'], var_name='year', value_name='annual')</code>
+- [ ] <code>inflation.melt(id_vars=['country'], var_name='year', value_name='annual')</code>
+
+<p class="">Magnificent! You identified the correct values to pass to the <code>id_vars</code> argument. These columns are not unpivoted. Finally, the other arguments set the name for the year and value columns.</p>
+
+### Using .melt() to reshape government data
+
+
+<div class>
+<p>The US Bureau of Labor Statistics (BLS) often provides data series in an easy-to-read format - it has a separate column for each month, and each year is a different row. Unfortunately, this wide format makes it difficult to plot this information over time. In this exercise, you will reshape a table of US unemployment rate data from the BLS into a form you can plot using <code>.melt()</code>. You will need to add a date column to the table and sort by it to plot the data correctly.</p>
+<p>The unemployment rate data has been loaded for you in a table called <code>ur_wide</code>. You are encouraged to view the table in the IPython shell before beginning the exercise.</p>
+</div>
+```{python,warning=F,message=F}
+# edited by mclix8
+ur_wide = pd.read_csv("https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Joining%20Data%20with%20pandas/datasets/ur_wide.csv")
+```
+
+<li>Use <code>.melt()</code> to unpivot all of the columns of <code>ur_wide</code> except <code>year</code> and ensure that the columns with the months and values are named <code>month</code> and <code>unempl_rate</code>, respectively. Save the result as <code>ur_tall</code>.</li>
+```{python,warning=F,message=F}
+# Unpivot everything besides the year column
+ur_tall = ur_wide.melt(id_vars=['year'], var_name='month', value_name='unempl_rate')
+```
+```{python,warning=F,message=F}
+# edited by mclix8
+ur_tall = ur_tall[ur_tall['unempl_rate'] != "nan"]
+ur_tall = ur_tall.dropna()
+ur_tall = ur_tall.astype(str)
+```
+
+<li>Add a column to <code>ur_tall</code> named <code>date</code> which combines the <code>year</code> and <code>month</code> columns as <em>year</em>-<em>month</em> format into a larger string, and converts it to a date data type. </li>
+
+```{python,warning=F,message=F}
+# Create a date column using the month and year columns of ur_tall
+ur_tall['date'] = pd.to_datetime(ur_tall['month'] + '-' + ur_tall['year'])
+```
+<li>Sort <code>ur_tall</code> by date and save as <code>ur_sorted</code>.</li>
+```{python,warning=F,message=F}
+# Sort ur_tall by date in ascending order
+ur_sorted = ur_tall.sort_values('date')
+
+# edited by mclix8
+ur_sorted['unempl_rate'] = pd.to_numeric(ur_sorted['unempl_rate'])
+```
+<li>Using <code>ur_sorted</code>, plot <code>unempl_rate</code> on the y-axis and <code>date</code> on the x-axis.</li>
+
+```{python,warning=F,message=F}
+# Plot the unempl_rate by date
+ur_sorted.plot(x='date', y='unempl_rate')
+plt.show()
+```
+
+<p class="">Nice going! The plot shows a steady decrease in the unemployment rate with an increase near the end. This increase is likely the effect of the COVID-19 pandemic and its impact on shutting down most of the US economy. In general, data is often provided (<em>especially by governments</em>) in a format that is easily read by people but not by machines. The <code>.melt()</code> method is a handy tool for reshaping data into a useful form.</p>
+
+### Using .melt() for stocks vs bond performance
+
+
+<div class>
+<p>It is widespread knowledge that the price of bonds is inversely related to the price of stocks. In this last exercise, you'll review many of the topics in this chapter to confirm this. You have been given a table of percent change of the US 10-year treasury bond price. It is in a wide format where there is a separate column for each year. You will need to use the <code>.melt()</code> method to reshape this table.</p>
+<p>Additionally, you will use the <code>.query()</code> method to filter out unneeded data. You will merge this table with a table of the percent change of the Dow Jones Industrial stock index price. Finally, you will plot data.</p>
+<p>The tables <code>ten_yr</code> and <code>dji</code> have been loaded for you.</p>
+</div>
+```{python,warning=F,message=F}
+# edited by mclix8
+ten_yr = pd.read_csv("https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Joining%20Data%20with%20pandas/datasets/ten_yr.csv")
+
+dji = pd.read_csv("https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Joining%20Data%20with%20pandas/datasets/dji.csv")
+```
+
+<li>Use <code>.melt()</code> on <code>ten_yr</code> to unpivot everything except the <code>metric</code> column, setting <code>var_name='date'</code> and <code>value_name='close'</code>. Save the result to <code>bond_perc</code>.</li>
+```{python,warning=F,message=F}
+# Use melt on ten_yr, unpivot everything besides the metric column
+bond_perc = ten_yr.melt(id_vars='metric', var_name='date', value_name='close')
+```
+<li>Using the <code>.query()</code> method, select only those rows were <code>metric</code> equals 'close', and save to <code>bond_perc_close</code>.</li>
+```{python,warning=F,message=F}
+# Use query on bond_perc to select only the rows where metric=close
+bond_perc_close = bond_perc.query('metric == "close"')
+```
+<li>Use <code>merge_ordered()</code> to merge <code>dji</code> (left table) and <code>bond_perc_close</code> on <code>date</code> with an inner join, and set <code>suffixes</code> equal to <code>('_dow', '_bond')</code>. Save the result to <code>dow_bond</code>.</li>
+```{python,warning=F,message=F}
+# Merge (ordered) dji and bond_perc_close on date with an inner join
+dow_bond = pd.merge_ordered(dji, bond_perc_close, on='date', suffixes=('_dow', '_bond'), how='inner')
+```
+<li>Using <code>dow_bond</code>, plot only the Dow and bond values.</li>
+```{python,warning=F,message=F}
+# Plot only the close_dow and close_bond columns
+dow_bond.plot(y=['close_dow', 'close_bond'], x='date', rot=90)
+plt.show()
+```
+
+<p class="">Super job! You used many of the techniques we have reviewed in this chapter to produce the plot. The plot confirms that the bond and stock prices are inversely correlated. Often as the price of stocks increases, the price for bonds decreases.</p>

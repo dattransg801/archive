@@ -1,0 +1,1040 @@
+## Image Processing with Keras in Python {.unnumbered}
+
+<h3 class="course__description-title">Ariel Rokem</h3>
+<p class="course__instructor-description display-none-mobile-course-page-experiment">
+    Ariel Rokem is a Data Scientist at the University of Washington eScience Institute. He received a PhD in neuroscience from UC Berkeley, and postdoctoral training in computational neuroimaging at Stanford. In his work, he develops data science algorithms and tools, and applies them to analysis of neural data. He is also a contributor to multiple open-source software projects in the scientific Python ecosystem.
+  </p>
+
+**Course Description**
+
+<p class="course__description">Image processing requires deep learning methods that use data to train neural network algorithms to do various machine learning tasks. Convolutional neural networks (CNNs) are particularly powerful neural networks which you'll use to classify different types of objects for the analysis of images. This four-hour course will teach you how to construct, train, and evaluate CNNs using Keras.
+<br><br>
+Turning images into data and teaching neural networks to classify them is a challenging element of deep learning with extensive applications throughout business and research, from helping an eCommerce site manage inventory more easily to allowing cancer researchers to quickly spot dangerous melanoma.
+<br><br>
+The first chapter of this course covers how images can be seen as data, and how you can use Keras to train a neural network to classify objects found in images.
+<br><br>
+The second chapter will cover convolutions, a fundamental part of CNNs. You’ll learn how they operate on image data and learn how to train and tweak your Keras CNN using test data. Later chapters go into more detail and teach you how to create a deep learning network.
+<br><br>
+You’ll finish the course by learning the different ways that you can track how well a CNN is doing and how you can improve their performance. At this point, you’ll be able to build Keras neural networks, optimize them, and visualize their responses across a range of applications.</p>
+
+### Image Processing With Neural Networks {.unnumbered}
+
+<p class="chapter__description">
+    Convolutional neural networks use the data that is represented in images to learn. In this chapter, we will probe data in images, and we will learn how to use Keras to train a neural network to classify objects that appear in images. 
+  </p>
+
+#### Introducing convolutional neural networks {.unnumbered}
+
+
+
+##### Images as data: visualizations {.unnumbered}
+
+
+<div class><p>To display image data, you will rely on Python's <a href="https://matplotlib.org/">Matplotlib</a> library, and specifically use matplotlib's <code>pyplot</code> sub-module, that contains many plotting commands. Some of these commands allow you to display the content of images stored in arrays.</p></div>
+<li>Import the image from the file <code>bricks.png</code> into <code>data</code>. </li>
+<li>Display the image in <code>data</code> on the screen.</li>
+```{python}
+# edited/added
+import numpy as np
+import pandas as pd
+import tensorflow as tf
+from skimage import transform
+
+# Import matplotlib
+import matplotlib.pyplot as plt
+
+# Load the image
+data = plt.imread('archive/Image-Processing-with-Keras-in-Python/datasets/bricks.png')
+
+# edited/added
+data = transform.resize(data, (159, 240))
+
+# Display the image
+plt.imshow(data)
+plt.show()
+plt.close() # edited/added
+```
+
+<p class="">Nicely done! Visit <a href="https://matplotlib.org/" target="_blank" rel="noopener noreferrer">Matplotlib's website</a> to learn more about plotting commands you could use.</p>
+
+##### Images as data: changing images {.unnumbered}
+
+
+<div class>
+<p>To modify an image, you can modify the existing numbers in the array. In a color image, you can change the values in one of the color channels without affecting the other colors, by indexing on the last dimension of the array. </p>
+<p>The image you imported in the previous exercise is available in <code>data</code>.</p>
+</div>
+
+<li>Modify the bricks image to replace the top left corner of the image (10 by 10 pixels) into a red square.</li>
+<li>Visualize the resulting image.</li>
+```{python}
+# Set the red channel in this part of the image to 1
+data[:10, :10, 0] = 1
+
+# Set the green channel in this part of the image to 0
+data[:10, :10, 1] = 0
+
+# Set the blue channel in this part of the image to 0
+data[:10, :10, 2] = 0
+
+# Visualize the result
+plt.imshow(data)
+plt.show()
+plt.close() # edited/added
+```
+
+<p class="">Great job! You now know how to manipulate images. By the way, if you set both the green and red channels to 1, that part of the image would be yellow.</p>
+
+#### Classifying images {.unnumbered}
+
+
+
+##### Using one-hot encoding to represent images {.unnumbered}
+
+
+<div class>
+<p>Neural networks expect the labels of classes in a dataset to be organized in a one-hot encoded manner: each row in the array
+contains zeros in all columns, except the column corresponding to a unique label, which is set to 1.</p>
+<p>The fashion dataset contains three categories: </p>
+<ol>
+<li>Shirts </li>
+<li>Dresses</li>
+<li>Shoes </li>
+</ol>
+<p>In this exercise, you will create a one-hot encoding of a small sample of these labels.</p>
+</div>
+
+<li>Initialize the <code>ohe_labels</code> variable to hold the one-hot encoded array.</li>
+<li>Use <code>np.where()</code> to find the location of the category of the item in each iteration in <code>categories</code>. </li>
+<li>Assign a <code>1</code> into the correct row/column combination in every iteration.</li>
+```{python}
+# edited/added
+labels = ['shoe', 'shirt', 'shoe', 'shirt', 'dress', 'dress', 'dress']
+
+# The number of image categories
+n_categories = 3
+
+# The unique values of categories in the data
+categories = np.array(["shirt", "dress", "shoe"])
+
+# Initialize ohe_labels as all zeros
+ohe_labels = np.zeros((len(labels), n_categories))
+
+# Loop over the labels
+for ii in range(len(labels)):
+    # Find the location of this label in the categories variable
+    jj = np.where(categories == labels[ii])
+    # Set the corresponding zero to one
+    ohe_labels[ii, jj] = 1
+```
+
+<p class="">Nice! You can use this array to test classification performance.</p>
+
+##### Evaluating a classifier {.unnumbered}
+
+
+<div class>
+<p>To evaluate a classifier, we need to test it on images that were not used during training. This is called "cross-validation": a prediction of the class (e.g., t-shirt, dress or shoe) is made from each of the test images, and these predictions are compared with the true labels of these images.</p>
+<p>The results of cross-validation are provided as one-hot encoded arrays: <code>test_labels</code> and <code>predictions</code>.</p>
+</div>
+
+<li>Multiply the arrays with each other and sum the result to find the total number of correct predictions. </li>
+<li>Divide the number of correct answers (the sum) by the length of <code>predictions</code> array to calculate the proportion of correct predictions.</li>
+```{python}
+# edited/added
+test_labels = np.array([[0., 0., 1.], [0., 1., 0.], [0., 0., 1.], [0., 1., 0.], 
+                        [0., 0., 1.], [0., 0., 1.], [0., 0., 1.], [0., 1., 0.]])
+
+predictions = np.array([[0., 0., 1.], [0., 1., 0.], [0., 0., 1.], [1., 0., 0.], 
+                        [0., 0., 1.], [1., 0., 0.], [0., 0., 1.], [0., 1., 0.]])
+
+# Calculate the number of correct predictions
+number_correct = (test_labels * predictions).sum()
+print(number_correct)
+
+# Calculate the proportion of correct predictions
+proportion_correct = number_correct/len(predictions)
+print(proportion_correct)
+```
+
+<p class="">Great job! Let's talk about fitting classification models using Keras.</p>
+
+#### Classification with Keras {.unnumbered}
+
+
+
+##### Build a neural network {.unnumbered}
+
+
+<div class>
+<p>We will use the <code>Keras</code> library to create neural networks and to train these neural networks to classify images. These models will all be of the <code>Sequential</code> type, meaning that the outputs of one layer are provided as inputs only to the next layer. </p>
+<p>In this exercise, you will create a neural network with <code>Dense</code> layers, meaning that each unit in each layer is connected to all of the units in the previous layer. For example, each unit in the first layer is connected to all of the pixels in the input images. The <code>Dense</code> layer object receives as arguments the number of units in that layer, and the activation function for the units. For the first layer in the network, it also receives an <code>input_shape</code> keyword argument.</p>
+<p><em>This course touches on a lot of concepts you may have forgotten, so if you ever need a quick refresher, download the <a href="https://datacamp-community-prod.s3.amazonaws.com/94fc681d-5422-40cb-a129-2218e9522f17">Keras Cheat Sheet</a> and keep it handy!</em></p>
+</div>
+
+<li>The first layer receives images as input, has 10 units and <code>'relu'</code> activation. </li>
+<li>The second input layer has 10 units and <code>'relu'</code> activation.</li>
+<li>The output layer has one unit for each category (3 categories) and <code>'softmax'</code> activation.</li>
+```{python}
+# Imports components from Keras
+import tensorflow.keras as keras
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
+
+# Initializes a sequential model
+model = Sequential()
+
+# First layer
+model.add(Dense(10, activation='relu', input_shape=(784,)))
+
+# Second layer
+model.add(Dense(10, activation='relu'))
+
+# Output layer
+model.add(Dense(3, activation='softmax'))
+```
+
+<p class="">Congratulations! You've built a neural network!</p>
+
+##### Compile a neural network {.unnumbered}
+
+
+<div class><p>Once you have constructed a model in <code>Keras</code>, the model needs to be compiled before you can fit it to data. This means that you need to specify the optimizer that will be used to fit the model and the loss function that will be used in optimization. Optionally, you can also specify a list of metrics that the model will keep track of. For example, if you want to know the classification accuracy, you will provide the list <code>['accuracy']</code> to the <code>metrics</code> keyword argument.</p></div>
+<div class="exercise--instructions__content"><p>Write code to compile the model with the <code>'adam'</code> optimizer and <code>'categorical_crossentropy'</code> as the loss function.</p></div>
+```{python}
+# Compile the model
+model.compile(optimizer='adam', 
+              loss='categorical_crossentropy', 
+              metrics=['accuracy'])
+```
+
+<p class="">This neural network model is now ready to be fit to data.</p>
+
+##### Fitting a neural network model to clothing data {.unnumbered}
+
+
+<div class>
+<p>In this exercise, you will fit the fully connected neural network that you constructed in the previous exercise to image data. The training data is provided as two variables: <code>train_data</code> that contains the pixel data for 50 images of the three clothing classes and <code>train_labels</code>, which contains one-hot encoded representations of the labels for each one of these 50 images. Transform the data into the network's expected input and then fit the model on training data and training labels. </p>
+<p>The <code>model</code> you compiled in the previous exercise, and <code>train_data</code> and <code>train_labels</code> are available in your workspace.</p>
+</div>
+
+<li>Prepare the data for fitting by reshaping it.</li>
+<li>Fit the model by passing the input training data and training labels to the model's <code>.fit()</code> method.</li>
+```{python}
+# edited/added
+(train_data, train_labels), (test_data, test_labels) = tf.keras.datasets.fashion_mnist.load_data()
+train_data = train_data[(train_labels >= 0) & (train_labels < 3)][0:50].reshape(-1, 28, 28, 1)
+train_labels = train_labels[(train_labels >= 0) & (train_labels < 3)][0:50]
+train_labels = pd.get_dummies(train_labels).to_numpy()
+test_data = test_data[(test_labels >= 0) & (test_labels < 3)][0:10].reshape(-1, 28, 28, 1)
+test_labels = test_labels[(test_labels >= 0) & (test_labels < 3)][0:10]
+test_labels = pd.get_dummies(test_labels).to_numpy()
+
+# Reshape the data to two-dimensional array
+train_data = train_data.reshape(50, 784)
+
+# Fit the model
+model.fit(train_data, train_labels, validation_split=0.2, epochs=3)
+```
+
+<p class="">This model works well on the training data, but does it work well on test data?</p>
+
+##### Cross-validation for neural network evaluation {.unnumbered}
+
+
+<div class>
+<p>To evaluate the model, we use a separate test data-set. As in the train data, the images in the test data also need to be reshaped before they can be provided to the fully-connected network because the network expects one column per pixel in the input. </p>
+<p>The <code>model</code> you fit in the previous exercise, and <code>test_data</code> and <code>test_labels</code> are available in your workspace.</p>
+</div>
+
+<li>Reshape the <code>test_data</code> so that it can be used to evaluate the model. </li>
+<li>Evaluate the model on <code>test_data</code> using <code>test_labels</code>.</li>
+```{python}
+# Reshape test data
+test_data = test_data.reshape(10, 784)
+
+# Evaluate the model
+model.evaluate(test_data, test_labels)
+```
+
+<p class="">Not too bad! The model cross-validates rather accurately.</p>
+
+### Using Convolutions {.unnumbered}
+
+<p class="chapter__description">
+    Convolutions are the fundamental building blocks of convolutional neural networks. In this chapter, you will be introducted to convolutions and learn how they operate on image data. You will also see how you incorporate convolutions into Keras neural networks. 
+  </p>
+
+#### Convolutions {.unnumbered}
+
+
+
+##### One dimensional convolutions {.unnumbered}
+
+
+<div class><p>A convolution of an one-dimensional array with a kernel comprises of taking the kernel, sliding it along the array, multiplying it with the items in the array that overlap with the kernel in that location and summing this product.</p></div>
+<div class="exercise--instructions__content"><p>Multiply each window in the input array with the kernel and sum the multiplied result and allocate the result into the correct entry in the output array (<code>conv</code>).</p></div>
+```{python}
+# edited/added
+def plot_comparison(img_original, img_filtered, img_title_filtered):
+    fig, (ax1, ax2) = plt.subplots(ncols=2, figsize=(10, 8), sharex=True, sharey=True)
+    ax1.imshow(img_original, cmap=plt.cm.gray)
+    ax1.set_title('Original')
+    ax1.axis('off')
+    ax2.imshow(img_filtered, cmap=plt.cm.gray)
+    ax2.set_title(img_title_filtered)
+    ax2.axis('off')
+    plt.show()
+    plt.close()
+    
+array = np.array([1, 0, 1, 0, 1, 0, 1, 0, 1, 0])
+kernel = np.array([1, -1, 0])
+conv = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+
+# Output array
+for ii in range(8):
+    conv[ii] = (kernel * array[ii:ii+3]).sum()
+
+# Print conv
+print(conv)
+```
+
+<p class="">Nicely done. Notice that we've only multiplied the kernel with eight different positions</p>
+
+##### Image convolutions {.unnumbered}
+
+
+<div class><p>The convolution of an image with a kernel summarizes a part of the image as the sum of the multiplication of that part of the image with the kernel. In this exercise, you will write the code that executes a convolution of an image with a kernel using Numpy. Given a black and white image that is stored in the variable <code>im</code>, write the operations inside the loop that would execute the convolution with the provided kernel.</p></div>
+
+<li>Select the right window from the image in each iteration and multiply this part of the image with the kernel.</li>
+<li>Sum the result and allocate the sum to the correct entry in the output array (<code>results</code>).</li>
+```{python}
+# edited/added
+im = pd.read_csv('archive/Image-Processing-with-Keras-in-Python/datasets/brick_bw.csv').to_numpy()
+
+kernel = np.array([[0, 1, 0], [1, 1, 1], [0, 1, 0]])
+result = np.zeros(im.shape)
+
+# Output array
+for ii in range(im.shape[0] - 3):
+    for jj in range(im.shape[1] - 3):
+        result[ii, jj] = (im[ii:ii+3, jj:jj+3] * kernel).sum()
+
+# Print result
+print(result)
+
+# edited/added
+plot_comparison(im, result, 'After convolution')
+```
+
+<p class="">In a future exercise, you will see how to use Keras to implement a convolution like this one.</p>
+
+##### Defining image convolution kernels {.unnumbered}
+
+
+<div class>
+<p>In the previous exercise, you wrote code that performs a convolution given an image and a kernel. This code is now stored in a function called <code>convolution()</code> that takes two inputs: <code>image</code> and <code>kernel</code> and produces the convolved image. In this exercise, you will be asked to define the kernel that finds a particular feature in the image. </p>
+<p>For example, the following kernel finds a vertical line in images: </p>
+<pre><code>np.array([[-1, 1, -1], 
+          [-1, 1, -1], 
+          [-1, 1, -1]])
+</code></pre>
+</div>
+<div class="exercise--instructions__content"><p>Define a kernel that finds horizontal lines in images.</p></div>
+
+
+<div class="exercise--instructions__content"><p>Define a kernel that finds a light spot surrounded by dark pixels.</p></div>
+
+
+<div class="exercise--instructions__content"><p>Define a kernel that finds a dark spot surrounded by bright pixels.</p></div>
+```{python}
+# edited/added
+def convolution(image, kernel):
+    kernel = kernel - kernel.mean()
+    result = np.zeros(image.shape)
+    for ii in range(image.shape[0]-2):
+        for jj in range(image.shape[1]-2):
+            result[ii, jj] = np.sum(image[ii:ii+3, jj:jj+3] * kernel)
+    return result
+    
+kernel = np.array([[-1, -1, -1], 
+                   [1, 1, 1],
+                   [-1, -1 ,-1]])
+# edited/added
+result = convolution(im, kernel)
+plot_comparison(im, result, 'Detect Horizontal line')
+
+kernel = np.array([[-1, -1, -1],
+                   [-1, 1, -1],
+                   [-1, -1, -1]])
+# edited/added
+result = convolution(im, kernel)
+plot_comparison(im, result, 'Detecting light spot')
+
+kernel = np.array([[1, 1, 1],
+                   [1, -1, 1],
+                   [1, 1, 1]])
+# edited/added
+result = convolution(im, kernel)
+plot_comparison(im, result, 'Detecting dark spot')
+```
+
+<p class="">Great work!</p>
+
+#### Implementing image convolutions in Keras {.unnumbered}
+
+
+
+##### Convolutional network for image classification {.unnumbered}
+
+
+<div class><p>Convolutional networks for classification are constructed from a sequence of convolutional layers (for image processing) and fully connected (<code>Dense</code>) layers  (for readout). In this exercise, you will construct a small convolutional network for classification of the data from the fashion dataset.</p></div>
+
+<li>Add a <code>Conv2D</code> layer to construct the input layer of the network. Use a kernel size of 3 by 3. You can use the <code>img_rows</code> and <code>img_cols</code> objects available in your workspace to define the <code>input_shape</code> of this layer.</li>
+<li>Add a <code>Flatten</code> layer to translate between the image processing and classification part of your network.</li>
+<li>Add a <code>Dense</code> layer to classify the 3 different categories of clothing in the dataset.</li>
+```{python}
+# edited/added
+img_rows, img_cols = 28, 28
+
+# Import the necessary components from Keras
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Conv2D, Flatten
+
+# Initialize the model object
+model = Sequential()
+
+# Add a convolutional layer
+model.add(Conv2D(10, kernel_size=3, activation='relu', 
+                 input_shape=(img_rows, img_cols, 1)))
+
+# Flatten the output of the convolutional layer
+model.add(Flatten())
+# Add an output layer for the 3 categories
+model.add(Dense(3, activation='softmax'))
+```
+
+<p class="">Congratulations! You just built a model with one convolutional layer.</p>
+
+##### Training a CNN to classify clothing types {.unnumbered}
+
+
+<div class>
+<p>Before training a neural network it needs to be compiled with the right cost function, using the right optimizer. During compilation, you can also define metrics that the network calculates and reports in every epoch. Model fitting requires a training data set, together with the training labels to the network. </p>
+<p>The Conv2D <code>model</code> you built in the previous exercise is available in your workspace.</p>
+</div>
+
+<li>Compile the network using the <code>'adam'</code> optimizer and the <code>'categorical_crossentropy'</code> cost function. In the metrics list define that the network to report <code>'accuracy'</code>.</li>
+<li>Fit the network on <code>train_data</code> and <code>train_labels</code>. Train for 3 epochs with a batch size of 10 images. In training, set aside 20% of the data as a validation set, using the <code>validation_split</code> keyword argument.</li>
+```{python}
+# edited/added
+(train_data, train_labels), (test_data, test_labels) = tf.keras.datasets.fashion_mnist.load_data()
+train_data = train_data[(train_labels >= 0) & (train_labels < 3)][0:50].reshape(-1, 28, 28, 1)
+train_labels = train_labels[(train_labels >= 0) & (train_labels < 3)][0:50]
+train_labels = pd.get_dummies(train_labels).to_numpy()
+test_data = test_data[(test_labels >= 0) & (test_labels < 3)][0:10].reshape(-1, 28, 28, 1)
+test_labels = test_labels[(test_labels >= 0) & (test_labels < 3)][0:10]
+test_labels = pd.get_dummies(test_labels).to_numpy()
+
+# Compile the model 
+model.compile(optimizer='adam', 
+              loss='categorical_crossentropy', 
+              metrics=['accuracy'])
+
+# Fit the model on a training set
+model.fit(train_data, train_labels, 
+          validation_split=0.2, 
+          epochs=3, batch_size=10)
+```
+
+<p class="">Validation accuracy converges to 100%!</p>
+
+##### Evaluating a CNN with test data {.unnumbered}
+
+
+<div class><p>To evaluate a trained neural network, you should provide a separate testing data set of labeled images. The <code>model</code> you fit in the previous exercise is available in your workspace.</p></div>
+
+<li>Evaluate the data on a separate test set: <code>test_data</code> and <code>test_labels</code>. </li>
+<li>Use the same batch size that was used for fitting (10 images per batch).</li>
+```{python}
+# Evaluate the model on separate test data
+model.evaluate(test_data, test_labels, batch_size=10)
+```
+
+<p class="">The first number in the output is the value of the cross-entropy loss, the second is the value of the accuracy. For this model, it's 100%!</p>
+
+#### Tweaking your convolutions {.unnumbered}
+
+
+
+##### Add padding to a CNN {.unnumbered}
+
+
+<div class><p>Padding allows a convolutional layer to retain the resolution of the input into this layer. This is done by adding zeros around the edges of the input image, so that the convolution kernel can overlap with the pixels on the edge of the image.</p></div>
+<div class="exercise--instructions__content"><p>Add a <code>Conv2D</code> layer and choose a padding such that the output has the same size as the input.</p></div>
+```{python}
+# Initialize the model
+model = Sequential()
+
+# Add the convolutional layer
+model.add(Conv2D(10, kernel_size=3, activation='relu', 
+                 input_shape=(img_rows, img_cols, 1), 
+                 padding='same'))
+
+# Feed into output layer
+model.add(Flatten())
+model.add(Dense(3, activation='softmax'))
+```
+
+<p class="">Great job! With <code>padding</code> set to <code>'same'</code>, the output layer will have the same size as the input layer!</p>
+
+##### Add strides to a convolutional network {.unnumbered}
+
+
+<div class><p>The size of the strides of the convolution kernel determines whether the kernel will skip over some of the pixels as it slides along the image. This affects the  size of the output because when strides are larger than one, the kernel will be centered on only some of the pixels.</p></div>
+<div class="exercise--instructions__content"><p>Construct a neural network with a <code>Conv2D</code> layer with strided convolutions that skips every other pixel.</p></div>
+```{python}
+# Initialize the model
+model = Sequential()
+
+# Add a convolutional layer
+model.add(Conv2D(10, kernel_size=3, activation='relu', 
+                 input_shape=(img_rows, img_cols, 1), 
+                 strides=2))
+
+# Feed into output layer
+model.add(Flatten())
+model.add(Dense(3, activation='softmax'))
+```
+
+<p class="">With <code>strides</code> set to 2, the network skips every other pixel.</p>
+
+##### Calculate the size of convolutional layer output {.unnumbered}
+
+
+<div class>
+<p>Zero padding and strides affect the size of the output of a convolution. </p>
+<p>What is the size of the output for an input of size 256 by 256, with a kernel of size 4 by 4, padding of 1 and strides of 2?</p>
+</div>
+
+- [ ] 127
+- [ ] 255
+- [x] 128
+- [ ] 256
+
+<p class="">That's right!</p>
+
+### Going Deeper {.unnumbered}
+
+<p class="chapter__description">
+    Convolutional neural networks gain a lot of power when they are constructed with multiple layers (deep networks). In this chapter, you will learn how to stack multiple convolutional layers into a deep network. You will also learn how to keep track of the number of parameters, as the network grows, and how to control this number.
+  </p>
+
+#### Going deeper {.unnumbered}
+
+
+
+##### Creating a deep learning network {.unnumbered}
+
+
+<div class>
+<p>A deep convolutional neural network is a network that has more than one layer. Each layer in a deep network receives its input from the preceding layer, with the very first layer receiving its input from the images used as training or test data. </p>
+<p>Here, you will create a network that has two convolutional layers.</p>
+</div>
+
+<li>The first convolutional layer is the input layer of the network. This should have 15 units with kernels of 2 by 2 pixels. It should have a <code>'relu'</code> activation function. It can use the variables <code>img_rows</code> and <code>img_cols</code> to define its <code>input_shape</code>.</li>
+<li>The second convolutional layer receives its inputs from the first layer. It should have 5 units with kernels of 2 by 2 pixels. It should also have a <code>'relu'</code> activation function.</li>
+```{python}
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Conv2D, Flatten
+
+model = Sequential()
+
+# Add a convolutional layer (15 units)
+model.add(Conv2D(15, kernel_size=2, activation='relu',
+                 input_shape=(img_rows, img_cols, 1)))
+
+# Add another convolutional layer (5 units)
+model.add(Conv2D(5, kernel_size=2, activation='relu'))
+
+# Flatten and feed to output layer
+model.add(Flatten())
+model.add(Dense(3, activation='softmax'))
+```
+
+<p class="">Congratulations!! You built a network with multiple convolution layers.</p>
+
+##### Train a deep CNN to classify clothing images {.unnumbered}
+
+
+<div class>
+<p>Training a deep learning model is very similar to training a single layer network. Once the model is constructed (as you have done in the previous exercise), the model needs to be compiled with the right set of parameters. Then, the model is fit by providing it with training data, as well as training labels. After training is done, the model can be evaluated on test data. </p>
+<p>The <code>model</code> you built in the previous exercise is available in your workspace.</p>
+</div>
+
+<li>Compile the model to use the categorical cross-entropy loss function and the Adam optimizer.</li>
+<li>Train the network with <code>train_data</code> for 3 epochs with batches of 10 images each.</li>
+<li>Use randomly selected 20% of the training data as validation data during training.</li>
+<li>Evaluate the model with <code>test_data</code>, use a batch size of 10.</li>
+```{python}
+# Compile model
+model.compile(optimizer='adam',
+              loss='categorical_crossentropy',
+              metrics=['accuracy'])
+
+# Fit the model to training data
+model.fit(train_data, train_labels,
+          validation_split=0.2,
+          epochs=3, batch_size=10)
+
+# Evaluate the model on test data
+model.evaluate(test_data, test_labels, batch_size=10)
+```
+
+<p class="">Accuracy calculated on the test data is not subject to overfitting.</p>
+
+##### What is special about a deep network? {.unnumbered}
+
+<div class=""><p>Networks with more convolution layers are called "deep" networks, and they may have more power to fit complex data, because of their ability to create hierarchical representations of the data that they fit.</p>
+<p>What is a major difference between a deep CNN and a CNN with only one convolutional layer?</p></div>
+
+- [ ] A deep network is inspired by the human visual system.
+- [x] A deep network requires more data and more computation to fit.
+- [ ] A deep network has more dense layers.
+- [ ] A deep network has larger convolutions.
+
+<p class="dc-completion-pane__message dc-u-maxw-100pc">That's right!</p>
+
+#### How many parameters? {.unnumbered}
+
+
+
+##### How many parameters in a CNN? {.unnumbered}
+
+
+<div class><p>We need to know how many parameters a CNN has, so we can adjust the model architecture, to reduce this number or shift parameters from one part of the network to another. How many parameters would a network have if its inputs are images with 28-by-28 pixels, there is one convolutional layer with 10 units kernels of 3-by-3 pixels, using zero padding (input has the same size as the output), and one densely connected layer with 2 units?</p></div>
+
+```{python}
+# edited/added
+print(10 * (3 * 3) + 10 + 784 * 10 * 2 + 2
+)
+```
+
+- [ ] 100
+- [ ] 1668
+- [x] 15,782
+- [ ] 15,682
+
+<p class="">That's correct! Nicely done.</p>
+
+##### How many parameters in a deep CNN? {.unnumbered}
+
+
+<div class>
+<p>In this exercise, you will use Keras to calculate the total number of parameters along with the number of parameters in each layer of the network. </p>
+<p>We have already provided code that builds a deep CNN for you.</p>
+</div>
+<div class="exercise--instructions__content"><p>Summarize the network, providing a count of the number of parameters.</p></div>
+```{python}
+# CNN model
+model = Sequential()
+model.add(Conv2D(10, kernel_size=2, activation='relu',
+                 input_shape=(28, 28, 1)))
+model.add(Conv2D(10, kernel_size=2, activation='relu'))
+model.add(Flatten())
+model.add(Dense(3, activation='softmax'))
+
+# Summarize the model
+model.summary()
+```
+
+<p class="">This model has 20,743 parameters!</p>
+
+#### Pooling operations {.unnumbered}
+
+
+
+##### Write your own pooling operation {.unnumbered}
+
+
+<div class>
+<p>As we have seen before, CNNs can have a lot of parameters. Pooling layers are often added between the convolutional layers of a neural network to summarize their outputs in a condensed manner, and reduce the number of parameters in the next layer in the network. This can help us if we want to train the network more rapidly, or if we don't have enough data to learn a very large number of parameters.</p>
+<p>A pooling layer can be described as a particular kind of convolution. For every window in the input it finds the maximal pixel value and passes only this pixel through. In this exercise, you will write your own max pooling operation, based on the code that you previously used to write a two-dimensional convolution operation.</p>
+</div>
+
+<li>Index into the input array (<code>im</code>) and select the right window.</li>
+<li>Find the maximum in this window.</li>
+<li>Allocate this into the right entry in the output array (<code>result</code>).</li>
+```{python}
+# edited/added
+im = pd.read_csv('archive/Image-Processing-with-Keras-in-Python/datasets/brick_bw.csv').to_numpy()
+imt = transform.resize(im, (128, 128))
+
+# Result placeholder
+result = np.zeros((im.shape[0]//2, im.shape[1]//2))
+
+# Pooling operation
+for ii in range(result.shape[0]):
+    for jj in range(result.shape[1]):
+        result[ii, jj] = np.max(im[ii*2:ii*2+2, jj*2:jj*2+2])
+
+plot_comparison(imt, result, 'After MaxPooling')
+```
+
+<p class="">The resulting image is smaller, but retains the salient features in every location</p>
+
+##### Keras pooling layers {.unnumbered}
+
+
+<div class>
+<p>Keras implements a pooling operation as a layer that can be added to CNNs between other layers. In this exercise, you will construct a convolutional neural network similar to the one you have constructed before: </p>
+<p><strong>Convolution =&gt; Convolution =&gt; Flatten =&gt; Dense</strong></p>
+<p>However, you will also add a pooling layer. The architecture will add a single max-pooling layer between the convolutional layer and the dense layer with a pooling of 2x2:</p>
+<p><strong>Convolution =&gt; Max pooling =&gt; Convolution =&gt; Flatten =&gt; Dense</strong></p>
+<p>A Sequential <code>model</code> along with <code>Dense</code>, <code>Conv2D</code>, <code>Flatten</code>, and <code>MaxPool2D</code> objects are available in your workspace.</p>
+</div>
+
+<li>Add an input convolutional layer (15 units, kernel size of 2, <code>relu</code> activation).</li>
+<li>Add a maximum pooling operation (pooling over windows of size 2x2). </li>
+<li>Add another convolution layer (5 units, kernel size of 2, <code>relu</code> activation). </li>
+<li>Flatten the output of the second convolution and add a <code>Dense</code> layer for output (3 categories, <code>softmax</code> activation).</li>
+```{python}
+# edited/added
+from tensorflow.keras.layers import MaxPool2D
+model = Sequential()
+
+# Add a convolutional layer
+model.add(Conv2D(15, kernel_size=2, activation='relu',
+                 input_shape=(img_rows, img_cols, 1)))
+
+# Add a pooling operation
+model.add(MaxPool2D(2))
+
+# Add another convolutional layer
+model.add(Conv2D(5, kernel_size=2, activation='relu'))
+
+# Flatten and feed to output layer
+model.add(Flatten())
+model.add(Dense(3, activation='softmax'))
+model.summary()
+```
+
+<p class="">This model is even deeper, but has fewer parameters.</p>
+
+##### Train a deep CNN with pooling to classify images {.unnumbered}
+
+
+<div class>
+<p>Training a CNN with pooling layers is very similar to training of the deep networks that y have seen before. Once the network is constructed (as you did in the previous exercise), the model needs to be appropriately compiled, and then training data needs to be provided, together with the other arguments that control the fitting procedure. </p>
+<p>The following <code>model</code> from the previous exercise is available in your workspace: </p>
+<p><strong>Convolution =&gt; Max pooling =&gt; Convolution =&gt; Flatten =&gt; Dense</strong></p>
+</div>
+
+<li>Compile this model to use the categorical cross-entropy loss function and the Adam optimizer. </li>
+<li>Train the model for 3 epochs with batches of size 10.</li>
+<li>Use 20% of the data as validation data.</li>
+<li>Evaluate the model on <code>test_data</code> with <code>test_labels</code> (also batches of size 10).</li>
+```{python}
+# Compile model
+model.compile(optimizer='adam',
+              loss='categorical_crossentropy',
+              metrics=['accuracy'])
+
+# Fit the model to training data
+model.fit(train_data, train_labels,
+          validation_split=0.2,
+          epochs=3, batch_size=10)
+
+# Evaluate the model on test data
+model.evaluate(test_data, test_labels, batch_size=10)
+```
+
+<p class="">This model is also very accurate!</p>
+
+### Understanding and Improving Deep Convolutional Networks {.unnumbered}
+
+<p class="chapter__description">
+    There are many ways to improve training by neural networks. In this chapter, we will focus on our ability to track how well a network is doing, and explore approaches towards improving convolutional neural networks.
+  </p>
+
+#### Tracking learning {.unnumbered}
+
+
+
+##### Plot the learning curves {.unnumbered}
+
+
+<div class><p>During learning, the model will store the loss function evaluated in each epoch. Looking at the learning curves can tell us quite a bit about the learning process. In this exercise, you will plot the learning and validation loss curves for a model that you will train.</p></div>
+
+<li>Fit the model to the training data (<code>train_data</code>).</li>
+<li>Use a validation split of 20%, 3 epochs and batch size of 10. </li>
+<li>Plot the training loss.</li>
+<li>Plot the validation loss.</li>
+```{python}
+# edited/added
+(train_data, train_labels), (test_data, test_labels) = tf.keras.datasets.fashion_mnist.load_data()
+train_data = train_data[(train_labels >= 0) & (train_labels < 3)][0:50].reshape(-1, 28, 28, 1)
+train_labels = train_labels[(train_labels >= 0) & (train_labels < 3)][0:50]
+train_labels = pd.get_dummies(train_labels).to_numpy()
+test_data = test_data[(test_labels >= 0) & (test_labels < 3)][0:10].reshape(-1, 28, 28, 1)
+test_labels = test_labels[(test_labels >= 0) & (test_labels < 3)][0:10]
+test_labels = pd.get_dummies(test_labels).to_numpy()
+from tensorflow.keras.callbacks import ModelCheckpoint
+checkpoint = ModelCheckpoint('archive/Image-Processing-with-Keras-in-Python/datasets/weights.hdf5', monitor='val_loss', save_best_only=True)
+
+import matplotlib.pyplot as plt
+
+# Train the model and store the training object
+training = model.fit(train_data, train_labels, epochs=3, batch_size=10, validation_split=0.2, callbacks=[checkpoint])
+
+# Extract the history from the training object
+history = training.history
+
+# Plot the training loss
+plt.plot(history['loss'])
+# Plot the validation loss
+plt.plot(history['val_loss'])
+
+# Show the figure
+plt.show()
+plt.close() # edited/added
+```
+
+<p class="">That's great! If you continue for many epochs, the validation loss will start going back up.</p>
+
+##### Using stored weights to predict in a test set {.unnumbered}
+
+
+<div class><p>Model weights stored in an <code>hdf5</code> file can be reused to populate an untrained model. Once the weights are loaded into this model, it behaves just like a model that has been trained to reach these weights. For example, you can use this model to make predictions from an unseen data set (e.g. <code>test_data</code>).</p></div>
+
+<li>Load the weights from a file called <code>'weights.hdf5'</code>. </li>
+<li>Predict the classes of the first three images from <code>test_data</code>.</li>
+```{python}
+# Load the weights from file
+model.load_weights('archive/Image-Processing-with-Keras-in-Python/datasets/weights.hdf5')
+
+# Predict from the first three images in the test data
+model.predict(test_data[:3])
+
+# edited/added
+print(np.argmax(model.predict(test_data), axis=-1))
+print(test_labels)
+```
+
+<p class="">Nicely done! How would you use these weights to evaluate the model instead?</p>
+
+#### Regularization {.unnumbered}
+
+
+
+##### Adding dropout to your network {.unnumbered}
+
+
+<div class>
+<p>Dropout is a form of regularization that removes a different random subset of the units in a layer in each round of training. In this exercise, we will add dropout to the convolutional neural network that we have used in previous exercises: </p>
+<ol>
+<li>Convolution (15 units, kernel size 2, 'relu' activation)</li>
+<li>Dropout (20%) </li>
+<li>Convolution (5 units, kernel size 2, 'relu' activation) </li>
+<li>Flatten</li>
+<li>Dense (3 units, 'softmax' activation)</li>
+</ol>
+<p>A Sequential <code>model</code> along with <code>Dense</code>, <code>Conv2D</code>, <code>Flatten</code>, and <code>Dropout</code> objects are available in your workspace.</p>
+</div>
+
+<li>Add dropout applied to the first layer with 20%. </li>
+<li>Add a flattening layer.</li>
+```{python}
+# edited/added
+from tensorflow.keras.layers import Dropout
+model = Sequential()
+
+# Add a convolutional layer
+model.add(Conv2D(15, kernel_size=2, activation='relu',
+                 input_shape=(img_rows, img_cols, 1)))
+
+# Add a dropout layer
+model.add(Dropout(0.2))
+
+# Add another convolutional layer
+model.add(Conv2D(5, kernel_size=2, activation='relu'))
+
+# Flatten and feed to output layer
+model.add(Flatten())
+model.add(Dense(3, activation='softmax'))
+```
+
+<p class="">Great! Now the kernels will be more different from each other.</p>
+
+##### Add batch normalization to your network {.unnumbered}
+
+
+<div class>
+<p>Batch normalization is another form of regularization that rescales the outputs of a layer to make sure that they have mean 0 and standard deviation 1. In this exercise, we will add batch normalization to the convolutional neural network that we have used in previous exercises: </p>
+<ol>
+<li>Convolution (15 units, kernel size 2, 'relu' activation)</li>
+<li>Batch normalization </li>
+<li>Convolution (5 unites, kernel size 2, 'relu' activation) </li>
+<li>Flatten</li>
+<li>Dense (3 units, 'softmax' activation)</li>
+</ol>
+<p>A Sequential <code>model</code> along with <code>Dense</code>, <code>Conv2D</code>, <code>Flatten</code>, and <code>Dropout</code> objects are available in your workspace.</p>
+</div>
+
+<li>Add the first convolutional layer. You can use the <code>img_rows</code> and <code>img_cols</code> objects available in your workspace to define the <code>input_shape</code> of this layer. </li>
+<li>Add batch normalization applied to the outputs of the first layer.</li>
+```{python}
+# edited/added
+from tensorflow.keras.layers import BatchNormalization
+model = Sequential()
+
+# Add a convolutional layer
+model.add(Conv2D(15, kernel_size=2, activation='relu',
+                 input_shape=(img_rows, img_cols, 1)))
+
+# Add batch normalization layer
+model.add(BatchNormalization())
+
+# Add another convolutional layer
+model.add(Conv2D(5, kernel_size=2, activation='relu'))
+
+# Flatten and feed to output layer
+model.add(Flatten())
+model.add(Dense(3, activation='softmax'))
+```
+
+<p class="">That's useful! That should improve training.</p>
+
+#### Interpreting the model {.unnumbered}
+
+
+
+##### Extracting a kernel from a trained network {.unnumbered}
+
+
+<div class><p>One way to interpret models is to examine the properties of the kernels in the convolutional layers. In this exercise, you will extract one of the kernels from a convolutional neural network with weights that you saved in a <code>hdf5</code> file.</p></div>
+
+<li>Load the weights into the model from the file <code>weights.hdf5</code>. </li>
+<li>Get the first convolutional layer in the model from the <code>layers</code> attribute. </li>
+<li>Use the <code>.get_weights()</code> method to extract the weights from this layer.</li>
+```{python}
+# edited/added
+from tensorflow.keras.callbacks import ModelCheckpoint
+model = Sequential()
+model.add(Conv2D(5, kernel_size=2, activation='relu', input_shape=(img_rows, img_cols, 1)))
+model.add(Conv2D(15, kernel_size=2, activation='relu'))
+model.add(MaxPool2D(2))
+model.add(Flatten())
+model.add(Dense(3, activation='softmax'))
+model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+checkpoint = ModelCheckpoint('archive/Image-Processing-with-Keras-in-Python/datasets/weights.hdf5', monitor='val_loss', save_best_only=True)
+model.fit(train_data, train_labels, epochs=3, validation_split=0.2, batch_size=10,
+          callbacks=[checkpoint]);
+
+# Load the weights into the model
+model.load_weights('archive/Image-Processing-with-Keras-in-Python/datasets/weights.hdf5')
+
+# Get the first convolutional layer from the model
+c1 = model.layers[0]
+
+# Get the weights of the first convolutional layer
+weights1 = c1.get_weights()
+
+# Pull out the first channel of the first kernel in the first layer
+kernel = weights1[0][...,0, 0]
+print(kernel)
+```
+
+<p class="">That's great! You can extract the weights from other layers too.</p>
+
+##### Shape of the weights {.unnumbered}
+
+
+<div class><p>A <code>Keras</code> neural network stores its layers in a list called <code>model.layers</code>. For the convolutional layers, you can get the weights using the <code>.get_weights()</code> method. This returns a list, and the first item in this list is an array representing the weights of the convolutional kernels. If the shape of this array is <code>(2, 2, 1, 5)</code>, what does the first number (<code>2</code>) represent?</p></div>
+
+- [ ] There are 2 channels in black and white images.
+- [x] The kernel size is 2 by 2.
+- [ ] The model used a convolutional unit with 2 dimensions.
+- [ ] There are 2 convolutional layers in the network.
+
+<p class="">That's correct, each of the 2s in this shape is one of the dimensions of the kernel.</p>
+
+##### Visualizing kernel responses {.unnumbered}
+
+
+<div class>
+<p>One of the ways to interpret the weights of a neural network is to see how the kernels stored in these weights "see" the world. That is, what properties of an image are emphasized by this kernel. In this exercise, we will do that by convolving an image with the kernel and visualizing the result. Given images in the <code>test_data</code> variable, a function called <code>extract_kernel()</code> that extracts a kernel from the provided network, and the function called <code>convolution()</code> that we defined in the first chapter, extract the kernel, load the data from a file and visualize it with <code>matplotlib</code>.</p>
+<p>A deep CNN <code>model</code>, a function <code>convolution()</code>, along with the <code>kernel</code> you extracted in an earlier exercise is available in your workspace. </p>
+<p>Ready to take your deep learning to the next level? Check out <a href="https://www.datacamp.com/courses/advanced-deep-learning-with-keras">Advanced Deep Learning with Keras</a> to see how the Keras functional API lets you build domain knowledge to solve new types of problems.</p>
+</div>
+
+<li>Use the <code>convolution()</code> function to convolve the extracted kernel with the first channel of the fourth item in the image array.</li>
+<li>Visualize the resulting convolution with <code>imshow()</code>.</li>
+```{python}
+# edited/added
+def convolution(image, kernel):
+    kernel = kernel - kernel.mean()
+    result = np.zeros(image.shape)
+    for ii in range(image.shape[0]-2):
+        for jj in range(image.shape[1]-2):
+            result[ii, jj] = np.sum(image[ii:ii+2, jj:jj+2] * kernel)
+    return result
+  
+import matplotlib.pyplot as plt
+
+# Convolve with the fourth image in test_data
+out = convolution(test_data[3, :, :, 0], kernel)
+
+# Visualize the result
+#plt.imshow(out)
+#plt.show()
+plot_comparison(test_data[3, :, :, 0], out, 'applying kernel') # edited/added
+```
+
+<p class="">That's nice. You can keep going and visualize the kernel responses for all the kernels in this layer!</p>
+
+#### Next steps {.unnumbered}
+
+##### Wrapping up {.unnumbered}
+
+Congratulations! You have completed this course on image processing with convolutional neural networks.
+
+##### What did we learn? {.unnumbered}
+
+These algorithms are the best we currently have for many computational tasks. Here, you learned about image classification. Classification is a particularly useful task and one that convolutional neural networks excel at. You learned how to set up a training set, a validation set and a test set and how to use them in training a model for classification and how to evaluate it. You learned about the fundamental operations of these networks: convolutions. The development of convolutional layers for neural networks ushered in the current golden age of computation with neural networks, so understanding how they work is particularly valuable, even if you continue to learn about other kinds of neural networks. One of the things that is remarkable about CNNs is that they have a very large number of parameters. This is one of the reasons that large amounts of data are usually required to effectively and accurately train a neural network. We looked at a couple of approaches to reduce the number of parameters: one is to tweak your convolutions, and adapt them to your problem. For example, using strided convolutions. Another approach is to use pooling layers. We also looked at a couple of approaches to improve your network, using regularization. Finally, you learned about ways to understand your network and visualize both the progress of learning, as well as the final result of learning: the parameters of the trained network.
+
+##### Model interpretation {.unnumbered}
+
+If you found this topic to be interesting, you might want to read this paper by Chris Olah and his colleagues that explores different aspects of visualization of neural network results. This is an exciting time to learn about CNNs, because the technology is rapidly evolving, and some of the most exciting developments are yet to come.
+
+##### Road {.unnumbered}
+
+Where does the road lead to from here?
+
+##### What next? {.unnumbered}
+
+There is a wealth of methods and ideas for you to dive into. Here are a few things to learn about next. In this course, you learned about simple architectures where one layer always connects only to the next. But there are other architectures that provide a variety of computational benefits. For example, you might want to learn about residual networks.
+
+##### Residual networks {.unnumbered}
+
+These include connections that skip over several layers, and they are called residual networks because the network will use this skipped connection to compute a difference between the input of a stack of layers and their output. Learning this difference, or residual, turns out to often be easier than learning the output. This means that these networks have been surprisingly effective at tasks such as classification.
+
+##### What next? {.unnumbered}
+
+Another topic you might want to explore further is transfer learning: in this approach an already-trained network is adapted to a new task. You've already learned how to read in weights into a network that you've defined. Now imagine training it again on another classification task. Sounds weird, but it's a great strategy for cases where you don't have a lot of data. In addition to convolutional networks that perform classification, there are so-called fully convolutional networks that take an image as input and produce another image as output.
+
+##### Fully convolutional networks {.unnumbered}
+
+For example, these networks can be used to find the part of an image that contains a particular kind of object, doing segmentation rather than classification.
+
+##### Generative adversarial networks {.unnumbered}
+
+A particularly interesting kind of networks are a generative adversarial networks. These complex architectures can be used to train a network to create new images that didn't exist before.
+
+##### What next? {.unnumbered}
+
+And there are many many other topics to explore. Whichever way you decide to turn next,
+
+##### Good luck! {.unnumbered}
+
+, good luck!

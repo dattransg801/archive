@@ -1,0 +1,1764 @@
+---
+title: "Quantitative Risk Management in R"
+subtitle: "Alexander J. McNeil - DataCamp"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+author:
+  - name: "Tran Thanh Dat - International University"
+output:
+  rmdformats::robobook:
+    thumbnails: true
+    lightbox: true
+    gallery: true
+    highlight: tango
+    use_bookdown: true
+---
+
+***
+
+<style>
+
+h1,h2,h3,h4,h5,h6,h {
+  font-family: Futura;
+}
+
+body {
+  font-family: "Georgia";
+  text-align: justify;
+}
+
+p {
+  font-family: "Georgia";
+  text-indent: 30px;
+  color: black;
+  font-style: normal;
+}
+</style>
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(qrmdata)
+```
+
+**Course Description**
+
+<p class="course__description">In Quantitative Risk Management (QRM), you will build models to understand the risks of financial portfolios. This is a vital task across the banking, insurance and asset management industries. The first step in the model building process is to collect data on the underlying risk factors that affect portfolio value and analyze their behavior. In this course, you will learn how to work with risk-factor return series, study the empirical properties or so-called "stylized facts" of these data - including their typical non-normality and volatility, and make estimates of value-at-risk for a portfolio.</p>
+
+# Exploring market risk-factor data
+
+<p class="chapter__description">
+    In this chapter, you will learn how to form return series, aggregate them over longer periods and plot them in different ways. You will look at examples using the qrmdata package.
+  </p>
+  
+## Exploring risk-factor
+
+
+
+### Exploring risk-factor time series: equity indexes
+
+
+<div class>
+<p>In this exercise, you will look at an equity index and plot it for a particular range of dates.
+The data used in this exercise and in the rest of the course are contained in the package <a href="https://www.rdocumentation.org/packages/qrmdata/versions/2016-01-03-1">qrmdata</a>. You also need the package <a href="https://www.rdocumentation.org/packages/xts/versions/0.9-7">xts</a> to manipulate time series.</p>
+<p>When the <code>qrmdata</code> library is attached, as it will be throughout the course, you can load a dataset with the <code>data()</code> command. For example, the command <code>data("FTSE")</code> loads the UK FTSE (Financial Times Stock Exchange) index, which you can then refer to as object <code>FTSE</code>.</p>
+<p>If you want to extract the data from a certain date range, for example from April 1 to June 30, 2000, you can create a new object using the command <code>ftse00 &lt;- FTSE["2000-04-01/2000-06-30"]</code>.</p>
+<p>From now onwards, the <code>xts</code> package will also already be loaded into your workspace.</p>
+<p><em>This course touches on a lot of concepts you may have forgotten, so if you ever need a quick refresher, download the <a href="https://datacamp-community-prod.s3.amazonaws.com/e04c5a6b-4aca-46f5-8cd5-803d975ccc4b">xts in R Cheat Sheet</a> and keep it handy!</em></p>
+</div>
+<div class="exercise--instructions__content">
+<li>Load the Dow Jones index <code>"DJ"</code> from <code>qrmdata</code>.</li>
+```{r,warning=F,message=F}
+# Load DJ index
+library(qrmdata)
+data("DJ")
+```
+<li>Show the first and last few lines of the DJ index with <code>head()</code> and <code>tail()</code>.</li>
+```{r,warning=F,message=F}
+# Show head() and tail() of DJ index
+head(DJ)
+tail(DJ)
+```
+<li>Plot the DJ index using <code>plot()</code>.</li>
+```{r,warning=F,message=F}
+# Plot DJ index
+plot(DJ)
+```
+<li>Extract the DJ index for the crisis period 2008-2009 and assign to object <code>dj0809</code>.</li>
+```{r,warning=F,message=F}
+# Extract 2008-2009 and assign to dj0809
+dj0809 <- DJ["2008/2009"]
+```
+<li>Plot the <code>dj0809</code> using the same plotting function as above.</li>
+```{r,warning=F,message=F}
+# Plot dj0809
+plot(dj0809)
+```
+</div>
+
+<div class="dc-completed__message"><p class="">Well done! You have plotted your first stock index time series. Take a good look at how it behaves and note how far the index fell in the 2008-2009 financial crisis.
+</p></div>
+
+### Exploring risk-factor time series: individual equities
+
+
+<div class>
+<p>For some risk management applications, it is sufficient to model equity risk by looking at indexes. If you want a more detailed model of the risk in a portfolio of equities, you can drill down to the level of individual share prices.</p>
+<p>In the previous chapter, you used <code>DJ["2008/2009"]</code> to extract the Dow Jones data from certain rows of an <code>xts</code> object by specifying a date range index. To also extract data from particular columns, you can add a column identifier, like a string name or numeric index, in the brackets following a comma. To select multiple columns, include these column identifiers in a vector. This <code>[rows, columns]</code> format is consistent with indexing most other two dimensional objects in R.</p>
+<pre><code>data[index, colname]
+data[index, c(col1index, col2index)]
+</code></pre>
+<p>The <code>qrmdata</code> package also includes data for certain <strong>constituents</strong>, or the stocks or companies part of a larger index. The Dow Jones constituents data are contained in <code>"DJ_const"</code>. In this exercise, you will view the names of all its stocks, select the Apple and Goldman Sachs share prices, and plot them using the command <code>plot.zoo()</code> to display multiple time series.</p>
+</div>
+<div class="exercise--instructions__content">
+<li>Load the DJ constituents data <code>"DJ_const"</code> from <code>qrmdata</code>.</li>
+```{r,warning=F,message=F}
+# Load DJ constituents data
+data(DJ_const)
+```
+<li>Use <code>names()</code> to view the names in <code>DJ_const</code> and <code>head()</code> to display the first few rows.</li>
+```{r,warning=F,message=F}
+# Apply names() and head() to DJ_const
+names(DJ_const)
+head(DJ_const)
+```
+<li>Extract only the Apple (<code>"AAPL"</code>) and Goldman Sachs (<code>"GS"</code>) share prices for 2008-2009 and assign them to object <code>stocks</code>.</li>
+```{r,warning=F,message=F}
+# Extract AAPL and GS in 2008-09 and assign to stocks
+stocks <- DJ_const["2008/2009",c("AAPL","GS")]
+```
+<li>Plot <code>stocks</code> using <code>plot.zoo()</code>.</li>
+```{r,warning=F,message=F}
+library(zoo)
+# Plot stocks with plot.zoo()
+plot.zoo(stocks)
+```
+</div>
+
+<p class="">Excellent work. Notice how the data from the two companies are plotted separately.
+</p>
+
+### Exploring risk-factor data: exchange rates
+
+
+<div class>
+<p>For a portfolio with risk exposure in different countries, it is necessary to consider the risk coming from <strong>foreign exchange</strong> (FX) rates. The <code>qrmdata</code> package includes FX rate data for many currencies, ranging from Swiss Francs to Japanese Yen, with respect to the <strong>USD</strong> (United States dollar) and <strong>GBP</strong> (Great Britain pound).</p>
+<p>In this exercise, you will look at the datasets <code>"EUR_USD"</code> and <code>"GBP_USD"</code>, which contain the Euro and British pound exchange rates against the US dollar. Then, you will merge these time series and plot them together for the period 2010-2015.</p>
+</div>
+<div class="exercise--instructions__content">
+<li>Load the foreign exchange data <code>"GBP_USD"</code> and <code>"EUR_USD"</code> from <code>qrmdata</code>.</li>
+```{r,warning=F,message=F}
+# Load exchange rate data
+data(GBP_USD)
+data(EUR_USD)
+```
+<li>Use <code>plot()</code> to plot each exchange rate separately.</li>
+```{r,warning=F,message=F}
+# Plot the two exchange rates
+plot(GBP_USD)
+plot(EUR_USD)
+```
+<li>Use <code>plot()</code> and the inverse of <code>GBP_USD</code> to plot a US dollar to British pound exchange rate.</li>
+```{r,warning=F,message=F}
+# Plot a USD_GBP exchange rate
+plot(1/GBP_USD)
+```
+<li>Use <code>merge()</code> to merge the <code>GBP_USD</code> and <code>EUR_USD</code> data, in that order, as object <code>fx</code>.</li>
+```{r,warning=F,message=F}
+# Merge the two exchange rates GBP_USD and EUR_USD
+fx <- merge(GBP_USD, EUR_USD, all = TRUE)
+```
+<li>Extract the exchange rates for 2010-15 from <code>fx</code> and assign to <code>fx0015</code>.</li>
+```{r,warning=F,message=F}
+# Extract 2010-15 data from fx and assign to fx0015
+fx0015 <- fx["2010/2015"]
+```
+<li>Plot <code>fx0015</code> using <code>plot.zoo()</code>.</li>
+```{r,warning=F,message=F}
+# Plot the exchange rates in fx0015
+plot.zoo(fx0015)
+```
+</div>
+
+<p class="">Good work! Note that merging the <code>EUR_USD</code> and <code>GBP_USD</code> data, in that order, would have produced a different object from <code>fx</code>.
+</p>
+
+## Risk-factor returns
+
+
+
+### Exploring return series
+
+
+<div class>
+<p>To analyze risk, the key task is to model the fluctuations in prices and rates over different time periods; these fluctuations are known as <strong>returns</strong>. To calculate the <strong>log-returns</strong> of the FTSE stock index and assign to <code>ftse_x</code>, apply the <code>log()</code> and <code>diff()</code> functions in succession:</p>
+<pre><code>&gt; ftse_x &lt;- diff(log(FTSE))
+</code></pre>
+<p>As you saw in the video, differencing in this way will always give a <code>NA</code> in the first position of the time series, which can then be removed with <code>diff(log(FTSE))[-1]</code>. However, you will <em>not</em> need to do this in the course unless it is specified in the instructions.</p>
+<p>In this exercise, you will calculate and plot log-return series for the equity and FX risk factors that you have previously encountered. The datasets <code>dj0809</code>, <code>djstocks</code>, and <code>GBP_USD</code> have been pre-loaded into your workspace.</p>
+</div>
+<div class="exercise--instructions__content">
+<li>Compute the log-returns of the DJ index in <code>dj0809</code> and assign to object <code>dj0809_x</code>.</li>
+```{r,warning=F,message=F}
+# Compute the log-returns of dj0809 and assign to dj0809_x
+dj0809_x <- diff(log(dj0809))
+```
+<li>Plot the return series <code>dj0809_x</code>.</li>
+```{r,warning=F,message=F}
+# Plot the log-returns
+plot(dj0809_x)
+```
+<li>Compute the log-returns of all share prices in <code>djstocks</code> and assign to <code>djstocks_x</code>.</li>
+```{r,warning=F,message=F}
+djstocks <- DJ_const["2008/2009",c("AAPL","GS")]
+# Compute the log-returns of djstocks and assign to djstocks_x
+djstocks_x <- diff(log(djstocks))
+```
+<li>Plot the share returns <code>djstocks_x</code>. <em>Note that <code>djstocks_x</code> contains multiple time series.</em>
+</li>
+```{r,warning=F,message=F}
+# Plot the two share returns
+plot.zoo(djstocks_x)
+```
+<li>Compute the log-returns of the <code>GBP_USD</code> exchange rate series and assign to <code>erate_x</code>.</li>
+```{r,warning=F,message=F}
+# Compute the log-returns of GBP_USD and assign to erate_x
+erate_x <- diff(log(GBP_USD))
+```
+<li>Plot the return series <code>erate_x</code>.</li>
+```{r,warning=F,message=F}
+# Plot the log-returns
+plot(erate_x)
+```
+</div>
+
+<p class="">Well done! The return series often just look like noise with some periods of larger fluctuations. You'll discover later that they typically have a lot of interesting structure.
+</p>
+
+### Different ways of plotting risk-factor and return series
+
+
+<div class>
+<p>You already know that you can use <code>plot.zoo()</code> to plot multiple time series. For a four-dimensional time series <code>data</code>, the call <code>plot.zoo(data)</code> creates four separate plots by default, unless you include the parameter <code>plot.type = "single"</code> to plot all four series in one plot. You can also add even more parameters such as <code>col</code> to specify different colors and <code>type = "h"</code> to get vertical bars instead of joining points, which can sometimes be a better way of displaying returns.</p>
+<pre><code>plot.zoo(x, plot.type, col = 1, type = "l", ...)
+</code></pre>
+<p>In this exercise, you will explore the <code>plot.zoo()</code> function to plot equity risk-factor data and the corresponding returns in different ways. The multivariate time series <code>djstocks</code> and <code>DJ_const</code> are available in your workspace.</p>
+</div>
+<div class="exercise--instructions__content">
+<li>Plot <code>djstocks</code> in four separate plots.</li>
+```{r,warning=F,message=F}
+djstocks <- DJ_const["2008/2009", c("AAPL", "AXP", "BA", "CAT")]
+# Plot djstocks in four separate plots
+plot.zoo(djstocks)
+```
+<li>Plot <code>djstocks</code> in one plot in colors 1 to 4. The code to create an appropriate legend for the plot is provided.</li>
+```{r,warning=F,message=F}
+# Plot djstocks in one plot and add legend
+plot.zoo(djstocks, plot.type = "single", col=c(1,2,3,4))
+legend(julian(x = as.Date("2009-01-01")), y = 70, legend = names(DJ_const)[1:4], fill = 1:4)
+```
+<li>Compute the log-returns of <code>djstocks</code> and assign them to <code>djstocks_x</code>.</li>
+```{r,warning=F,message=F}
+# Compute log-returns and assign to djstocks_x
+djstocks_x <- diff(log(djstocks))
+```
+<li>Plot <code>djstocks_x</code> in four separate plots.</li>
+```{r,warning=F,message=F}
+# Plot djstocks_x in four separate plots
+plot.zoo(djstocks_x)
+```
+<li>Plot <code>djstocks_x</code> in four separate plots with vertical bars.</li>
+```{r,warning=F,message=F}
+# Plot djstocks_x with vertical bars
+plot.zoo(djstocks_x, type = "h")
+```
+</div>
+
+<p class="">Nice plots! Note how in late 2008 there were large returns for all series. That was the height of the financial crisis.
+</p>
+
+## Aggregating log-returns
+
+
+
+### Aggregating log-return series
+
+
+<div class>
+<p>In statistics, <strong>aggregate data</strong> are data combined from several measurements. You just learned that you can compute compute weekly, monthly and quarterly log-returns by summing daily log-returns with the corresponding <code>apply.weekly()</code>, <code>apply.monthly()</code> and <code>apply.quarterly()</code> functions.</p>
+<p>For example, you can use the following code to form the quarterly returns for a univariate time series <code>data</code> and multivariate time series <code>mv_data</code>:</p>
+<pre><code>&gt; # apply.quarterly(x, FUN, ...)
+&gt; data_q = apply.quarterly(data, sum)
+&gt; mv_data_q = apply.quarterly(mv_data, colSums)
+</code></pre>
+<p>In this exercise, you will practice aggregating time series data using these functions and plotting the results. The data <code>DJ</code> and <code>DJ_const</code> are available in your workspace, as are the objects <code>djx</code>, which contains daily log-returns of the Dow Jones index from 2000-2015, and <code>djreturns</code>, which contains the daily log-returns for the first four <code>DJ_const</code> stocks from 2000-2015. Use <code>plot</code> for univariate time series and <code>plot.zoo</code> for multivariate time series.</p>
+</div>
+<div class="exercise--instructions__content">
+<li>Plot the object <code>djx</code>.</li>
+```{r,warning=F,message=F}
+dj <- DJ["2000/2015"]
+djx <- diff(log(dj))
+djstocks <- DJ_const["2000/2015",c("AAPL", "AXP", "BA", "CAT")]
+djreturns <- diff(log(djstocks))
+# Plot djx
+plot(djx)
+```
+<li>In one line, plot the weekly log-returns of <code>djx</code> with vertical bars.</li>
+```{r,warning=F,message=F}
+library(xts)
+# Plot weekly log-returns of djx
+plot(apply.weekly(djx, sum), type = "h")
+```
+<li>Plot the monthly log-returns of <code>djx</code> with vertical bars.</li>
+```{r,warning=F,message=F}
+# Plot monthly log-returns of djx
+plot(apply.monthly(djx, sum), type = "h")
+```
+<li>Plot the object <code>djreturns</code> using <code>plot.zoo</code>.</li>
+```{r,warning=F,message=F}
+# Plot djreturns
+plot.zoo(djreturns)
+```
+<li>Plot the monthly log-returns for <code>djreturns</code> with vertical bars using <code>plot.zoo</code>.</li>
+```{r,warning=F,message=F}
+# Plot monthly log-returns of djreturns
+plot.zoo(apply.monthly(djreturns, colSums), type = "h")
+```
+</div>
+
+<p class="">Excellent work! These aggregation functions are extremely useful as for analyzing risk over longer time horizons.
+</p>
+
+### A test on aggregation of log-returns
+
+
+<div class>
+<p>Data scientists often use the aggregations that you have learned so far in combination with summary statistics to extract even more insights from data. Functions that calculate summary statistics include <code>mean()</code>, <code>median()</code>, and <code>var()</code>.</p>
+<p>The object <code>sp</code> contains daily log-returns for the S&amp;P 500 index for the period 1960-2015; it is loaded in your workspace. To three decimal places, what is the average quarterly log-return for the S&amp;P 500 from 1990-2010?</p>
+</div>
+
+<ul>
+<li><div class="dc-input-radio__text">0.054</div></li>
+<strong><li><div class="dc-input-radio__text">0.015</div></li></strong>
+<li><div class="dc-input-radio__text">-0.026</div></li>
+<li><div class="dc-input-radio__text">0.116</div></li>
+<li><div class="dc-input-radio__text">0.005</div></li>
+</ul>
+
+```{r,warning=F,message=F}
+data("SP500")
+sp <- SP500["1990/2010"]
+sp <- diff(log(sp))[-1]
+mean(apply.quarterly(sp, sum))
+```
+
+<p class="">Nice work.
+</p>
+
+## Other kinds of risk factors
+
+
+
+### Commodities data
+
+
+<div class>
+<p>The plotting function <code>pairs()</code> creates a pairwise scatterplot of the components of a multivariate time series with two or more dimensions. It is used on a <code>zoo</code> object rather than an <code>xts</code> object.</p>
+<p>A roughly circular shape of a scatterplot indicates a low correlation between the log-returns of two different commodities. Generally speaking, low correlation is good in a portfolio as it implies that the assets are diversified. High correlation, on the other hand, represents a risk that must be properly modelled.</p>
+<p>In this exercise, you will look at gold and oil prices over a 25 year period, calculate their daily and monthly log-returns, and plot them. The data <code>gold</code> and <code>oil</code>, containing the daily prices from 1990-2015 of gold and Brent crude oil, respectively, are available in your workspace.</p>
+</div>
+<div class="exercise--instructions__content">
+<li>Use <code>plot()</code> to plot the <code>gold</code> and <code>oil</code> time series separately.</li>
+```{r,warning=F,message=F}
+data("OIL_Brent")
+oil <- OIL_Brent["1990/2015"]
+data("GOLD")
+gold <- GOLD["1990/2015"]
+
+# Plot gold and oil prices
+plot(gold)
+plot(oil)
+```
+<li>Calculate the daily log-returns of each commodity and assign to <code>goldx</code> and <code>oilx</code>, respectively.</li>
+```{r,warning=F,message=F}
+# Calculate daily log-returns
+goldx <- diff(log(gold))
+oilx <- diff(log(oil))
+```
+<li>Calculate the monthly log-returns of each commodity and assign to <code>goldx_m</code> and <code>oilx_m</code>, respectively.</li>
+```{r,warning=F,message=F}
+# Calculate monthly log-returns
+goldx_m <- apply.monthly(goldx, sum)
+oilx_m <- apply.monthly(oilx, sum)
+```
+<li>Use <code>merge()</code> to merge <code>goldx_m</code> and <code>oilx_m</code>, in that order, into <code>coms</code>.</li>
+```{r,warning=F,message=F}
+# Merge goldx_m and oilx_m into coms
+coms <- merge(goldx_m, oilx_m)
+```
+<li>Plot <code>coms</code>, a multivariate series, with vertical bars.</li>
+```{r,warning=F,message=F}
+# Plot coms with vertical bars
+plot.zoo(coms, type = "h")
+```
+<li>Convert <code>coms</code> to a <code>zoo</code> object with <code>as.zoo()</code> and then apply <code>pairs()</code> to create a pairwise scatterplot.</li>
+```{r,warning=F,message=F}
+# Make a pairwise scatterplot of coms
+pairs(as.zoo(coms))
+```
+</div>
+
+<p class="">Well done! As you can see, gold and oil are well diversified commodities.
+</p>
+
+### Interest-rate data
+
+
+<div class>
+<p>The object <code>zcb</code> contains daily values of Canadian zero-coupon-bond yields, expressed as percentages, for the period 2006-2015. <strong>Yields</strong> are the key risk-factor when it comes to analysing the interest-rate risk in a portfolio of bonds or other fixed-income products.</p>
+<p>It is not so clear what is the best way of calculating risk-factor changes for yields. It is possible to compute log-returns, provided yields are not negative, and it is also possible to calculate simple returns. To compute the simple returns of a series, use only <code>diff()</code> instead of <code>diff()</code> and <code>log()</code>.</p>
+<p>In this exercise, you will plot time series of yields for fixed times to maturity, and plot risk-factor changes for these yields. You will also plot the whole yield curve on particular dates. The <code>zcb</code> data has been loaded into your workspace. A vector <code>yield_cols</code> containing the names of the columns corresponding to maturities of 1, 5 and 10 years has been created. A numerical vector <code>maturity</code> containing all the maturities in years has also been created.</p>
+</div>
+<div class="exercise--instructions__content">
+<li>Compute the log-returns of <code>zcb</code> as <code>zcb_x</code> and the simple log-returns as <code>zcb_x2</code>.</li>
+```{r,warning=F,message=F}
+data("ZCB_CAD")
+zcb <- ZCB_CAD["2006/2015"]
+# Compute log-returns as zcb_x and simple returns as zcb_x2
+zcb_x <- diff(log(zcb))
+zcb_x2 <- diff(zcb)
+```
+<li>Plot <code>zcb_x</code> for 1, 5 and 10-year maturities in one plot.</li>
+```{r,warning=F,message=F}
+yield_cols <- c("1.00y", "5.00y", "10.00y")
+# Plot zcb_x for 1, 5 and 10-year maturities
+plot.zoo(zcb_x[, yield_cols])
+```
+<li>Plot <code>zcb_x2</code> for 1, 5 and 10-year maturities in one plot.</li>
+```{r,warning=F,message=F}
+# Plot zcb_x2 for 1, 5 and 10-year maturities
+plot.zoo(zcb_x2[, yield_cols])
+```
+<li>Index <code>zcb</code> in <code>plot()</code> to plot the yield curve for the <em>first</em> day in <code>zcb</code>.</li>
+<li>Index <code>zcb</code> in <code>lines()</code> to add a line to the yield curve for the <em>last</em> day in <code>zcb</code>.</li>
+```{r,warning=F,message=F}
+maturity <- c(0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3, 
+3.25, 3.5, 3.75, 4, 4.25, 4.5, 4.75, 5, 5.25, 5.5, 5.75, 6, 6.25, 
+6.5, 6.75, 7, 7.25, 7.5, 7.75, 8, 8.25, 8.5, 8.75, 9, 9.25, 9.5, 
+9.75, 10, 10.25, 10.5, 10.75, 11, 11.25, 11.5, 11.75, 12, 12.25, 
+12.5, 12.75, 13, 13.25, 13.5, 13.75, 14, 14.25, 14.5, 14.75, 
+15, 15.25, 15.5, 15.75, 16, 16.25, 16.5, 16.75, 17, 17.25, 17.5, 
+17.75, 18, 18.25, 18.5, 18.75, 19, 19.25, 19.5, 19.75, 20, 20.25, 
+20.5, 20.75, 21, 21.25, 21.5, 21.75, 22, 22.25, 22.5, 22.75, 
+23, 23.25, 23.5, 23.75, 24, 24.25, 24.5, 24.75, 25, 25.25, 25.5, 
+25.75, 26, 26.25, 26.5, 26.75, 27, 27.25, 27.5, 27.75, 28, 28.25, 
+28.5, 28.75, 29, 29.25, 29.5, 29.75, 30)
+
+# Plot the yield curve for the first day of zcb
+plot(maturity, zcb[1, ], ylim = range(zcb), type = "l", ylab = "yield (%)", col = "red")
+# Add a line for the last day of zcb
+lines(maturity, zcb[nrow(zcb), ])
+```
+</div>
+
+<p class="">Excellent work! Yields can seem a little tricky to work with at first but they are fundamental for analyzing bond portfolios and many other financial products that depend on interest rates.
+</p>
+
+# Risky real world returns
+
+<p class="chapter__description">
+    In this chapter, you will learn about graphical and numerical tests of normality, apply them to different datasets, and consider the alternative Student t model.
+  </p>
+  
+## The normal distribution
+
+<h3>**Graphical methods for assessing normality**</h3>
+
+
+<div class>
+<p>In the video, you learned how to create a histogram with 20 buckets that represents the probability density of the FTSE data, as well as how to add a <strong>normal distribution</strong> to the existing plot as a red line:</p>
+<pre><code>&gt; hist(ftse, nclass = 20, probability = TRUE)
+&gt; lines(ftse, dnorm(ftse, mean = mu, sd = sigma), col = "red")
+</code></pre>
+<p>As you can see, <code>dnorm(x, mean, sd)</code> calculates the probability density function (PDF) of the data <code>x</code> with the calculated sample mean and standard deviation; this is known as the <strong>method-of-moments</strong>.</p>
+<p>Finally, to calculate an estimate of the density of data <code>x</code>, use <code>density(x)</code>. This creates a so-called kernel-density estimate (KDE) using a non-parametric method that makes no assumptions about the underlying distribution.</p>
+<p>The various plots suggest that the data are heavier tailed than normal, although you will learn about better graphical and numerical tests in future exercises.</p>
+<p>In this exercise, you will fit a normal distribution to the log-returns of the Dow Jones index for 2008-2009 and compare the data with the fitted distribution using a histogram and a density plot. The object <code>djx</code> containing Dow Jones data is loaded into your workspace.</p>
+</div>
+<div class="exercise--instructions__content">
+<li>Calculate the average and standard deviation (<code>sd()</code>) of the <code>djx</code> data and assign to <code>mu</code> and <code>sigma</code>, respectively.</li>
+```{r,warning=F,message=F}
+djx <- DJ["2008/2009"]
+djx <- diff(log(djx))
+djx <- as.numeric(djx)[-1]
+djx <- sort(djx)
+# Calculate average and standard deviation of djx
+mu <- mean(djx)
+sigma <- sd(djx)
+```
+<li>Plot a histogram of <code>djx</code> with 20 buckets that represents a probability density of the data.</li>
+<li>Fill in the <code>lines()</code> and <code>dnorm()</code> functions to add the normal density curve for <code>djx</code> as a red line to the histogram.</li>
+```{r,warning=F,message=F}
+# Plot histogram of djx
+hist(djx, nclass = 20, probability = TRUE)
+# Add the normal density as a red line to histogram
+lines(djx, dnorm(djx, mean = mu, sd = sigma), col = "red")
+```
+<li>Plot a kernel-density estimate for <code>djx</code> using <code>density()</code>.</li>
+<li>Use the same <code>lines()</code> command as above to add the normal density curve for <code>djx</code> as a red line to the KDE.</li>
+```{r,warning=F,message=F}
+# Plot non-parametric KDE of djx
+plot(density(djx))
+# Add the normal density as red line to KDE
+lines(djx, dnorm(djx, mean = mu, sd = sigma), col = "red")
+```
+</div>
+
+<p class="">Great work! The data don't look very normal. Compare in particular the center and the tails of the histogram and density plot with the red normal curve.
+</p>
+
+## Testing for normality
+
+
+
+<h3>**Q-Q plots for assessing normality**</h3>
+
+
+<div class>
+<p>The <strong>quantile-quantile plot</strong> (Q-Q plot) is a better graphical method for revealing non-normality. In general, a Q-Q plot compares the quantiles of the data with the quantiles of a reference distribution; if the data are from a distribution of the same type (up to scaling and location), a reasonably straight line should be observed. You should know that the <strong>degrees of freedom</strong> (df) refer to the number of values or observations that can affect the system you are working with.</p>
+<p>In the video, you saw how to generate 1000 normal data points with the <code>rnorm()</code> function, as well as how to use <code>qqnorm()</code> to create the Q-Q plot, and <code>qqline()</code> to add a straight line for reference:</p>
+<pre><code>&gt; data &lt;- rnorm(1000, mean = 3, sd = 2)
+&gt; qqnorm(data)
+&gt; qqline(data) 
+</code></pre>
+<p>In this exercise, you will create a Q-Q plot of the Dow Jones log-returns in <code>djx</code> against the normal reference distribution, which you will add as a visual guide. You will then compare the plot with simulated datasets from normal, Student t and uniform distributions generated with the <code>rnorm()</code>, <code>rt()</code> and <code>runif()</code> functions. You will be learning about the t distribution later in this chapter.</p>
+<p>If the data are from a normal distribution the dots should be close to the red line (although there may be some deviation at the very end).</p>
+<p>Once again, <code>djx</code> has been loaded into your workspace.</p>
+</div>
+<div class="exercise--instructions__content">
+<li>Make a Q-Q plot of <code>djx</code> against normal with and add a red line with <code>qqline()</code> and <code>col = "red"</code> to judge whether the plot is linear.</li>
+```{r,warning=F,message=F}
+# Make a Q-Q plot of djx and add a red line
+qqnorm(djx)
+qqline(djx, col = "red")
+```
+<li>Calculate the length of <code>djx</code> with <code>length()</code> and assign to object <code>n</code>.</li>
+```{r,warning=F,message=F}
+# Calculate the length of djx as n
+n <- length(djx)
+```
+<li>Generate <code>n</code> standard normal variables with <code>rnorm()</code> and assign them to <code>x1</code>. Make a Q-Q plot of <code>x1</code> against normal and add a red line as before.</li>
+```{r,warning=F,message=F}
+# Generate n standard normal variables, make a Q-Q plot, add a red line
+x1 <- rnorm(n)
+qqnorm(x1)
+qqline(x1, col = "red")
+```
+<li>Generate <code>n</code> Student t variables with degree of freedom 4 and assign them to <code>x2</code> (this has been done for you). Make a Q-Q plot of <code>x2</code> against normal and add a red line.</li>
+```{r,warning=F,message=F}
+# Generate n Student t variables, make a Q-Q plot, add a red line
+x2 <- rt(n, df = 4)
+qqnorm(x2)
+qqline(x2, col = "red")
+```
+<li>Generate <code>n</code> uniform variables and assign them to <code>x3</code> (this has been done for you). Make a Q-Q plot of <code>x3</code> against normal and add a red line.</li>
+```{r,warning=F,message=F}
+# Generate n standard uniform variables, make a Q-Q plot, add red line
+x3 <- runif(n)
+qqnorm(x3)
+qqline(x3, col = "red")
+```
+</div>
+
+<p class="">Great work! The Q-Q plot is a very effective tool that is widely used in applied statistical and econometric work.
+</p>
+
+## Skewness, kurtosis & JB test
+
+
+
+### Numerical tests of normality
+
+
+<div class>
+<p>The <a href="https://www.rdocumentation.org/packages/moments/versions/0.14">moments</a> package contains functions for computing the <strong>kurtosis</strong> and <strong>skewness</strong> of data and well as for implementing the <strong>Jarque-Bera test</strong>, which is a test of normality based on these higher-order moments. In one command, it compares the skewness and kurtosis of the data with the theoretical values for the normal distribution, which are 0 and 3, respectively.</p>
+<pre><code>jarque.test(x)
+skewness(x, na.rm = FALSE)
+kurtosis(x, na.rm = FALSE)
+</code></pre>
+<p>In this exercise, you will calculate the skewness and kurtosis for the <code>djx</code>, the Dow Jones index from 2008-2011, and apply the Jarque-Bera test of normality. You will then apply the same methods to <code>djreturns</code>, which contains 29 of the Dow Jones stocks for the same period.</p>
+<p>Recall that you can use <code>apply(X, MARGIN, FUN, …)</code> to apply functions over array margins. The <code>MARGIN</code> parameter is a vector indicating where the function will be applied; in this instance, you will use <code>2</code> to specify that the function <code>FUN</code> should be applied to the <em>columns</em> in matrix <code>X</code>.</p>
+<p>The <code>moments</code> package has been imported for you, and the <code>djx</code> and <code>djreturns</code> data is in your workspace.</p>
+</div>
+<div class="exercise--instructions__content">
+<li>Calculate the skewness and kurtosis of the Dow Jones index returns in <code>djx</code> using <code>skewness()</code> and <code>kurtosis()</code>, respectively.</li>
+```{r,warning=F,message=F}
+dj <- DJ["2008/2011"]
+djx <- diff(log(dj))
+djx <- as.numeric(djx)[-1]
+djx <- sort(djx)
+
+djstocks <- DJ_const["2008/2011"]
+djreturns <- diff(log(djstocks))[-1]
+library(moments)
+# Calculate skewness and kurtosis of djx
+skewness(djx)
+kurtosis(djx)
+```
+<li>Carry out a Jarque-Bera test of normality for <code>djx</code> using <code>jarque.test()</code>.</li>
+```{r,warning=F,message=F}
+# Carry out a Jarque-Bera test for djx
+jarque.test(djx)
+```
+<li>Use <code>apply()</code> to calculate the skewness and kurtosis of the individual equity returns in <code>djreturns</code> assigning the results to <code>s</code> and <code>k</code>, respectively.</li>
+```{r,warning=F,message=F}
+# Calculate skewness and kurtosis of djreturns 
+s <- apply(djreturns, 2, skewness)
+k <- apply(djreturns, 2, kurtosis)
+```
+<li>Fill in <code>plot()</code> to plot <code>k</code> against <code>s</code> with parameter <code>type = "n"</code>, and then place the stock symbols at the points with the command <code>text()</code> (this has been done for you).</li>
+```{r,warning=F,message=F}
+# Plot k against s and add text labels to identify stocks
+plot(s, k, type = "n")
+text(s, k, names(s), cex = 0.6)
+```
+<li>Use <code>apply()</code> to carry out the Jarque-Bera test for each of the Dow Jones constituents in <code>djreturns</code>.</li>
+```{r,warning=F,message=F}
+# Carry out Jarque-Bera tests for each constituent in djreturns
+apply(djreturns, 2, jarque.test)
+```
+</div>
+
+<p class="">Well done! The return distributions of the Dow Jones stocks all have high kurtosis and some of them are quite skewed.
+</p>
+
+### Testing normality for longer time horizons
+
+
+<div class>
+<p>As returns are added together over longer time periods, a <strong>central limit</strong> effect takes place and returns tend to become more normal.</p>
+<p>In this exercise, you will use aggregation functions that you learned in the first chapter to aggregate the data in <code>djx_d</code>, containing the daily log-returns for 29 of the Dow Jones stocks for the period 2008-2011. Then, you'll apply the Jarque-Bera test to the daily, weekly and monthly returns. <code>djx_d</code> is loaded in your workspace.</p>
+</div>
+<div class="exercise--instructions__content">
+<li>Calculate weekly and monthly log-returns of <code>djx_d</code> and assign to <code>djx_w</code> and <code>djx_m</code>, respectively.</li>
+```{r,warning=F,message=F}
+djstocks <- DJ_const["2000/2015"]
+djreturns <- diff(log(djstocks))[-1]
+djx_d <- djreturns
+# Calculate weekly and monthly log-returns from djx_d
+djx_w <- apply.weekly(djx_d, colSums)
+djx_m <- apply.monthly(djx_d, colSums)
+```
+<li>Fill in <code>apply()</code> to calculate the p-value of the Jarque-Bera test for each of the Dow Jones daily return series in <code>djx_d</code>.</li>
+```{r,warning=F,message=F}
+# Calculate the p-value for each series in djx_d
+apply(djx_d, 2, function(v){jarque.test(v)$p.value})
+```
+<li>Do the same for the weekly equity returns in <code>djx_w</code>.</li>
+```{r,warning=F,message=F}
+# Calculate the p-value for each series in djx_w
+apply(djx_w, 2, function(v){jarque.test(v)$p.value})
+```
+<li>Do the same for the monthly equity returns in <code>djx_m</code>.</li>
+```{r,warning=F,message=F}
+# Calculate the p-value for each series in djx_m
+apply(djx_m, 2, function(v){jarque.test(v)$p.value})
+```
+</div>
+
+<p class="">Although the p-values get larger, all monthly returns other than for Chevron (CVX), 3M (MMM), and Pfizer (PFE) still fail the normality test.
+</p>
+
+### Overlapping returns
+
+
+<div class>
+<p>When you aggregate series by summing daily log-returns into longer intervals, you analyze a smaller amount of observations. To preserve the quantity of data, you can calculate <strong>overlapping returns</strong> with the <code>rollapplyr()</code> function; this also creates strong correlations between observations.</p>
+<p>There are 5 trading days in the average calendar week. By computing the 5-day <strong>moving sums</strong> of the log-returns of daily index data, you obtain approximate overlapping weekly returns ending on each calendar week. Similarly, calculating 21-day moving sums gives approximate overlapping monthly returns, and calculating 63-day moving sums gives approximate overlapping quarterly returns.</p>
+<p>Let's look at an example with the Dow Jones daily return data in <code>djx</code>. Because 5 values are used to calculate each moving sum, the first 4 values in the result are <code>NA</code>. In this instance, we will use indexing to remove them:</p>
+<pre><code>&gt; djx5 &lt;- rollapplyr(djx, width = 5, FUN = sum)
+&gt; head(djx5)
+                  ^DJI
+2008-01-03          NA
+2008-01-04          NA
+2008-01-07          NA
+2008-01-08          NA
+2008-01-09 -0.02394677
+2008-01-10 -0.01571869
+
+&gt; djx5 &lt;- djx5[-(1:4)]
+</code></pre>
+<p>In this exercise, you will calculate moving sums of different intervals from <code>djx</code>, which is loaded in your workspace. You will then find the skewness and kurtosis of the resulting data and conduct the Jarque-Bera test just as you have in previous exercises. Do the overlapping returns appear more normal?</p>
+</div>
+<div class="exercise--instructions__content">
+<li>Calculate a 21-day moving sum of the log-returns in <code>djx</code>, remove the first 20 values, and assign to <code>djx21</code>.</li>
+```{r,warning=F,message=F}
+dj <- DJ["2008/2011"]
+djx <- diff(log(dj))[-1]
+djx5 <- rollapplyr(djx, width = 5, FUN = sum)
+djx5 <- djx5[-(1:4)]
+```
+```{r,warning=F,message=F}
+# Calculate a 21-day moving sum of djx
+djx21 <- rollapplyr(djx, width = 21, FUN = sum)[-(1:20)]
+```
+<li>Calculate a 63-day moving sum of the log-returns in <code>djx</code>, remove the first 62 values, and assign to <code>djx63</code>
+</li>
+```{r,warning=F,message=F}
+# Calculate a 63-day moving sum of djx
+djx63 <- rollapplyr(djx, width = 63, FUN = sum)[-(1:62)]
+```
+<li>Use <code>merge()</code> and <code>all = FALSE</code> to merge <code>djx</code>, <code>djx21</code>, and <code>djx63</code> in that order, then assign to <code>djx2</code>. Plot it with <code>plot.zoo()</code>.</li>
+```{r,warning=F,message=F}
+# Merge the three series and plot
+djx2 <- merge(djx, djx21, djx63, all = FALSE)
+plot.zoo(djx2)
+```
+<li>Use <code>apply()</code> and the appropriate functions to compute the skewness and kurtosis for each of the series in <code>djx2</code>.</li>
+```{r,warning=F,message=F}
+# Compute the skewness and kurtosis for each series in djx2
+apply(djx2, 2, skewness)
+apply(djx2, 2, kurtosis)
+```
+<li>Use <code>apply()</code> and the appropriate function to conduct the Jarque-Bera test on each of the series in <code>djx2</code>.</li>
+```{r,warning=F,message=F}
+# Conduct the Jarque-Bera test to each series in djx2
+apply(djx2, 2, jarque.test)
+```
+</div>
+
+<p class="">Great work! These overlapping returns are highly correlated and even more difficult to interpret.
+</p>
+
+### Reviewing knowledge of normal distributions and returns
+
+<div class=""><p>Consider the following four statements. Which is <em>false</em>?</p></div>
+
+<ul>
+<li><div class="">In a Q-Q plot against a normal distribution, heavy-tailed data show an inverted S-shape.</div></li>
+<li><div class="">Longer-intervals returns are expected to be more normal than shorter-interval returns.</div></li>
+<strong><li><div class="">Log-returns should be log-normally distributed if the Black-Scholes model holds for the price series.</div></li></strong>
+<li><div class="">Normally distributed data should have a kurtosis close to 3.</div></li>
+</ul>
+
+<p class="dc-completion-pane__message dc-u-maxw-100pc">Correct! This statement does not accurately describe the Black-Scholes model.</p>
+
+## The Student t distribution
+
+
+
+### Fitting t distribution to data
+
+
+<div class>
+<p>A <strong>Student t distribution</strong> is generally a much better fit to daily, weekly, and monthly returns than a normal distribution.</p>
+<p>You can create one by using the <code>fit.st()</code> function in the <a href="https://www.rdocumentation.org/packages/QRM/versions/0.4-13">QRM</a> package. The resulting fitted model has a parameter estimates component <code>par.ests</code> which can be assigned to a list <code>tpars</code> in order to store its values of <code>nu</code>, <code>mu</code>, and <code>sigma</code> for later use:</p>
+<pre><code>&gt; tfit &lt;- fit.st(ftse)
+&gt; tpars &lt;- tfit$par.ests
+&gt; tpars
+          nu           mu        sigma
+2.949514e+00 4.429863e-05 1.216422e-02
+</code></pre>
+<p>In this exercise, you will fit a Student t distribution to the daily log-returns of the Dow Jones index from 2008-2011 contained in <code>djx</code>. Then, you will plot a histogram of the data and superimpose a red line to the plot showing the fitted t density. The <code>djx</code> data and <code>QRM</code> package have been loaded for you.</p>
+</div>
+<div class="exercise--instructions__content">
+<li>Use <code>fit.st()</code> to fit a Student t distribution to the data in <code>djx</code> and assign the results to <code>tfit</code>.</li>
+```{r,warning=F,message=F}
+library(QRM)
+djx <- as.numeric(djx)
+djx <- sort(djx)
+# Fit a Student t distribution to djx
+tfit <- fit.st(djx)
+```
+<li>Assign the <code>par.ests</code> component of the fitted model to <code>tpars</code> and the elements of <code>tpars</code> to <code>nu</code>, <code>mu</code>, and <code>sigma</code>, respectively.</li>
+```{r,warning=F,message=F}
+# Define tpars, nu, mu, and sigma
+tpars <- tfit$par.ests
+nu <- tpars[1]
+mu <- tpars[2]
+sigma <- tpars[3]
+```
+<li>Fill in <code>hist()</code> to plot a histogram of <code>djx</code>.</li>
+<li>Fill in <code>dt()</code> to compute the fitted t density at the values <code>djx</code> and assign to <code>yvals</code>. Refer to the video for this equation.</li>
+<li>Fill in <code>lines()</code> to add a red line to the histogram of <code>djx</code> showing the fitted t density.</li>
+```{r,warning=F,message=F}
+# Plot a histogram of djx
+hist(djx, nclass = 20, probability = TRUE, ylim = range(0, 40))
+# Compute the fitted t density at the values djx
+yvals <- dt((djx - mu)/sigma, df = nu)/sigma
+# Superimpose a red line to show the fitted t density
+lines(djx, yvals, col = "red")
+```
+</div>
+
+<p class="">Great work! The fitted Student t distribution looks a lot better than the normal did.
+</p>
+
+### Testing FX returns for normality
+
+
+<div class>
+<p>So far, the exercises in this chapter have examined the normality of equity index returns and individual equity returns.</p>
+<p>To reinforce these ideas, you will apply similar ideas to exchange-rate log-returns. The dataset <code>fx_d</code> contains daily log-returns of the EUR/USD, GBP/USD and JPY/USD exchange rates for the period 2001-2015, and the dataset <code>fx_m</code> contains the corresponding monthly log-returns. Both are multivariate; they are loaded into your workspace.</p>
+<p>Which of the monthly log-return series appears the most normal?</p>
+</div>
+<div class="exercise--instructions__content">
+<li>Plot the daily exchange-rate log-return series in <code>fx_d</code> with the appropriate plotting function.</li>
+```{r,warning=F,message=F}
+data("EUR_USD")
+data("GBP_USD")
+data("JPY_USD")
+fx1 <- EUR_USD["2001/2015"]
+fx2 <- GBP_USD["2001/2015"]
+fx3 <- JPY_USD["2001/2015"]
+fx <- merge(fx1, fx2, fx3)
+fx_d <- apply(log(fx), 2, diff)
+fx_m <- apply.monthly(fx_d, colSums)
+# Plot the daily log-return series in fx_d
+plot.zoo(fx_d)
+```
+<li>Use <code>apply()</code> to conduct the Jarque-Bera test on each of the series in <code>fx_d</code>.</li>
+```{r,warning=F,message=F}
+# Apply the Jarque-Bera test to each of the series in fx_d
+apply(fx_d, 2, jarque.test)
+```
+<li>Plot the monthly log-return series in <code>fx_m</code> with the same plotting function and parameter <code>type = "h"</code>.</li>
+```{r,warning=F,message=F}
+# Plot the monthly log-return series in fx_m
+plot.zoo(fx_m, type = "h")
+```
+<li>Use <code>apply()</code> to conduct the Jarque-Bera test on each of series in <code>fx_m</code>.</li>
+```{r,warning=F,message=F}
+# Apply the Jarque-Bera test to each of the series in fx_m
+apply(fx_m, 2, jarque.test)
+```
+<li>Fill in <code>apply()</code> to fit a Student t distribution to each of the series in <code>fx_m</code> and obtain the parameter estimates.</li>
+```{r,warning=F,message=F}
+# Fit a Student t distribution to each of the series in fx_m
+apply(fx_m, 2, function(v){fit.st(v)$par.ests})
+```
+</div>
+
+<p class="">Fantastic work! Do you agree that the JPY/USD exchange rate log-returns appear to be the most normal?
+</p>
+
+### Testing interest-rate returns for normality
+
+
+<div class>
+<p>The object <code>zcbx_m</code> contains monthly log-return series for the 1-year, 5-year and 10-year Canadian zero-coupon bond yields. The object <code>zcbx2_m</code> contains the corresponding simple returns. Both are multivariate; they are loaded into your workspace.</p>
+<p>In this exercise, you will plot these interest rate return series and then examine their normality with Q-Q plots and Jarque-Bera tests. </p>
+<p>The log-returns show clearer evidence of non-normality than the simple returns in this case.</p>
+</div>
+<div class="exercise--instructions__content">
+<li>Plot <code>zcbx_m</code> and <code>zcbx2_m</code> with the appropriate plotting function and the parameter <code>type = "h"</code>.</li>
+```{r,warning=F,message=F}
+data("ZCB_CAD")
+zcb <- ZCB_CAD[,c("1.00y", "5.00y", "10.00y")]
+zcb_x <- diff(log(zcb))
+zcb_x2 <- diff(zcb)
+zcbx_m <- apply.monthly(zcb_x, colSums)["2006/2015"]
+zcbx2_m<- apply.monthly(zcb_x2, colSums)["2006/2015"]
+# Plot the interest-rate return series zcbx_m and zcbx2_m
+plot.zoo(zcbx_m, type = "h")
+plot.zoo(zcbx2_m, type = "h")
+```
+<li>Use brackets for indexing and <code>qqnorm()</code> to create Q-Q plots of the 3rd component series of <code>zcbx_m</code> and <code>zcbx2_m</code>.</li>
+```{r,warning=F,message=F}
+# Make Q-Q plots of the 3rd component series of zcbx_m and zcbx2_m
+qqnorm(zcbx_m[, 3])
+qqnorm(zcbx2_m[, 3])
+```
+<li>Use <code>apply()</code> to compute the kurtosis of each component series in <code>zcbx_m</code> and <code>zcbx2_m</code>.</li>
+```{r,warning=F,message=F}
+# Compute the kurtosis of each series in zcbx_m and zcbx2_m
+apply(zcbx_m, 2, kurtosis)
+apply(zcbx2_m, 2, kurtosis)
+```
+<li>Use <code>apply()</code> to conduct the Jarque-Bera test on each component series in <code>zcbx_m</code> and <code>zcbx2_m</code>.</li>
+```{r,warning=F,message=F}
+# Conduct the Jarque-Bera test on each series in zcbx_m and zcbx2_m
+apply(zcbx_m, 2, jarque.test)
+apply(zcbx2_m, 2, jarque.test)
+```
+</div>
+
+<p class="">Well done! Note how the simple monthly returns for the 5 and 10 year yields did not fail the normality test.
+</p>
+
+### Testing gold price returns for normality
+
+
+<div class>
+<p>The object <code>goldx_q</code> contains quarterly log-returns of the gold price from the beginning of 1990 to the end of 2015. </p>
+<p>Test the data for normality using the Jarque-Bera test, then fit a Student t distribution and find the estimated degree of freedom \(\hat{\nu}\) to the nearest integer. </p>
+<p>Which of the following statements is <em>true</em>?</p>
+</div>
+
+<ul>
+<li><div class="dc-input-radio__text">The data pass a test of normality and <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" role="presentation" tabindex="0" ctxtmenu_counter="1" style="font-size: 116.7%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-texatom texclass="ORD"><mjx-mover><mjx-over style="padding-bottom: 0.06em; padding-left: 0.07em; margin-bottom: -0.531em;"><mjx-mo class="mjx-n"><mjx-c class="mjx-c5E"></mjx-c></mjx-mo></mjx-over><mjx-base><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D708 TEX-I"></mjx-c></mjx-mi></mjx-base></mjx-mover></mjx-texatom><mjx-mo class="mjx-n" space="4"><mjx-c class="mjx-c3D"></mjx-c></mjx-mo><mjx-mn class="mjx-n" space="4"><mjx-c class="mjx-c31"></mjx-c><mjx-c class="mjx-c32"></mjx-c></mjx-mn></mjx-math><mjx-assistive-mml role="presentation" unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mover><mi>ν</mi><mo stretchy="false">^</mo></mover></mrow><mo>=</mo><mn>12</mn></math></mjx-assistive-mml></mjx-container>.</div></li>
+<strong><li><div class="dc-input-radio__text">The data fail a test of normality and <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" role="presentation" tabindex="0" ctxtmenu_counter="2" style="font-size: 116.7%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-texatom texclass="ORD"><mjx-mover><mjx-over style="padding-bottom: 0.06em; padding-left: 0.07em; margin-bottom: -0.531em;"><mjx-mo class="mjx-n"><mjx-c class="mjx-c5E"></mjx-c></mjx-mo></mjx-over><mjx-base><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D708 TEX-I"></mjx-c></mjx-mi></mjx-base></mjx-mover></mjx-texatom><mjx-mo class="mjx-n" space="4"><mjx-c class="mjx-c3D"></mjx-c></mjx-mo><mjx-mn class="mjx-n" space="4"><mjx-c class="mjx-c31"></mjx-c><mjx-c class="mjx-c30"></mjx-c></mjx-mn></mjx-math><mjx-assistive-mml role="presentation" unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mover><mi>ν</mi><mo stretchy="false">^</mo></mover></mrow><mo>=</mo><mn>10</mn></math></mjx-assistive-mml></mjx-container></div></li></strong>
+<li><div class="dc-input-radio__text">The data pass a test of normality and <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" role="presentation" tabindex="0" ctxtmenu_counter="3" style="font-size: 116.7%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-texatom texclass="ORD"><mjx-mover><mjx-over style="padding-bottom: 0.06em; padding-left: 0.07em; margin-bottom: -0.531em;"><mjx-mo class="mjx-n"><mjx-c class="mjx-c5E"></mjx-c></mjx-mo></mjx-over><mjx-base><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D708 TEX-I"></mjx-c></mjx-mi></mjx-base></mjx-mover></mjx-texatom><mjx-mo class="mjx-n" space="4"><mjx-c class="mjx-c3D"></mjx-c></mjx-mo><mjx-mn class="mjx-n" space="4"><mjx-c class="mjx-c31"></mjx-c><mjx-c class="mjx-c30"></mjx-c></mjx-mn></mjx-math><mjx-assistive-mml role="presentation" unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mover><mi>ν</mi><mo stretchy="false">^</mo></mover></mrow><mo>=</mo><mn>10</mn></math></mjx-assistive-mml></mjx-container>.</div></li>
+<li><div class="dc-input-radio__text">The data fail a test of normality and <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" role="presentation" tabindex="0" ctxtmenu_counter="4" style="font-size: 116.7%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-texatom texclass="ORD"><mjx-mover><mjx-over style="padding-bottom: 0.06em; padding-left: 0.07em; margin-bottom: -0.531em;"><mjx-mo class="mjx-n"><mjx-c class="mjx-c5E"></mjx-c></mjx-mo></mjx-over><mjx-base><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D708 TEX-I"></mjx-c></mjx-mi></mjx-base></mjx-mover></mjx-texatom><mjx-mo class="mjx-n" space="4"><mjx-c class="mjx-c3D"></mjx-c></mjx-mo><mjx-mn class="mjx-n" space="4"><mjx-c class="mjx-c31"></mjx-c><mjx-c class="mjx-c32"></mjx-c></mjx-mn></mjx-math><mjx-assistive-mml role="presentation" unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mover><mi>ν</mi><mo stretchy="false">^</mo></mover></mrow><mo>=</mo><mn>12</mn></math></mjx-assistive-mml></mjx-container>.</div></li>
+<li><div class="dc-input-radio__text">None of the above are true.</div></li>
+</ul>
+
+```{r,warning=F,message=F}
+data("GOLD")
+gold <- GOLD["1990/2015"]
+goldx <- diff(log(gold))[-1]
+goldx_q <- as.numeric(apply.quarterly(goldx, sum)[,1])
+jarque.test(goldx_q)
+tfit <- fit.st(goldx_q)
+
+tpars <- tfit$par.ests
+
+tpars[1]
+```
+<p class="">Correct!
+</p>
+
+# Volatile and correlated real world returns
+
+<p class="chapter__description">
+    In this chapter, you will learn about volatility and how to detect it using act plots. You will learn how to apply Ljung-Box tests for serial correlation and estimate cross correlations.
+  </p>
+  
+## Volatile return
+
+<h3>**Spotting a volatile time series**</h3>
+
+
+<div class>
+<p>In this exercise you will plot the Dow Jones log-returns for 2008-2011 alongside <strong>independent and identically distributed</strong> (iid) normal data and iid Student t data.</p>
+<p>The <code>xts</code> object <code>djx</code> contains the Dow Jones index and the objects <code>npars</code> and <code>tpars</code> contain the parameter estimates that are obtained when a normal distribution and a t distribution are fitted to <code>djx</code>. All three objects are loaded in your workspace.</p>
+<p>In this exercise, you will generate a normal sample from the fitted model by generating standard normal data, scaling them with the second component <code>npars[2]</code> and shifting them with the first component <code>npars[1]</code>. For the Student t sample you will do something similar but note that this time the first component <code>tpars[1]</code> contains the degree of freedom parameter and <code>tpars[2]</code> and <code>tpars[3]</code> contain the location and scale parameters.</p>
+<p>After making the plots, you should compare the behavior of the real returns with that of the iid returns, particularly around the 2008 financial crisis.</p>
+</div>
+<div class="exercise--instructions__content">
+<li>Compute the length <code>n</code> of <code>djx</code>.</li>
+```{r,warning=F,message=F}
+# Compute the length n of djx 
+n <- length(djx)
+```
+<li>Generate a normal sample of size <code>n</code> with parameters given by <code>npars</code> and assign the data to <code>ndata</code>.</li>
+```{r,warning=F,message=F}
+djx <- DJ["2007-12-31/2011-12-31"]
+djx <- diff(log(djx))[-1]
+npars <- c(mu = mean(djx), sigma = sd(djx))
+tfit <- fit.st(djx)
+tpars <- tfit$par.ests
+set.seed(123)
+# Compute the length n of djx 
+n <- length(djx)
+#  Generate a normal sample of size n with parameters given by npars
+ndata <- rnorm(n)*npars[2] + npars[1]
+```
+<li>Generate a t sample of size <code>n</code> with parameters given by <code>tpars</code> and assign the data to <code>tdata</code>.</li>
+```{r,warning=F,message=F}
+# Generate a t-distributed sample of size n with paramaters given by tpars
+tdata <- rt(n, df = tpars[1])*tpars[3] + tpars[2]
+```
+<li>Convert <code>ndata</code> and <code>tdata</code> into <code>xts</code> objects named <code>ndatax</code> and <code>tdatax</code> with the same dates as <code>djx</code>.</li>
+```{r,warning=F,message=F}
+# Make ndata and tdata into xts objects
+ndatax <- xts(ndata, time(djx))
+tdatax <- xts(tdata, time(djx))
+```
+<li>Merge the time series <code>djx</code>, <code>ndatax</code> and <code>tdatax</code> into a single object called <code>alldata</code> and plot with <code>plot.zoo()</code> using <code>type = "h"</code>.</li>
+```{r,warning=F,message=F}
+# Merge djx, ndatax, and tdatax and plot
+alldata <- merge(djx, ndatax, tdatax)
+plot.zoo(alldata, type = "h", ylim = range(alldata))
+```
+</div>
+
+<p class="">Note how the real returns look more volatile than the iid returns. There was clearly a period of large movements around the 2008 financial crisis followed by a quieter period in 2010.
+</p>
+
+## Estimating serial correlations
+
+
+
+<h3>**Using acf plots to reveal volatility**</h3>
+
+
+<div class>
+<p>This exercise follows on from the previous R exercise where we looked for visible signs of volatility in a financial time series. For the Dow Jones returns from 2008-11 in <code>djx</code> and the simulated normal and t-distributed data in <code>ndata</code> and <code>tdata</code>, respectively, you will calculate and plot the <strong>sample autocorrelation functions</strong> (acf) using the command <code>acf()</code>.</p>
+<p>While very little evidence of serial correlation is found in these plots, the picture changes dramatically when we look at absolute or squared return data. The real returns in the Dow Jones return series <code>djx</code> behave very differently to the simulated data. The serial correlation in absolute or squared returns is a consequence of volatility, which causes large returns to be followed by further large returns, although not necessarily of the same sign.</p>
+<p><code>djx</code>, <code>ndata</code>, and <code>tdata</code> are available in your workspace.</p>
+</div>
+<div class="exercise--instructions__content">
+<li>Set up the plotting region to show 3 plots at a time (this has been done for you).</li>
+```{r,warning=F,message=F}
+# Set up a plot region to show 3 plots at a time
+par(mfrow = c(3, 1))
+```
+<li>Plot the sample acf of <code>djx</code> and the simulated normal and t-distributed data <code>ndata</code> and <code>tdata</code>.</li>
+```{r,warning=F,message=F}
+# Plot the acfs of djx, ndata and tdata
+acf(djx)
+acf(ndata)
+acf(tdata)
+```
+<li>Plot the sample acf of the absolute values of the three series.</li>
+```{r,warning=F,message=F}
+# Plot the acfs of the absolute values
+acf(abs(djx))
+acf(abs(ndata))
+acf(abs(tdata))
+```
+<li>Plot the sample acf of the squares of the values of the three series.</li>
+```{r,warning=F,message=F}
+# Plot the acfs of the squares of the values
+acf(djx^2)
+acf(ndata^2)
+acf(tdata^2)
+```
+</div>
+
+<p class="">Excellent work! It is very common to see strong serial correlation in absolute and squared return series.
+</p>
+
+## The Ljung-Box test
+
+
+
+### Applying Ljung-Box tests to return data
+
+
+<div class>
+<p>As you saw in the video, this code applies the <strong>Ljung-Box test</strong> to the <code>ftse</code> data with a lag of 10:</p>
+<pre><code>Box.test(ftse, lag = 10, type = "Ljung")
+</code></pre>
+<p>In this exercise, you will carry out a Ljung-Box test for serial correlation on the time series <code>djx</code> which contains the Dow Jones daily index returns for 2008-2011, as well as on all the individual equity return series in <code>djall</code> which contains the Dow Jones data for 2006-2015. You will implement this test on both the raw return series and the absolute values of the series, which you can calculate with <code>abs()</code>. Both <code>djx</code> and <code>djall</code> are loaded in your workspace.</p>
+<p>You should notice that while the hypothesis of no serial correlation is rejected for many of the raw return series, it is rejected overwhelmingly for all of the absolute value series.</p>
+</div>
+<div class="exercise--instructions__content">
+<li>Apply the Ljung-Box test to the Dow Jones index returns <code>djx</code> with a lag of 10.</li>
+```{r,warning=F,message=F}
+# Apply the Ljung-Box test to djx
+Box.test(djx, lag = 10, type = "Ljung")
+```
+<li>Apply the Ljung-Box test to the absolute values of <code>djx</code> with a lag of 10.</li>
+```{r,warning=F,message=F}
+# Apply the Ljung-Box test to absolute values of djx
+Box.test(abs(djx), lag = 10, type = "Ljung")
+```
+<li>Use the <code>apply()</code> function to perform the Ljung-Box test, with a lag of 10, for each of the equity return series in <code>djall</code>. </li>
+```{r,warning=F,message=F}
+djall <- DJ_const["2006-12-31/2015-12-31"]
+djall <- diff(log(djall))[-1]
+# Apply the Ljung-Box test to all return series in djall
+apply(djall, 2, Box.test, lag = 10, type = "Ljung")
+```
+<li>Use the <code>apply()</code> function to perform the Ljung-Box test, with a lag of 10, for the absolute values of the data in <code>djall</code>.</li>
+```{r,warning=F,message=F}
+# Apply the Ljung-Box test to absolute values of all returns in djall
+apply(abs(djall), 2, Box.test, lag = 10, type = "Ljung")
+```
+</div>
+
+<p class="">Excellent. Note that the Ljung-Box test did not reject the null hypothesis when applied to the raw returns for AAPL, CAT, CSCO and HD.
+</p>
+
+### Applying Ljung-Box tests to longer-interval returns
+
+
+<div class>
+<p>What happens when you apply the same analyses as in the previous exercise to the monthly returns rather than the daily returns? Does the amount of serial dependence in the data appear to increase or decrease?</p>
+<p>The objects <code>djx</code> and <code>djall</code> from the previous exercise are loaded in your workspace. Recall that <code>djall</code> is a multivariate series.</p>
+</div>
+<div class="exercise--instructions__content">
+<li>Use <code>apply.monthly()</code> to sum the daily log-returns in <code>djx</code> and assign the resulting monthly log-returns to <code>djx_m</code>.</li>
+```{r,warning=F,message=F}
+# Create monthly log-returns from djx
+djx_m <- apply.monthly(djx, FUN = sum)
+```
+<li>Fill in <code>Box.test()</code> to carry out Ljung-Box tests on the raw and absolute values of <code>djx_m</code> with <code>lag = 10</code>.</li>
+```{r,warning=F,message=F}
+# Apply Ljung-Box tests to raw and absolute values of djx_m
+Box.test(djx_m, lag = 10, type = "Ljung")
+Box.test(abs(djx_m), lag = 10, type = "Ljung")
+```
+<li>Use <code>apply.monthly()</code> to create monthly log-returns for all the daily return series in <code>djall</code> and assign the results to <code>djall_m</code>.</li>
+```{r,warning=F,message=F}
+# Create monthly log-returns from djall
+djall_m <- apply.monthly(djall, FUN = colSums)
+```
+<li>Fill in <code>apply()</code> to carry out Ljung-Box tests on the raw and absolute values of each component in <code>djall_m</code> with <code>lag = 10</code>.</li>
+```{r,warning=F,message=F}
+# Apply Ljung-Box tests to raw and absolute values of djall_m
+apply(djall_m, 2, Box.test, lag = 10, type = "Ljung")
+apply(abs(djall_m), 2, Box.test, lag = 10, type = "Ljung")
+```
+</div>
+
+<p class="">That's right. The amount of serial dependence appears to decrease when we move from daily to monthly returns.
+</p>
+
+## Extremes in volatile return
+
+
+
+### Extreme values in volatile time series
+
+
+<div class>
+<p>When you take a long series of iid data, such as several thousand observations, and select a small subset of the most extreme observations, like less than 100, then these extremes appear at random and the spaces or gaps between the extremes follow a distribution that is very close to exponential. When we carry out the same exercise for a volatile financial log-return series then the extremes appear in clusters during periods of high volatility. This is another feature of real log-return data that we need to take account of when building models.</p>
+<p>In this exercise, you will investigate the irregular time series <code>djx_extremes</code> which contains the 100 most extreme negative log-returns of the Dow Jones index between 1985 and 2015. You will compare it with <code>iid_extremes</code> which contains the 100 most extreme values in an iid series of the same length as <code>djx_extremes</code>. To do this, you will use the object <code>exp_quantiles</code>, which contains 100 theoretical quantiles of the standard exponential distribution. These can be used to construct a Q-Q plot of each dataset against the exponential reference distribution.</p>
+<p>The <code>djx_extremes</code>, <code>iid_extremes</code>, and <code>exp_quantiles</code> objects are available in your workspace.</p>
+</div>
+<div class="exercise--instructions__content">
+<li>Partition the plotting area into a row of 3 panels (this has been done for you)</li>
+```{r,warning=F,message=F}
+set.seed(123)
+
+#load data and get log returns
+djreturns <- diff(log(DJ))[-1]
+
+#get mean and sigma to generate normal distribution
+npars <- c(mu = mean(djreturns), sigma = sd(djreturns))
+n <- length(djreturns)
+
+#calculate extreme losses
+dj_losses <- -djreturns
+djx_extremes <- dj_losses[dj_losses>0.0274]
+
+#calculate extreme losses on iid dist
+iid <- rnorm(n)*npars[2] + npars[1]
+iid <- as.xts(iid, order.by = index(djreturns))
+iid_losses <- -iid
+iid_extremes <- iid_losses[iid_losses>0.02459]
+
+#get 100 theroical quantiles of the standar exponential distribution
+exp_quantiles <- qexp(ppoints(100))
+```
+<li>Use <code>plot()</code> and <code>type = "h"</code> to plot <code>djx_extremes</code>.</li>
+```{r,warning=F,message=F}
+
+
+```
+<li>Use <code>time()</code> and <code>diff()</code> in succession to compute the spaces between the dates of the extremes and assign them to <code>djx_spaces</code>.</li>
+```{r,warning=F,message=F}
+
+```
+<li>Use <code>hist()</code> and <code>as.numeric()</code> in succession to make a histogram of <code>djx_spaces</code> after coercing the data to numeric values.</li>
+```{r,warning=F,message=F}
+
+```
+<li>Use the appropriate function to make a Q-Q plot of <code>djx_spaces</code> against the exponential quantiles in <code>exp_quantiles</code>.</li>
+```{r,warning=F,message=F}
+# Partition plotting area into 3 pieces
+par(mfrow = c(1, 3))
+
+# Plot djx_extremes
+plot(djx_extremes, type = "h")
+
+# Compute the spaces between the times of the extremes
+djx_spaces <- diff(time(djx_extremes))
+
+# Make a histogram of these spaces
+hist(as.numeric(djx_spaces))
+
+# Make a Q-Q plot of djx_spaces against exp_quantiles
+qqplot(exp_quantiles, djx_spaces)
+```
+<li>Carry out the previous 4 steps for <code>iid_extremes</code>: plot the raw data with same <code>type</code> parameter, compute the spaces as <code>iid_spaces</code>, make a histogram, and make a Q-Q plot.</li>
+```{r,warning=F,message=F}
+# Carry out the previous 4 steps for iid_extremes
+plot(iid_extremes, type = "h")
+iid_spaces <- diff(time(iid_extremes))
+hist(as.numeric(iid_spaces))
+qqplot(exp_quantiles, iid_spaces)
+```
+</div>
+
+<p class="">Great work: Note how strongly clustered the extreme returns are compared with the extremes in the iid series.
+</p>
+
+### Cross correlations between risk-factor return series
+
+
+<div class>
+<p>Many risk-factor returns are correlated with each other in the same time period. However, in the same way that there tends to be only weak serial correlation within series, there tends to be only weak cross correlation between series in different time periods.</p>
+<p>The picture changes dramatically when we look at the absolute values, which are often strongly correlated both within and between series.</p>
+<p>In this exercise, you will investigate cross correlations between the daily log-returns of the Dow Jones, FTSE100 and SMI equity indexes. When the function <code>acf()</code> is applied to a multivariate time series, we obtain a matrix of plots with the usual sample acf plots on the diagonal, and plots of the correlations between different series at different lags off the diagonal.</p>
+<p>One thing to note here is that the US and European series are slightly out of step. The European markets tend to follow the US, so we see some evidence of cross correlation between US returns on one day and European returns on the next.</p>
+</div>
+<div class="exercise--instructions__content">
+<li>Make a time series plot of <code>indexes</code> with <code>plot.zoo()</code> and a pairwise scatterplot with <code>pairs()</code>.</li>
+```{r,warning=F,message=F}
+data("SMI")
+data("FTSE")
+smix <- diff(log(SMI))[-1]["2005/2015"]
+ftsex <- diff(log(FTSE))[-1]["2005/2015"]
+djx <- diff(log(DJ))[-1]["2005/2015"]
+indexes <- merge(djx, ftsex, smix, all = TRUE)
+indexes <- na.omit(indexes) 
+# Make a time series plot of indexes with plot.zoo and a pairwise scatterplot with pairs
+plot.zoo(indexes)
+pairs(as.zoo(indexes))
+```
+<li>Calculate the sample correlation matrix of <code>indexes</code> using <code>cor()</code>.</li>
+```{r,warning=F,message=F}
+# Calculate the sample correlation matrix of indexes
+cor(indexes)
+```
+<li>Plot the sample autocorrelation functions and cross-correlation functions for <code>indexes</code> using <code>acf()</code>.</li>
+```{r,warning=F,message=F}
+# Plot the sample acfs and cross-correlation functions for the returns in indexes
+acf(indexes)
+```
+<li>Plot the sample autocorrelation functions and cross-correlation functions for the absolute values of <code>indexes</code>.</li>
+```{r,warning=F,message=F}
+# Plot the sample acfs and cross-correlations functions for the absolute values of indexes
+acf(abs(indexes))
+```
+</div>
+
+<p class="">Well done! Do you see the evidence that the US market leads the European markets in the third of the four plots?
+</p>
+
+## The empirical return series
+
+
+
+### Volatility and correlation of FX returns
+
+
+<div class>
+<p>In this exercise, you will discover evidence of volatility and serial dependence in daily and weekly exchange-rate log-returns. The dataset <code>fx</code> contains daily log-returns for the "EUR_USD", "GBP_USD", "JPY_USD" and "CHF_USD" exchange rates while <code>fx_w</code> contains the corresponding weekly log-returns. Both are in your workspace.</p>
+<p>Note that foreign exchange trading takes place every day of the week although the lower volume of trading at weekends leads to an unusual weekly correlation cycle which will be evident in one of the pictures you create.</p>
+</div>
+<div class="exercise--instructions__content">
+<li>Plot the multivariate time series <code>fx</code> and <code>fx_w</code> with the option <code>type = "h"</code>.</li>
+```{r,warning=F,message=F}
+data("CHF_USD")
+fx1 <- diff(log(EUR_USD))[-1]["2011/2016"]
+fx2 <- diff(log(GBP_USD))[-1]["2011/2016"]
+fx3 <- diff(log(JPY_USD))[-1]["2011/2016"]
+fx4 <- diff(log(CHF_USD))[-1]["2011/2016"]
+fx <- merge(fx1, fx2, fx3, fx4, all = TRUE)
+fx_w<- apply.weekly(fx, colSums)
+# Plot fx and fx_w
+plot.zoo(fx, type = "h")
+plot.zoo(fx_w, type = "h")
+```
+<li>Use <code>acf()</code> to make acf plots for both <code>fx</code> and the absolute values of <code>fx</code>.</li>
+```{r,warning=F,message=F}
+# Make acf plots of fx and the absolute values of fx
+acf(fx)
+acf(abs(fx))
+```
+<li>Use <code>apply()</code> to conduct the Ljung-Box test, with a lag of 10, on the components of <code>fx</code> and then their absolute values.</li>
+```{r,warning=F,message=F}
+# Apply the Ljung-Box test to the components of fx and their absolute values
+apply(fx, 2, Box.test, lag = 10, type = "Ljung")
+apply(abs(fx), 2, Box.test, lag = 10, type = "Ljung")
+```
+<li>Use <code>acf()</code> to make acf plots for both <code>fx_w</code> and the absolute values of <code>fx_w</code>.</li>
+```{r,warning=F,message=F}
+# Make acf plots of fx_w and the absolute values of fx_w
+acf(fx_w)
+acf(abs(fx_w))
+```
+<li>Use <code>apply()</code> to conduct the Ljung-Box test, with a lag of 10, on the components of <code>fx_w</code> and then their absolute values.</li>
+```{r,warning=F,message=F}
+# Apply the Ljung-Box test to the components of fx_w and their absolute values
+apply(fx_w, 2, Box.test, lag = 10, type = "Ljung")
+apply(abs(fx_w), 2, Box.test, lag = 10, type = "Ljung")
+```
+</div>
+
+<p class="">Great work! There is strong evidence of serial dependence in the absolute values of the weekly log-returns.
+</p>
+
+### Volatility and correlation of interest-rate data
+
+
+<div class><p>In this exercise you will explore whether volatility and serial dependence is also a feature of daily and monthly interest-rate log-returns. The dataset <code>zcb_x</code> contains daily log-returns for the 1-year, 5-year and 10-year Canadian zero-coupon bond yields while <code>zcbx_m</code> contains the corresponding monthly log-returns.</p></div>
+<div class="exercise--instructions__content">
+<li>Make acf plots and cross-correlation plots for <code>zcb_x</code> and the absolute values of <code>zcb_x</code>.</li>
+```{r,warning=F,message=F}
+# Make acf plots of zcb_x and the absolute values of zcb_x
+acf(zcb_x[-1])
+acf(abs(zcb_x[-1]))
+```
+<li>Apply the Ljung-Box test to the components of <code>zcb_x</code> and the absolute values with the option <code>lag = 10</code>. </li>
+```{r,warning=F,message=F}
+# Apply the Ljung-Box test to the components of zcb_x and their absolute values
+apply(zcb_x, 2, Box.test, lag = 10, type="Ljung")
+apply(abs(zcb_x), 2, Box.test, lag = 10, type="Ljung")
+```
+<li>Make acf plots and cross-correlation plots for <code>zcbx_m</code> and the absolute values of <code>zcbx_m</code>.</li>
+```{r,warning=F,message=F}
+# Make acf plots of zcbx_m and the absolute values of zcbx_m
+acf(zcbx_m)
+acf(abs(zcbx_m))
+```
+<li>Apply the Ljung-Box test to the components of <code>zcbx_m</code> and the absolute values with the option <code>lag = 10</code>.</li>
+```{r,warning=F,message=F}
+# Apply the Ljung-Box test to the components of zcbx_m and their absolute values
+apply(zcbx_m, 2, Box.test, lag = 10, type="Ljung")
+apply(abs(zcbx_m), 2, Box.test, lag = 10, type="Ljung")
+```
+</div>
+
+<p class="">Excellent work! The monthly log-returns for the 5 and 10 year yields don't appear to show much serial dependence.
+</p>
+
+### Reviewing knowledge of volatility and correlation
+
+<div class=""><p>Suppose you are given a time series of risk-factor returns. You carry out the exploratory procedures and tests described in this chapter. Which of the following is a <em>true</em> statement?</p></div>
+
+<ul>
+<li><div class="">A significant Ljung-Box test implies that the data are heavier-tailed than normal.</div></li>
+<li><div class="">An insignificant Ljung-Box implies that the time series can be assumed to be independent.</div></li>
+<li><div class="">A Q-Q plot of the waiting times between the most extreme values against a normal distribution can reveal evidence of volatility.</div></li>
+<strong><li><div class="">When volatility is present in a time series we can predict the magnitude of future returns.</div></li></strong>
+<li><div class="">When volatility is present in a time series we can predict the direction of future returns.</div></li>
+</ul>
+
+<p class="dc-completion-pane__message dc-u-maxw-100pc">Correct! This statement about volatility is true.</p>
+
+# Estimating portfolio value-at-risk (VaR)
+
+<p class="chapter__description">
+    In this chapter, the concept of value-at-risk and simple methods of estimating VaR based on historical simulation are introduced.
+  </p>
+  
+## VaR & ES
+
+
+
+<h3>**Computing VaR and ES for normal distribution**</h3>
+
+
+<div class>
+<p>The standard function <code>qnorm()</code> calculates quantiles of a normal distribution from the probability <code>p</code>, the mean, and standard deviation, and thus can be used to calculate <strong>value-at-risk</strong> (VaR). The function <code>ESnorm()</code> from the <a href="https://www.rdocumentation.org/packages/QRM/versions/0.4-13">QRM</a> package calculates the <strong>expected shortfall</strong> (ES) for a normal distribution from the probability <code>p</code>, location parameter <code>mu</code>, and scale parameter <code>sd</code>:</p>
+<pre><code>qnorm(p, mean = 0, sd = 1)
+ESnorm(p, mu = 0, sd = 1)
+</code></pre>
+<p>Common numeric values for <code>p</code> include 0.95 and 0.99 for confidence levels of 95% and 99%, respectively.</p>
+<p>In this exercise, you will compute and display VaR and ES for a normal distribution \(N(\mu, \sigma^2)\) with mean \(\mu\) and standard deviation \(\sigma\). In the process, you will use the new functions for sequence generation and adding straight lines to a plot. You can read about their arguments by typing in <code>?seq</code> and <code>?abline</code> to your console.</p>
+<p>The variables <code>mu</code> and <code>sigma</code> contain the estimated mean and standard deviation of the Dow Jones index returns for 2008-2009 contained in <code>djx</code>. All three objects are available in your workspace.</p>
+</div>
+<div class="exercise--instructions__content">
+<li>Fill in <code>seq()</code> to make a sequence of 100 x-values going from \(-4\sigma\) to \(4\sigma\) and assign to <code>xvals</code>.</li>
+```{r,warning=F,message=F}
+# Make a sequence of 100 x-values going from -4*sigma to 4*sigma
+xvals <- seq(from = -4*sigma, to = 4*sigma, length.out = 100)
+```
+<li>Fill in <code>dnorm()</code> to compute the density of a \(N(\mu, \sigma^2)\) distribution at <code>xvals</code> and assign to <code>ndens</code>.</li>
+```{r,warning=F,message=F}
+# Compute the density of a N(mu, sigma^2) distribution at xvals
+ndens <- dnorm(xvals, mean = mu, sd = sigma)
+```
+<li>Plot <code>ndens</code> against <code>xvals</code> using <code>type = "l"</code>.</li>
+<li>Use <code>qnorm()</code> and <code>ESnorm()</code> to compute the 99% VaR and 99% ES of the distribution and assign to <code>VaR99</code> and <code>ES99</code>, respectively.</li>
+<li>Fill in <code>abline()</code> to create vertical lines for <code>VaR99</code> and <code>ES99</code> in red and green, respectively.</li>
+```{r,warning=F,message=F}
+# Plot ndens against xvals
+plot(xvals, ndens, type = "l")
+# Compute the 99% VaR and 99% ES of a N(mu, sigma^2) distribution
+VaR99 <- qnorm(0.99, mean = mu, sd = sigma)
+ES99 <- ESnorm(0.99, mu = mu, sd = sigma)
+# Draw vertical lines at VaR99 and ES99 in red and green
+abline(v = VaR99, col = "red")
+abline(v = ES99, col = "green")
+```
+</div>
+
+<p class="">Nice picture! In this case, ES99 is only 14.7% bigger than VaR99. For heavy-tailed distributions, the difference can be much greater.
+</p>
+
+## International equity portfolio
+
+
+
+### Examining risk factors for international equity portfolio
+
+
+<div class>
+<p>The UK investor in UK, US, and Swiss equities is exposed to 5 risk factors; the data is contained in <code>riskfactors</code>, a multivariate dataset. </p>
+<p>In this exercise, you will recall some of the tests and techniques that you learned earlier for showing that these risk factors are heavier tailed than normal, highly volatile and subject to profound serial dependencies.</p>
+</div>
+<div class="exercise--instructions__content">
+<li>Use the appropriate function to plot <code>riskfactors</code>.</li>
+```{r,warning=F,message=F}
+data("USD_GBP")
+data("CHF_GBP")
+X.FTSE <- FTSE["2000/2012"]
+X.GSPC <- SP500["2000/2012"]
+X.SSMI <- SMI["2000/2012"]
+USD.GBP <- USD_GBP["2000/2012"]
+CHF.GBP <- CHF_GBP["2000/2012"]
+riskfactors <- merge(X.FTSE,  X.GSPC, X.SSMI, USD.GBP, CHF.GBP , all = TRUE)
+riskfactors <- na.omit(riskfactors)
+# Plot the risk-factor data
+plot.zoo(riskfactors)
+```
+<li>Calculate the log-returns of <code>riskfactors</code>, remove the first <code>NA</code> value for all series, and assign to <code>returns</code>. Use the appropriate function to plot <code>returns</code>.</li>
+```{r,warning=F,message=F}
+# Calculate the log-returns, assign to returns, and plot
+returns <- diff(log(riskfactors))[-1, ]
+plot.zoo(returns)
+```
+<li>Use <code>apply()</code> with 3 parameters to carry out the Jarque-Bera test of normality for all series.</li>
+```{r,warning=F,message=F}
+# Use apply() to carry out the Jarque-Bera test for all 5 series
+apply(returns, 2, jarque.test)
+```
+<li>Use <code>qqnorm()</code> to make a Q-Q plot against normal for only the 5th return series in <code>returns</code>. Then, add a reference line with <code>qqline()</code>.</li>
+```{r,warning=F,message=F}
+# Make a Q-Q plot against normal for the 5th return series and add a reference line
+qqnorm(returns[, 5])
+qqline(returns[, 5])
+```
+<li>Use <code>acf()</code> to make a picture of the sample acfs for the returns and then the absolute values of the returns.</li>
+```{r,warning=F,message=F}
+# Make a picture of the sample acfs for returns and their absolute values
+acf(returns)
+acf(abs(returns))
+```
+</div>
+
+<p class="">Good work! All five risk factors are clearly non-normal and show strong serial and cross dependencies.
+</p>
+
+### Historical simulation
+
+
+<div class>
+<p>Suppose that a UK investor has invested 30% of her wealth in the FTSE index, 40% in the S&amp;P 500 index, and 30% in the SMI index.</p>
+<p>For different vectors of log-returns for the 5 risk factors, the function <code>lossop()</code> computes the loss or gain incurred by the investor when her total wealth is 1. The function can also be applied to a 5-dimensional time series of log-returns to obtain a time series of historically-simulated losses and gains corresponding to each vector of log-returns in the time series.</p>
+<p>The function <code>lossop()</code> is the so-called <strong>loss operator</strong> for the portfolio and has been specially written for this exercise. In general, for each new portfolio, a specific function has to be written to compute portfolio losses and gains.</p>
+<p>In this exercise, you will form historically simulated losses and examine them. This is a necessary prelude to using these data to estimate VaR and ES.</p>
+</div>
+<div class="exercise--instructions__content">
+<li>Calculate the loss that would result from a log-return of -0.1 for all five risk factors (this has been done for you).</li>
+```{r,warning=F,message=F}
+lossop <- function (xseries, wts = c(0.3, 0.4, 0.3)){
+    if (is.xts(xseries)) 
+        x <- coredata(xseries)
+    else if (is.matrix(xseries)) 
+        x <- xseries
+    else x <- matrix(xseries, nrow = 1)
+    ll <- apply(x, 1, function(x, wts) {
+        1 - (wts[1] * exp(x[1]) + wts[2] * exp(x[2] + x[4]) + 
+            wts[3] * exp(x[3] + x[5]))
+    }, wts = wts)
+    if (is.xts(xseries)) 
+        ll <- xts(ll, time(xseries))
+    ll
+}
+# Calculate the loss from a log-return of -0.1 for all risk factors
+lossop(rep(-0.1, 5))
+```
+<li>Create the object <code>hslosses</code> by applying <code>lossop()</code> to <code>returns</code>, and then plot <code>hslosses</code>.</li>
+```{r,warning=F,message=F}
+# Apply lossop() to returns and plot hslosses
+hslosses <- lossop(returns)
+plot(hslosses)
+```
+<li>Form a Q-Q plot of <code>hslosses</code> against the normal distribution.</li>
+```{r,warning=F,message=F}
+# Form a Q-Q plot of hslosses against normal
+qqnorm(hslosses)
+```
+<li>Plot the sample acf of <code>hslosses</code> and of then of the absolute values in <code>hslosses</code>.</li>
+```{r,warning=F,message=F}
+# Plot the sample acf of hslosses and their absolute values
+acf(hslosses)
+acf(abs(hslosses))
+```
+</div>
+
+<p class="">Great work! Note how the features of the underlying risk-factor returns (heavy tails and serial dependence) are present in the historically simulated losses.
+</p>
+
+### Estimating VaR and ES
+
+
+<div class>
+<p>Now you are ready to estimate VaR and ES for the international equity investor using the historically simulated losses and gains in <code>hslosses</code>.</p>
+<p>You will do this by two methods. First, you will apply a simple non-parametric method using a sample quantile to estimate VaR and the average of values exceeding the sample quantile to estimate ES.</p>
+<p>Then, you will compare these estimates with the values obtained when you assume that the <code>hslosses</code> have a normal distribution. Obviously, this is a very bad assumption and you should compare the two sets of estimates to see which are more conservative.</p>
+</div>
+<div class="exercise--instructions__content">
+<li>Use <code>quantile()</code> to estimate the 99th sample percentile of the distribution of <code>hslosses</code>.</li>
+```{r,warning=F,message=F}
+# Estimate the 99th sample percentile of the distribution of hslosses
+quantile(hslosses, 0.99)
+```
+<li>Estimate the 99% ES by computing the mean of the <code>hslosses</code> that are at least as large as the VaR estimate (this has been done for you).</li>
+```{r,warning=F,message=F}
+# Estimate the 99% ES
+mean(hslosses[hslosses >= quantile(hslosses, 0.99)])
+```
+<li>Use the appropriate functions to estimate the mean and standard deviation of <code>hslosses</code> and assign to <code>mu</code> and <code>sigma</code>, respectively.</li>
+```{r,warning=F,message=F}
+# Estimate the mean and standard deviation of hslosses
+mu <- mean(hslosses)
+sigma <- sd(hslosses)
+```
+<li>Use <code>qnorm()</code> with the calculated mean and standard deviation values to compute the 99% quantile of a normal distribution.</li>
+```{r,warning=F,message=F}
+# Compute the 99% quantile of a normal distribution
+qnorm(0.99, mean = mu, sd = sigma)
+```
+<li>Use <code>ESnorm()</code> with the calculated mean and standard deviation values to compute the 99% ES of a normal distribution.</li>
+```{r,warning=F,message=F}
+# Compute the 99% ES of a normal distribution
+ESnorm(0.99, mu = mu, sd = sigma)
+```
+</div>
+
+<p class="">This is what we expected. The estimates derived from a normal assumption are much less conservative than the estimates derived using the non-parametric method. That is not to say that the latter method is the best possible, but it is a reasonable first attempt to estimate the risk measures.
+</p>
+
+## Option and Black Scholes
+
+
+
+### Compute Black-Scholes price of an option
+
+
+<div class>
+<p>The <code>Black_Scholes()</code> function in the package <a href="https://www.rdocumentation.org/packages/qrmtools/versions/0.0-6">qrmtools</a> can be used to price European call and put options using the standard Black-Scholes options pricing formula for a non-dividend-paying stock.</p>
+<p>In this exercise you will price in succession: an out-of-the-money European call, an in-the-money European call, an in-the-money European put and an out-of-the-money European put. An option is in-the-money if immediate exercise would result in a positive payout and out-of-the-money if it would not.</p>
+<p>The main point of the exercise is to understand the different risk factors that go into the price calculation: the current stock price, the current volatility and the current interest rate.</p>
+</div>
+<div class="exercise--instructions__content">
+<li>Set the current interest rate <code>r</code> to be 0.01, the current volatility <code>sigma</code> to be 0.2 and the strike <code>K</code> to be 100.</li>
+```{r,warning=F,message=F}
+# Set the interest rate r to be 0.01, the volatility sigma to be 0.2 and the strike K to be 100
+r <- 0.01
+sigma <- 0.2
+K <- 100
+```
+<li>Look at the arguments of the <code>Black_Scholes()</code> function.</li>
+```{r,warning=F,message=F}
+# Set the interest rate r to be 0.01, the volatility sigma to be 0.2 and the strike K to be 100
+r <- 0.01
+sigma <- 0.2
+K <- 100
+
+library(qrmtools)
+# Look at the arguments of the Black_Scholes function
+args(Black_Scholes)
+```
+<li>Price a European call option that matures in <code>T = 1</code> year if the current stock price is <code>S = 80</code>.</li>
+```{r,warning=F,message=F}
+# Price a European call option that matures in one year if the current stock price is 80
+Black_Scholes(0, 80, r, sigma, K, 1, "call")
+```
+<li>Price a European call option that matures in <code>T = 1</code> year if the current stock price is <code>S = 120</code>.</li>
+```{r,warning=F,message=F}
+# Price a European call option that matures in one year if the current stock price is 120
+Black_Scholes(0, 120, r, sigma, K, 1, "call")
+```
+<li>Price a European put option that matures in <code>T = 1</code> year if the current stock price is <code>S = 80</code>.</li>
+```{r,warning=F,message=F}
+# Price a European put option that matures in one year if the current stock price is 80
+Black_Scholes(0, 80, r, sigma, K, 1, "put")
+```
+<li>Price a European put option that matures in <code>T = 1</code> year if the current stock price is <code>S = 120</code>.</li>
+```{r,warning=F,message=F}
+# Price a European put option that matures in one year if the current stock price is 120
+Black_Scholes(0, 120, r, sigma, K, 1, "put")
+```
+</div>
+
+<p class="">Well done! Did you see how dramatically the option values changed as the stock price moved from out-of-the-money to in-the-money or vice versa?
+</p>
+
+### Equity and implied volatility risk factors
+
+
+<div class>
+<p>To analyze the risk of a portfolio consisting of an option, it is necessary to consider changes in all three risk factors: stock price, volatility and interest rates. Here, you will focus on the first two of these risk factors and assume that interest rates do not change much over short time intervals. The daily risk-factor values for the period 1990-2010 are contained in <code>riskfactors</code> and the corresponding log-returns in <code>returns</code>; both multivariate datasets are loaded in your workspace.</p>
+<p>Volatility is a new risk factor that hasn't been considered so far in this course. It is represented by the VIX index which is constructed from the implied volatilities of a wide range of options on the S&amp;P 500 index:</p>
+<pre><code>&gt; names(returns)
+[1] "X.GSPC" "X.VIX"
+</code></pre>
+```{r,warning=F,message=F}
+data("VIX")
+X.GSPC <- SP500["1990/2010"]
+X.VIX <- VIX["1990/2010"]
+riskfactors <- merge(X.GSPC, X.VIX, all = TRUE)
+riskfactors <- na.omit(riskfactors)
+returns <- diff(log(riskfactors))[-1, ]
+names(returns)
+```
+<p>In this exercise, you will be able to verify whether the log-returns of volatility behave like other return data you have encountered, and to see how they vary with the log-returns of the S&amp;P 500 index.</p>
+</div>
+<div class="exercise--instructions__content">
+<li>Use the appropriate function to plot the data in <code>riskfactors</code> and in <code>returns</code>.</li>
+```{r,warning=F,message=F}
+# Plot the risk factors and the log-returns
+plot.zoo(riskfactors)
+plot.zoo(returns)
+```
+<li>Use <code>plot()</code> and <code>as.matrix()</code> in succession to create a scatterplot of <code>returns</code>.</li>
+```{r,warning=F,message=F}
+# Make a scatterplot of the two return series
+plot(as.matrix(returns))
+```
+<li>Use <code>apply()</code> to conduct the Jarque-Bera test on <code>returns</code>, and then use <code>qqnorm()</code> and brackets for indexing to make a Q-Q plot against normal for the log-returns of the series in <code>returns</code> containing volatility data.</li>
+```{r,warning=F,message=F}
+# Apply the Jarque-Bera test to the returns and make a Q-Q plot of the volatility log-returns
+apply(returns, 2, jarque.test)
+qqnorm(returns[, 2])
+```
+<li>Create the sample acf plot of the data in <code>returns</code> and then the absolute returns of the data.</li>
+```{r,warning=F,message=F}
+# Create the sample acf of the returns and absolute returns
+acf(returns)
+acf(abs(returns))
+```
+<li>Use <code>cor()</code> to calculate the correlation between the log-returns of the two risk factors in <code>returns</code>.</li>
+```{r,warning=F,message=F}
+# Calculate the correlation between the log-returns
+cor(returns)
+```
+</div>
+
+<p class="">Great work! It is clear that the log-returns of the VIX index show the same stylized facts as other returns that you have analyzed - non-normality, heavy tails, volatility, serial dependence in the absolute values but not the raw values. Moreover, they are negatively correlated with the log-returns of the SP500 index.
+</p>
+
+## Simulation for options
+
+
+
+### Historical simulation of losses for option portfolio
+
+
+<div class>
+<p>Suppose that an investor has invested one unit of wealth in a single European call option on the S&amp;P 500 index. The function <code>lossop()</code> computes the loss or gain incurred by the investor over a one-day time horizon due to changes in the log stock price or changes in the log volatility. As before, this function has been written specially for the particular portfolio in this exercise:</p>
+<pre><code>lossop(xseries, S, sigma)
+</code></pre>
+<p>The first argument contains the log returns corresponding to the stock price and volatility risk factors, either in a series or in form <code>c(stock_risk, volatility_risk)</code>, <code>S</code> is the current stock price, and <code>sigma</code> is the current volatility.</p>
+<p>Changes in the interest rate over the time horizon will be neglected as being of lesser importance.</p>
+<p>In this exercise, you will form the historically simulated losses for the option portfolio and examine their properties before estimating VaR and ES in the next exercise. The interest rate, strike price, and maturity have been set to <code>r = 0.01</code>, <code>K = 100</code> and <code>T = 1</code>, respectively. The <code>returns</code> object is also in your workspace.</p>
+</div>
+<div class="exercise--instructions__content">
+<li>Use <code>lossop()</code> to calculate the loss resulting from a log-return of -0.1 for both risk factors, assuming the current stock price is 80 and volatility is 0.2.</li>
+```{r,warning=F,message=F}
+lossop <- function (xseries, r = 0.01, K = 100, T = 1, sigma = 0.2, S = 100){
+    if (is.xts(xseries)) 
+        x <- coredata(xseries)
+    else if (is.matrix(xseries)) 
+        x <- xseries
+    else x <- matrix(xseries, nrow = 1)
+    ll <- apply(x, 1, function(x, r, K, T, sigma, S) {
+        deltat <- 1/250
+        V_t0 <- Black_Scholes(0, S, r, sigma, K, T, "call")
+        V_t1 = Black_Scholes(deltat, exp(log(S) + x[1]), r, exp(log(sigma) + 
+            x[2]), K, T, "call")
+        -(V_t1 - V_t0)/V_t0
+    }, r = r, K = K, T = T, sigma = sigma, S = S)
+    if (is.xts(xseries)) 
+        ll <- xts(ll, time(xseries))
+    ll
+}
+# Calculate the first loss
+lossop(c(-0.1, -0.1), S = 80, sigma = 0.2)
+```
+<li>Use <code>lossop()</code> to calculate the loss resulting from a log-return of -0.1 for the stock and 0.1 for the volatility, assuming the current stock price is 100 and volatility is 0.2.</li>
+```{r,warning=F,message=F}
+# Calculate the second loss
+lossop(c(-0.1, 0.1), S = 100, sigma = 0.2)
+```
+<li>Create the object <code>hslosses</code> by applying <code>lossop()</code> to <code>returns</code>, assuming <code>S = 100</code> and <code>sigma = 0.2</code>, and then plot <code>hslosses</code>.</li>
+```{r,warning=F,message=F}
+# Create and plot hslosses
+hslosses <- lossop(returns, S = 100, sigma = 0.2)
+plot(hslosses)
+```
+<li>Form a Q-Q plot of <code>hslosses</code> against the normal distribution.</li>
+```{r,warning=F,message=F}
+# Form a Q-Q plot of hslosses against normal
+qqnorm(hslosses)
+```
+<li>Plot the sample acf of <code>hslosses</code> and of the corresponding absolute values.</li>
+```{r,warning=F,message=F}
+# Plot the sample acf of raw data and absolute values in hslosses
+acf(hslosses)
+acf(abs(hslosses))
+```
+</div>
+
+<p class="">Excellent work! Note that, once again, these historically simulated losses are highly non-normal and very volatile.
+</p>
+
+### Estimating VaR and ES for option portfolio
+
+
+<div class>
+<p>Now you are ready to estimate VaR and ES for the investor in the European call option using the historically simulated losses and gains in <code>hslosses</code>.</p>
+<p>Once again, you will do this by two methods. First, you will apply a non-parametric method using a sample quantile to estimate VaR and calculate the average of values exceeding the same quantile to estimate ES.</p>
+<p>Then, you will compare these estimates with the values obtained when you assume that the <code>hslosses</code> have a normal distribution. Like in the previous exercise, this is a bad assumption and you should compare the two sets of estimates to see which are more conservative.</p>
+</div>
+<div class="exercise--instructions__content">
+<li>Estimate the 99.5% sample percentile of the distribution of <code>hslosses</code> using <code>quantile()</code>.</li>
+```{r,warning=F,message=F}
+# Estimate the 99.5% percentile of the distribution
+quantile(hslosses, 0.995)
+```
+<li>Estimate the 99.5% ES by computing the mean of the <code>hslosses</code> that are at least as large as the VaR estimate (this has been done for you).</li>
+```{r,warning=F,message=F}
+# Estimate the 99.5% ES
+mean(hslosses[hslosses >= quantile(hslosses, 0.995)])
+```
+<li>Use the appropriate functions to estimate the mean and standard deviation of <code>hslosses</code> and assign to <code>mu</code> and <code>sigma</code>, respectively.</li>
+```{r,warning=F,message=F}
+# Estimate the mean and standard deviation of hslosses
+mu <- mean(hslosses)
+sigma <- sd(hslosses)
+```
+<li>Use <code>qnorm()</code> with the calculated mean and standard deviation to compute the 99.5% quantile of a normal distribution.</li>
+```{r,warning=F,message=F}
+# Compute the 99.5% quantile of a normal distribution
+qnorm(0.995, mean = mu, sd = sigma)
+```
+<li>Use <code>ESnorm()</code> with the calculated mean and standard deviation to compute the 99.5% ES of a normal distribution.</li>
+```{r,warning=F,message=F}
+# Compute the 99.5% ES of a normal distribution
+ESnorm(0.995, mu = mu, sd = sigma)
+```
+</div>
+
+<p class="">Very good work! It will be no surprise to you now that the normal distribution greatly underestimates these measures of risk.
+</p>
+
+### Computing VaR for weekly losses
+
+
+<div class>
+<p>In this final exercise, you will test your understanding by computing an empirical estimate of VaR for weekly losses in the <code>returns</code> data. You will have to repeat the analysis of the previous exercise, but this time, you need to:</p>
+<ol>
+<li>Find the weekly log-returns of <code>returns</code> using <code>apply.weekly()</code>.</li>
+<li>Use these weekly log-returns to simulate the losses of the two risk factors through <code>lossop()</code>.</li>
+</ol>
+<p>Note that the <code>lossop()</code> function has been adjusted in your workspace so that it correctly calculates the losses and gains of the option portfolio for a one-week time horizon. It still takes in arguments as follows:</p>
+<pre><code>lossop(xseries, S, sigma)
+</code></pre>
+<p>Your challenge is to compute the 99% VaR for weekly changes in value of the European call option in <code>returns</code> when the current stock price is <code>S = 120</code> and the current volatility is <code>sigma = 0.25</code>. What is the correct answer?</p>
+</div>
+
+<ul>
+<li><div class="dc-input-radio__text">0.256</div></li>
+<strong><li><div class="dc-input-radio__text">0.194</div></li></strong>
+<li><div class="dc-input-radio__text">0.158</div></li>
+<li><div class="dc-input-radio__text">-0.203</div></li>
+<li><div class="dc-input-radio__text">-0.245</div></li>
+</ul>
+
+```{r,warning=F,message=F}
+return_w <- apply.weekly(returns, colSums)
+hslosses <- lossop(return_w, S = 120, sigma = 0.25)
+quantile(hslosses, 0.99)
+```
+
+<p class="">Fantastic! Please watch the wrap-up video to learn how you can further improve these calculations.
+</p>

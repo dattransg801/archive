@@ -1,0 +1,1219 @@
+# Functional Programming {.unnumbered}
+
+**Course Description**
+
+
+<p class="course__description">Have you ever been wondering what the purrr description (“A functional programming toolkit for R”) refers to? Then, you’ve come to the right place! This course will walk you through the functional programming part of purrr - in other words, you will learn how to take full advantage of the flexibility offered by the .f in map(.x, .f) to iterate other lists, vectors and data.frame with a robust, clean, and easy to maintain code. During this course, you will learn how to write your own mappers (or lambda functions), and how to use predicates and adverbs. Finally, this new knowledge will be applied to a use case, so that you’ll be able to see how you can use this newly acquired knowledge on a concrete example of a simple nested list, how to extract, keep or discard elements, how to compose functions to manipulate and parse results from this list, how to integrate purrr workflow inside other functions, how to avoid copy and pasting with purrr functional tools.</p>
+
+<p class="course__description">Lists can be difficult to both understand and manipulate, but they can pack a ton of information and are very powerful. In this course, you will learn to easily extract, summarize, and manipulate lists and how to export the data to your desired object, be it another list, a vector, or even something else! Throughout the course, you will work with the purrr package and a variety of datasets from the repurrrsive package, including data from Star Wars and Wes Anderson films and data collected about GitHub users and GitHub repos. Following this course, your list skills will be purrrfect!</p>
+
+
+## Simplifying with purrr {.unnumbered}
+
+<p class="chapter__description">
+    Iteration is a powerful way to make the computer do the work for you. It can also be an area of coding where it is easy to make lots of typos and simple mistakes. The purrr package helps simplify iteration so you can focus on the next step, instead of finding typos.
+  </p>
+  
+### The power of iteration {.unnumbered}
+
+
+#### Introduction to iteration {.unnumbered}
+
+
+<div class>
+<p>Imagine that you need to read in hundreds of files with a similar structure and perform an action on them. You don't want to write hundreds of repetitive lines of code to read in all the files or to perform the action. Instead, you want to <strong>iterate</strong> over them. Iteration is the process of doing the same process to multiple inputs. Being able to iterate is important to make your code efficient, and is powerful when working with lists. </p>
+<p>For this exercise, the names of 16 CSV files have been loaded into a list called <code>files</code>. In your own work, you could use the <code>list.files()</code> function to create this list. The <code>readr</code> library is also already loaded.</p>
+<p><em>This course touches on a lot of concepts you may have forgotten, so if you ever need a quick refresher, download the <a href="https://datacamp-community-prod.s3.amazonaws.com/e63a8f6b-2aa3-4006-89e0-badc294b179c">tidyverse Cheat Sheet</a> and keep it handy!</em></p>
+</div>
+<div class="exercise--instructions__content">
+<li>Create a for loop, which iterates over the <code>files</code> list, and gives each element as an input for <code>readr::read_csv()</code>, which is another way of saying the <code>read_csv()</code> function from the <code>readr</code> package.</li>
+<li>Then use that input, so the result is a list where each CSV file has been read into a separate element of the newly created <code>all_files</code> list. </li>
+<li>Output the size of the <code>all_files</code> list.</li>
+```{r}
+# edited/added
+library(readr)
+library(tidyverse)
+files=list.files("archive/Functional-Programming-with-purrr/datasets", pattern = "*.csv")
+files=paste("archive/Functional-Programming-with-purrr/datasets/",files,sep="")
+
+# Initialize list
+all_files <- list()
+
+# For loop to read files into a list
+for(i in seq_along(files)){
+  all_files[[i]] <- read_csv(files[[i]])
+}
+
+# Output size of list object
+length(all_files)
+```
+</div>
+
+<p class="">Good work! Now let's see how to do it more easily with purrr.
+</p>
+
+#### Iteration with purrr {.unnumbered}
+
+
+<div class>
+<p>You've made a great for loop, but it uses a lot of code to do something as simple as input a series of files into a list. This is where <code>purrr</code> comes in. We can do the same thing as a for loop in <em>one line</em> of code with <code>purrr::map()</code>. The function <code>map()</code> iterates over a list, and uses another function that can specified with the <code>.f</code> argument. </p>
+<p><code>map()</code> takes two arguments:</p>
+
+<li>The first is the list over that will be iterated over </li>
+<li>The second is a function that will act on each element of the list</li>
+
+<p>The <code>readr</code> library is already loaded.</p>
+</div>
+<div class="exercise--instructions__content">
+<li>Load the <code>purrr</code> library (note the 3 Rs).</li>
+<li>Replicate the for loop from the last exercise using <code>map()</code> instead. Use the same list <code>files</code> and the same function <code>readr::read_csv()</code>.</li>
+<li>Check the length of <code>all_files_purrr</code>.</li>
+```{r}
+# edited/added
+library(readr)
+files=list.files("archive/Functional-Programming-with-purrr/datasets", pattern = "*.csv")
+files=paste("archive/Functional-Programming-with-purrr/datasets/",files,sep="")
+
+# Load purrr library
+library(purrr)
+
+# Use map to iterate
+all_files_purrr <- map(files, read_csv)
+
+# Output size of list object
+length(all_files_purrr)
+```
+</div>
+
+<p class="">Nice! You can see from the output here that 16 different files have been read into <code>all_files_purrr</code>.
+</p>
+
+#### More iteration with for loops {.unnumbered}
+
+
+<div class>
+<p>Iteration isn't just for reading in files though; iteration can be used to perform other actions on objects. First, you will try iterating with a for loop.</p>
+<p>You're going to change each element of a list into a numeric data type and then put it back into the <em>same</em> element in the <em>same</em> list. </p>
+<p>For this exercise, you will iterate using a for loop that takes <code>list_of_df</code>, which is a list of character vector, but the characters are actually numbers! You need to change the character vectors to numeric so that you can perform mathematical operations on them; you can use the base R function, <code>as.numeric()</code> to do that.</p>
+</div>
+<div class="exercise--instructions__content">
+<li>Check the class type of the first element of <code>list_of_df</code>.</li>
+<li>Build a for loop that takes each element of <code>list_of_df</code>, changes it into numeric data with <code>as.numeric()</code>, and adds it back into the same element of <code>list_of_df</code>.</li>
+<li>Check the class type of the first element of <code>list_of_df</code>.</li>
+<li>Print <code>list_of_df</code>.</li>
+```{r}
+# edited/added
+list_of_df=lapply(1:10,function(x){c("1","2","3","4")})
+
+# Check the class type of the first element
+class(list_of_df[[1]])
+
+# Change each element from a character to a number
+for(i in seq_along(list_of_df)){
+    list_of_df[[i]] <- as.numeric(list_of_df[[i]])
+}
+
+# Check the class type of the first element
+class(list_of_df[[1]])
+
+# Print out the list
+list_of_df
+```
+</div>
+
+<p class="">Nice! You can see from the output that we have a list of numbers now!
+</p>
+
+#### More iteration with purrr {.unnumbered}
+
+
+<div class>
+<p>Now you will change each element of a list into a numeric data type and then put it back into the same element in the same list, but instead of using a for loop, you'll use <code>map()</code>. </p>
+<p>You can use the <code>purrr</code> function <code>map()</code> to more easily loop over a list, and turn the characters into numbers. Instead of having to build a whole for loop, you can use one line of code.</p>
+</div>
+<div class="exercise--instructions__content">
+<li>Check the class of the first element of <code>list_of_df</code>.</li>
+<li>Use <code>map()</code> to iterate over <code>list_of_df</code> and change each element of the list into numeric data.  </li>
+<li>Check the class of the first element of <code>list_of_df</code>.</li>
+<li>Print out <code>list_of_df</code>.</li>
+```{r}
+# edited/added
+library(purrr)
+list_of_df=lapply(1:10,function(x){c("1","2","3","4")})
+
+# Check the class type of the first element
+class(list_of_df[[1]])  
+
+# Change each character element to a number
+list_of_df <- map(list_of_df, as.numeric)
+
+# Check the class type of the first element again
+class(list_of_df[[1]])
+
+# Print out the list
+list_of_df
+```
+</div>
+
+<p class="">Good work! Now you can fix class type issues in your lists!
+</p>
+
+### Subsetting lists {.unnumbered}
+
+
+
+#### Subsetting lists {.unnumbered}
+
+
+<div class>
+<p>Often when working in R, you'll use dataframes or vectors. Another kind of R object is a list. While lists can be complicated, lists are also incredibly powerful. Lists are like Hermione Granger's bag of holding (from Harry Potter); they can hold a wide variety of things. The contents of a list don't have to be the same data type, and as long as you know how it's organized, you can grab out what you need by subsetting.</p>
+<p>Both named and unnamed lists can be subset using double square brackets <code>[[ ]]</code> list this: <code>listname[[ index ]]</code></p>
+<p>If a list is named, you can also use <code>$</code> for subsetting. The syntax <code>list\$elementname</code> pulls out the named element from the list. Like any other kind of object in R, you can use the <code>str()</code> to determine the structure of the list.</p>
+</div>
+<div class="exercise--instructions__content">
+<li>Load the <code>repurrrsive</code> package.</li>
+
+<li>Load the <code>wesanderson</code> dataset.</li>
+
+<li>Examine the structure of the first element in <code>wesanderson</code>.</li>
+
+<li>Examine the structure of the <code>GrandBudapest</code> element in <code>wesanderson</code>.</li>
+```{r}
+# Load repurrrsive package, to get access to the wesanderson dataset
+library(repurrrsive)
+
+# Load wesanderson dataset
+data(wesanderson)
+
+# Get structure of first element in wesanderson
+str(wesanderson[[1]])
+
+# Get structure of GrandBudapest element in wesanderson
+str(wesanderson$GrandBudapest)
+```
+</div>
+
+<p class="">Good work! Now you can subset and determine the structure of each part of a named or unnamed list!
+</p>
+
+#### Subsetting list elements {.unnumbered}
+
+
+<div class>
+<p>You can also subset within list elements using bracket notation like this: <code>ListName\$ElementName[VectorNumber]</code>. If a list element is a dataframe, you can pull out a column like this: <code>ListName\$ElementName\$ColumnName</code> or <code>ListName[[1]][,1]</code>.</p>
+<p>In this exercise, you’ll examine the <code>wesanderson</code> and <code>sw_films</code> datasets from the <code>repurrrsive</code> package. <code>wesanderson</code> contains color palettes for each of Wes Anderson's movies. These colors are recorded in hexadecimal, that is, a # followed by six digits that indicate a particular color. Here, you will be using two ways of pulling out a particular color hexadecimal.</p>
+<p><code>sw_films</code> contains information about the films in the Star Wars franchise, such as title, director, producer, etc. You'll use subsetting to explore this dataset.</p>
+</div>
+<div class="exercise--instructions__content"><p>Subset the third color from the first element of <code>wesanderson</code>. Then subset the fourth color from <code>GrandBudapest</code>.</p></div>
+```{r}
+# edited/added
+library(repurrrsive)
+data(wesanderson)
+
+# Third element of the first wesanderson vector
+wesanderson[[1]][3]
+
+# Fourth element of the GrandBudapest wesanderson vector
+wesanderson$GrandBudapest[4]
+```
+
+<div class="exercise--instructions__content"><p>Subset the first element from <code>sw_films</code>. Then subset the title element from the first element.</p></div>
+```{r}
+# edited/added
+library(repurrrsive)
+data(sw_films)
+
+# Subset the first element of the sw_films data
+sw_films[[1]]
+
+# Subset the first element of the sw_films data, the title column 
+sw_films[[1]]$title
+```
+
+<p class="">Great work, now you should be very comfortable subsetting lists!
+</p>
+
+### The many flavors of map() {.unnumbered}
+
+
+
+#### map() argument alternatives {.unnumbered}
+
+
+<div class>
+<p>You can also use iteration to answer a question, like how long is each element in the <code>wesanderson</code> dataset.  You can do this by feeding <code>map()</code> a function like <code>length()</code>. You can do this using the <code>map(list, function)</code> syntax and it works just fine. However, future exercises get more complex, you will need to learn how to do this second way, using:</p>
+<p><code>map(list, ~function(.x))</code></p>
+<p>This second way gives the same result as <code>map(list, function)</code>. To specify how the list is used in the function, use the argument <code>.x</code> to denote where the list element goes inside the function. When you want to use <code>.x</code> to show where the element goes in the function, you need to put a <code>~</code> in front of the function in the second argument of <code>map()</code>.</p>
+</div>
+<div class="exercise--instructions__content"><p>Use <code>map()</code> on <code>wesanderson</code> and determine the length of each element in the "old" way.</p></div>
+
+<div class="exercise--instructions__content"><p>Use <code>map()</code> on <code>wesanderson</code> and determine the length of each element again, but this time using <code>map(list, ~function(.x))</code>.</p></div>
+```{r}
+# edited/added
+library(repurrrsive)
+library(purrr)
+data(wesanderson)
+
+# Map over wesanderson to get the length of each element
+map(wesanderson, length)
+
+# Map over wesanderson, and determine the length of each element
+map(wesanderson, ~length(.x))
+```
+
+<p class="">Great Job! This new way of writing <code>map_*()</code> functions will come in handy in future exercises, so make a mental note of the <code>~</code> and the <code>.x</code> argument.
+</p>
+
+#### map_* {.unnumbered}
+
+
+<div class><p>The <code>map()</code> function will return its output as a list. However, there are several different <code>map()</code> functions; you can use <code>map_*()</code> functions to tell <code>purrr</code> the type of output you want. The * in <code>map_*()</code> represents different R data types. For instance, you might want the output to be a vector of numbers so that we can put it inside a dataframe. So, unless you want something to be returned as a list, you need to determine what you want the output to be before you write your <code>map()</code> function.</p></div>
+<div class="exercise--instructions__content">
+<li>Determine the length of each element of the <code>wesanderson</code> dataset using our original <code>map()</code> function. Examine the output.</li>
+</div>
+
+
+<div class="exercise--instructions__content">
+<li>Create a dataframe that has the number of colors from each movie, using <code>map_dbl()</code>. The dbl means a double or a number that can have a decimal.</li>
+</div>
+```{r}
+# edited/added
+library(repurrrsive)
+library(purrr)
+data(wesanderson)
+
+# Map over wesanderson, to determine the length of each element
+map(wesanderson, length)
+
+# Create a numcolors column and fill with length of each wesanderson element
+data.frame(numcolors = map_dbl(wesanderson, ~length(.x)))
+```
+
+<p class="">Good work! Notice how much cleaner the output was using <code>map_dbl()</code>! It's always worth thinking through which <code>map_*()</code> function will get you where to need to go before coding it out. In our next chapter, we'll dive into more complex uses of purrr.
+</p>
+
+## More complex iterations {.unnumbered}
+
+<p class="chapter__description">
+    purrr is much more than a for loop; it works well with pipes, we can use it to run models and simulate data, and make nested loops!
+  </p>
+  
+### Working with unnamed lists {.unnumbered}
+
+
+
+#### Names &amp; pipe refresher {.unnumbered}
+
+
+<div class>
+<p>It is easy to determine if a list has names using <code>names()</code>. Understanding the named elements of a list can make working with the list elements easier because you can pull out the information you need by name, instead of searching for the correct numbered element. </p>
+<p><code>purrr</code> is a part of the tidyverse, a system of packages designed to be used together, and used with pipes. Let's do a quick refresh on how pipes work. A pipe <code>%&gt;%</code> takes the output from the function that comes before it, and feeds it into the function that comes after the pipe as its first argument.</p>
+<pre><code>function_before() %&gt;% 
+    function_after()
+</code></pre>
+<p>You don't <em>need</em> to use pipes when you use <code>purrr</code> functions, but for the purposes of these lessons, you will be.</p>
+</div>
+<div class="exercise--instructions__content">
+<li>Check to see if the <code>sw_films</code> list has named elements with pipes.</li>
+</div>
+```{r}
+# edited/added
+library(repurrrsive)
+library(tidyverse)
+data(sw_films)
+
+# Use pipes to check for names in sw_films
+sw_films %>%
+    names()
+```
+
+<p class="">Good work! Now that you know how to check to see if a list has names in a tidy way, you're ready to dive in.
+</p>
+
+#### Setting names {.unnumbered}
+
+
+<div class><p>If you have an unnamed list, you can, of course, name each element. This can be very useful for being able to call out certain elements in a list, regardless of their order, especially if you are working with a list that may grow or change over time, or if you use the same code on several different lists. For instance, if you have a list that contains, a dataframe, a model, and a plot, being able to call out <code>$plot</code> instead of searching to figure out what numbered element of the plot, is much easier.</p></div>
+<div class="exercise--instructions__content">
+<li>With a piped workflow: 
+<li>Name each element of <code>sw_films</code> list and assign to a new list, <code>sw_films_named</code>. </li>
+<li>Iterate over the title element. </li>
+
+</li>
+
+<li>Check to make sure the new list has names.</li>
+```{r}
+# edited/added
+library(repurrrsive)
+library(tidyverse)
+data(sw_films)
+
+# Set names so each element of the list is named for the film title
+sw_films_named <- sw_films %>% 
+  set_names(map_chr(sw_films, "title"))
+
+# Check to see if the names worked/are correct
+names(sw_films_named)
+```
+</div>
+
+<p class="">Good work! Naming lists makes working in <code>purrr</code> easier and more human-readable.
+</p>
+
+#### Pipes in map() {.unnumbered}
+
+
+<div class>
+<p>So you've refreshed your memory on how pipes can be used <em>between</em> functions. You can also use pipes on the <em>inside</em> of <code>map()</code> function to help you iterate a pipeline of tasks over a list of inputs.</p>
+<p>Here instead of using one of the <code>repurrrsive</code> datasets, you will be working with a list of numbers so that you can do a few mathematical operations.</p>
+</div>
+<div class="exercise--instructions__content">
+<li>Create a list that contains the values 1 through 10, each as a separate element.</li>
+
+<li>Create a pipeline within one <code>map()</code> function that takes the <code>sqrt()</code> of each element, and then the <code>sin()</code> of each element.</li>
+```{r}
+# edited/added
+library(tidyverse)
+
+# Create a list of values from 1 through 10
+numlist <- list(1,2,3,4,5,6,7,8,9,10)
+
+# Iterate over the numlist 
+map(numlist, ~.x %>% sqrt() %>% sin()) %>% head()
+```
+</div>
+
+<p class="">Good work! Using pipes inside of <code>map()</code> makes iterating over multiple functions easy.
+</p>
+
+### More map() {.unnumbered}
+
+
+
+#### Simulating Data with Purrr {.unnumbered}
+
+
+<div class>
+<p>Often when trying to solve a problem with data we first need to build some simulated data to see if our idea is even possible. For example, you may want to test models with data that have known differences, to see if the models are working correctly. </p>
+<p>In this exercise, you will see how this works in <code>purrr</code> by simulating data for two populations, <code>a</code> and <code>b</code>, from the sites: "north", "east", and "west". The two populations will be randomly drawn from a normal distribution, with different means and standard deviations.</p>
+</div>
+<div class="exercise--instructions__content">
+<li>Create a list of site names, "north", "east", and "west".</li>
+
+<li>Then use <code>map()</code> to create a list of dataframes with three columns, the first column is sites.
+<li>The second is population <code>a</code>, which has a <code>mean</code> of 5, a sample size <code>n</code> of 200, and an <code>sd</code> of (5/2).</li>
+<li>The third is population <code>b</code>, which has a <code>mean</code> of 200, a sample size <code>n</code> of 200, and an <code>sd</code> of 15.</li>
+
+</li>
+```{r}
+# edited/added
+library(purrr)
+
+# List of sites north, east, and west
+sites <- list("north","east","west")
+
+# Create a list of dataframes, each with a years, a, and b column
+list_of_df <-  map(sites,  
+  ~data.frame(sites = .x,
+              a = rnorm(mean = 5,   n = 200, sd = (5/2)),
+              b = rnorm(mean = 200, n = 200, sd = 15)))
+
+list_of_df
+```
+</div>
+
+<p class="">Good work! Now you can simulate data with ease.
+</p>
+
+#### Run a linear model {.unnumbered}
+
+
+<div class>
+<p>You can use <code>map()</code> to do more than just take the square root of a number or simulate data. You can also use <code>map()</code> to loop over different inputs to run several models, each using the unique values of a given list element. You can also then iterate over the models you've run to create the model summaries and look at the results.</p>
+<p>The lists <code>sites</code> and <code>list_of_df</code> are preloaded.</p>
+</div>
+<div class="exercise--instructions__content">
+<li>Pipe <code>list_of_df</code> into <code>map()</code> along with the <code>lm()</code> linear model function, to compare <code>a</code> as the response and <code>b</code> as the predictor variable. <li>Use the syntax: <code>lm(response ~ predictor, data = )</code>
+</li>
+</li>
+<li>Then pipe the linear model output into <code>map()</code> and generate the <code>summary()</code> of each model.</li>
+</div>
+```{r}
+# edited/added
+library(tidyverse)
+
+# List of sites north, east, and west
+sites <- list("north","east","west")
+
+# Create a list of dataframes, each with a years, a, and b column
+list_of_df <-  map(sites,  
+  ~data.frame(sites = .x,
+              a = rnorm(mean = 5,   n = 200, sd = (5/2)),
+              b = rnorm(mean = 200, n = 200, sd = 15)))
+
+# Map over the models to look at the relationship of a vs b
+list_of_df %>%
+    map(~ lm(a ~ b, data = .)) %>%
+    map(summary)
+```
+
+<p class="">Good work! This will make running multiple models and summarizing their results much easier.
+</p>
+
+#### map_chr() {.unnumbered}
+
+
+<div class>
+<p>In this exercise, you'll dive a bit deeper into the different <code>map_*()</code> variants. The <code>map()</code> function always outputs a list. <code>map_*()</code> outputs other kinds of information. Study the table below and make sure you're clear on the type of output for each <code>map_*()</code> variant.</p>
+<table>
+<thead><tr>
+<th><code>map_*()</code></th>
+<th>Output</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><code>map_chr()</code></td>
+<td>character vector</td>
+</tr>
+<tr>
+<td><code>map_lgl()</code></td>
+<td>logical vector [TRUE or FALSE]</td>
+</tr>
+<tr>
+<td><code>map_int()</code></td>
+<td>integer vector</td>
+</tr>
+<tr>
+<td><code>map_dbl()</code></td>
+<td>double vector</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="exercise--instructions__content">
+<li>Compare the results of <code>map()</code> and <code>map_chr()</code> for the <code>director</code> named element <code>sw_films</code>.</li>
+</div>
+```{r}
+# edited/added
+library(repurrrsive)
+library(purrr)
+data(sw_films)
+
+# Pull out the director element of sw_films in a list and character vector
+map(sw_films, ~.x[["director"]])
+map_chr(sw_films, ~.x[["director"]])
+```
+
+<div class="exercise--instructions__content">
+<li>Compare the <code>map()</code> and <code>map_lgl()</code> outputs on <code>sw_films</code> for <code>director == George Lucas</code>.</li>
+</div>
+```{r}
+# edited/added
+library(repurrrsive)
+library(purrr)
+data(sw_films)
+
+# Compare outputs when checking if director is George Lucas
+map(sw_films, ~.x[["director"]] == "George Lucas")
+map_lgl(sw_films, ~.x[["director"]] == "George Lucas")
+```
+
+<p class="">Good work! Mastering the flavors of <code>map_*()</code> is key for success in <code>purrr</code>.
+</p>
+
+#### map_dbl() and map_int() {.unnumbered}
+
+
+<div class>
+<p>Some flavors of <code>map_*()</code> are very similar. <code>map_dbl()</code> and <code>map_int()</code> both output numbers. <code>map_int()</code> outputs integer vectors, which have numbers with no decimals. <code>map_dbl()</code> outputs double vectors, which have numbers that <em>can</em> have decimals. Take a closer look at how using different <code>map_*()</code> functions affect outputs.</p>
+<p>Here is the <code>map_*()</code> table again as a reference.</p>
+<table>
+<thead><tr>
+<th><code>map_*()</code></th>
+<th>Output</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><code>map_chr()</code></td>
+<td>character vector</td>
+</tr>
+<tr>
+<td><code>map_lgl()</code></td>
+<td>logical vector [TRUE or FALSE]</td>
+</tr>
+<tr>
+<td><code>map_int()</code></td>
+<td>integer vector</td>
+</tr>
+<tr>
+<td><code>map_dbl()</code></td>
+<td>double vector</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="exercise--instructions__content"><p>Compare the <code>map()</code> and <code>map_dbl()</code> outputs for pulling out the <code>episode_id</code> for each element of <code>sw_films</code>.</p></div>
+
+<div class="exercise--instructions__content"><p>Compare the <code>map()</code> and <code>map_int()</code> outputs for pulling out the <code>episode_id</code> for each element of <code>sw_films</code>.</p></div>
+```{r}
+# edited/added
+library(repurrrsive)
+library(purrr)
+data(sw_films)
+
+# Pull out episode_id element as list
+map(sw_films, ~.x[["episode_id"]])
+
+# Pull out episode_id element as double vector
+map_dbl(sw_films, ~.x[["episode_id"]])
+
+# Pull out episode_id element as integer vector
+map_int(sw_films, ~.x[["episode_id"]])
+```
+
+<p class="">Good work! Now you can output numbers without decimals!
+</p>
+
+### map2() and pmap() {.unnumbered}
+
+
+
+#### Simulating data with multiple inputs using map2() {.unnumbered}
+
+
+<div class>
+<p>The <code>map()</code> function is great if you need to iterate over <em>one</em> list, however, you will often need to iterate over two lists at the same time. This is where <code>map2()</code> comes in. While <code>map()</code> takes the list as the <code>.x</code> argument; <code>map2()</code> takes two lists as two arguments: <code>.x</code> and <code>.y</code>. </p>
+<p>To test out <code>map2()</code>, you are going to create a simple dataset, with one list of numbers and one list of strings. You will put these two lists together and create some simulated data.</p>
+</div>
+<div class="exercise--instructions__content">
+<li>Create a list, <code>means</code>, of the values 1 through 3.</li>
+
+<li>Create a <code>sites</code> list with "north", "west", and "east". </li>
+
+<li><code>map2()</code> over the <code>sites</code> and <code>means</code> lists to create a dataframe with two columns. <li>First column is <code>sites</code>; second column is generated by <code>rnorm()</code> with <code>mean</code> from the <code>means</code> list.</li></li>
+```{r}
+# edited/added
+library(purrr)
+
+# List of 1, 2 and 3
+means <- list(1,2,3)
+
+# Create sites list
+sites <- list("north","west","east")
+
+# Map over two arguments: sites and means
+list_of_files_map2 <- map2(sites, means, ~data.frame(sites = .x,
+                             a = rnorm(mean = .y, n = 200, sd = (5/2))))
+
+map(list_of_files_map2,~head(.x))
+```
+</div>
+
+<p class="">Good work! Now you can you two lists together!
+</p>
+
+#### Simulating data 3+ inputs with pmap() {.unnumbered}
+
+
+<div class>
+<p>What if you need to iterate over three lists? Is there a <code>map3()</code>? To iterate over more than two lists, whether it's three, four, or even 20, you'll need to use <code>pmap()</code>. However, <code>pmap()</code> does require us to supply our list arguments a bit differently. </p>
+<p>To use <code>pmap()</code>, you first need to create a <em>master list</em> of all the lists we want to iterate over. The master list is the input for <code>pmap()</code>. Instead of using <code>.x</code> or <code>.y</code>, use the list names <em>as</em> the argument names.</p>
+<p>You are going to simulate data one more time, using five lists as inputs, instead of two. Using <code>pmap()</code> gives you complete control over our simulated dataset, and will allow you to use two different means and two different standard deviations along with the different sites.</p>
+</div>
+<div class="exercise--instructions__content">
+<li>Create a named list containing the <code>sites</code>, <code>means</code>, <code>means2</code>, <code>sigma</code>, and <code>sigma2</code> lists.   </li>
+
+<li>
+<code>pmap()</code> over the list of lists, to create a list of dataframes with three columns; the first column is <code>sites</code>.
+<li>The second column is <code>a</code>, which is <code>rnorm()</code> with <code>mean = means</code>, and <code>sd = sigma</code>.</li>
+<li>The third column is <code>b</code>, which is <code>rnorm()</code> with <code>mean = means2</code>, and <code>sd = sigma2</code>.</li>
+
+</li>
+```{r}
+# edited/added
+library(purrr)
+means2=list(0.5,1,1.5)
+sigma2=list(0.5,1,1.5)
+sigma=list(1,2,3)
+
+# Create a master list, a list of lists
+pmapinputs <- list(sites = sites, means = means, sigma = sigma, 
+                   means2 = means2, sigma2 = sigma2)
+
+# Map over the master list
+list_of_files_pmap <- pmap(pmapinputs, 
+  function(sites, means, sigma, means2, sigma2){
+    data.frame(sites = sites,
+        a = rnorm(mean = means,  n = 200, sd = sigma),
+        b = rnorm(mean = means2, n = 200, sd = sigma2))})
+
+map(list_of_files_pmap,~head(.x))
+```
+</div>
+
+<p class="">Good work! With <code>pmap()</code> you now have all the power in <code>purrr</code>.
+</p>
+
+## Troubleshooting lists with purrr {.unnumbered}
+
+<p class="chapter__description">
+    Like anything in R, understanding how to troubleshoot issues is an important skill set. This can be particularly important with lists, where finding the problem can be tricky.
+  </p>
+  
+### How to purrr safely() {.unnumbered}
+
+
+
+#### safely() replace with NA {.unnumbered}
+
+
+<div class>
+<p>If you <code>map()</code> over a list, and one of the elements does not have the right data type, you will not get the output you expect. Perhaps you are trying to do a mathematical operation on each element, and it turns out one of the elements is a character - it simply won't work. </p>
+<p>If you have a very large list, figuring out where things went wrong, and what exactly went wrong can be hard. That is where <code>safely()</code> comes in; it shows you both your results and where the errors occurred in your <code>map()</code> call.</p>
+</div>
+<div class="exercise--instructions__content">
+<li>Use <code>safely()</code> with <code>log()</code>. This will fail to work on -10, so we'll pipe it into <code>transpose()</code> to put the results first.</li>
+</div>
+
+
+<div class="exercise--instructions__content">
+<li>Print out <code>a</code>.</li>
+</div>
+
+
+<div class="exercise--instructions__content">
+<li>Print out the "result" element of <code>a</code>.</li>
+</div>
+
+
+<div class="exercise--instructions__content">
+<li>Print out just the error messages from <code>a</code>.</li>
+</div>
+```{r}
+# edited/added
+library(tidyverse)
+
+# Map safely over log
+a <- list(-10, 1, 10, 0) %>% 
+      map(safely(log, otherwise = NA_real_)) %>%
+    # Transpose the result
+      transpose()
+
+# Print the list
+a
+
+# Print the result element in the list
+a[["result"]]
+
+# Print the error element in the list
+a[["error"]]
+```
+
+<p class="">Good work! Now you have the power to start debugging your lists, and you can do it with simple element subsetting.
+</p>
+
+#### Convert data to numeric with purrr {.unnumbered}
+
+
+<div class><p>In the <code>sw_people</code> dataset, some of the Star Wars characters have unknown heights. If you want to do some data exploration and determine how character height differs depending on their home planet, you need to write your code so that R understands the difference between heights and missing values. Currently, the missing values are entered as <code>"unknown"</code>, but you would like them as <code>NA</code>. In this exercise, you will combine <code>map()</code> and <code>ifelse()</code> to fix this issue.</p></div>
+<div class="exercise--instructions__content">
+<li>Load the <code>sw_people</code> dataset.</li>
+
+<li>Map over <code>sw_people</code> and pull out <code>"height"</code>.</li>
+<li>Then map over the output and if an element is labeled as "unknown" change it to <code>NA</code>, otherwise, convert the value into a number with <code>as.numeric()</code>.</li>
+```{r}
+# edited/added
+library(repurrrsive)
+library(tidyverse)
+
+# Load sw_people data
+data(sw_people)
+
+# Map over sw_people and pull out the height element
+height_cm <- map(sw_people, "height") %>%
+  map(function(x){
+    ifelse(x == "unknown",NA,
+    as.numeric(x))
+})
+```
+</div>
+
+<p class="">Good work! Now you can use <code>purrr</code> for data wrangling to help clean numeric data in lists.
+</p>
+
+#### Finding the problem areas {.unnumbered}
+
+
+<div class>
+<p>When you are working with a small list, it might not seem like a lot of work to go through things manually and figure out what element has an issue. But if you have a list with hundreds or thousands of elements, you want to automate that process. </p>
+<p>Now you'll look at a situation with a larger list, where you can see how the error message can be useful to check through the entire list for issues.</p>
+</div>
+<div class="exercise--instructions__content">
+<li>
+<code>map()</code> over <code>sw_people</code> and pull out the "height" element. </li>
+<li>
+<code>map()</code> over <code>safely()</code> to convert the heights from centimeters into feet.</li>
+<li>Set <code>quiet = FALSE</code> so that errors are printed.</li>
+
+<li>Pipe into <code>transpose()</code>, to print the results first.</li>
+```{r}
+# edited/added
+library(repurrrsive)
+library(tidyverse)
+data(sw_people)
+
+# Map over sw_people and pull out the height element
+height_ft <- map(sw_people, "height")  %>% 
+  map(safely(function(x){
+    x * 0.0328084
+  }, quiet = FALSE)) %>%
+transpose()
+
+# Print your list, the result element, and the error element
+height_ft
+height_ft[["result"]]
+height_ft[["error"]]
+```
+</div>
+
+<p class="">Good work! Now you are ready to troubleshoot lists too large to check by hand.
+</p>
+
+### possibly() purrr {.unnumbered}
+
+
+
+#### Replace safely() with possibly() {.unnumbered}
+
+
+<div class>
+<p>Once you have figured out how to solve an issue with <code>safely()</code>, (e.g., output an <code>NA</code> in place of an error), swap out <code>safely()</code> with <code>possibly()</code>. <code>possibly()</code> will run through your code and implement your desired changes without printing out the error messages.</p>
+<p>You'll now <code>map()</code> over <code>log()</code> again, but you will use <code>possibly()</code> instead of <code>safely()</code> since you already know how to resolve your errors.</p>
+</div>
+<div class="exercise--instructions__content">
+<li>Create a list with the values -10, 1, 10, and 0.</li>
+<li>
+<code>map()</code> over this list to take the <code>log()</code> of each element, using <code>possibly()</code>.</li>
+<li>Use <code>NA_real_</code> to fix any elements that are not the right data type.</li>
+</div>
+```{r}
+# edited/added
+library(tidyverse)
+
+# Take the log of each element in the list
+a <- list(-10, 1, 10, 0) %>% 
+  map(possibly(function(x){
+    log(x)
+},NA_real_))
+```
+
+<p class="">Good work! Now you can solve issues in lists using <code>safely()</code>, and then continue with your analysis using <code>possibly()</code>.
+</p>
+
+#### Convert values with possibly() {.unnumbered}
+
+
+<div class>
+<p>Let's say you need to convert the Star Wars character heights in <code>sw_people</code> from centimeters to feet. You <em>already</em> know that some of the heights have missing data, so you will use <code>possibly()</code> to convert missing values into <code>NA</code>. Then you will multiply each of the existing values by 0.0328084 to convert them from centimeters into feet.</p>
+<p>To get a feel for your data, print out <code>height_cm</code> in the console to check out the heights in centimeters.</p>
+</div>
+<div class="exercise--instructions__content">
+<li>Pipe the <code>height_cm</code> object into a <code>map_*()</code> function that returns double vectors.  </li>
+<li>Convert each element in <code>height_cm</code> into feet (multiply it by 0.0328084).</li>
+<li>Since not all elements are numeric, use <code>possibly()</code> to replace instances that do not work with <code>NA_real_</code>.</li>
+</div>
+```{r}
+# edited/added
+library(repurrrsive)
+library(tidyverse)
+
+# Load sw_people data
+data(sw_people)
+
+# Map over sw_people and pull out the height element
+height_cm <- map(sw_people, "height") %>%
+  map(function(x){
+    ifelse(x == "unknown",NA,
+    as.numeric(x))
+})
+
+# Create a piped workflow that returns double vectors
+height_cm %>%  
+  map_dbl(possibly(function(x){
+  # Convert centimeters to feet
+  x * 0.0328084
+}, NA_real_))
+```
+
+<p class="">Good work! Using <code>possibly()</code> helps us work with problem data in a really clean and efficient way.
+</p>
+
+### purrr is a walk() in the park {.unnumbered}
+
+
+
+#### Comparing walk() vs no walk() outputs {.unnumbered}
+
+
+<div class>
+<p>Printing out lists with <code>map()</code> shows a lot of bracketed text in the console, which can be useful for understanding their structure, but this information is usually <em>not</em> important for communicating with your end users. If you need to print, using <code>walk()</code> prints out lists in a more compact and human-readable way, without all those brackets. <code>walk()</code> is also great for printing out plots without printing anything to the console. </p>
+<p>Here, you'll be using the <code>people_by_film</code> dataset, which dataset derived from <code>sw_films</code> that has the url of each character and the film they appear in.</p>
+</div>
+<div class="exercise--instructions__content"><p>Print <code>people_by_film</code> to the console.</p></div>
+
+<div class="exercise--instructions__content"><p>Print out <code>people_by_film</code> using <code>walk()</code> and <code>print()</code>.</p></div>
+```{r}
+# edited/added
+library(tidyverse)
+people_by_film = set_names(map(sw_films, "characters"), map_chr(sw_films, "url")) %>% 
+  stack %>% 
+  arrange(values) %>%
+  rename("url" = "values", "url_films" = "ind")
+
+# Print normally
+people_by_film
+
+# Print with walk
+walk(people_by_film, print)
+```
+
+<p class="">Good work! Now you can use walk() to make your outputs cleaner and more human-readable.
+</p>
+
+#### walk() for printing cleaner list outputs {.unnumbered}
+
+
+<div class>
+<p>Now you will try one more use of <code>walk()</code>, specifically creating plots using <code>walk()</code>. In the previous exercise, you printed some lists, and you saw that printing lists is much cleaner using <code>walk()</code> than using the base R way. You can also use <code>walk()</code> to display multiple plots sequentially.</p>
+<p>Here, use your <code>map()</code> knowledge along with <code>ggplot2</code> functions to create a graph for the first ten elements of <code>gap_split</code> and then display each graph with <code>walk()</code>.</p>
+</div>
+<div class="exercise--instructions__content">
+<li>Load the <code>gap_split</code> dataset.</li>
+
+<li><code>map2()</code> over the first 10 elements of <code>gap_split</code>, and the first 10 names of <code>gap_split</code>.</li>
+
+<li>Then <code>walk()</code> over the new plots object and supply <code>print()</code> as an argument to print all plots.</li>
+```{r}
+# edited/added
+library(purrr)
+library(ggplot2)
+library(repurrrsive)
+
+# Load the gap_split data
+data(gap_split)
+
+# Map over the first 10 elements of gap_split
+plots <- map2(gap_split[1:10], 
+              names(gap_split[1:10]), 
+              ~ ggplot(.x, aes(year, lifeExp)) + 
+                geom_line() +
+                labs(title = .y))
+
+# Object name, then function name
+walk(plots, print)
+```
+</div>
+
+<p class="">Good work! Now you can print out multiple plots easily using <code>walk()</code>.
+</p>
+
+## Problem solving with purrr {.unnumbered}
+
+<p class="chapter__description">
+    Now that you have the building blocks, we will start tackling some more complex data problems with purrr.
+  </p>
+  
+### Using purrr in your workflow {.unnumbered}
+
+
+
+#### Name review {.unnumbered}
+
+
+<div class><p>Now, you'll quickly review how to check if a list has names, and how to pull out a specific element from a list. Remember, you can use the <code>names()</code> function to see if a list is named. There are several ways to extract a named element from a list, but the key difference when working with dataframes is to remember the <code>[[double bracket]]</code> syntax.</p></div>
+<div class="exercise--instructions__content">
+<li>Load the <code>gh_users</code> data.</li>
+</div>
+
+
+<div class="exercise--instructions__content">
+<li>Examine the names of <code>gh_users</code>.</li>
+</div>
+
+
+<div class="exercise--instructions__content">
+<li>Extract the names for each element of <code>gh_users</code>.</li>
+</div>
+```{r}
+# edited/added
+library(repurrrsive)
+library(purrr)
+
+# Load the data
+data(gh_users)
+
+# Check if data has names
+names(gh_users)
+
+# Map over name element of list
+map(gh_users, ~.x[["name"]])
+```
+
+<p class="">Good work, now we have refreshed the basics of named lists, we can dive into our next task.
+</p>
+
+#### Setting names {.unnumbered}
+
+
+<div class>
+<p>Setting list names makes working with lists much easier in many scenarios; it makes the code easier to read, which is especially important when reviewing code weeks or months later. </p>
+<p>Here you are going to work with the <code>gh_repos</code> and <code>gh_users</code> datasets and set their names in two different ways. The two methods will give the same result: a list with named elements.</p>
+</div>
+<div class="exercise--instructions__content">
+<li>Set the names on <code>gh_users</code> using the "name" element and use the <code>map_*()</code> function that outputs a character vector. </li>
+
+<li>Explore the structure of <code>gh_repos</code> to see where the owner info is stored.</li>
+
+<li>Set the names of a new list <code>gh_repos_named</code> based on the login of the owner of the repo, using the <code>set_names()</code> and <code>map_*()</code> functions.</li>
+```{r}
+# edited/added
+library(repurrrsive)
+library(tidyverse)
+data(gh_users)
+data(gh_repos)
+
+# Name gh_users with the names of the users
+gh_users_named <- gh_users %>% 
+    set_names(map_chr(gh_users, "name"))
+
+# Check gh_repos structure
+str(gh_repos)
+
+# Name gh_repos with the names of the repo owner
+gh_repos_named <- gh_repos %>% 
+    map_chr(~ .[[1]]$owner$login) %>% 
+    set_names(gh_repos, .)
+```
+</div>
+
+<p class="">Good work! Sometimes list naming is tricky but purrr makes it simpler by easily extracting the element we want to use as the names.
+</p>
+
+#### Asking questions from a list {.unnumbered}
+
+
+<div class>
+<p>One of the great things about <code>purrr</code> is you can easily move from having a question about the data to an answer, with just a few lines of code. Here you are going to use the <code>gh_users</code> data to ask three questions:</p>
+
+<li>Which user joined GitHub first? </li>
+<li>Are all the repositories user-owned, rather than organization-owned? </li>
+<li>Which user has the most public repositories?</li>
+
+<p>In this exercise, your <code>map_\*()</code> knowledge is really tested, so make sure to reflect on all the different flavors of <code>map_\*()</code> and how they should be used.</p>
+</div>
+<div class="exercise--instructions__content"><p>Name <code>gh_users</code> with the <code>"name"</code> element and sort the <code>"created_at"</code> element to determine who joined GitHub first.</p></div>
+
+<div class="exercise--instructions__content"><p>Output a vector that returns <code>TRUE</code> for each element where the <code>"type"</code> is <code>"USER"</code>.</p></div>
+
+<div class="exercise--instructions__content"><p>Output a named numeric vector of the number of <code>"public_repos"</code>.</p></div>
+```{r}
+# edited/added
+library(repurrrsive)
+library(tidyverse)
+data(gh_users)
+data(gh_repos)
+
+# Determine who joined github first
+map_chr(gh_users, ~.x[["created_at"]]) %>%
+      set_names(map_chr(gh_users, "name")) %>%
+    sort()
+
+# Determine user versus organization
+map_lgl(gh_users, ~.x[["type"]] == "User")
+
+# Determine who has the most public repositories
+map_int(gh_users, ~.x[["public_repos"]]) %>%
+      set_names(map_chr(gh_users, "name")) %>%
+    sort()
+```
+
+<p class="">Good work! Now you can use functions you already know to ask any question of your data in just a few lines of code.
+</p>
+
+### Even more complex problems {.unnumbered}
+
+#### Questions about gh_repos {.unnumbered}
+
+
+<div class>
+<p>You're going to use <code>gh_repos</code> again, a list where each element is information about a GitHub repository. Here you will use <code>map()</code> and <code>map_dbl()</code> to answer the question: </p>
+
+<li>Which repository is the largest?'</li>
+
+<p>GitHub repository size is measured in megabytes. This information could be useful to document if you are working with a list based dataset that changes over time, and need to be able to pull out information, like the largest repository, in the most recent dataset.</p>
+</div>
+<div class="exercise--instructions__content">
+<li>
+<code>map()</code> over <code>gh_repos</code>.</li>
+<li>
+<code>map_dbl()</code> over the `"size" element.</li>
+<li>Then <code>map()</code> to determine which repo is the largest.</li>
+</div>
+```{r}
+# edited/added
+library(repurrrsive)
+library(tidyverse)
+data(gh_repos)
+
+# Map over gh_repos to generate numeric output
+map(gh_repos,
+    ~map_dbl(.x, 
+             ~.x[["size"]])) %>%
+    # Grab the largest element
+    map(~max(.x))
+```
+
+<p class="">Good work! You're gaining great skills to be able to answer questions in a reproducible way with your datasets.
+</p>
+
+### Graphs in purrr {.unnumbered}
+
+
+
+#### ggplot() refresher {.unnumbered}
+
+
+<div class>
+<p>You've already been introduced to the package <code>ggplot2</code> in the prerequisite for this course, but let's do a quick refresher. </p>
+
+<li>
+<code>geom_point()</code> makes scatterplots</li>
+<li>
+<code>geom_histogram()</code> makes histograms</li>
+
+<p>In this exercise, you are going to use a dataframe created from the <code>gh_users</code> dataset, called <code>gh_users_df</code> that has two columns; one for the number of public repositories a user has and another for how many followers that user has. Each row is a different user. Then you will make it into a scatter plot, a plot where the data are displayed with points.</p>
+</div>
+<div class="exercise--instructions__content"><p>Create a scatterplot with <code>public_repos</code> on the <code>x</code> axis and <code>followers</code> on the <code>y</code> axis.</p></div>
+```{r}
+# edited/added
+library(repurrrsive)
+library(purrr)
+library(ggplot2)
+data(gh_users)
+gh_users_df = data.frame(public_repos = map_int(gh_users,"public_repos"), 
+                         followers = map_int(gh_users,"followers"))
+
+# Scatter plot of public repos and followers
+ggplot(data = gh_users_df, 
+       aes(x = public_repos, y = followers))+
+    geom_point()
+```
+<div class="exercise--instructions__content"><p>Create a histogram of <code>followers</code> by piping in <code>gh_users_df</code>.</p></div>
+```{r}
+# edited/added
+library(repurrrsive)
+library(purrr)
+library(ggplot2)
+data(gh_users)
+gh_users_df = data.frame(public_repos = map_int(gh_users,"public_repos"), 
+                         followers = map_int(gh_users,"followers"))
+
+# Histogram of followers    
+gh_users_df %>%
+    ggplot(aes(x = followers))+
+        geom_histogram()
+```
+
+<p class="">Good work! Isn't making plots fun? Now let's dive into how <code>purrr</code> can help make more of them!
+</p>
+
+#### purrr and scatterplots {.unnumbered}
+
+
+<div class>
+<p>Since <code>ggplot()</code> does not accept lists as an input, it can be paired up with <code>purrr</code> to go from a list to a dataframe to a <code>ggplot()</code> graph in just a few lines of code.</p>
+<p>You will continue to work with the <code>gh_users</code> data for this exercise. You will use a <code>map_*()</code> function to pull out a few of the named elements and transform them into the correct datatype. Then create a scatterplot that compares the user's number of followers to the user's number of public repositories.</p>
+</div>
+<div class="exercise--instructions__content">
+<li>
+<code>map()</code> over <code>gh_users</code>, use the <code>map_*()</code> function that creates a dataframe, with four columns, named <code>"login"</code>, <code>"name"</code>, <code>"followers"</code> and <code>"public_repos"</code>.</li>
+<li>Pipe that dataframe into a scatterplot, where the <code>x</code> axis is <code>followers</code> and <code>y</code> is <code>public_repos</code>.</li>
+</div>
+```{r}
+# edited/added
+library(repurrrsive)
+library(tidyverse)
+data(gh_users)
+
+# Create a dataframe with four columns
+map_df(gh_users, `[`, 
+       c("login","name","followers","public_repos")) %>%
+  # Plot followers by public_repos
+  ggplot(., 
+         aes(x = followers, y = public_repos)) + 
+      # Create scatter plots
+      geom_point()
+```
+
+<p class="">Good work! Now you can go from list to plot using a tidy workflow!
+</p>
+
+#### purrr and histograms {.unnumbered}
+
+
+<div class>
+<p>Now you're going to put together everything you've learned, starting with two different lists, which will be turned into a faceted histogram. You're going to work again with the Stars Wars data from the <code>sw_films</code> and <code>sw_people</code> datasets to answer a question:</p>
+
+<li>What is the distribution of heights of characters in each of the Star Wars films?</li>
+
+<p>Different movies take place on different sets of planets, so you might expect to see different distributions of heights from the characters. Your first task is to transform the two datasets into dataframes since <code>ggplot()</code> requires a dataframe input. Then you will join them together, and plot the result, a histogram with a different facet, or subplot, for each film.</p>
+</div>
+<div class="exercise--instructions__content">
+<li>Create a dataframe with the <code>"title"</code> of each film, and the <code>"characters"</code> from each film in the <code>sw_films</code> dataset.</li>
+
+<li>Create a dataframe with the <code>"height"</code>, <code>"mass"</code>, <code>"name"</code>, and <code>"url"</code> elements from <code>sw_people</code>.</li>
+
+<li>Join the two dataframes together using the <code>"characters</code>" and <code>"url</code>" keys.</li>
+
+<li>Create a <code>ggplot()</code> histogram with <code>x = height</code>, faceted by <code>filmtitle</code>.</li>
+```{r}
+# edited/added
+library(repurrrsive)
+library(tidyverse)
+data(sw_films)
+
+# Turn data into correct dataframe format
+film_by_character <- tibble(filmtitle = map_chr(sw_films, "title")) %>%
+    mutate(filmtitle, characters = map(sw_films, "characters")) %>%
+    unnest()
+
+# Pull out elements from sw_people
+sw_characters <- map_df(sw_people, `[`, c("height","mass","name","url"))
+
+# Join our two new objects
+character_data <- inner_join(film_by_character, sw_characters, by = c("characters" = "url")) %>%
+    # Make sure the columns are numbers
+    mutate(height = as.numeric(height), mass = as.numeric(mass))
+
+# Plot the heights, faceted by film title
+ggplot(character_data, aes(x = height)) +
+  geom_histogram(stat = "count") +
+  facet_wrap(~ filmtitle)
+```
+</div>
+
+<p class="">Good work! Now you've learned all the basics of how you can use <code>purrr</code> to make tasks that require iteration and working with lists, more manageable, and human readable!
+</p>
+
+### Wrap Up {.unnumbered}
+
+
+#### Congratulations! {.unnumbered}
+
+Great job completing this course all about the R package purrr.
+
+#### Next steps {.unnumbered}
+
+With the skills you have learned here you will be ready to tackle problems that involve iteration and data stored in lists with simple, easy to read code so you can focus on your results, instead of complex code.
+
+#### purrrfectly done! {.unnumbered}

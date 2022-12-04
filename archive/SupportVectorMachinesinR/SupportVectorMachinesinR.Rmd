@@ -1,0 +1,1213 @@
+---
+title: "Support Vector Machines in R"
+subtitle: "Kailash Awati - DataCamp"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+author:
+  - name: "Tran Thanh Dat - International University"
+output:
+  rmdformats::robobook:
+    thumbnails: true
+    lightbox: true
+    gallery: true
+    highlight: tango
+    use_bookdown: true
+---
+
+***
+
+<style>
+
+h1,h2,h3,h4,h5,h6,h {
+  font-family: Futura;
+}
+
+body {
+  font-family: "Georgia";
+  text-align: justify;
+}
+
+p {
+  font-family: "Georgia";
+  text-indent: 30px;
+  color: black;
+  font-style: normal;
+}
+</style>
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(qrmdata)
+```
+
+**Course Description**
+
+<p class="course__description">This course will introduce a powerful classifier, the support vector machine (SVM) using an intuitive, visual approach. Support Vector Machines in R will help students develop an understanding of the SVM model as a classifier and gain practical experience using R’s libsvm implementation from the e1071 package. Along the way, students will gain an intuitive understanding of important concepts, such as hard and soft margins, the kernel trick, different types of kernels, and how to tune SVM parameters. Get ready to classify data with this impressive model.</p>
+
+# Introduction
+
+## Sugar content of soft drinks
+
+
+
+### Visualizing a sugar content dataset
+
+
+<div class>
+<p>In this exercise, you will create a 1-dimensional scatter plot of 25 soft drink sugar content measurements. The aim is to visualize distinct clusters in the dataset as a first step towards identifying candidate decision boundaries.</p>
+<p>The dataset with 25 sugar content measurements is stored in the <code>sugar_content</code> column of the data frame <code>df</code>, which has been preloaded for you.</p>
+</div>
+<div class="exercise--instructions__content">
+<li>Load the <code>ggplot2</code> package.</li>
+```{r}
+# Load ggplot2
+library(ggplot2)
+```
+<li>List the variables in dataframe <code>df</code>.</li>
+```{r}
+library(tidyverse)
+df=data.frame(sugar_content=c(10.9,10.9,10.6,10,8,8.2,8.6,10.9,10.7,8,7.7,7.8,8.4,11.5,11.2,8.9,8.7,7.4,10.9,10,11.4,10.8,8.5,8.2,10.6)) %>% mutate(sample.=row_number())
+# Print variable names
+colnames(df)
+```
+<li>Complete the scatter plot code. Using the <code>df</code> dataset, plot the sugar content of samples along the x-axis (at y equal to zero).</li>
+```{r}
+# Plot sugar content along the x-axis
+plot_df <- ggplot(data = df, aes(x = sugar_content, y = 0)) + 
+    geom_point() + 
+    geom_text(aes(label = sugar_content), size = 2.5, vjust = 2, hjust = 0.5)
+```
+<li>Write <code>ggplot()</code> code to display sugar content in <code>df</code> as a scatter plot. <em>Can you spot two distinct clusters corresponding to high and low sugar content samples?</em></li>
+```{r}
+# Display plot
+plot_df
+```
+</div>
+
+<p class="">Nice work! Notice the gap between 9 and 10. Sample with sugar content below 9 form a “low sugar” cluster, and samples above 10 form a “high sugar” cluster.
+</p>
+
+### Identifying decision boundaries
+
+
+<div class><p>Based on the plot you created in the previous exercise (reproduced on the right), which of the following points is <strong>not</strong> a legitimate decision boundary?</p></div>
+
+<ul>
+<li><div class="dc-input-radio__text">9g/100 ml</div></li>
+<li><div class="dc-input-radio__text">9.1g/100 ml</div></li>
+<li><div class="dc-input-radio__text">9.8 g/100 ml</div></li>
+<strong><li><div class="dc-input-radio__text">8.9g/100 ml</div></li></strong>
+</ul>
+
+<p class="">That's correct! 8.9 g/100ml is not a legitimate decision boundary as it is part of the lower sugar content cluster.
+</p>
+
+### Find the maximal margin separator
+
+
+<div class><p>Recall that the dataset we are working with consists of measurements of sugar content of 25 randomly chosen samples of two soft drinks, one regular and the other reduced sugar. In one of our earlier plots, we identified two distinct clusters (classes). A dataset in which the classes do not overlap is called <strong>separable</strong>, the classes being separated by a <strong>decision boundary</strong>. The <strong>maximal margin separator</strong> is the decision boundary that is furthest from both classes. It is located at the mean of the relevant extreme points from each class. In this case the relevant points are the highest valued point in the low sugar content class and the lowest valued point in the high sugar content class. This exercise asks you to find the maximal margin separator for the sugar content dataset.</p></div>
+<div class="exercise--instructions__content">
+<li>Find the maximal margin separator and assign it to the variable <code>mm_separator</code>.</li>
+```{r}
+#The maximal margin separator is at the midpoint of the two extreme points in each cluster.
+mm_separator <- (8.9+10)/2
+```
+<li>Use the displayed plot to find the sugar content values of the relevant extremal data points in each class.</li>
+</div>
+
+<p class="">Well done! We'll visualize the separator in the next exercise.
+</p>
+
+### Visualize the maximal margin separator
+
+
+<div class><p>In this exercise you will add the maximal margin separator to the scatter plot you created in an earlier exercise. The plot has been reproduced on the right.</p></div>
+<div class="exercise--instructions__content">
+<li>Create a data frame called <code>separator</code> containing the maximal margin separator. This is available in the variable <code>mm_separator</code>(enter <code>mm_separator</code> to see it)</li>
+```{r}
+#create data frame containing the maximum margin separator
+separator <- data.frame(sep = mm_separator)
+```
+<li>Use the data frame created to add the maximal margin separator to the sugar content scatterplot created in the earlier exercise and display the result.</li>
+```{r}
+plot_=plot_df
+#add separator to sugar content scatterplot
+plot_sep <- plot_ + geom_point(data = separator, aes(x = mm_separator, y = 0), color = "blue", size = 4)
+
+#display plot
+plot_sep
+```
+</div>
+
+<p class="">Well done! It should be clear from the plot that the blue point is the best possible separator. Why?
+</p>
+
+## Linearly separable dataset
+
+
+
+### Generate a 2d uniformly distributed dataset.
+
+
+<div class><p>The aim of this lesson is to create a dataset that will be used to illustrate the basic principles of support vector machines. In this exercise we will do the first step, which is to create a 2 dimensional uniformly distributed dataset containing 600 datapoints.</p></div>
+<div class="exercise--instructions__content">
+<li>Set the number of data points, <code>n</code>.</li>
+```{r}
+#set seed
+set.seed(42)
+
+#set number of data points. 
+n <- 600
+```
+<li>Generate a dataframe <code>df</code> with two uniformly distributed variables, <code>x1</code> and <code>x2</code> lying in (0, 1).</li>
+```{r}
+#Generate data frame with two uniformly distributed predictors lying between 0 and 1.
+df <- data.frame(x1 = runif(n), 
+                 x2 = runif(n))
+```
+</div>
+
+<p class="">Good work. Next we'll divide the dataset into two classes that are separated by a linear decision boundary.
+</p>
+
+### Create a decision boundary
+
+
+<div class><p>The dataset you created in the previous exercise is available to you in the dataframe <code>df</code> (recall that it consists of two uniformly distributed variables x1 and x2, lying between 0 and 1). In this exercise you will add a class variable to that dataset. You will do this by creating a variable <code>y</code> whose value is -1 or +1 depending on whether the point <code>(x1, x2)</code> lies below or above the straight line that passes through the origin and has slope 1.4.</p></div>
+<div class="exercise--instructions__content">
+<li>Create a new column <code>y</code> in the dataframe <code>df</code> with the following specs:</li>
+<li>
+<code>y = -1</code> if x2 &lt; 1.4*x1</li>
+<li>
+<code>y = 1</code> if x2 &gt; 1.4*x1</li>
+</div>
+```{r}
+#classify data points depending on location
+df$y <- factor(ifelse(df$x2-1.4*df$x1 < 0, -1, 1), 
+    levels = c(-1, 1))
+```
+
+<p class="">Nice work. Next we'll introduce a margin in the dataset and visualize it.
+</p>
+
+### Introduce a margin in the dataset
+
+
+<div class><p>Your final task for Chapter 1 is to create a margin in the dataset that you generated in the previous exercise and then display the margin in a plot. The <code>ggplot2</code> library has been preloaded for you. Recall that the slope of the linear decision boundary you created in the previous exercise is 1.4.</p></div>
+<div class="exercise--instructions__content">
+<li>Introduce a margin <code>delta</code> of 0.07 units in your dataset.</li>
+```{r}
+#set margin
+delta <- 0.07
+```
+<li>Replot the dataset, displaying the margin boundaries as dashed lines and the decision boundary as a solid line.</li>
+```{r}
+# retain only those points that lie outside the margin
+df1 <- df[abs(1.4*df$x1 - df$x2) > delta, ]
+
+#build plot
+plot_margins <- ggplot(data = df1, aes(x = x1, y = x2, color = y)) + geom_point() + 
+    scale_color_manual(values = c("red", "blue")) + 
+    geom_abline(slope = 1.4, intercept = 0)+
+    geom_abline(slope = 1.4, intercept = delta, linetype = "dashed") +
+    geom_abline(slope = 1.4, intercept = -delta, linetype = "dashed")
+ 
+#display plot
+plot_margins
+```
+</div>
+
+<p class="">Nice work! We will use this dataset to learn about linear support vector machines in the next chapter.
+</p>
+
+# Linear Kernels
+
+## Linear SVM
+
+
+
+### Creating training and test datasets
+
+
+<div class>
+<p>Splitting a dataset into training and test sets is an important step in building and testing a classification model. The training set is used to build the model and the test set to evaluate its predictive accuracy. </p>
+<p>In this exercise, you will split the dataset you created in the previous chapter into training and test sets. The dataset has been loaded in the dataframe <code>df</code> and a seed has already been set to ensure reproducibility.</p>
+</div>
+<div class="exercise--instructions__content">
+<li>Create a column called <code>train</code> in <code>df</code> and randomly assign 80% of the rows in <code>df</code> a value of 1 for this column (and the remaining rows a value of 0).</li>
+```{r}
+#split train and test data in an 80/20 proportion
+df[, "train"] <- ifelse(runif(nrow(df))<0.8, 1, 0)
+
+
+```
+<li>Assign the rows with <code>train == 1</code> to the dataframe <code>trainset</code> and those with <code>train == 0</code> to the dataframe <code>testset</code>.</li>
+```{r}
+#assign training rows to data frame trainset
+trainset <- df[df$train == 1, ]
+#assign test rows to data frame testset
+testset <- df[df$train == 0, ]
+```
+<li>Remove <code>train</code> column from training and test datasets by index.</li>
+```{r}
+#find index of "train" column
+trainColNum <- grep("train", names(df))
+
+#remove "train" column from train and test dataset
+trainset <- trainset[, -trainColNum]
+testset <- testset[, -trainColNum]
+```
+</div>
+
+<p class="">Nice work! In the next exercise we will use these datasets to build our first SVM model.
+</p>
+
+### Building a linear SVM classifier
+
+
+<div class><p>In this exercise, you will use the <code>svm()</code> function from the <code>e1071</code> library to build a linear SVM classifier using training dataset you created in the previous exercise. The training dataset has been loaded for you in the dataframe <code>trainset</code></p></div>
+<div class="exercise--instructions__content">
+<li>Load the <code>e1071</code> library.</li>
+```{r}
+library(e1071)
+```
+<li>Build an SVM model using a linear kernel.</li>
+<li>Do not scale the variables (this is to allow comparison with the original dataset later).</li>
+```{r}
+#build svm model, setting required parameters
+svm_model<- svm(y ~ ., 
+                data = trainset, 
+                type = "C-classification", 
+                kernel = "linear", 
+                scale = FALSE)
+```
+</div>
+
+<p class="">Nice work! In the next exercise we will explore the contents of the model.
+</p>
+
+### Exploring the model and calculating accuracy
+
+
+<div class><p>In this exercise you will explore the contents of the model and calculate its training and test accuracies. The training and test data are available in the data frames <code>trainset</code> and <code>testset</code> respectively, and the SVM model is stored in the variable <code>svm_model</code>.</p></div>
+<div class="exercise--instructions__content"><ul>
+<li>List the components of your SVM model.</li>
+</ul></div>
+```{r}
+#list components of model
+names(svm_model)
+```
+
+<div class="exercise--instructions__content"><p>List the contents of <code>SV</code>, <code>index</code>, and <code>rho</code>.</p></div>
+```{r}
+#list values of the SV, index and rho
+head(svm_model$SV)
+svm_model$index
+svm_model$rho
+```
+
+<div class="exercise--instructions__content"><p>Calculate the training accuracy of the model.</p></div>
+```{r}
+#compute training accuracy
+pred_train <- predict(svm_model, trainset)
+mean(pred_train == trainset$y)
+```
+
+<div class="exercise--instructions__content"><p>Calculate the test accuracy of the model.</p></div>
+```{r}
+#compute test accuracy
+pred_test <- predict(svm_model, testset)
+mean(pred_test == testset$y)
+```
+
+<p class="">Excellent! You are now ready for the next lesson in which we'll visually explore the model.
+</p>
+
+## Visualizing Linear SVMs
+
+
+
+### Visualizing support vectors using ggplot
+
+
+<div class><p>In this exercise you will plot the training dataset you used to build a linear SVM and mark out the support vectors. The training dataset has been preloaded for you in the dataframe <code>trainset</code> and the SVM model is stored in the variable <code>svm_model</code>.</p></div>
+<div class="exercise--instructions__content">
+<li>Load <code>ggplot2</code>.</li>
+```{r}
+#load ggplot
+library(ggplot2)
+```
+<li>Plot the training dataset.</li>
+```{r}
+#build scatter plot of training dataset
+scatter_plot <- ggplot(data = trainset, aes(x = x1, y = x2, color = y)) + 
+    geom_point() + 
+    scale_color_manual(values = c("red", "blue"))
+
+```
+<li>Mark out the support vectors on the plot using their indices from the SVM model.</li>
+```{r}
+#add plot layer marking out the support vectors 
+layered_plot <- 
+    scatter_plot + geom_point(data = trainset[svm_model$index, ], aes(x = x1, y = x2), color = "purple", size = 4, alpha = 0.5)
+
+#display plot
+layered_plot
+```
+</div>
+
+<p class="">Well done! Now let's add the decision and margin boundaries to the plot.
+</p>
+
+### Visualizing decision &amp; margin bounds using `ggplot2`
+
+
+<div class><p>In this exercise, you will add the decision and margin boundaries to the support vector scatter plot created in the previous exercise. The SVM model is available in the variable <code>svm_model</code> and the weight vector has been precalculated for you and is available in the variable <code>w</code>. The <code>ggplot2</code> library has also been preloaded.</p></div>
+<div class="exercise--instructions__content">
+<li>Calculate the slope and intercept of the decision boundary.</li>
+```{r}
+w=t(svm_model$coefs) %*% svm_model$SV
+#calculate slope and intercept of decision boundary from weight vector and svm model
+slope_1 <- -w[1]/w[2]
+intercept_1 <- svm_model$rho/w[2]
+
+#build scatter plot of training dataset
+scatter_plot <- ggplot(data = trainset, aes(x = x1, y = x2, color = y)) + 
+    geom_point() + scale_color_manual(values = c("red", "blue"))
+```
+<li>Add the decision boundary to the plot.</li>
+<li>Add the margin boundaries to the plot.</li>
+```{r}
+#add decision boundary 
+plot_decision <- scatter_plot + geom_abline(slope = slope_1, intercept = intercept_1) 
+
+#add margin boundaries
+plot_margins <- plot_decision + 
+ geom_abline(slope = slope_1, intercept = intercept_1 - 1/w[2], linetype = "dashed")+
+ geom_abline(slope = slope_1, intercept = intercept_1 + 1/w[2], linetype = "dashed")
+
+#display plot
+plot_margins
+```
+</div>
+
+<p class="">Excellent! We'll now visualize the decision regions and support vectors using the svm plot function.
+</p>
+
+### Visualizing decision &amp; margin bounds using `plot()`
+
+
+<div class><p>In this exercise, you will rebuild the SVM model (as a refresher) and use the built in SVM <code>plot()</code> function to visualize the decision regions and support vectors. The training data is available in the dataframe <code>trainset</code>.</p></div>
+<div class="exercise--instructions__content">
+<li>Load the library needed to build an SVM model.</li>
+```{r}
+#load required library
+library(e1071)
+```
+<li>Build a linear SVM model using the training data.</li>
+```{r}
+#build svm model
+svm_model<- 
+    svm(y ~ ., data = trainset, type = "C-classification", 
+        kernel = "linear", scale = FALSE)
+```
+<li>Plot the decision regions and support vectors.</li>
+```{r}
+#plot decision boundaries and support vectors for the training data
+plot(x = svm_model, data = trainset)
+```
+</div>
+
+<p class="">Excellent! We're now ready for the next lesson in which we'll learn how to tune linear SVMs.
+</p>
+
+## Tuning linear SVMs
+
+
+
+### Tuning a linear SVM
+
+
+<div class><p>In this exercise you will study the influence of varying cost on the number of support vectors for linear SVMs. To do this, you will build two SVMs, one with cost = 1 and the other with cost = 100 and find the number of support vectors. A model training dataset is available in the dataframe <code>trainset</code>.</p></div>
+<div class="exercise--instructions__content">
+<li>Build a linear SVM with cost = 1 (default setting).</li>
+```{r}
+#build svm model, cost = 1
+svm_model_1 <- svm(y ~ .,
+                   data = trainset,
+                   type = "C-classification",
+                   cost = 1,
+                   kernel = "linear",
+                   scale = FALSE)
+```
+<li>Print the model to find the number of support vectors.</li>
+```{r}
+#print model details
+svm_model_1
+```
+</div>
+
+<div class="exercise--instructions__content">
+<li>Build the model again with cost = 100.</li>
+```{r}
+#build svm model, cost = 100
+svm_model_100 <- svm(y ~ .,
+                   data = trainset,
+                   type = "C-classification",
+                   cost = 100,
+                   kernel = "linear",
+                   scale = FALSE)
+```
+<li>Print the model.</li>
+```{r}
+#print model details
+svm_model_100
+```
+</div>
+
+<p class="">Excellent! The number of support vectors decreases as cost increases because the margin becomes narrower.
+</p>
+
+### Visualizing decision boundaries and margins
+
+
+<div class>
+<p>In the previous exercise you built two linear classifiers for a linearly separable dataset, one with <code>cost = 1</code> and the other <code>cost = 100</code>. In this exercise you will visualize the margins for the two classifiers on a single plot. The following objects are available for use: </p>
+<ul>
+<li>The training dataset: <code>trainset</code>.</li>
+<li>The <code>cost = 1</code> and <code>cost = 100</code> classifiers in <code>svm_model_1</code> and <code>svm_model_100</code>, respectively. </li>
+<li>The slope and intercept for the <code>cost = 1</code> classifier is stored in <code>slope_1</code> and <code>intercept_1</code>.</li>
+<li>The slope and intercept for the <code>cost = 100</code> classifier is stored in <code>slope_100</code> and <code>intercept_100</code>.</li>
+<li>Weight vectors for the two costs are stored in <code>w_1</code> and <code>w_100</code>, respectively </li>
+<li>A basic scatter plot of the training data is stored in <code>train_plot</code>
+</li>
+</ul>
+<p>The <code>ggplot2</code> library has been preloaded.</p>
+</div>
+
+<div class="exercise--instructions__content">
+<li>Add the decision boundary and margins for the cost = 1 classifier to the training data plot. </li>
+```{r}
+w_1=w[1]
+w_2=w[2]
+train_plot <- ggplot(data = trainset, aes(x = x1, y = x2, color = y)) + 
+    geom_point() + scale_color_manual(values = c("red", "blue"))
+#add decision boundary and margins for cost = 1 to training data scatter plot
+train_plot_with_margins <- train_plot + 
+    geom_abline(slope = slope_1, intercept = intercept_1) +
+    geom_abline(slope = slope_1, intercept = intercept_1-1/w_1[2], linetype = "dashed")+
+    geom_abline(slope = slope_1, intercept = intercept_1+1/w_1[2], linetype = "dashed")
+```
+<li>Display the resulting plot.</li>
+```{r}
+#display plot
+train_plot_with_margins
+```
+</div>
+
+<div class="exercise--instructions__content">
+<li>Add the decision boundary and margins for the cost = 100 classifier to the plot you created in the first step.</li>
+```{r}
+#build svm model, cost = 100
+svm_model_100 <- svm(y ~ .,
+                   data = trainset,
+                   type = "C-classification",
+                   cost = 100,
+                   kernel = "linear",
+                   scale = FALSE)
+
+w_100=t(svm_model_100$coefs) %*% svm_model_100$SV
+#calculate slope and intercept of decision boundary from weight vector and svm model
+slope_100 <- -w_100[1]/w_100[2]
+intercept_100 <- svm_model_100$rho/w_100[2]
+train_plot_100=train_plot_with_margins
+#add decision boundary and margins for cost = 100 to training data scatter plot
+train_plot_with_margins <- train_plot_100 + 
+    geom_abline(slope = slope_100, intercept = intercept_100, color = "goldenrod") +
+    geom_abline(slope = slope_100, intercept = intercept_100-1/w_100[2], linetype = "dashed", color = "goldenrod")+
+    geom_abline(slope = slope_100, intercept = intercept_100+1/w_100[2], linetype = "dashed", color = "goldenrod")
+```
+<li>Display the final plot showing decision boundaries and margins for both classifiers.</li>
+```{r}
+#display plot 
+train_plot_with_margins
+```
+</div>
+
+<p class="">Well done! The plot clearly shows the effect of increasing the cost on linear classifiers.
+</p>
+
+### When are soft margin classifiers useful?
+
+<div class=""><p>In this lesson, we looked at an example in which a soft margin linear SVM (low cost, wide margin) had a better accuracy than its hard margin counterpart (high cost, narrow margin). Which of the phrases listed best completes the following statement:</p>
+<p>Linear soft margin classifiers are most likely to be useful when:</p></div>
+
+<ul>
+<li><div class="">Working with a linearly separable dataset.</div></li>
+<li><div class="">Dealing with a dataset that has a highly nonlinear decision boundary.</div></li>
+<strong><li><div class="">Working with a dataset that is almost linearly separable.</div></li></strong>
+</ul>
+
+<p class="dc-completion-pane__message dc-u-maxw-100pc">"That's right! A soft margin linear classifier would work well for a nearly linearly separable dataset."</p>
+
+## Multiclass problems
+
+
+
+### A multiclass classification problem
+
+
+<div class><p>In this exercise, you will use the <code>svm()</code> function from the <code>e1071</code> library to build a linear multiclass SVM classifier for a dataset that is known to be <em>perfectly</em> linearly separable. Calculate the training and test accuracies, and plot the model using the training data. The training and test datasets are available in the dataframes <code>trainset</code> and <code>testset</code>. Use the default setting for the cost parameter.</p></div>
+<div class="exercise--instructions__content"><ul>
+<li>Load the required library and build a default cost linear SVM.</li>
+</ul>
+```{r}
+#load library and build svm model
+library(e1071)
+svm_model<- 
+    svm(y ~ ., data = trainset, type = "C-classification", 
+        kernel = "linear", scale = FALSE)
+
+```
+</div>
+
+<div class="exercise--instructions__content"><p>Calculate training accuracy.</p></div>
+```{r}
+#compute training accuracy
+pred_train <- predict(svm_model, trainset)
+mean(pred_train == trainset$y)
+```
+
+<div class="exercise--instructions__content"><p>Calculate test accuracy.</p></div>
+```{r}
+#compute test accuracy
+pred_test <- predict(svm_model, testset)
+mean(pred_test == testset$y)
+```
+
+<div class="exercise--instructions__content"><p>Plot classifier against training data.</p></div>
+```{r}
+#plot
+plot(svm_model, trainset)
+```
+
+<p class="">Well done! The model performs very well even for default settings. The actual separators are  lines that pass through the origin at angles of 30 and 60 degrees to the horizontal.
+</p>
+
+### Iris redux - a more robust accuracy.
+
+
+<div class><p>In this exercise, you will build linear SVMs for 100 distinct training/test partitions of the iris dataset. You will then evaluate the performance of your model by calculating the mean accuracy and standard deviation. This procedure, which is quite general, will give you a far more robust measure of model performance than the ones obtained from a single partition.</p></div>
+<div class="exercise--instructions__content"><ul>
+<li>For each trial:<ul>
+<li>Partition the dataset into training and test sets in a random 80/20 split.</li>
+<li>Build a default cost linear SVM on the training dataset.</li>
+<li>Evaluate the accuracy of your model.</li>
+</ul>
+</li>
+</ul>
+```{r}
+accuracy=NULL
+for (i in 1:100){ 
+  	#assign 80% of the data to the training set
+    iris[, "train"] <- ifelse(runif(nrow(iris)) < 0.8, 1, 0)
+    trainColNum <- grep("train", names(iris))
+    trainset <- iris[iris$train == 1, -trainColNum]
+    testset <- iris[iris$train == 0, -trainColNum]
+  	#build model using training data
+    svm_model <- svm(Species~ ., data = trainset, 
+                     type = "C-classification", kernel = "linear")
+    #calculate accuracy on test data
+    pred_test <- predict(svm_model, testset)
+    accuracy[i] <- mean(pred_test == testset$Species)
+}
+mean(accuracy)
+sd(accuracy)
+```
+</div>
+
+<p class="">Well done! The high accuracy and low standard deviation confirms that the dataset is almost linearly separable.
+</p>
+
+# Polynomial Kernels
+
+## Radially separable dataset
+
+
+
+### Generating a 2d radially separable dataset
+
+
+<div class><p>In this exercise you will create a 2d radially separable dataset containing 400 uniformly distributed data points.</p></div>
+<div class="exercise--instructions__content">
+<li>Generate a data frame <code>df</code> with:<ul>
+<li>400 points with variables <code>x1</code> and <code>x2</code>.</li>
+<li>
+<code>x1</code> and <code>x2</code> uniformly distributed in (-1, 1).</li>
+</ul>
+</li>
+```{r}
+#set number of variables and seed
+n <- 400
+set.seed(1)
+
+#Generate data frame with two uniformly distributed predictors, x1 and x2
+df <- data.frame(x1 = runif(n, min = -1, max = 1), 
+                 x2 = runif(n, min = -1, max = 1))
+```
+<li>Introduce a circular boundary of radius 0.8, centred at the origin.</li>
+```{r}
+#We want a circular boundary. Set boundary radius 
+radius <- 0.8
+radius_squared <- radius^2
+```
+<li>Create <code>df$y</code>, which takes value -1 or 1 depending on whether a point lies within or outside the circle.</li>
+```{r}
+#create dependent categorical variable, y, with value -1 or 1 depending on whether point lies
+#within or outside the circle.
+df$y <- factor(ifelse(df$x1^2 + df$x2^2 < radius_squared, -1, 1), levels = c(-1, 1))
+```
+</div>
+
+<p class="">Excellent! Now let's visualize the dataset.
+</p>
+
+### Visualizing the dataset
+
+
+<div class><p>In this exercise you will use <code>ggplot()</code> to visualize the dataset you created in the previous exercise. The dataset is available in the dataframe <code>df</code>. Use <code>color</code> to distinguish between the two classes.</p></div>
+<div class="exercise--instructions__content">
+<li>Load <code>ggplot2</code> library.</li>
+```{r}
+#load ggplot
+library(ggplot2)
+```
+<li>Create 2d scatter plot and color the two classes (y = -1 and y = 1) red and blue.</li>
+```{r}
+#build scatter plot, distinguish class by color
+scatter_plot <- ggplot(data = df, aes(x = x1, y = x2, color = y)) + 
+    geom_point() +
+    scale_color_manual(values = c("red", "blue"))
+
+#display plot
+scatter_plot
+```
+</div>
+
+<p class="">Nice work! We'll use this dataset extensively in this chapter.
+</p>
+
+## Linear SVMs on radial data
+
+
+
+### Linear SVM for a radially separable dataset
+
+
+<div class><p>In this exercise you will build two linear SVMs, one for cost = 1 (default) and the other for cost = 100, for the radially separable dataset you created in the first lesson of this chapter. You will also calculate the training and test accuracies for both costs. The <code>e1071</code> library has been loaded, and test and training datasets have been created for you and are available in the data frames <code>trainset</code> and <code>testset</code>.</p></div>
+<div class="exercise--instructions__content">
+<li>Build a linear SVM using the default cost.</li>
+
+```{r}
+#split train and test data in an 80/20 proportion
+df[, "train"] <- ifelse(runif(nrow(df))<0.8, 1, 0)
+
+#assign training rows to data frame trainset
+trainset <- df[df$train == 1, ]
+#assign test rows to data frame testset
+testset <- df[df$train == 0, ]
+
+#find index of "train" column
+trainColNum <- grep("train", names(df))
+
+#remove "train" column from train and test dataset
+trainset <- trainset[, -trainColNum]
+testset <- testset[, -trainColNum]
+```
+
+
+```{r}
+#default cost mode;
+svm_model_1 <- svm(y ~ ., data = trainset, type = "C-classification", cost = 1, kernel = "linear")
+```
+<li>Calculate training and test accuracies.</li>
+```{r}
+#training accuracy
+pred_train <- predict(svm_model_1, trainset)
+mean(pred_train == trainset$y)
+
+#test accuracy
+pred_test <- predict(svm_model_1, testset)
+mean(pred_test == testset$y)
+```
+</div>
+
+<div class="exercise--instructions__content"><ul>
+<li>Set cost = 100 and repeat.</li>
+</ul></div>
+```{r}
+#cost = 100 model
+svm_model_2 <- svm(y ~ ., data = trainset, type = "C-classification", cost = 100, kernel = "linear")
+
+#accuracy
+pred_train <- predict(svm_model_2, trainset)
+mean(pred_train == trainset$y)
+pred_test <- predict(svm_model_2, testset)
+mean(pred_test == testset$y)
+```
+
+<p class="">Good work! Next, we'll get a more reliable measure of accuracy for one of the models.
+</p>
+
+### Average accuracy for linear SVM
+
+
+<div class><p>In this exercise you will calculate the average accuracy for a default cost linear SVM using 100 different training/test partitions of the dataset you generated in the first lesson of this chapter. The <code>e1071</code> library has been preloaded and the dataset is available in the dataframe <code>df</code>. Use random 80/20 splits of the data in <code>df</code> when creating training and test datasets for each iteration.</p></div>
+<div class="exercise--instructions__content"><ul>
+<li>Create a vector to hold accuracies for each step.</li>
+</ul></div>
+```{r}
+# Print average accuracy and standard deviation
+accuracy <- rep(NA, 100)
+set.seed(2)
+```
+
+<div class="exercise--instructions__content"><p>Create training / test datasets, build default cost SVMs and calculate the test accuracy for each iteration.</p></div>
+```{r}
+# Calculate accuracies for 100 training/test partitions
+for (i in 1:100){
+    df[, "train"] <- ifelse(runif(nrow(df)) < 0.8, 1, 0)
+    trainset <- df[df$train == 1, ]
+    testset <- df[df$train == 0, ]
+    trainColNum <- grep("train", names(trainset))
+    trainset <- trainset[, -trainColNum]
+    testset <- testset[, -trainColNum]
+    svm_model <- svm(y ~ ., data = trainset, type = "C-classification", kernel = "linear")
+    pred_test <- predict(svm_model, testset)
+    accuracy[i] <- mean(pred_test == testset$y)
+}
+```
+
+<div class="exercise--instructions__content"><p>Compute the average accuracy and standard deviation over all iterations.</p></div>
+```{r}
+# Print average accuracy and its standard deviation
+mean(accuracy)
+sd(accuracy)
+```
+
+<p>Compute the average accuracy and standard deviation over all iterations.</p>
+
+## The kernel trick
+
+
+
+### Visualizing transformed radially separable data
+
+
+<div class><p>In this exercise you will transform the radially separable dataset you created earlier in this chapter and visualize it in the <code>x1^2-x2^2</code> plane. As a reminder, the separation boundary for the data is the circle <code>x1^2 + x2^2 = 0.64</code>(radius = 0.8 units). The dataset has been loaded for you in the dataframe <code>df</code>.</p></div>
+<div class="exercise--instructions__content">
+<li>Transform data to x1^2-x2^2 plane.</li>
+```{r}
+#transform data
+df1 <- data.frame(x1sq = df$x1^2, x2sq = df$x2^2, y = df$y)
+```
+<li>Visualize data in terms of transformed coordinates.</li>
+```{r}
+#plot data points in the transformed space
+plot_transformed <- ggplot(data = df1, aes(x = x1sq, y = x2sq, color = y)) + 
+    geom_point()+ guides(color = FALSE) + 
+    scale_color_manual(values = c("red", "blue"))
+```
+<li>Add a boundary that is linear in terms of transformed coordinates.</li>
+```{r}
+#add decision boundary and visualize
+plot_decision <- plot_transformed + geom_abline(slope = -1, intercept = 0.64)
+plot_decision
+```
+</div>
+
+<p class="">Excellent! As expected, the data is linearly separable in the x1<sup>2</sup> - x2<sup>2</sup> plane.
+</p>
+
+### SVM with polynomial kernel
+
+
+<div class><p>In this exercise you will build a SVM with a quadratic kernel (polynomial of degree 2) for the radially separable dataset you created earlier in this chapter. You will then calculate the training and test accuracies and create a plot of the model using the built in <code>plot()</code> function. The training and test datasets are available in the dataframes <code>trainset</code> and <code>testset</code>, and the <code>e1071</code> library has been preloaded.</p></div>
+<div class="exercise--instructions__content">
+<li>Build SVM model on the training data using a polynomial kernel of degree 2.</li>
+```{r}
+svm_model<- 
+    svm(y ~ ., data = trainset, type = "C-classification", 
+        kernel = "polynomial", degree = 2)
+```
+<li>Calculate training and test accuracy for the given training/test partition.</li>
+```{r}
+#measure training and test accuracy
+pred_train <- predict(svm_model, trainset)
+mean(pred_train == trainset$y)
+pred_test <- predict(svm_model, testset)
+mean(pred_test == testset$y)
+```
+<li>Plot the model against the training data.</li>
+```{r}
+#plot
+plot(svm_model, trainset)
+```
+</div>
+
+<p class="">Well done! The decision boundary using default parameters looks good.
+</p>
+
+
+## Tuning SVMs
+
+
+
+### Using `tune.svm()`
+
+
+<div class>
+<p>This exercise will give you hands-on practice with using the <code>tune.svm()</code> function. You will use it to obtain the optimal values for the <code>cost</code>, <code>gamma</code>, and <code>coef0</code> parameters for an SVM model based on the radially separable dataset you created earlier in this chapter. The training data is available in the dataframe <code>trainset</code>, the test data in <code>testset</code>, and the <code>e1071</code> library has been preloaded for you. Remember that the class variable <code>y</code> is stored in the third column of the <code>trainset</code> and <code>testset</code>.</p>
+<p>Also recall that in the video, Kailash used <code>cost=10^(1:3)</code> to get a range of the cost parameter from <code>10=10^1</code> to <code>1000=10^3</code> in multiples of 10.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Set parameter search ranges as follows:<ul>
+<li>
+<code>cost</code> - from 0.1 (<code>10^(-1)</code>) to 100 (<code>10^2</code>) in multiples of 10.</li>
+<li>
+<code>gamma</code> and <code>coef0</code> - one of the following values: 0.1, 1 and 10.</li>
+</ul>
+</li>
+</ul></div>
+```{r}
+#tune model
+tune_out <- 
+    tune.svm(x = trainset[, -3], y = trainset[, 3], 
+             type = "C-classification", 
+             kernel = "polynomial", degree = 2, cost = 10^(-1:2), 
+             gamma = c(0.1, 1, 10), coef0 = c(0.1, 1, 10))
+
+#list optimal values
+tune_out$best.parameters$cost
+tune_out$best.parameters$gamma
+tune_out$best.parameters$coef0
+```
+
+<p class="">Well done! You have obtained the optimal parameters for the specified parameter ranges.
+</p>
+
+### Building and visualizing the tuned model
+
+
+<div class><p>In the final exercise of this chapter, you will build a polynomial SVM using the optimal values of the parameters that you obtained from <code>tune.svm()</code> in the previous exercise. You will then calculate the training and test accuracies and visualize the model using <code>svm.plot()</code>. The <code>e1071</code> library has been preloaded and the test and training datasets are available in the dataframes <code>trainset</code> and <code>testset</code>. The output of <code>tune.svm()</code> is available in the variable <code>tune_out</code>.</p></div>
+<div class="exercise--instructions__content">
+<li>Build an SVM using a polynomial kernel of degree 2. </li>
+<li>Use the optimal parameters calculated using <code>tune.svm()</code>.</li>
+```{r}
+#Build tuned model
+svm_model <- svm(y~ ., data = trainset, type = "C-classification", 
+                 kernel = "polynomial", degree = 2, 
+                 cost = tune_out$best.parameters$cost, 
+                 gamma = tune_out$best.parameters$gamma, 
+                 coef0 = tune_out$best.parameters$coef0)
+```
+<li>Obtain training and test accuracies.</li>
+```{r}
+#Calculate training and test accuracies   
+pred_train <- predict(svm_model, trainset)
+mean(pred_train == trainset$y)
+pred_test <- predict(svm_model, testset)
+mean(pred_test == testset$y)
+```
+<li>Plot the decision boundary against the training data.</li>
+```{r}
+#plot model
+plot(svm_model, trainset)
+```
+</div>
+
+<p class="">Excellent! Tuning the parameters has given us a considerably better accuracy.
+</p>
+
+# Radial Basis Function Kernels
+
+## Generating a complex dataset
+
+
+
+### Generating a complex dataset - part 1
+
+
+<div class><p>In this exercise you will create a dataset that has two attributes <code>x1</code> and <code>x2</code>, with <code>x1</code> normally distributed (mean = -0.5, sd = 1) and <code>x2</code> uniformly distributed in (-1, 1).</p></div>
+<div class="exercise--instructions__content">
+<li>Generate a data frame <code>df</code> with 1000 points (x1, x2) distributed as follows:</li>
+```{r}
+#number of data points
+n <- 1000
+```
+<li>
+<code>x1</code> - normally distributed with mean = -0.5 and std deviation 1.</li>
+```{r}
+#set seed
+set.seed(1)
+```
+<li>
+<code>x2</code> uniformly distributed in (-1, 1).</li>
+```{r}
+#create dataframe
+df <- data.frame(x1 = rnorm(n, mean = -0.5, sd = 1), 
+                 x2 = runif(n, min = -1, max = 1))
+```
+</div>
+
+<p class="">Excellent! Now let's create a complex decision boundary.
+</p>
+
+### Generating a complex dataset - part 2
+
+
+<div class>
+<p>In this exercise, you will create a decision boundary for the dataset you created in the previous exercise. The boundary consists of two circles of radius 0.8 units with centers at x1 = -0.8, x2 = 0) and (x1 = 0.8, x2 = 0) that just touch each other at the origin. Define a binary classification variable <code>y</code> such that points that lie within either of the circles have <code>y = -1</code> and those that lie outside both circle have <code>y = 1</code>. </p>
+<p>The dataset created in the previous exercise is available in the dataframe <code>df</code>.</p>
+</div>
+<div class="exercise--instructions__content">
+<li>Set radii and centers of circles.</li>
+```{r}
+#set radius and centers 
+radius <- 0.8
+center_1 <- c(-0.8, 0)
+center_2 <- c(0.8, 0)
+radius_squared <- radius^2
+```
+<li>Add a column to <code>df</code> containing the binary classification variable <code>y</code>.</li>
+```{r}
+#create binary classification variable 
+df$y <- factor(ifelse((df$x1-center_1[1])^2 + (df$x2-center_1[2])^2 < radius_squared|
+                      (df$x1-center_2[1])^2 + (df$x2-center_2[2])^2 < radius_squared, -1, 1),
+                      levels = c(-1, 1))
+```
+</div>
+
+<p class="">Well done! Now let's visualize the decision boundary.
+</p>
+
+### Visualizing the dataset
+
+
+<div class>
+<p>In this exercise you will use <code>ggplot()</code> to visualise the complex dataset you created in the previous exercises. The dataset is available in the dataframe <code>df</code>. You are not required to visualize the decision boundary.</p>
+<p>Here you will use <code>coord_equal()</code> to give the x and y axes the same physical representation on the plot, making the circles appear as circles rather than ellipses.</p>
+</div>
+<div class="exercise--instructions__content">
+<li>Load the required plot library.</li>
+<li>Set the arguments of the <code>aesthetics</code> parameter.</li>
+```{r}
+# Load ggplot2
+library(ggplot2)
+```
+<li>Set the appropriate <code>geom_</code> function for a scatter plot.</li>
+<li>Specify equal coordinates by adding <code>coord_equal()</code> without arguments.</li>
+```{r}
+# Plot x2 vs. x1, colored by y
+scatter_plot <- ggplot(data = df, aes(x = x1, y = x2 , color = y)) + 
+    # Add a point layer
+    geom_point() + 
+    scale_color_manual(values = c("red", "blue")) +
+    # Specify equal coordinates
+    coord_equal()
+ 
+scatter_plot 
+```
+</div>
+
+<p class="">Excellent! In the next lesson we will see how linear and quadratic kernels perform against this dataset.
+</p>
+
+## Motivating the RBF kernel
+
+
+
+### Linear SVM for complex dataset
+
+
+<div class><p>In this exercise you will build a default cost linear SVM for the complex dataset you created in the first lesson of this chapter. You will also calculate the training and test accuracies and plot the classification boundary against the test dataset. The <code>e1071</code> library has been loaded, and test and training datasets have been created for you and are available in the data frames <code>trainset</code> and <code>testset</code>.</p></div>
+<div class="exercise--instructions__content"><ul>
+<li>Build a linear SVM using the default value of cost.</li>
+</ul></div>
+```{r}
+#build model
+svm_model<- 
+    svm(y ~ ., data = trainset, type = "C-classification", 
+        kernel = "linear")
+```
+
+<div class="exercise--instructions__content"><p>Calculate training and test accuracies.</p></div>
+```{r}
+#accuracy
+pred_train <- predict(svm_model, trainset)
+mean(pred_train == trainset$y)
+pred_test <- predict(svm_model, testset)
+mean(pred_test == testset$y)
+```
+
+<div class="exercise--instructions__content"><p>Plot decision boundary against the test data.</p></div>
+```{r}
+#plot model against testset
+plot(svm_model, testset)
+```
+
+<p class="">Nice work! As expected, the accuracy is poor and the plot clearly shows why a linear boundary will never work well.
+</p>
+
+### Quadratic SVM for complex dataset
+
+
+<div class><p>In this exercise you will build a default quadratic (polynomial, degree = 2) linear SVM for the complex dataset you created in the first lesson of this chapter. You will also calculate the training and test accuracies plot the classification boundary against the training dataset. The <code>e1071</code> library has been loaded, and test and training datasets have been created for you and are available in the data frames <code>trainset</code> and <code>testset</code>.</p></div>
+<div class="exercise--instructions__content"><ul>
+<li>Build a polynomial SVM of degree 2 using the default parameters.</li>
+</ul></div>
+```{r}
+#build model
+svm_model<- 
+    svm(y ~ ., data = trainset, type = "C-classification", 
+        kernel = "polynomial", degree = 2)
+```
+
+<div class="exercise--instructions__content"><p>Calculate training and test accuracies.</p></div>
+```{r}
+#accuracy
+pred_train <- predict(svm_model, trainset)
+mean(pred_train == trainset$y)
+pred_test <- predict(svm_model, testset)
+mean(pred_test == testset$y)
+```
+
+<div class="exercise--instructions__content"><p>Plot decision boundary against the training data.</p></div>
+```{r}
+#plot model
+plot(svm_model, trainset)
+```
+
+<p class="">Well done! The model accuracy is not too bad, but the plot shows that it is impossible to capture the figure of 8 shape of the actual boundary using a degree 2 polynomial.
+</p>
+
+## The RBF Kernel
+
+
+
+### Polynomial SVM on a complex dataset
+
+
+<div class><p>Calculate the average accuracy for a <strong>degree 2 polynomial</strong> kernel SVM using 100 different training/test partitions of the complex dataset you generated in the first lesson of this chapter. Use default settings for the parameters. The <code>e1071</code> library has been preloaded and the dataset is available in the dataframe <code>df</code>. Use random 80/20 splits of the data in <code>df</code> when creating training and test datasets for each iteration.</p></div>
+<div class="exercise--instructions__content"><ul>
+<li>Create a vector to hold accuracies for each step.</li>
+</ul></div>
+```{r}
+#create vector to store accuracies and set random number seed
+accuracy <- rep(NA, 100)
+set.seed(2)
+```
+
+<div class="exercise--instructions__content"><p>Create training/test datasets, build default cost polynomial SVMs of degree 2, and calculate the test accuracy for each iteration.</p></div>
+```{r}
+#calculate accuracies for 100 training/test partitions
+for (i in 1:100){
+    df[, "train"] <- ifelse(runif(nrow(df))<0.8, 1, 0)
+    trainset <- df[df$train == 1, ]
+    testset <- df[df$train == 0, ]
+    trainColNum <- grep("train", names(trainset))
+    trainset <- trainset[, -trainColNum]
+    testset <- testset[, -trainColNum]
+    svm_model<- svm(y ~ ., data = trainset, type = "C-classification", kernel = "polynomial", degree = 2)
+    pred_test <- predict(svm_model, testset)
+    accuracy[i] <- mean(pred_test == testset$y)
+}
+```
+
+<div class="exercise--instructions__content"><p>Compute the average accuracy and standard deviation over all iterations.</p></div>
+```{r}
+#print average accuracy and standard deviation
+mean(accuracy)
+sd(accuracy)
+```
+
+<p class="">Nice work! Please note down the average accuracy and standard deviation. We'll compare these to the default RBF kernel SVM next.
+</p>
+
+### RBF SVM on a complex dataset
+
+
+<div class><p>Calculate the average accuracy for a <strong>RBF</strong> kernel SVM using 100 different training/test partitions of the complex dataset you generated in the first lesson of this chapter. Use default settings for the parameters. The <code>e1071</code> library has been preloaded and the dataset is available in the dataframe <code>df</code>. Use random 80/20 splits of the data in <code>df</code> when creating training and test datasets for each iteration.</p></div>
+<div class="exercise--instructions__content"><ul>
+<li>Create a vector of length 100 to hold accuracies for each step.</li>
+</ul></div>
+```{r}
+#create vector to store accuracies and set random number seed
+accuracy <- rep(NA, 100)
+set.seed(2)
+```
+
+<div class="exercise--instructions__content"><p>Create training/test datasets, build RBF SVMs with default settings for all parameters and calculate the test accuracy for each iteration.</p></div>
+```{r}
+#calculate accuracies for 100 training/test partitions
+for (i in 1:100){
+    df[, "train"] <- ifelse(runif(nrow(df))<0.8, 1, 0)
+    trainset <- df[df$train == 1, ]
+    testset <- df[df$train == 0, ]
+    trainColNum <- grep("train", names(trainset))
+    trainset <- trainset[, -trainColNum]
+    testset <- testset[, -trainColNum]
+    svm_model<- svm(y ~ ., data = trainset, type = "C-classification", kernel = "radial")
+    pred_test <- predict(svm_model, testset)
+    accuracy[i] <- mean(pred_test == testset$y)
+}
+```
+
+<div class="exercise--instructions__content"><p>Compute the average accuracy and standard deviation over all iterations.</p></div>
+```{r}
+#print average accuracy and standard deviation
+mean(accuracy)
+sd(accuracy)
+```
+
+<p class="">Well done! Note that the average accuracy is almost 10% better than the one obtained in the previous exercise (polynomial kernel of degree 2)
+</p>
+
+### Tuning an RBF kernel SVM
+
+
+<div class><p>In this exercise you will build a tuned RBF kernel SVM for a the given training dataset (available in dataframe <code>trainset</code>) and calculate the accuracy on the test dataset (available in dataframe <code>testset</code>). You will then plot the tuned decision boundary against the test dataset.</p></div>
+<div class="exercise--instructions__content"><ul>
+<li>Use <code>tune.svm()</code> to build a tuned RBF kernel SVM.</li>
+</ul></div>
+```{r}
+#tune model
+tune_out <- tune.svm(x = trainset[, -3], y = trainset[, 3], 
+                     gamma = 5*10^(-2:2), 
+                     cost = c(0.01, 0.1, 1, 10, 100), 
+                     type = "C-classification", kernel = "radial")
+
+```
+
+<div class="exercise--instructions__content"><p>Rebuild SVM using optimal values of <code>cost</code> and <code>gamma</code>.</p></div>
+```{r}
+#build tuned model
+svm_model <- svm(y~ ., data = trainset, type = "C-classification", kernel = "radial", 
+                 cost = tune_out$best.parameters$cost, 
+                 gamma = tune_out$best.parameters$gamma)
+```
+
+<div class="exercise--instructions__content"><p>Calculate the accuracy of your model using the test dataset.</p></div>
+```{r}
+#calculate test accuracy
+pred_test <- predict(svm_model, testset)
+mean(pred_test == testset$y)
+```
+
+<div class="exercise--instructions__content"><p>Plot the decision boundary against <code>testset</code>.</p></div>
+```{r}
+#Plot decision boundary against test data
+plot(svm_model, testset)
+```
+
+<p class="">Well done! That's it for this course. I hope you found it useful.
+</p>

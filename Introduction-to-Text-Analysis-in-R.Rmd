@@ -1,0 +1,1026 @@
+## Text Analysis {.unnumbered}
+
+<h3 class="course__description-title">Marc Dotson</h3>
+<p class="course__instructor-description display-none-mobile-course-page-experiment">
+    Marc's research is focused on applications of Bayesian inference in marketing, including choice modeling and text analysis. He teaches courses in survey research, conjoint analysis, marketing analytics, and statistical modeling.
+  </p>
+
+**Course Description**
+
+<p class="course__description">From social media to product reviews, text is an increasingly important type of data across applications, including marketing analytics. In many instances, text is replacing other forms of unstructured data due to how inexpensive and current it is. However, to take advantage of everything that text has to offer, you need to know how to think about, clean, summarize, and model text. In this course, you will use the latest tidy tools to quickly and easily get started with text. You will learn how to wrangle and visualize text, perform sentiment analysis, and run and interpret topic models.</p>
+
+
+### Wrangling Text {.unnumbered}
+
+<p class="chapter__description">
+    Since text is unstructured data, a certain amount of wrangling is required to get it into a form where you can analyze it. In this chapter, you will learn how to add structure to text by tokenizing, cleaning, and treating text as categorical data.
+  </p>
+  
+#### Text as data {.unnumbered}
+
+##### Airline tweets data {.unnumbered}
+
+
+<div class>
+<p>The <code>twitter_data</code> data frame has over 7,000 tweets about airlines. The tweets have already been classified as either complaints or non-complaints in the <code>complaint_label</code> column. Let's get a sense of how many of these tweets are complaints.</p>
+
+<p><em>Be aware that this is real data from Twitter and as such there is always a risk that it may contain profanity or other offensive content (in this exercise, and any following exercises that also use real Twitter data).</em></p>
+</div>
+<div class="exercise--instructions__content">
+<li>Load the <code>tidyverse</code> package. </li>
+
+<li>Get a sense of the size and content of the data by printing <code>twitter_data</code>.</li>
+
+<li>Filter <code>twitter_data</code> so it's just the complaints. How many complaints are in the data?</li>
+```{r}
+# edited/addded
+twitter_data=readRDS("archive/Introduction-to-Text-Analysis-in-R/datasets/ch_1_twitter_data.rds")
+
+# Load the tidyverse packages
+library(tidyverse)
+
+# Print twitter_data
+twitter_data
+
+# Print just the complaints in twitter_data
+twitter_data %>% 
+  filter(complaint_label == "Complaint")
+```
+</div>
+
+<p class="">Of the 7,044 tweets, only 1,676 are complaints.
+</p>
+
+##### Grouped summaries {.unnumbered}
+
+
+<div class><p>So there are more non-complaints than complaints in <code>twitter_data</code>. You might be starting to question whether or not this data is actually from Twitter! There are a few other columns of interest in <code>twitter_data</code> that would be helpful to explore before you get to the tweets themselves. Every tweet includes the number of followers that user has in the <code>usr_followers_count</code> column. Do you expect those who complain to have more users or fewer users, on average, than those who don't complain? You can use grouped summaries to quickly and easily provide an answer.</p></div>
+
+<li>Group the data by <code>complaint_label</code>.</li>
+<li>Compute the average, minimum, and maximum, number of <code>usr_followers_count</code>.</li>
+
+```{r}
+# edited/added
+library(tidyverse)
+
+# Start with the data frame
+twitter_data %>% 
+  # Group the data by whether or not the tweet is a complaint
+  group_by(complaint_label) %>% 
+  # Compute the mean, min, and max follower counts
+  summarize(
+    avg_followers = mean(usr_followers_count),
+    min_followers = min(usr_followers_count),
+    max_followers = max(usr_followers_count)
+  )
+```
+
+<p class="">The tweets that are complaints come from accounts with fewer followers, on average. Is that what you expected?
+</p>
+
+#### Counting categorical data {.unnumbered}
+
+
+
+##### Counting user types {.unnumbered}
+
+
+<div class><p>Counts are the essential summary for categorical data. Since text is categorical, it's important to get comfortable computing counts. The <code>twitter_data</code> is composed of complaints and non-complaints, as indicated by the <code>complaint_label</code> column, and also includes a column indicating whether or not the user is verified (i.e., they have been confirmed by Twitter to be who they say they are) called <code>usr_verified</code>. Note that column is of type <code>&lt;lgl&gt;</code>, meaning logical. Do verified users complain more?</p></div>
+<div class="exercise--instructions__content">
+<li>Load the <code>tidyverse</code> package, which includes <code>dplyr</code> and <code>ggplot2</code>. </li>
+
+<li>Filter the data to only keep tweets that are complaints. </li>
+<li>Count the number of verified and non-verified users that have complained.</li>
+```{r}
+# Load the tidyverse package
+library(tidyverse)
+
+twitter_data %>% 
+  # Filter for just the complaints
+  filter(complaint_label == "Complaint") %>% 
+  # Count the number of verified and non-verified users
+  count(usr_verified)
+```
+</div>
+
+<p class="">So verified Twitter users complain less often than non-verified Twitter users? Or are there just fewer verified users?
+</p>
+
+##### Summarizing user types {.unnumbered}
+
+
+<div class><p>Since you can use the <code>count()</code> wrapper, why bother counting rows in a group as part of a grouped summary? Sometimes you want a more detailed summary, and knowing how to compute a count as part of a grouped summary that mixes numeric and categorical summaries can come in handy.</p></div>
+
+<li>Group <code>twitter_data</code> by whether or not a user is verified.</li>
+<li>Compute the average number of followers for each type of user. Call this new column <code>avg_followers</code>.</li>
+<li>Count the number of verified and non-verified users. For consistency, call this new column <code>n</code>.</li>
+
+```{r}
+library(tidyverse)
+
+twitter_data %>% 
+  # Group by whether or not a user is verified
+  group_by(usr_verified) %>% 
+  summarize(
+    # Compute the average number of followers
+    avg_followers = mean(usr_followers_count),
+    # Count the number of users in each category
+    n = n()
+  )
+```
+
+<p class="">Okay, so there are fewer verified users. We can also see that they, on average, have far more followers than non-verified users.
+</p>
+
+#### Tokenizing and cleaning {.unnumbered}
+
+
+##### Tokenizing and counting {.unnumbered}
+
+
+<div class><p>Explore the content of the airline tweets in <code>twitter_data</code> through word counts. The content of each tweet is in the <code>tweet_text</code> column.</p></div>
+<div class="exercise--instructions__content">
+<li>Load the tidyverse and tidytext packages.</li>
+
+<li>Tokenize the tweets in the <code>tweet_text</code> column.</li>
+
+<li>Compute word counts using the tokenized text.</li>
+<li>Arrange the counts in descending order.</li>
+```{r}
+# Load the tidyverse and tidytext packages
+library(tidyverse)
+library(tidytext)
+
+tidy_twitter <- twitter_data %>% 
+  # Tokenize the twitter data
+  unnest_tokens(word, tweet_text)
+
+tidy_twitter %>% 
+  # Compute word counts
+  count(word) %>% 
+  # Arrange the counts in descending order
+  arrange(desc(n))
+```
+</div>
+
+<p class="">It's clear we haven't removed any stop words. Let's try this again!
+</p>
+
+##### Cleaning and counting {.unnumbered}
+
+
+<div class><p>Remove stop words to explore the content of just the airline tweets classified as complaints in <code>twitter_data</code>.</p></div>
+
+<li>Tokenize the tweets in <code>twitter_data</code>. Name the column with tokenized words as <code>word</code>. </li>
+<li>Remove the default stop words from the tokenized <code>twitter_data</code>.</li>
+<li>Filter to keep the complaints only.</li>
+<li>Compute word counts using the tokenized, cleaned text and arrange in descending order by count.</li>
+
+```{r}
+tidy_twitter <- twitter_data %>% 
+  # Tokenize the twitter data
+  unnest_tokens(word, tweet_text) %>% 
+  # Remove stop words
+  anti_join(stop_words)
+
+tidy_twitter %>% 
+  # Filter to keep complaints only
+  filter(complaint_label == "Complaint") %>% 
+  # Compute word counts and arrange in descending order
+  count(word) %>% 
+  arrange(desc(n))
+```
+
+<p class="">It looks like complaints include frequent references to time, delays, and service. However, there are simply a lot of specific airlines referenced. These could be considered as stop words specific to this data, and we'll see how to remove them in the next chapter.
+</p>
+
+### Visualizing Text {.unnumbered}
+
+<p class="chapter__description">
+    While counts are nice, visualizations are better. In this chapter, you will learn how to apply what you know from ggplot2 to tidy text data.
+  </p>
+  
+#### Plotting word counts {.unnumbered}
+
+##### Visualizing complaints {.unnumbered}
+
+
+<div class>
+<p>We ended the last chapter with complaint word counts. Now let's visualize those word counts with a bar plot.</p>
+<p>The <code>tidyverse</code> and <code>tidytext</code> packages have been loaded. <code>twitter_data</code> has been tokenized and the standard stop words have been removed.</p>
+</div>
+<div class="exercise--instructions__content">
+<li>Only keep the words with counts greater than 100.</li>
+
+<li>Create a bar plot using <code>word_counts</code> with <code>word</code> mapped to the x-axis.</li>
+<li>Flip the plot coordinates.</li>
+```{r}
+word_counts <- tidy_twitter %>% 
+  filter(complaint_label == "Complaint") %>% 
+  count(word) %>% 
+  # Keep words with count greater than 100
+  filter(n > 100)
+
+# Create a bar plot using word_counts with x = word
+ggplot(word_counts, aes(x = word, y = n)) +
+  geom_col() +
+  # Flip the plot coordinates
+  coord_flip()
+```
+</div>
+
+<p class="">Like last time, its easy to see that the complaints include frequent references to time, delays, and service, along with a number of specific airlines.
+</p>
+
+##### Visualizing non-complaints {.unnumbered}
+
+<div class><p>Now let's visualize the word counts associated with non-complaints.</p></div>
+<div class="exercise--instructions__content">
+<li>Only keep the non-complaints.</li>
+
+<li>Create a bar plot using the new <code>word_counts</code>.</li>
+<li>Title the plot "Non-Complaint Word Counts".</li>
+```{r}
+word_counts <- tidy_twitter %>% 
+  # Only keep the non-complaints
+  filter(complaint_label == "Non-Complaint") %>% 
+  count(word) %>% 
+  filter(n > 150)
+
+# Create a bar plot using the new word_counts
+ggplot(word_counts, aes(x = word, y = n)) +
+  geom_col() +
+  coord_flip() +
+  # Title the plot "Non-Complaint Word Counts"
+  ggtitle("Non-Complaint Word Counts")
+```
+</div>
+
+<p class="">We still have some terms that look like stop words specific to this application. Also, it would be nice to plot both of these side-by-side!
+</p>
+
+#### Improving word count plots {.unnumbered}
+
+##### Adding custom stop words {.unnumbered}
+
+<div class><p>We've seen a number of words in <code>twitter_data</code> that aren't informative and should be removed from your final list of words. In this exercise, you will add a few words to your <code>custom_stop_words</code> data frame .</p></div>
+<div class="exercise--instructions__content">
+<li>The column names for the new data frame of custom stop words should match <code>stop_words</code>.</li>
+<li>Add <code>http</code>, <code>win</code>, and <code>t.co</code> as custom stop words.</li>
+
+<li>Row bind the custom stop words to <code>stop_words</code>.</li>
+```{r}
+# edited/added
+custom_stop_words <- tribble(
+  # Column names should match stop_words
+  ~word,  ~lexicon,
+  # Add http, win, and t.co as custom stop words
+  "http", "CUSTOM",
+  "win",  "CUSTOM",
+  "t.co", "CUSTOM"
+)
+
+# Bind the custom stop words to stop_words
+stop_words2 <- stop_words %>% 
+  bind_rows(custom_stop_words)
+```
+</div>
+
+<p class="">This list of custom stop words can get quite long, depending on your application. This is a good start!
+</p>
+
+##### Visualizing word counts using factors {.unnumbered}
+
+
+<div class><p>I've added a number of other custom stop words (including the airline names) and tidied the data for you. Now you will create an improved visualization and plot the words arranged in descending order by word count.</p></div>
+<div class="exercise--instructions__content">
+<li>Only keep the terms that occur more than 100 times in the <code>non_complaints</code>. </li>
+<li>Reorder the <code>word</code> column as a factor ordered by word counts.</li>
+
+<li>Create a bar plot using the new word column with type factor.</li>
+```{r}
+word_counts <- tidy_twitter %>% 
+  filter(complaint_label == "Non-Complaint") %>% 
+  count(word) %>% 
+  # Keep terms that occur more than 100 times
+  filter(n > 100) %>% 
+  # Reorder word as an ordered factor by word counts
+  mutate(word2 = fct_reorder(word, n))
+
+# Plot the new word column with type factor
+ggplot(word_counts, aes(x = word2, y = n)) +
+  geom_col() +
+  coord_flip() +
+  ggtitle("Non-Complaint Word Counts")
+```
+</div>
+
+<p class="">Nicely done! Flight is still most commonly used. With entered and getaway, it appears that there may have been some kind of sweepstake people were entering frequently in the non-complaints.
+</p>
+
+#### Faceting word count plots {.unnumbered}
+
+##### Counting by product and reordering {.unnumbered}
+
+
+<div class><p><code>tidy_twitter</code> has been tokenized and stop words, including custom stop words, have been removed. You would like to visualize the differences in word counts based on complaints and non-complaints.</p></div>
+
+<li>Count words by whether or not its a complaint.</li>
+<li>Keep the top 20 words by whether or not its a complaint.</li>
+<li>Ungroup before reordering word as a factor by the count.</li>
+
+```{r}
+word_counts <- tidy_twitter %>%
+  # Count words by whether or not its a complaint
+  count(word, complaint_label) %>%
+  # Group by whether or not its a complaint
+  group_by(complaint_label) %>%
+  # Keep the top 20 words
+  top_n(20, n) %>%
+  # Ungroup before reordering word as a factor by the count
+  ungroup() %>%
+  mutate(word2 = fct_reorder(word, n))
+```
+
+<p class="">Well done! You're ready to plot.
+</p>
+
+##### Visualizing word counts with facets {.unnumbered}
+
+
+<div class><p>The <code>word_counts</code> from the previous exercise have been loaded. Let's visualize the word counts for the Twitter data with separate facets for complaints and non-complaints.</p></div>
+
+<li>Include a color aesthetic tied to whether or not its a complaint.</li>
+<li>Don't include the lengend for the column plot.</li>
+<li>Facet by whether or not the tweet comes from a complaint and make the y-axis free.</li>
+<li>Flip the coordinates and add a title: "Twitter Word Counts".</li>
+
+```{r}
+# Include a color aesthetic tied to whether or not its a complaint
+ggplot(word_counts, aes(x = word2, y = n, fill = complaint_label)) +
+  # Don't include the lengend for the column plot
+  geom_col(show.legend = FALSE) +
+  # Facet by whether or not its a complaint and make the y-axis free
+  facet_wrap(~ complaint_label, scales = "free_y") +
+  # Flip the coordinates and add a title: "Twitter Word Counts"
+  coord_flip() +
+  ggtitle("Twitter Word Counts")
+```
+
+<p class="">Nicely done. How similar is the word usage for complaints and non-complaints?
+</p>
+
+#### Plotting word clouds {.unnumbered}
+
+##### Creating a word cloud {.unnumbered}
+
+<div class><p>We've seen bar plots, now let's visualize word counts with word clouds! <code>tidy_twitter</code> has already been loaded, tokenized, and cleaned.</p></div>
+<div class="exercise--instructions__content">
+<li>Load the <code>wordcloud</code> package.</li>
+
+<li>Compute the word counts and assign to <code>word_counts</code>.</li>
+
+<li>Assign the word column from <code>word_counts</code> to the <code>words</code> argument.</li>
+<li>Assign the count column (<code>n</code>) from <code>word_counts</code> to the <code>freq</code> argument.</li>
+```{r}
+# Load the wordcloud package
+library(wordcloud)
+
+# Compute word counts and assign to word_counts
+word_counts <- tidy_twitter %>% 
+  count(word)
+
+wordcloud(
+  # Assign the word column to words
+  words = word_counts$word, 
+  # Assign the count column to freq
+  freq = word_counts$n, 
+  max.words = 30
+)
+```
+</div>
+
+<p class="">You may need to expand the plot in your browser to see any of the words clearly. The dominance of flight is readily apparent! We should consider whether or not this is another custom stop word.
+</p>
+
+##### Adding a splash of color {.unnumbered}
+
+<div class><p>What about just the complaints? And let's add some color. Red seems appropriate. The <code>wordcloud</code> package has been loaded along with <code>tidy_twitter</code>.</p></div>
+<div class="exercise--instructions__content">
+<li>Compute the word counts only for the complaints and assign it to <code>word_counts</code>.</li>
+
+<li>Create a complaint word cloud of the top 50 terms, colored red.</li>
+```{r}
+# Compute complaint word counts and assign to word_counts
+word_counts <- tidy_twitter %>% 
+  filter(complaint_label == "Complaint") %>% 
+  count(word)
+
+# Create a complaint word cloud of the top 50 terms, colored red
+wordcloud(
+  words = word_counts$word, 
+  freq = word_counts$n, 
+  max.words = 50,
+  colors = "red"
+)
+```
+</div>
+
+<p class="">Word clouds are cute, but we can see that they simply contain the same information as our tried-and-true bar plot.
+</p>
+
+### Sentiment Analysis {.unnumbered}
+
+<p class="chapter__description">
+    While word counts and visualizations suggest something about the content, we can do more. In this chapter, we move beyond word counts alone to analyze the sentiment or emotional valence of text.
+  </p>
+  
+#### Sentiment dictionaries {.unnumbered}
+
+##### Counting the NRC sentiments {.unnumbered}
+
+
+<div class><p>The fourth dictionary included with the tidytext package is the <code>nrc</code> dictionary. Let's start our exploration with sentiment counts.</p></div>
+<div class="exercise--instructions__content">
+<li>I usually do this for you, but start with loading the <code>tidyverse</code> and <code>tidytext</code> packages.</li>
+
+<li>Count the number of words associated with each sentiment in <code>nrc</code>.</li>
+<li>Arrange the counts in descending order.</li>
+```{r}
+# Load the tidyverse and tidytext packages
+library(tidyverse)
+library(tidytext)
+
+# Count the number of words associated with each sentiment in nrc
+read.csv("archive/Introduction-to-Text-Analysis-in-R/datasets/nrc.csv") %>% # edited/added
+  count(sentiment) %>% 
+  # Arrange the counts in descending order
+  arrange(desc(n))
+```
+</div>
+
+<p class="">This dictionary is interesting. It has ten different sentiments, from negative to surprise in descending count order.
+</p>
+
+##### Visualizing the NRC sentiments {.unnumbered}
+
+<div class><p>We've seen how visualizations can give us a better idea of patterns in data than counts alone. Let's visualize the sentiments from the <code>nrc</code> dictionary. I've loaded the <code>tidyverse</code> and <code>tidytext</code> packages for you already.</p></div>
+<div class="exercise--instructions__content">
+<li>Extract the <code>nrc</code> dictionary, count the sentiments and reorder them by count to create a new factor column, <code>sentiment2</code>.</li>
+
+<li>Visualize <code>sentiment_counts</code> using the new sentiment factor column.</li>
+<li>Change the title to "Sentiment Counts in NRC", x-axis to "Sentiment", and y-axis to "Counts".</li>
+```{r}
+# Pull in the nrc dictionary, count the sentiments and reorder them by count
+sentiment_counts <- read.csv("archive/Introduction-to-Text-Analysis-in-R/datasets/nrc.csv") %>% # edited/added
+  count(sentiment) %>% 
+  mutate(sentiment2 = fct_reorder(sentiment, n))
+
+# Visualize sentiment_counts using the new sentiment factor column
+ggplot(sentiment_counts, aes(x = sentiment2, y = n)) +
+  geom_col() +
+  coord_flip() +
+  # Change the title to "Sentiment Counts in NRC", x-axis to "Sentiment", and y-axis to "Counts"
+  labs(
+    title = "Sentiment Counts in NRC",
+    x = "Sentiment",
+    y = "Counts"
+  )
+```
+</div>
+
+<p class="">The visualization makes even more clear how abundant negative terms are in the dictionary. That's been true across dictionaries.
+</p>
+
+#### Appending dictionaries {.unnumbered}
+
+
+
+##### Counting sentiment {.unnumbered}
+
+
+<div class><p>The <code>tidy_twitter</code> dataset has been loaded for you. Let's see what sort of sentiments are most prevalent in our Twitter data.</p></div>
+<div class="exercise--instructions__content">
+<li>Join <code>tidy_twitter</code> and the NRC sentiment dictionary.</li>
+
+<li>Count the sentiments in <code>sentiment_twitter</code>.</li>
+<li>Arrange the sentiment counts in descending order.</li>
+```{r}
+# Join tidy_twitter and the NRC sentiment dictionary
+sentiment_twitter <- tidy_twitter %>% 
+  inner_join(read.csv("archive/Introduction-to-Text-Analysis-in-R/datasets/nrc.csv")) # edited/added
+
+# Count the sentiments in sentiment_twitter
+sentiment_twitter %>% 
+  count(sentiment) %>% 
+  # Arrange the sentiment counts in descending order
+  arrange(desc(n))
+```
+</div>
+
+<p class="">Overall, these tweets appear mostly positive! What words are associated with these sentiments in our Twitter data?
+</p>
+
+##### Visualizing sentiment {.unnumbered}
+
+
+<div class><p>Let's explore which words are associated with each sentiment in our Twitter data.</p></div>
+
+<li>Inner join <code>tidy_twitter</code> to the NRC dictionary and filter for positive, fear, and trust.</li>
+<li>Count by word and sentiment and keep only the top 10 of each sentiment.</li>
+<li>Create a factor called <code>word2</code> that has each word ordered by the count.</li>
+
+
+
+
+<li>Create a bar plot of the word counts colored by sentiment.</li>
+<li>Create a separate facet for each sentiment with free axes.</li>
+<li>Title the plot "Sentiment Word Counts" with "Words" for the x-axis.</li>
+
+```{r}
+word_counts <- tidy_twitter %>% 
+  # Append the NRC dictionary and filter for positive, fear, and trust
+  inner_join(read.csv("archive/Introduction-to-Text-Analysis-in-R/datasets/nrc.csv")) %>%  # edited/added
+  filter(sentiment %in% c("positive", "fear", "trust")) %>%
+  # Count by word and sentiment and take the top 10 of each
+  count(word, sentiment) %>% 
+  group_by(sentiment) %>% 
+  top_n(10, n) %>% 
+  ungroup() %>% 
+  # Create a factor called word2 that has each word ordered by the count
+  mutate(word2 = fct_reorder(word, n))
+
+# Create a bar plot out of the word counts colored by sentiment
+ggplot(word_counts, aes(x = word2, y = n, fill = sentiment)) +
+  geom_col(show.legend = FALSE) +
+  # Create a separate facet for each sentiment with free axes
+  facet_wrap(~ sentiment, scales = "free") +
+  coord_flip() +
+  # Title the plot "Sentiment Word Counts" with "Words" for the x-axis
+  labs(
+    title = "Sentiment Word Counts",
+    x = "Words"
+  )
+```
+
+<p class="">These word counts by sentiment illustrate a possible mismatch with this particular sentiment dictionary. For example, gate is listed under trust. Pay is listed under both trust and positive. Remember, our sentiment analysis is conditioned on the dictionary we use. It's a tall order, but finding or building a sentiment dictionary that is context-specific would be ideal.
+</p>
+
+#### Improving sentiment analysis {.unnumbered}
+
+
+
+##### Practicing reshaping data {.unnumbered}
+
+
+<div class><p>The <code>spread()</code> verb allows us to quickly reshape or stack and transpose our data, making it easier to <code>mutate()</code>.</p></div>
+
+<li>Append <code>tidy_twitter</code> to the NRC sentiment dictionary.</li>
+<li>Count by complaint label and sentiment.</li>
+<li>Spread the sentiment and count columns.</li>
+
+```{r}
+tidy_twitter %>% 
+  # Append the NRC sentiment dictionary
+  inner_join(read.csv("archive/Introduction-to-Text-Analysis-in-R/datasets/nrc.csv")) %>%  # edited/added
+  # Count by complaint label and sentiment
+  count(complaint_label, sentiment) %>% 
+  # Spread the sentiment and count columns
+  spread(sentiment, n)
+```
+
+<p class="">Each of the sentiments in NRC is its own column with the associated counts as values.
+</p>
+
+##### Practicing with grouped summaries {.unnumbered}
+
+
+<div class><p>We can use <code>spread()</code> in association with the output of grouped summaries as well.</p></div>
+
+<li>Append <code>tidy_twitter</code> to the afinn sentiment dictionary.</li>
+<li>Group by both complaint label and whether or not the user is verified.</li>
+<li>Summarize the data to create a new column, <code>aggregate_value</code>, which contains the sum of <code>value</code>.</li>
+<li>Spread the <code>complaint_label</code> and <code>aggregate_value</code> columns.</li>
+
+```{r}
+# edited/added
+library(textdata)
+
+tidy_twitter %>%
+  # Append the afinn sentiment dictionary
+  inner_join(get_sentiments("afinn")) %>%
+  # Group by both complaint label and whether or not the user is verified
+  group_by(complaint_label, usr_verified) %>%
+  # Summarize the data with an aggregate_value = sum(value)
+  summarize(aggregate_value = sum(value)) %>%
+  # Spread the complaint_label and aggregate_value columns
+  spread(complaint_label, aggregate_value) %>%
+  mutate(overall_sentiment = Complaint + `Non-Complaint`)
+```
+
+<p class="">With the output of the grouped summary <code>spread()</code>, we can easily use <code>mutate()</code> to create a new <code>overall_sentiment</code> column. It looks like unverified users complain more often, on aggregate.
+</p>
+
+##### Visualizing sentiment by complaint type {.unnumbered}
+
+
+<div class><p>Now let's see whether or not complaints really are more negative, on average.</p></div>
+
+<li>Append <code>tidy_twitter</code> to the bing sentiment dictionary.</li>
+<li>Count by complaint label and sentiment.</li>
+<li>Spread the sentiment and count columns.</li>
+<li>Add a new column, <code>overall_sentiment</code>, as <code>positive - negative</code>.</li>
+
+
+
+
+<li>Create a bar plot of overall sentiment by complaint label, colored by complaint label (as a factor). </li>
+<li>Title the plot "Overall Sentiment by Complaint Label" with the subtitle "Airline Twitter Data".</li>
+
+```{r}
+sentiment_twitter <- tidy_twitter %>% 
+  # Append the bing sentiment dictionary
+  inner_join(get_sentiments("bing")) %>% 
+  # Count by complaint label and sentiment
+  count(complaint_label, sentiment) %>% 
+  # Spread the sentiment and count columns
+  spread(sentiment, n) %>% 
+  # Compute overall_sentiment = positive - negative
+  mutate(overall_sentiment = positive - negative)
+
+# Create a bar plot out of overall sentiment by complaint label, colored by complaint label as a factor
+ggplot(
+  sentiment_twitter, 
+  aes(x = complaint_label, y = overall_sentiment, fill = as.factor(complaint_label))
+) +
+  geom_col(show.legend = FALSE) +
+  coord_flip() + 
+  # Title the plot "Overall Sentiment by Complaint Label" with an "Airline Twitter Data" subtitle
+  labs(
+    title = "Overall Sentiment by Complaint Label",
+    subtitle = "Airline Twitter Data"
+  )
+```
+
+<p class="">Complaints are very negative while non-complaints are neutral at best.
+</p>
+
+### Topic Modeling {.unnumbered}
+
+<p class="chapter__description">
+    In this final chapter, we move beyond word counts to uncover the underlying topics in a collection of documents. We will use a standard topic model known as latent Dirichlet allocation.
+  </p>
+  
+#### Latent Dirichlet allocation {.unnumbered}
+
+##### Topics as word probabilities {.unnumbered}
+
+
+<div class><p><code>lda_topics</code> contains the topics output from an LDA run on the Twitter data. Remember that each topic is a collection of word probabilities for all of the unique words used in the corpus. In this case, each tweet is its own document and the <code>beta</code> column contains the word probabilities.</p></div>
+<div class="exercise--instructions__content"><p>Print the output from an LDA run on the Twitter data. It is stored in <code>lda_topics</code>.</p></div>
+
+
+<div class="exercise--instructions__content"><p>Arrange the topics by word probabilities in descending order.</p></div>
+```{r}
+# Load the topicmodels package
+library(topicmodels)
+
+# Cast the word counts by tweet into a DTM
+dtm_twitter <- tidy_twitter %>% 
+  count(word, tweet_id) %>% 
+  cast_dtm(tweet_id, word, n)
+
+# Run an LDA with 2 topics and a Gibbs sampler
+lda_out <- LDA(
+  dtm_twitter,
+  k = 2,
+  method = "Gibbs",
+  control = list(seed = 42)
+)
+# Tidy the matrix of word probabilities
+lda_topics <- lda_out %>% 
+  tidy(matrix = "beta")
+# Print the output from LDA run
+lda_topics
+
+# Start with the topics output from the LDA run
+lda_topics %>% 
+  # Arrange the topics by word probabilities in descending order
+  arrange(desc(beta))
+```
+
+<p class="">The two topics have words like flight, time, and plane and service, customer, and airline occurring with high probability, respectively.
+</p>
+
+##### Summarizing topics {.unnumbered}
+
+
+<div class><p>Let's explore some of the implied features of the LDA output using some grouped summaries.</p></div>
+
+<li>Produce a grouped summary of the LDA output by topic.</li>
+<li>Calculate the sum of the word probabilities.</li>
+<li>Count the number of terms.</li>
+
+```{r}
+# Produce a grouped summary of the LDA output by topic
+lda_topics %>% 
+  group_by(topic) %>% 
+  summarize(
+    # Calculate the sum of the word probabilities
+    sum = sum(beta),
+    # Count the number of terms
+    n = n()
+  )
+```
+
+<p class="">Well done! Is this what you expected? Note that since the topics are word probabilities, the sum of all probabilities for each topic equals 1. Also, since each topic includes every term in the corpus, the counts are equal across topics.
+</p>
+
+##### Visualizing topics {.unnumbered}
+
+
+<div class><p>Using what we've covered in previous chapters, let's visualize the topics produced by the LDA.</p></div>
+
+<li>Keep the top 10 highest word probabilities by topic.</li>
+<li>Create <code>term2</code>, a factor ordering <code>term</code> by word probability.</li>
+
+<li>Plot <code>term2</code> and the word probabilities.</li>
+<li>Facet the bar plot by (i.e., <code>~</code>) topic.</li>
+
+```{r}
+word_probs <- lda_topics %>%
+  # Keep the top 10 highest word probabilities by topic
+  group_by(topic) %>% 
+  top_n(10, beta) %>% 
+  ungroup() %>%
+  # Create term2, a factor ordered by word probability
+  mutate(term2 = fct_reorder(term, beta))
+
+# Plot term2 and the word probabilities
+ggplot(word_probs, aes(x = term2, y = beta)) +
+  geom_col() +
+  # Facet the bar plot by topic
+  facet_wrap(~ topic, scales = "free") +
+  coord_flip()
+```
+
+<p class="">Given the terms occuring with high probability, the visualiation helps us interpret the topics. For example, it seems likely that the first topic is related to complaints.
+</p>
+
+#### Document term matrices {.unnumbered}
+
+##### Creating a DTM {.unnumbered}
+
+
+<div class><p>Create a DTM using our <code>tidy_twitter</code> data. In this case, each tweet is considered a document. Print <code>tidy_twitter</code> in the console to confirm the column names.</p></div>
+
+<li>Start with the tidied Twitter data.</li>
+<li>Count each word used in each tweet.</li>
+<li>Use the word counts by tweet to create a DTM.</li>
+
+```{r}
+# Start with the tidied Twitter data
+tidy_twitter %>% 
+  # Count each word used in each tweet
+  count(word, tweet_id) %>% 
+  # Use the word counts by tweet to create a DTM
+  cast_dtm(tweet_id, word, n)
+```
+
+<p class="">With 6,962 documents and 17,964 terms, that's going to be one sparse matrix!
+</p>
+
+##### Evaluating a DTM as a matrix {.unnumbered}
+
+
+<div class>
+<p>Let's practice casting our tidy data into a DTM and evaluating the DTM by treating it as a matrix. </p>
+<p>In this exercise, you will create a DTM again, but with a much smaller subset of the twitter data (<code>tidy_twitter_subset</code>).</p>
+</div>
+<div class="exercise--instructions__content">
+<li>Cast the word counts by tweet into a DTM and assign it to <code>dtm_twitter</code>. </li>
+
+<li>Coerce <code>dtm_twitter</code> into a matrix called <code>matrix_twitter</code>.</li>
+
+<li>Print rows 1 through 5 and columns 90 through 95.</li>
+```{r}
+tidy_twitter_subset=tidy_twitter[1:200,]
+# Assign the DTM to dtm_twitter
+dtm_twitter <- tidy_twitter_subset %>% 
+  count(word, tweet_id) %>% 
+  # Cast the word counts by tweet into a DTM
+  cast_dtm(tweet_id, word, n)
+
+# Coerce dtm_twitter into a matrix called matrix_twitter
+matrix_twitter <- as.matrix(dtm_twitter)
+
+# Print rows 1 through 5 and columns 90 through 95
+matrix_twitter[1:5, 90:95]
+```
+</div>
+
+<p class="">The matrix is far too large to print all at once, but by indexing it we get a sense for its structure and sparsity.
+</p>
+
+#### Running topic models {.unnumbered}
+
+##### Fitting an LDA {.unnumbered}
+
+
+<div class><p>It's time to run your first topic model! As discussed, the three additional arguments of the <code>LDA()</code> function are critical for properly running a topic model. Note that running the <code>LDA()</code> function could take about 10 seconds. The <code>tidyverse</code> and <code>tidytext</code> packages along with the <code>tidy_twitter</code> dataset have been loaded for you.</p></div>
+<div class="exercise--instructions__content">
+<li>Load the <code>topicmodels</code> package. </li>
+
+<li>Cast the word counts by tweet into a DTM.</li>
+
+<li>Run an LDA with 2 topics and a Gibbs sampler.</li>
+```{r}
+# Load the topicmodels package
+library(topicmodels)
+
+# Cast the word counts by tweet into a DTM
+dtm_twitter <- tidy_twitter %>% 
+  count(word, tweet_id) %>% 
+  cast_dtm(tweet_id, word, n)
+
+# Run an LDA with 2 topics and a Gibbs sampler
+lda_out <- LDA(
+  dtm_twitter,
+  k = 2,
+  method = "Gibbs",
+  control = list(seed = 42)
+)
+```
+</div>
+
+<p class="">Well done! Remember that the Gibbs sampler can take some time to run, depending on the amount of data and the number of topics specified.
+</p>
+
+##### Tidying LDA output {.unnumbered}
+
+
+<div class><p>We've loaded the LDA output <code>lda_out</code> from the previous exercise. While there are a number of things of interest in the output, the topics themselves are of general interest. Let's extract these values.</p></div>
+<div class="exercise--instructions__content">
+<li>Print a summary of the topic model output using <code>glimpse()</code>. </li>
+
+<li>Tidy the matrix of word probabilities.</li>
+
+<li>Arrange the topics by word probabilities in descending order.</li>
+```{r}
+# Glimpse the topic model output
+glimpse(lda_out)
+
+# Tidy the matrix of word probabilities
+lda_topics <- lda_out %>% 
+  tidy(matrix = "beta")
+
+# Arrange the topics by word probabilities in descending order
+lda_topics %>% 
+  arrange(desc(beta))
+```
+</div>
+
+<p class="">Isn't it great to keep things tidy? Casting from and into a tidy format makes it trivial for us to evaluate the output of one (or more) topic models.
+</p>
+
+##### Comparing LDA output {.unnumbered}
+
+<div class>
+<p>We've only run a single LDA with a specific number of topics. The tidied output from that model, <code>lda_out_tidy</code>, has been loaded along with <code>dtm_twitter</code> in your workspace. Now run LDA with 3 topics and compare the outputs.</p>
+<pre><code>&gt; lda_out_tidy</code>
+
+<code># A tibble: 35,928 x 3
+   topic term        beta
+   &lt;int&gt; &lt;chr&gt;      &lt;dbl&gt;
+ 1     1 flight   0.0343 
+ 2     1 time     0.0102 
+ 3     2 service  0.00882
+ 4     1 plane    0.00688
+ 5     1 trip     0.00614
+ 6     2 customer 0.00604
+ 7     1 delayed  0.00596
+ 8     2 airline  0.00593
+ 9     1 hours    0.00532
+10     1 day      0.00499</code>
+<code># ... with 35,918 more rows
+</code></pre>
+</div>
+<div class="exercise--instructions__content">
+<li>Run an LDA with 3 topics and a Gibbs sampler (this may take 10 or more seconds).</li>
+
+<li>Tidy the matrix of word probabilities.</li>
+
+<li>Arrange the topics by word probabilities in descending order.</li>
+```{r}
+# Run an LDA with 3 topics and a Gibbs sampler
+lda_out2 <- LDA(
+  dtm_twitter,
+  k = 3,
+  method = "Gibbs",
+  control = list(seed = 42)
+)
+
+# Tidy the matrix of word probabilities
+lda_topics2 <- lda_out2 %>% 
+  tidy(matrix = "beta")
+
+# Arrange the topics by word probabilities in descending order
+lda_topics2 %>% 
+  arrange(desc(beta))
+```
+</div>
+
+<p class="">From the top word probabilities, do the first two topics look the same? What does the third topic appear to be about?
+</p>
+
+#### Interpreting topics {.unnumbered}
+
+##### Naming three topics {.unnumbered}
+
+
+<div class><p>Let's compare two possible topic model solutions and try naming the topics. Let's start with a three topic model named <code>lda_topics2</code>.</p></div>
+<div class="exercise--instructions__content">
+<li>Select the top 15 terms by topic and reorder term.</li>
+
+<li>Plot <code>word_probs2</code>, color and facet based on topic.</li>
+<li>What would you name these three topics?</li>
+```{r}
+# Select the top 15 terms by topic and reorder term
+word_probs2 <- lda_topics2 %>% 
+  group_by(topic) %>% 
+  top_n(15, beta) %>% 
+  ungroup() %>%
+  mutate(term2 = fct_reorder(term, beta))
+
+# Plot word probs, color and facet based on topic
+ggplot(
+  word_probs2, 
+  aes(term2, beta, fill = as.factor(topic))
+) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~ topic, scales = "free") +
+  coord_flip()
+```
+</div>
+
+<p class="">Nicely done! What did you decide for the topic names? Topic 1 is clearly about flights. Topic 2 appears to be about the amenities surrounding flights. Topic 3 looks to be about the airlines. You may have interpreted this differently, which is just fine – just be clear as to why you've named them the way you have.
+</p>
+
+##### Naming four topics {.unnumbered}
+
+
+<div class><p>Now let's compare the previous solution with a four topic model, <code>lda_topics3</code>.</p></div>
+<div class="exercise--instructions__content">
+<li>Select the top 15 terms by topic and reorder term.</li>
+
+<li>Plot <code>word_probs3</code>, color and facet based on topic.</li>
+<li>What would you name these four topics?</li>
+```{r}
+# Run an LDA with 4 topics and a Gibbs sampler
+lda_out3 <- LDA(
+  dtm_twitter,
+  k = 4,
+  method = "Gibbs",
+  control = list(seed = 42)
+)
+# Tidy the matrix of word probabilities
+lda_topics3 <- lda_out3 %>% 
+  tidy(matrix = "beta")
+# Select the top 15 terms by topic and reorder term
+word_probs3 <- lda_topics3 %>% 
+  group_by(topic) %>% 
+  top_n(15, beta) %>% 
+  ungroup() %>%
+  mutate(term2 = fct_reorder(term, beta))
+
+# Plot word_probs3, color and facet based on topic
+ggplot(
+  word_probs3, 
+  aes(term2, beta, fill = as.factor(topic))
+) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~ topic, scales = "free") +
+  coord_flip()
+```
+</div>
+
+<p class="">Well done! Are these topics different from each other? Should you keep adding topics or is this enough? How does this compare to the previous solution? I interpreted these as follows: Topic 1 is about flights, topic 2 is about airlines, topic 3 is about service, and topic 4 is about planes.
+</p>
+
+#### Wrap-up {.unnumbered}
+
+##### Wrap-up {.unnumbered}
+
+Congratulations! You have finished this course on introduction to text analysis in R. In this course, you have built on the foundation of the tidyverse to learn how to wrangle and visualize text, perform sentiment analysis, and run and interpret topic models. While you have come a long ways, there is always more to learn!
+
+##### Summary {.unnumbered}
+
+We have covered a number of new functions to help you wrangle, visualize, and model text data. You have learned how to tokenize and clean text, remove stop words, and visualize word counts, including using factors to reorder the elements of a plot, faceting, flipping coordinates, and creating word clouds. You have learned how to conduct sentiment analysis by appending sentiment dictionaries and using tidyr functions to restructure the data and visualize differences in sentiment across groups. Finally, you have learned how to use topic modeling to uncover underlying themes in text data, including how to create document term matrices and cast to and from tidy formats to visualize and interpret the word probabilities that represent each topic across many possible models.
+
+##### Next steps {.unnumbered}
+
+With Introduction to the Tidyverse and this course completed, you are ready for a number of other DataCamp courses. Julia Silge's "Sentiment Analysis in R: The Tidy Way" is a deeper dive into all things sentiment analysis. Pavel Oleinikov's "Topic Modeling in R" provides a whole course on topic modeling. Outside of DataCamp, Julia Silge and David Robinson's book "Text Mining with R," available for free online, provides even more detail on the use of the tidytext package they developed.
+
+##### All the best! {.unnumbered}
+
+Like I said, there has never been a better time to learn data analysis, especially data analysis in R. Thank you for taking this course and I wish you all the best in your future endeavors.

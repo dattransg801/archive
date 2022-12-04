@@ -1,0 +1,1814 @@
+# Visualization {.unnumbered}
+
+## Introduction to Matplotlib {.unnumbered}
+
+<h3 class="course__description-title">Ariel Rokem</h3>
+<p class="course__description">Ariel Rokem is a Data Scientist at the University of Washington eScience Institute. He received a PhD in neuroscience from UC Berkeley, and postdoctoral training in computational neuroimaging at Stanford. In his work, he develops data science algorithms and tools, and applies them to analysis of neural data. He is also a contributor to multiple open-source software projects in the scientific Python ecosystem.</p>
+
+**Course Description**
+
+<p class="course__description">Visualizing data in plots and figures exposes the underlying patterns in the data and provides insights. Good visualizations also help you communicate your data to others, and are useful to data analysts and other consumers of the data. In this course, you will learn how to use Matplotlib, a powerful Python data visualization library. Matplotlib provides the building blocks to create rich visualizations of many different kinds of datasets. You will learn how to create visualizations for different kinds of data and how to customize, automate, and share these visualizations.</p>
+
+### Introduction to Matplotlib {.unnumbered}
+
+<p class="chapter__description">
+    This chapter introduces the Matplotlib visualization library and demonstrates how to use it with data.
+  </p>
+  
+#### Introduction to Matplotlib {.unnumbered}
+
+
+
+##### Using the matplotlib.pyplot interface {.unnumbered}
+
+
+<div class>
+<p>There are many ways to use Matplotlib. In this course, we will focus on the <code>pyplot</code> interface, which provides the most flexibility in creating and customizing data visualizations.</p>
+<p>Initially, we will use the <code>pyplot</code> interface to create two kinds of objects: <code>Figure</code> objects and <code>Axes</code> objects.</p>
+<p><em>This course introduces a lot of new concepts, so if you ever need a quick refresher, download the <a href="https://datacamp-community-prod.s3.amazonaws.com/e1a8f39d-71ad-4d13-9a6b-618fe1b8c9e9">Matplotlib Cheat Sheet</a> and keep it handy!</em></p>
+</div>
+
+<li>Import the <code>matplotlib.pyplot</code> API, using the conventional name <code>plt</code>.</li>
+<li>Create <code>Figure</code> and <code>Axes</code> objects using the <code>plt.subplots</code> function.</li>
+<li>Show the results, an empty set of axes, using the <code>plt.show</code> function.</li>
+```{python,warning=F,message=F}
+# edited/added
+
+# Import the matplotlib.pyplot submodule and name it plt
+import matplotlib.pyplot as plt
+
+# Create a Figure and an Axes with plt.subplots
+fig, ax = plt.subplots()
+
+# Call the show function to show the result
+plt.show()
+plt.close()
+```
+
+<p class="">Nicely done! This script provides the basis for everything we'll do in this course.</p>
+
+##### Adding data to an Axes object {.unnumbered}
+
+
+<div class>
+<p>Adding data to a figure is done by calling methods of the <code>Axes</code> object. In this exercise, we will use the <code>plot</code> method to add data about rainfall in two American cities: Seattle, WA and Austin, TX.</p>
+<p>The data are stored in two pandas DataFrame objects that are already loaded into memory: <code>seattle_weather</code> stores information about the weather in Seattle, and <code>austin_weather</code> stores information about the weather in Austin. Each of the DataFrames has a <code>"MONTH"</code> column that stores the three-letter name of the months. Each also has a column named <code>"MLY-PRCP-NORMAL"</code> that stores the average rainfall in each month during a ten-year period.</p>
+<p>In this exercise, you will create a visualization that will allow you to compare the rainfall in these two cities.</p>
+</div>
+
+
+<li>Import the <code>matplotlib.pyplot</code> submodule as <code>plt</code>.</li>
+
+<li>Create a Figure and an Axes object by calling <code>plt.subplots</code>.</li>
+<li>Add data from the <code>seattle_weather</code> DataFrame by calling the Axes <code>plot</code> method.</li>
+<li>Add data from the <code>austin_weather</code> DataFrame in a similar manner and call <code>plt.show</code> to show the results.</li>
+```{python,warning=F,message=F,eval=F}
+# edited/added
+import pandas as pd
+import calendar
+austin_weather = pd.read_csv("archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/austin_weather.csv")
+seattle_weather = pd.read_csv("archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/seattle_weather.csv")
+seattle_weather = seattle_weather[seattle_weather['STATION'] == 'USW00094290']
+
+# Import the matplotlib.pyplot submodule and name it plt
+import matplotlib.pyplot as plt
+
+# Create a Figure and an Axes with plt.subplots
+fig, ax = plt.subplots()
+
+# Plot MLY-PRCP-NORMAL from seattle_weather against MONTH
+ax.plot(seattle_weather["DATE"], seattle_weather["MLY-PRCP-NORMAL"])
+
+# Plot MLY-PRCP-NORMAL from austin_weather against MONTH
+ax.plot(austin_weather["DATE"], austin_weather["MLY-PRCP-NORMAL"])
+
+# Call the show function
+plt.xticks(range(1, 1 + len(austin_weather["DATE"])), austin_weather['DATE'].apply(lambda x: calendar.month_abbr[x]))
+plt.show()
+plt.close()
+```
+```{python,warning=F,message=F,echo=F}
+# edited/added
+import pandas as pd
+import calendar
+austin_weather = pd.read_csv("archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/austin_weather.csv")
+seattle_weather = pd.read_csv("archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/seattle_weather.csv")
+seattle_weather = seattle_weather[seattle_weather['STATION'] == 'USW00094290']
+
+# Import the matplotlib.pyplot submodule and name it plt
+import matplotlib.pyplot as plt
+
+# Create a Figure and an Axes with plt.subplots
+fig, ax = plt.subplots()
+
+# Plot MLY-PRCP-NORMAL from seattle_weather against MONTH
+ax.plot(seattle_weather["DATE"], seattle_weather["MLY-PRCP-NORMAL"])
+
+# Plot MLY-PRCP-NORMAL from austin_weather against MONTH
+ax.plot(austin_weather["DATE"], austin_weather["MLY-PRCP-NORMAL"])
+
+# Call the show function
+plt.xticks(range(1, 1 + len(austin_weather["DATE"])), austin_weather['DATE'].apply(lambda x: calendar.month_abbr[x]))
+plt.show()
+plt.close()
+```
+<p class="">Great! Next you will learn how to label the axes on this plot.</p>
+
+#### Customizing your plots {.unnumbered}
+
+
+
+##### Customizing data appearance {.unnumbered}
+
+
+<div class>
+<p>We can customize the appearance of data in our plots, while adding the data to the plot, using key-word arguments to the plot command.</p>
+<p>In this exercise, you will customize the appearance of the markers, the linestyle that is used, and the color of the lines and markers for your data.</p>
+<p>As before, the data is already provided in pandas DataFrame objects loaded into memory: <code>seattle_weather</code> and <code>austin_weather</code>. These each have a <code>"MONTHS"</code> column and a <code>"MLY-PRCP-NORMAL"</code> that you will plot against each other.</p>
+<p>In addition, a Figure object named <code>fig</code> and an Axes object named <code>ax</code> have already been created for you.</p>
+</div>
+
+<li>Call <code>ax.plot</code> to plot <code>"MLY-PRCP-NORMAL"</code> against <code>"MONTHS"</code> in both DataFrames.</li>
+<li>Pass the <code>color</code> key-word arguments to these commands to set the color of the Seattle data to blue ('b') and the Austin data to red ('r').</li>
+<li>Pass the <code>marker</code> key-word arguments to these commands to set the Seattle data to circle markers ('o') and the Austin markers to triangles pointing downwards ('v').</li>
+<li>Pass the <code>linestyle</code> key-word argument to use dashed lines for the data from both cities ('--').</li>
+```{python,warning=F,message=F,eval=F}
+# edited/added
+import pandas as pd
+import calendar
+import matplotlib.pyplot as plt
+austin_weather = pd.read_csv("archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/austin_weather.csv")
+seattle_weather = pd.read_csv("archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/seattle_weather.csv")
+seattle_weather = seattle_weather[seattle_weather['STATION'] == 'USW00094290']
+
+# Create a Figure and an Axes with plt.subplots
+fig, ax = plt.subplots()
+
+# Plot Seattle data, setting data appearance
+ax.plot(seattle_weather["DATE"], seattle_weather["MLY-PRCP-NORMAL"],
+        color='b', marker='o', linestyle='--')
+
+# Plot Austin data, setting data appearance
+ax.plot(austin_weather["DATE"], austin_weather["MLY-PRCP-NORMAL"],
+        color='r', marker='v', linestyle='--')
+
+# Call show to display the resulting plot
+plt.xticks(range(1, 1 + len(austin_weather["DATE"])), austin_weather['DATE'].apply(lambda x: calendar.month_abbr[x]))
+plt.show()
+plt.close()
+```
+```{python,warning=F,message=F,echo=F}
+# edited/added
+import pandas as pd
+import calendar
+import matplotlib.pyplot as plt
+austin_weather = pd.read_csv("archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/austin_weather.csv")
+seattle_weather = pd.read_csv("archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/seattle_weather.csv")
+seattle_weather = seattle_weather[seattle_weather['STATION'] == 'USW00094290']
+
+# Create a Figure and an Axes with plt.subplots
+fig, ax = plt.subplots()
+
+# Plot Seattle data, setting data appearance
+ax.plot(seattle_weather["DATE"], seattle_weather["MLY-PRCP-NORMAL"],
+        color='b', marker='o', linestyle='--')
+
+# Plot Austin data, setting data appearance
+ax.plot(austin_weather["DATE"], austin_weather["MLY-PRCP-NORMAL"],
+        color='r', marker='v', linestyle='--')
+
+# Call show to display the resulting plot
+plt.xticks(range(1, 1 + len(austin_weather["DATE"])), austin_weather['DATE'].apply(lambda x: calendar.month_abbr[x]))
+plt.show()
+plt.close()
+```
+<p class="">Beautiful! Now you can create plots that look exactly as you'd like them to appear.</p>
+
+##### Customizing axis labels and adding titles {.unnumbered}
+
+
+<div class>
+<p>Customizing the axis labels requires using the <code>set_xlabel</code> and <code>set_ylabel</code> methods of the Axes object. Adding a title uses the <code>set_title</code> method.</p>
+<p>In this exercise, you will customize the content of the axis labels and add a title to a plot.</p>
+<p>As before, the data is already provided in pandas DataFrame objects loaded into memory: <code>seattle_weather</code> and <code>austin_weather</code>. These each have a <code>"MONTH"</code> column and a <code>"MLY-PRCP-NORMAL"</code> column. These data are plotted against each other in the first two lines of the sample code provided.</p>
+<p>In addition, a Figure object named <code>fig</code> and an Axes object named <code>ax</code> have already been created for you.</p>
+</div>
+
+<li>Use the <code>set_xlabel</code> method to add the label: <code>"Time (months)"</code>.</li>
+<li>Use the <code>set_ylabel</code> method to add the label: <code>"Precipitation (inches)"</code>.</li>
+<li>Use the <code>set_title</code> method to add the title: <code>"Weather patterns in Austin and Seattle"</code>.</li>
+```{python,warning=F,message=F,eval=F}
+# edited/added
+import pandas as pd
+import calendar
+import matplotlib.pyplot as plt
+austin_weather = pd.read_csv("archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/austin_weather.csv")
+seattle_weather = pd.read_csv("archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/seattle_weather.csv")
+seattle_weather = seattle_weather[seattle_weather['STATION'] == 'USW00094290']
+
+# Create a Figure and an Axes with plt.subplots
+fig, ax = plt.subplots()
+ax.plot(seattle_weather["DATE"], seattle_weather["MLY-PRCP-NORMAL"])
+ax.plot(austin_weather["DATE"], austin_weather["MLY-PRCP-NORMAL"])
+
+# Customize the x-axis label
+ax.set_xlabel("Time (months)")
+
+# Customize the y-axis label
+ax.set_ylabel("Precipitation (inches)")
+
+# Add the title
+ax.set_title("Weather patterns in Austin and Seattle")
+
+# Display the figure
+plt.xticks(range(1, 1 + len(austin_weather["DATE"])), austin_weather['DATE'].apply(lambda x: calendar.month_abbr[x]))
+plt.show()
+plt.close()
+```
+```{python,warning=F,message=F,echo=F}
+# edited/added
+import pandas as pd
+import calendar
+import matplotlib.pyplot as plt
+austin_weather = pd.read_csv("archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/austin_weather.csv")
+seattle_weather = pd.read_csv("archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/seattle_weather.csv")
+seattle_weather = seattle_weather[seattle_weather['STATION'] == 'USW00094290']
+
+# Create a Figure and an Axes with plt.subplots
+fig, ax = plt.subplots()
+ax.plot(seattle_weather["DATE"], seattle_weather["MLY-PRCP-NORMAL"])
+ax.plot(austin_weather["DATE"], austin_weather["MLY-PRCP-NORMAL"])
+
+# Customize the x-axis label
+ax.set_xlabel("Time (months)")
+
+# Customize the y-axis label
+ax.set_ylabel("Precipitation (inches)")
+
+# Add the title
+ax.set_title("Weather patterns in Austin and Seattle")
+
+# Display the figure
+plt.xticks(range(1, 1 + len(austin_weather["DATE"])), austin_weather['DATE'].apply(lambda x: calendar.month_abbr[x]))
+plt.show()
+plt.close()
+```
+
+<p class="">Great! We'll learn more about annotating figures later in the course.</p>
+
+#### Small multiples {.unnumbered}
+
+
+
+##### Creating a grid of subplots {.unnumbered}
+
+
+<div class><p>How would you create a <code>Figure</code> with 6 <code>Axes</code> objects organized in 3 rows and 2 columns?</p></div>
+
+- [ ] <code>fig, ax = plt.subplots((3, 2))</code>
+- [ ] <code>fig, ax = plt.axes((2, 3))</code>
+- [x] <code>fig, ax = plt.subplots(3, 2)</code>
+- [ ] <code>fig, ax = plt.subplots((2, 3))</code>
+
+<p class="">That's right! This gives you the output you need.</p>
+
+##### Creating small multiples with plt.subplots {.unnumbered}
+
+
+<div class>
+<p>Small multiples are used to plot several datasets side-by-side. In Matplotlib, small multiples can be created using the <code>plt.subplots()</code> function. The first argument is the number of rows in the array of Axes objects generate and the second argument is the number of columns. In this exercise, you will use the Austin and Seattle data to practice creating and populating an array of subplots.</p>
+<p>The data is given to you in DataFrames: <code>seattle_weather</code> and <code>austin_weather</code>. These each have a <code>"MONTH"</code> column and <code>"MLY-PRCP-NORMAL"</code> (for average precipitation), as well as <code>"MLY-TAVG-NORMAL"</code> (for average temperature) columns. In this exercise, you will plot in a separate subplot the monthly average precipitation and average temperatures in each city.</p>
+</div>
+
+<li>Create a Figure and an array of subplots with 2 rows and 2 columns.</li>
+<li>Addressing the top left Axes as index 0, 0, plot the Seattle precipitation.</li>
+<li>In the top right (index 0,1), plot Seattle temperatures.</li>
+<li>In the bottom left (1, 0) and bottom right (1, 1) plot Austin precipitations and temperatures.</li>
+```{python,warning=F,message=F,eval=F}
+# edited/added
+import pandas as pd
+import calendar
+import matplotlib.pyplot as plt
+austin_weather = pd.read_csv("archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/austin_weather.csv")
+seattle_weather = pd.read_csv("archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/seattle_weather.csv")
+seattle_weather = seattle_weather[seattle_weather['STATION'] == 'USW00094290']
+
+# Create a Figure and an array of subplots with 2 rows and 2 columns
+fig, ax = plt.subplots(2, 2)
+
+# Addressing the top left Axes as index 0, 0, plot month and Seattle precipitation
+ax[0, 0].plot(seattle_weather["DATE"], seattle_weather["MLY-PRCP-NORMAL"])
+ax[0, 0].set_xticks(range(1, 1 + len(austin_weather["DATE"])))
+ax[0, 0].set_xticklabels(austin_weather['DATE'].apply(lambda x: calendar.month_abbr[x]), rotation='vertical', fontsize=6)
+
+# In the top right (index 0,1), plot month and Seattle temperatures
+ax[0, 1].plot(seattle_weather["DATE"], seattle_weather["MLY-TAVG-NORMAL"])
+ax[0, 1].set_xticks(range(1, 1 + len(austin_weather["DATE"])))
+ax[0, 1].set_xticklabels(austin_weather['DATE'].apply(lambda x: calendar.month_abbr[x]), rotation='vertical', fontsize=6)
+
+# In the bottom left (1, 0) plot month and Austin precipitations
+ax[1, 0].plot(austin_weather["DATE"], austin_weather["MLY-PRCP-NORMAL"])
+ax[1, 0].set_xticks(range(1, 1 + len(austin_weather["DATE"])))
+ax[1, 0].set_xticklabels(austin_weather['DATE'].apply(lambda x: calendar.month_abbr[x]), rotation='vertical', fontsize=6)
+
+# In the bottom right (1, 1) plot month and Austin temperatures
+ax[1, 1].plot(austin_weather["DATE"], austin_weather["MLY-TAVG-NORMAL"])
+ax[1, 1].set_xticks(range(1, 1 + len(austin_weather["DATE"])))
+ax[1, 1].set_xticklabels(austin_weather['DATE'].apply(lambda x: calendar.month_abbr[x]), rotation='vertical', fontsize=6)
+
+plt.show()
+plt.close()
+```
+```{python,warning=F,message=F,echo=F}
+# edited/added
+import pandas as pd
+import calendar
+import matplotlib.pyplot as plt
+austin_weather = pd.read_csv("archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/austin_weather.csv")
+seattle_weather = pd.read_csv("archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/seattle_weather.csv")
+seattle_weather = seattle_weather[seattle_weather['STATION'] == 'USW00094290']
+
+# Create a Figure and an array of subplots with 2 rows and 2 columns
+fig, ax = plt.subplots(2, 2)
+
+# Addressing the top left Axes as index 0, 0, plot month and Seattle precipitation
+ax[0, 0].plot(seattle_weather["DATE"], seattle_weather["MLY-PRCP-NORMAL"])
+ax[0, 0].set_xticks(range(1, 1 + len(austin_weather["DATE"])))
+ax[0, 0].set_xticklabels(austin_weather['DATE'].apply(lambda x: calendar.month_abbr[x]), rotation='vertical', fontsize=6)
+
+# In the top right (index 0,1), plot month and Seattle temperatures
+ax[0, 1].plot(seattle_weather["DATE"], seattle_weather["MLY-TAVG-NORMAL"])
+ax[0, 1].set_xticks(range(1, 1 + len(austin_weather["DATE"])))
+ax[0, 1].set_xticklabels(austin_weather['DATE'].apply(lambda x: calendar.month_abbr[x]), rotation='vertical', fontsize=6)
+
+# In the bottom left (1, 0) plot month and Austin precipitations
+ax[1, 0].plot(austin_weather["DATE"], austin_weather["MLY-PRCP-NORMAL"])
+ax[1, 0].set_xticks(range(1, 1 + len(austin_weather["DATE"])))
+ax[1, 0].set_xticklabels(austin_weather['DATE'].apply(lambda x: calendar.month_abbr[x]), rotation='vertical', fontsize=6)
+
+# In the bottom right (1, 1) plot month and Austin temperatures
+ax[1, 1].plot(austin_weather["DATE"], austin_weather["MLY-TAVG-NORMAL"])
+ax[1, 1].set_xticks(range(1, 1 + len(austin_weather["DATE"])))
+ax[1, 1].set_xticklabels(austin_weather['DATE'].apply(lambda x: calendar.month_abbr[x]), rotation='vertical', fontsize=6)
+
+plt.show()
+plt.close()
+```
+
+<p class="">That's great! Next, you will put together all the things you've learned so far.</p>
+
+##### Small multiples with shared y axis {.unnumbered}
+
+
+<div class>
+<p>When creating small multiples, it is often preferable to make sure that the different plots are displayed
+with the same scale used on the y-axis. This can be configured by setting the <code>sharey</code> key-word to <code>True</code>.</p>
+<p>In this exercise, you will create a Figure with two Axes objects that share their y-axis. As before, the data is provided in <code>seattle_weather</code> and <code>austin_weather</code> DataFrames.</p>
+</div>
+
+<li>Create a Figure with an array of two Axes objects that share their y-axis range.</li>
+<li>Plot Seattle's <code>"MLY-PRCP-NORMAL"</code> in a solid blue line in the top Axes. </li>
+<li>Add Seattle's <code>"MLY-PRCP-25PCTL"</code> and <code>"MLY-PRCP-75PCTL"</code> in dashed blue lines to the top Axes.</li>
+<li>Plot Austin's <code>"MLY-PRCP-NORMAL"</code> in a solid red line in the bottom Axes and the <code>"MLY-PRCP-25PCTL"</code> and <code>"MLY-PRCP-75PCTL"</code> in dashed red lines.</li>
+```{python,warning=F,message=F,eval=F}
+# edited/added
+import pandas as pd
+import calendar
+import matplotlib.pyplot as plt
+austin_weather = pd.read_csv("archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/austin_weather.csv")
+seattle_weather = pd.read_csv("archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/seattle_weather.csv")
+seattle_weather = seattle_weather[seattle_weather['STATION'] == 'USW00094290']
+
+# Create a figure and an array of axes: 2 rows, 1 column with shared y axis
+fig, ax = plt.subplots(2, 1, sharey=True)
+
+# Plot Seattle precipitation in the top axes
+ax[0].plot(seattle_weather["DATE"], seattle_weather["MLY-PRCP-NORMAL"], color='b')
+ax[0].plot(seattle_weather["DATE"], seattle_weather["MLY-PRCP-25PCTL"], color='b', linestyle='--')
+ax[0].plot(seattle_weather["DATE"], seattle_weather["MLY-PRCP-75PCTL"], color='b', linestyle='--')
+ax[0].set_xticks(range(1, 1 + len(austin_weather["DATE"])))
+ax[0].set_xticklabels(austin_weather['DATE'].apply(lambda x: calendar.month_abbr[x]), fontsize=6)
+
+# Plot Austin precipitation in the bottom axes
+ax[1].plot(austin_weather["DATE"], austin_weather["MLY-PRCP-NORMAL"], color='r')
+ax[1].plot(austin_weather["DATE"], austin_weather["MLY-PRCP-25PCTL"], color='r', linestyle='--')
+ax[1].plot(austin_weather["DATE"], austin_weather["MLY-PRCP-75PCTL"], color='r', linestyle='--')
+ax[1].set_xticks(range(1, 1 + len(austin_weather["DATE"])))
+ax[1].set_xticklabels(austin_weather['DATE'].apply(lambda x: calendar.month_abbr[x]), fontsize=6)
+
+plt.show()
+plt.close()
+```
+```{python,warning=F,message=F,echo=F}
+# edited/added
+import pandas as pd
+import calendar
+import matplotlib.pyplot as plt
+austin_weather = pd.read_csv("archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/austin_weather.csv")
+seattle_weather = pd.read_csv("archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/seattle_weather.csv")
+seattle_weather = seattle_weather[seattle_weather['STATION'] == 'USW00094290']
+
+# Create a figure and an array of axes: 2 rows, 1 column with shared y axis
+fig, ax = plt.subplots(2, 1, sharey=True)
+
+# Plot Seattle precipitation in the top axes
+ax[0].plot(seattle_weather["DATE"], seattle_weather["MLY-PRCP-NORMAL"], color='b')
+ax[0].plot(seattle_weather["DATE"], seattle_weather["MLY-PRCP-25PCTL"], color='b', linestyle='--')
+ax[0].plot(seattle_weather["DATE"], seattle_weather["MLY-PRCP-75PCTL"], color='b', linestyle='--')
+ax[0].set_xticks(range(1, 1 + len(austin_weather["DATE"])))
+ax[0].set_xticklabels(austin_weather['DATE'].apply(lambda x: calendar.month_abbr[x]), fontsize=6)
+
+# Plot Austin precipitation in the bottom axes
+ax[1].plot(austin_weather["DATE"], austin_weather["MLY-PRCP-NORMAL"], color='r')
+ax[1].plot(austin_weather["DATE"], austin_weather["MLY-PRCP-25PCTL"], color='r', linestyle='--')
+ax[1].plot(austin_weather["DATE"], austin_weather["MLY-PRCP-75PCTL"], color='r', linestyle='--')
+ax[1].set_xticks(range(1, 1 + len(austin_weather["DATE"])))
+ax[1].set_xticklabels(austin_weather['DATE'].apply(lambda x: calendar.month_abbr[x]), fontsize=6)
+
+plt.show()
+plt.close()
+```
+
+<p class="">Good job! Next, you will learn how to plot more complex time-series data.</p>
+
+### Plotting time-series {.unnumbered}
+
+<p class="chapter__description">
+    Time series data is data that is recorded. Visualizing this type of data helps clarify trends and illuminates relationships between data.
+  </p>
+  
+#### Plotting time-series data {.unnumbered}
+
+
+
+##### Read data with a time index {.unnumbered}
+
+
+<div class>
+<p>pandas DataFrame objects can have an index that denotes time. This is useful because Matplotlib recognizes that these measurements represent time and labels the values on the axis accordingly.</p>
+<p>In this exercise, you will read data from a CSV file called <code>climate_change.csv</code> that contains measurements of CO2 levels and temperatures made on the 6th of every month from 1958 until 2016. You will use pandas' <code>read_csv</code> function.</p>
+<p>To designate the index as a <code>DateTimeIndex</code>, you will use the <code>parse_dates</code> and <code>index_col</code> key-word arguments both to parse this column as a variable that contains dates and also to designate it as the index for this DataFrame.</p>
+<p><em>By the way, if you haven't downloaded it already, check out the <a href="https://datacamp-community-prod.s3.amazonaws.com/e1a8f39d-71ad-4d13-9a6b-618fe1b8c9e9">Matplotlib Cheat Sheet</a>. It includes an overview of the most important concepts, functions and methods and might come in handy if you ever need a quick refresher!</em></p>
+</div>
+
+<li>Import the pandas library as <code>pd</code>.</li>
+
+<li>Read in the data from a CSV file called <code>'climate_change.csv'</code> using <code>pd.read_csv</code>.</li>
+<li>Use the <code>parse_dates</code> key-word argument to parse the <code>"date"</code> column as dates.</li>
+<li>Use the <code>index_col</code> key-word argument to set the <code>"date"</code> column as the index.</li>
+```{python,warning=F,message=F}
+# edited/added
+import pandas as pd
+
+# Read the data from file using read_csv
+climate_change = pd.read_csv('archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/climate_change.csv', parse_dates=["date"], index_col="date")
+```
+
+<p class="">Nicely done! Next, we'll plot these data.</p>
+
+##### Plot time-series data {.unnumbered}
+
+
+<div class>
+<p>To plot time-series data, we use the <code>Axes</code> object <code>plot</code> command. The first argument to this method are the values for the x-axis and the second argument are the values for the y-axis. </p>
+<p>This exercise provides data stored in a DataFrame called <code>climate_change</code>. This variable has a time-index with the dates of measurements and two data columns: <code>"co2"</code> and <code>"relative_temp"</code>.</p>
+<p>In this case, the index of the DataFrame would be used as the x-axis values and we will plot the values stored in the <code>"relative_temp"</code> column as the y-axis values. We will also properly label the x-axis and y-axis.</p>
+</div>
+
+<li>Add the data from <code>climate_change</code> to the plot: use the DataFrame <code>index</code> for the x value and the <code>"relative_temp"</code> column for the y values.</li>
+<li>Set the x-axis label to <code>'Time'</code>.</li>
+<li>Set the y-axis label to <code>'Relative temperature (Celsius)'</code>.</li>
+<li>Show the figure.</li>
+```{python,warning=F,message=F}
+# edited/added
+import pandas as pd
+
+# Read the data from file using read_csv
+climate_change = pd.read_csv('archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/climate_change.csv', parse_dates=["date"], index_col="date")
+
+import matplotlib.pyplot as plt
+fig, ax = plt.subplots()
+
+# Add the time-series for "relative_temp" to the plot
+ax.plot(climate_change.index, climate_change['relative_temp'])
+
+# Set the x-axis label
+ax.set_xlabel('Time')
+
+# Set the y-axis label 
+ax.set_ylabel('Relative temperature (Celsius)')
+
+# Show the figure
+plt.show()
+plt.close()
+```
+
+<p class="">Great! Next, you'll zoom in to select a part of the time-series.</p>
+
+##### Using a time index to zoom in {.unnumbered}
+
+
+<div class>
+<p>When a time-series is represented with a time index, we can use this index for the x-axis when plotting. We can also select a range of dates to zoom in on a particular period within the time-series using pandas' indexing facilities. In this exercise, you will select a portion of a time-series dataset and you will plot that period.</p>
+<p>The data to use is stored in a DataFrame called <code>climate_change</code>, which has a time-index with dates of measurements and two data columns: <code>"co2"</code> and <code>"relative_temp"</code>.</p>
+</div>
+
+<li>Use <code>plt.subplots</code> to create a Figure with one Axes called <code>fig</code> and <code>ax</code>, respectively.</li>
+
+<li>Create a variable called <code>seventies</code> that includes all the data between <code>"1970-01-01"</code> and <code>"1979-12-31"</code>.</li>
+
+<li>Add the data from <code>seventies</code> to the plot: use the DataFrame <code>index</code> for the x value and the <code>"co2"</code> column for the y values.</li>
+```{python,warning=F,message=F}
+# edited/added
+import pandas as pd
+
+# Read the data from file using read_csv
+climate_change = pd.read_csv('archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/climate_change.csv', parse_dates=["date"], index_col="date")
+
+import matplotlib.pyplot as plt
+
+# Use plt.subplots to create fig and ax
+fig, ax = plt.subplots()
+
+# Create variable seventies with data from "1970-01-01" to "1979-12-31"
+seventies = climate_change["1970-01-01":"1979-12-31"]
+
+# Add the time-series for "co2" data from seventies to the plot
+ax.plot(seventies.index, seventies["co2"])
+
+# Show the figure
+plt.show()
+plt.close()
+```
+
+<p class="">Nice. That's what the data for the seventies looks like!</p>
+
+#### Plotting different variables {.unnumbered}
+
+
+
+##### Plotting two variables {.unnumbered}
+
+
+<div class>
+<p>If you want to plot two time-series variables that were recorded at the same times, you can add both of them to the same subplot.</p>
+<p>If the variables have very different scales, you'll want to make sure that you plot them in different twin Axes objects. These objects can share one axis (for example, the time, or x-axis) while not sharing the other (the y-axis).</p>
+<p>To create a twin Axes object that shares the x-axis, we use the <code>twinx</code> method.</p>
+<p>In this exercise, you'll have access to a DataFrame that has the <code>climate_change</code> data loaded into it. This DataFrame was loaded with the <code>"date"</code> column set as a <code>DateTimeIndex</code>, and it has a column called <code>"co2"</code> with carbon dioxide measurements and a column called <code>"relative_temp"</code> with temperature measurements.</p>
+</div>
+
+<li>Use <code>plt.subplots</code> to create a Figure and Axes objects called <code>fig</code> and <code>ax</code>, respectively.</li>
+```{python,warning=F,message=F}
+# edited/added
+import pandas as pd
+
+# Read the data from file using read_csv
+climate_change = pd.read_csv('archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/climate_change.csv', parse_dates=["date"], index_col="date")
+
+import matplotlib.pyplot as plt
+
+# Initalize a Figure and Axes
+fig, ax = plt.subplots()
+
+# Plot the CO2 variable in blue
+ax.plot(climate_change.index, climate_change["co2"], color='blue')
+
+# Create a twin Axes that shares the x-axis
+ax2 = ax.twinx()
+
+# Plot the relative temperature in red
+ax2.plot(climate_change.index, climate_change["relative_temp"], color='red')
+
+plt.show()
+plt.close()
+```
+<li>Plot the carbon dioxide variable in blue using the Axes <code>plot</code> method.</li>
+<li>Use the Axes <code>twinx</code> method to create a twin Axes that shares the x-axis.</li>
+<li>Plot the relative temperature variable in red on the twin Axes using its <code>plot</code> method.</li>
+
+<p class="">Great work. Next, let's implement this as a function.</p>
+
+##### Defining a function that plots time-series data {.unnumbered}
+
+
+<div class>
+<p>Once you realize that a particular section of code that you have written is useful, it is a good idea to define a function that saves that section of code for you, rather than copying it to other parts of your program where you would like to use this code.</p>
+<p>Here, we will define a function that takes inputs such as a time variable and some other variable and plots them as x and y inputs. Then, it sets the labels on the x- and y-axis and sets the colors of the y-axis label, the y-axis ticks and the tick labels.</p>
+</div>
+
+<li>Define a function called <code>plot_timeseries</code> that takes as input an Axes object (<code>axes</code>), data (<code>x</code>,<code>y</code>), a string with the name of a color and strings for x- and y-axis labels.</li>
+<li>Plot y as a function of in the color provided as the input <code>color</code>.</li>
+<li>Set the x- and y-axis labels using the provided input <code>xlabel</code> and <code>ylabel</code>, setting the y-axis label color using <code>color</code>.</li>
+<li>Set the y-axis tick parameters using the <code>tick_params</code> method of the Axes object, setting the <code>colors</code> key-word to <code>color</code>.</li>
+```{python,warning=F,message=F}
+# Define a function called plot_timeseries
+def plot_timeseries(axes, x, y, color, xlabel, ylabel):
+
+  # Plot the inputs x,y in the provided color
+  axes.plot(x, y, color=color)
+
+  # Set the x-axis label
+  axes.set_xlabel(xlabel)
+
+  # Set the y-axis label
+  axes.set_ylabel(ylabel, color=color)
+
+  # Set the colors tick params for y-axis
+  axes.tick_params('y', colors=color)
+```
+
+<p class="">Very good. Next, let's use this function!</p>
+
+##### Using a plotting function {.unnumbered}
+
+
+<div class>
+<p>Defining functions allows us to reuse the same code without having to repeat all of it. Programmers sometimes say <a href="https://en.wikipedia.org/wiki/Don%27t_repeat_yourself">"Don't repeat yourself"</a>.</p>
+<p>In the previous exercise, you defined a function called <code>plot_timeseries</code>:</p>
+<pre><code>plot_timeseries(axes, x, y, color, xlabel, ylabel)
+</code></pre>
+<p>that takes an Axes object (as the argument <code>axes</code>), time-series data (as <code>x</code> and <code>y</code> arguments) the name of a color (as a string, provided as the <code>color</code> argument) and x-axis and y-axis labels (as <code>xlabel</code> and <code>ylabel</code> arguments). In this exercise, the function <code>plot_timeseries</code> is already defined and provided to you.</p>
+<p>Use this function to plot the <code>climate_change</code> time-series data, provided as a pandas DataFrame object that has a DateTimeIndex with the dates of the measurements and <code>co2</code> and <code>relative_temp</code> columns.</p>
+</div>
+
+<li>In the provided <code>ax</code> object, use the function <code>plot_timeseries</code> to plot the <code>"co2"</code> column in blue, with the x-axis label <code>"Time (years)"</code> and y-axis label <code>"CO2 levels"</code>.</li>
+
+<li>Use the <code>ax.twinx</code> method to add an Axes object to the figure that shares the x-axis with <code>ax</code>.</li>
+
+<li>Use the function <code>plot_timeseries</code> to add the data in the <code>"relative_temp"</code> column in red to the twin Axes object, with the x-axis label <code>"Time (years)"</code> and y-axis label <code>"Relative temperature (Celsius)"</code>.</li>
+```{python,warning=F,message=F}
+# edited/added
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Read the data from file using read_csv
+climate_change = pd.read_csv('archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/climate_change.csv', parse_dates=["date"], index_col="date")
+
+# Define a function called plot_timeseries
+def plot_timeseries(axes, x, y, color, xlabel, ylabel):
+
+  # Plot the inputs x,y in the provided color
+  axes.plot(x, y, color=color)
+
+  # Set the x-axis label
+  axes.set_xlabel(xlabel)
+
+  # Set the y-axis label
+  axes.set_ylabel(ylabel, color=color)
+
+  # Set the colors tick params for y-axis
+  axes.tick_params('y', colors=color)
+  
+fig, ax = plt.subplots()
+
+# Plot the CO2 levels time-series in blue
+plot_timeseries(ax, climate_change.index, climate_change["co2"], 'blue', "Time (years)", "CO2 levels")
+
+# Create a twin Axes object that shares the x-axis
+ax2 = ax.twinx()
+
+# Plot the relative temperature data in red
+plot_timeseries(ax2, climate_change.index, climate_change['relative_temp'], 'red', "Time (years)", "Relative temperature (Celsius)")
+
+plt.show()
+plt.close()
+```
+
+<p class="">Great. Let's see next how to highlight particular details of the data.</p>
+
+#### Annotating time-series data {.unnumbered}
+
+
+
+##### Annotating a plot of time-series data {.unnumbered}
+
+
+<div class>
+<p>Annotating a plot allows us to highlight interesting information in the plot. For example, in describing the climate change dataset, we might want to point to the date at which the relative temperature first exceeded 1 degree Celsius.</p>
+<p>For this, we will use the <code>annotate</code> method of the Axes object. In this exercise, you will have the <code>DataFrame</code> called <code>climate_change</code> loaded into memory. Using the Axes methods, plot only the relative temperature column as a function of dates, and annotate the data.</p>
+</div>
+
+<li>Use the <code>ax.plot</code> method to plot the DataFrame index against the <code>relative_temp</code> column.</li>
+<li>Use the <code>annotate</code> method to add the text <code>'&gt;1 degree'</code> in the location <code>(pd.Timestamp('2015-10-06'), 1)</code>.</li>
+```{python,warning=F,message=F}
+# edited/added
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Read the data from file using read_csv
+climate_change = pd.read_csv('archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/climate_change.csv', parse_dates=["date"], index_col="date")
+
+fig, ax = plt.subplots()
+
+# Plot the relative temperature data
+ax.plot(climate_change.index, climate_change['relative_temp'])
+
+# Annotate the date at which temperatures exceeded 1 degree
+ax.annotate(">1 degree", xy=(pd.Timestamp('2015-10-06'), 1))
+
+plt.show()
+plt.close()
+```
+
+<p class="">Good job! Now let's put it all together to create a figure that tells the whole story.</p>
+
+##### Plotting time-series: putting it all together {.unnumbered}
+
+
+<div class>
+<p>In this exercise, you will plot two time-series with different scales on the same Axes, and annotate the data from one of these series.</p>
+<p>The CO2/temperatures data is provided as a DataFrame called <code>climate_change</code>. You should also use the function that we have defined before, called <code>plot_timeseries</code>, which takes an Axes object (as the <code>axes</code> argument) plots a time-series (provided as <code>x</code> and <code>y</code> arguments), sets the labels for the x-axis and y-axis and sets the color for the data, and for the y tick/axis labels:</p>
+<pre><code>plot_timeseries(axes, x, y, color, xlabel, ylabel)
+</code></pre>
+<p>Then, you will annotate with text an important time-point in the data: on 2015-10-06, when the temperature first rose to above 1 degree over the average.</p>
+</div>
+
+<li>Use the <code>plot_timeseries</code> function to plot CO2 levels against time. Set xlabel to <code>"Time (years)"</code> ylabel to <code>"CO2 levels"</code> and color to <code>'blue'</code>.</li>
+
+<li>Create <code>ax2</code>, as a twin of the first Axes.</li>
+
+<li>In <code>ax2</code>, plot temperature against time, setting the color ylabel to <code>"Relative temp (Celsius)"</code> and color to <code>'red'</code>.</li>
+
+<li>Annotate the data using the <code>ax2.annotate</code> method. Place the text <code>"&gt;1 degree"</code> in x=<code>pd.Timestamp('2008-10-06')</code>, y=<code>-0.2</code> pointing with a gray thin arrow to x=<code>pd.Timestamp('2015-10-06')</code>, y = <code>1</code>.</li>
+```{python,warning=F,message=F}
+# edited/added
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Read the data from file using read_csv
+climate_change = pd.read_csv('archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/climate_change.csv', parse_dates=["date"], index_col="date")
+
+# Define a function called plot_timeseries
+def plot_timeseries(axes, x, y, color, xlabel, ylabel):
+
+  # Plot the inputs x,y in the provided color
+  axes.plot(x, y, color=color)
+
+  # Set the x-axis label
+  axes.set_xlabel(xlabel)
+
+  # Set the y-axis label
+  axes.set_ylabel(ylabel, color=color)
+
+  # Set the colors tick params for y-axis
+  axes.tick_params('y', colors=color)
+
+fig, ax = plt.subplots()
+
+# Plot the CO2 levels time-series in blue
+plot_timeseries(ax, climate_change.index, climate_change["co2"], 'blue', "Time (years)", "CO2 levels")
+
+# Create an Axes object that shares the x-axis
+ax2 = ax.twinx()
+
+# Plot the relative temperature data in red
+plot_timeseries(ax2, climate_change.index, climate_change['relative_temp'], 'red', "Time (years)", "Relative temp (Celsius)")
+
+# Annotate the point with relative temperature >1 degree
+ax2.annotate(">1 degree", xy=(pd.Timestamp('2015-10-06'), 1), xytext=(pd.Timestamp('2008-10-06'), -0.2), arrowprops={'arrowstyle':'->', 'color':'gray'})
+
+plt.show()
+plt.close()
+```
+
+<p class="">Beautiful! In the next chapter, you will learn how make quantitative comparisons using plots.</p>
+
+### Quantitative visualizations {.unnumbered}
+
+<p class="chapter__description">
+    Visualizations can be used to compare data in a quantitative manner. This chapter explains several methods for quantitative visualizations.
+  </p>
+  
+#### Bar-charts {.unnumbered}
+
+
+
+##### Bar chart {.unnumbered}
+
+
+<div class>
+<p>Bar charts visualize data that is organized according to categories as a series of bars, where the height of each bar represents the values of the data in this category.</p>
+<p>For example, in this exercise, you will visualize the number of gold medals won by each country in the provided <code>medals</code> DataFrame. The DataFrame contains the countries as the index, and a column called <code>"Gold"</code> that contains the number of gold medals won by each country, according to their rows.</p>
+</div>
+
+
+<li>Call the <code>ax.bar</code> method to plot the <code>"Gold"</code> column as a function of the country.</li>
+<li>Use the <code>ax.set_xticklabels</code> to set the x-axis tick labels to be the country names.</li>
+<li>In the call to <code>ax.set_xticklabels</code> rotate the x-axis tick labels by 90 degrees by using the <code>rotation</code> key-word argument.</li>
+<li>Set the y-axis label to <code>"Number of medals"</code>.</li>
+```{python,warning=F,message=F,eval=F}
+# edited/added
+import pandas as pd
+import matplotlib.pyplot as plt
+medals = pd.read_csv('archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/medals_by_country_2016.csv', index_col = "Unnamed: 0")
+fig, ax = plt.subplots()
+
+# Plot a bar-chart of gold medals as a function of country
+ax.bar(range(len(medals.index)), medals["Gold"], color = "orange")
+
+# Set the x-axis tick labels to the country names
+plt.xticks(range(len(medals.index)), medals.index, rotation=90)
+
+# Set the y-axis label
+ax.set_ylabel("Number of medals")
+plt.show()
+plt.close()
+```
+```{python,warning=F,message=F,echo=F}
+# edited/added
+import pandas as pd
+import matplotlib.pyplot as plt
+medals = pd.read_csv('archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/medals_by_country_2016.csv', index_col = "Unnamed: 0")
+fig, ax = plt.subplots()
+
+# Plot a bar-chart of gold medals as a function of country
+ax.bar(range(len(medals.index)), medals["Gold"], color = "orange")
+
+# Set the x-axis tick labels to the country names
+plt.xticks(range(len(medals.index)), medals.index, rotation=90)
+
+# Set the y-axis label
+ax.set_ylabel("Number of medals")
+plt.show()
+plt.close()
+```
+
+<p class="">Well done! In the next exercise, you will create a stacked bar chart.</p>
+
+##### Stacked bar chart {.unnumbered}
+
+
+<div class>
+<p>A stacked bar chart contains bars, where the height of each bar represents values. In addition, stacked on top of the first variable may be another variable. The <em>additional</em> height of this bar represents the value of this variable. And you can add more bars on top of that.</p>
+<p>In this exercise, you will have access to a DataFrame called <code>medals</code> that contains an index that holds the names of different countries, and three columns: <code>"Gold"</code>, <code>"Silver"</code> and <code>"Bronze"</code>. You will also have a Figure, <code>fig</code>, and Axes, <code>ax</code>, that you can add data to.</p>
+<p>You will create a stacked bar chart that shows the number of gold, silver, and bronze medals won by each country, and you will add labels and create a legend that indicates which bars represent which medals.</p>
+</div>
+
+<li>Call the <code>ax.bar</code> method to add the <code>"Gold"</code> medals. Call it with the <code>label</code> set to <code>"Gold"</code>.</li>
+<li>Call the <code>ax.bar</code> method to stack <code>"Silver"</code> bars on top of that, using the <code>bottom</code> key-word argument so the bottom of the bars will be on top of the gold medal bars, and <code>label</code> to add the label <code>"Silver"</code>.</li>
+<li>Use <code>ax.bar</code> to add <code>"Bronze"</code> bars on top of that, using the <code>bottom</code> key-word and <code>label</code> it as <code>"Bronze"</code>.</li>
+```{python,warning=F,message=F,eval=F}
+# edited/added
+import pandas as pd
+import matplotlib.pyplot as plt
+medals = pd.read_csv('archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/medals_by_country_2016.csv', index_col = "Unnamed: 0")
+fig, ax = plt.subplots()
+
+# Add bars for "Gold" with the label "Gold"
+ax.bar(range(len(medals.index)), medals["Gold"], label="Gold", color = "r")
+
+# Stack bars for "Silver" on top with label "Silver"
+ax.bar(range(len(medals.index)), medals["Silver"], bottom=medals["Gold"], label="Silver", color = "orange")
+
+# Stack bars for "Bronze" on top of that with label "Bronze"
+ax.bar(range(len(medals.index)), medals["Bronze"], bottom=medals["Gold"] + medals["Silver"], label="Bronze", color = "g")
+
+# Set the x-axis tick labels to the country names
+# Display the legend
+ax.legend()
+plt.xticks(range(len(medals.index)), medals.index, rotation=90)
+plt.show()
+plt.close()
+```
+```{python,warning=F,message=F,echo=F}
+# edited/added
+import pandas as pd
+import matplotlib.pyplot as plt
+medals = pd.read_csv('archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/medals_by_country_2016.csv', index_col = "Unnamed: 0")
+fig, ax = plt.subplots()
+
+# Add bars for "Gold" with the label "Gold"
+ax.bar(range(len(medals.index)), medals["Gold"], label="Gold", color = "r")
+
+# Stack bars for "Silver" on top with label "Silver"
+ax.bar(range(len(medals.index)), medals["Silver"], bottom=medals["Gold"], label="Silver", color = "orange")
+
+# Stack bars for "Bronze" on top of that with label "Bronze"
+ax.bar(range(len(medals.index)), medals["Bronze"], bottom=medals["Gold"] + medals["Silver"], label="Bronze", color = "g")
+
+# Set the x-axis tick labels to the country names
+# Display the legend
+ax.legend()
+plt.xticks(range(len(medals.index)), medals.index, rotation=90)
+plt.show()
+plt.close()
+```
+
+<p class="">Nicely done! Let's learn about other quantitative comparisons.</p>
+
+#### Histograms {.unnumbered}
+
+
+
+##### Creating histograms {.unnumbered}
+
+
+<div class>
+<p>Histograms show the full distribution of a variable. In this exercise, we will display the distribution of weights of medalists in gymnastics and in rowing in the 2016 Olympic games for a comparison between them.</p>
+<p>You will have two DataFrames to use. The first is called <code>mens_rowing</code> and includes information about the medalists in the men's rowing events. The other is called <code>mens_gymnastics</code> and includes information about medalists in all of the Gymnastics events.</p>
+</div>
+
+
+<li>Use the <code>ax.hist</code> method to add a histogram of the <code>"Weight"</code> column from the <code>mens_rowing</code> DataFrame.</li>
+
+<li>Use <code>ax.hist</code> to add a histogram of <code>"Weight"</code> for the <code>mens_gymnastics</code> DataFrame.</li>
+
+<li>Set the x-axis label to <code>"Weight (kg)"</code> and the y-axis label to <code>"# of observations"</code>.</li>
+```{python,warning=F,message=F,eval=F}
+# edited/added
+import pandas as pd
+import matplotlib.pyplot as plt
+summer_2016_medals = pd.read_csv('archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/summer2016.csv')
+mens_rowing = summer_2016_medals[(summer_2016_medals['Sport'] == 'Rowing') & (summer_2016_medals['Sex'] == 'M')]
+mens_gymnastics = summer_2016_medals[(summer_2016_medals['Sport'] == 'Gymnastics') & (summer_2016_medals['Sex'] == 'M')]
+fig, ax = plt.subplots()
+
+# Plot a histogram of "Weight" for mens_rowing
+ax.hist(mens_rowing["Weight"])
+
+# Compare to histogram of "Weight" for mens_gymnastics
+ax.hist(mens_gymnastics["Weight"])
+
+# Set the x-axis label to "Weight (kg)"
+ax.set_xlabel("Weight (kg)")
+
+# Set the y-axis label to "# of observations"
+ax.set_ylabel("# of observations")
+plt.show()
+plt.close()
+```
+```{python,warning=F,message=F,echo=F}
+# edited/added
+import pandas as pd
+import matplotlib.pyplot as plt
+summer_2016_medals = pd.read_csv('archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/summer2016.csv')
+mens_rowing = summer_2016_medals[(summer_2016_medals['Sport'] == 'Rowing') & (summer_2016_medals['Sex'] == 'M')]
+mens_gymnastics = summer_2016_medals[(summer_2016_medals['Sport'] == 'Gymnastics') & (summer_2016_medals['Sex'] == 'M')]
+fig, ax = plt.subplots()
+
+# Plot a histogram of "Weight" for mens_rowing
+ax.hist(mens_rowing["Weight"])
+
+# Compare to histogram of "Weight" for mens_gymnastics
+ax.hist(mens_gymnastics["Weight"])
+
+# Set the x-axis label to "Weight (kg)"
+ax.set_xlabel("Weight (kg)")
+
+# Set the y-axis label to "# of observations"
+ax.set_ylabel("# of observations")
+plt.show()
+plt.close()
+```
+<p class="">Nice. Now let's customize these histograms a bit by changing their default settings.</p>
+
+##### &quot;Step&quot; histogram {.unnumbered}
+
+
+<div class>
+<p>Histograms allow us to see the distributions of the data in different groups in our data. In this exercise, you will select groups from the Summer 2016 Olympic Games medalist dataset to compare the height of medalist athletes in two different sports.</p>
+<p>The data is stored in a pandas DataFrame object called <code>summer_2016_medals</code> that has a column "Height". In addition, you are provided a pandas GroupBy object that has been grouped by the sport.</p>
+<p>In this exercise, you will visualize and label the histograms of two sports: "Gymnastics" and "Rowing" and see the marked difference between medalists in these two sports.</p>
+</div>
+
+<li>Use the <code>hist</code> method to display a histogram of the <code>"Weight"</code> column from the <code>mens_rowing</code> DataFrame, label this as <code>"Rowing"</code>.</li>
+<li>Use <code>hist</code> to display a histogram of the <code>"Weight"</code> column from the <code>mens_gymnastics</code> DataFrame, and label this as <code>"Gymnastics"</code>.</li>
+<li>For both histograms, use the <code>histtype</code> argument to visualize the data using the <code>'step'</code> type and set the number of bins to use to 5.</li>
+<li>Add a legend to the figure, before it is displayed.</li>
+```{python,warning=F,message=F,eval=F}
+# edited/added
+import pandas as pd
+import matplotlib.pyplot as plt
+summer_2016_medals = pd.read_csv('archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/summer2016.csv')
+mens_rowing = summer_2016_medals[(summer_2016_medals['Sport'] == 'Rowing') & (summer_2016_medals['Sex'] == 'M')]
+mens_gymnastics = summer_2016_medals[(summer_2016_medals['Sport'] == 'Gymnastics') & (summer_2016_medals['Sex'] == 'M')]
+fig, ax = plt.subplots()
+
+# Plot a histogram of "Weight" for mens_rowing
+ax.hist(mens_rowing["Weight"], histtype='step', label="Rowing", bins=5)
+
+# Compare to histogram of "Weight" for mens_gymnastics
+ax.hist(mens_gymnastics["Weight"], histtype='step', label="Gymnastics", bins=5)
+
+ax.set_xlabel("Weight (kg)")
+ax.set_ylabel("# of observations")
+
+# Add the legend and show the Figure
+ax.legend()
+plt.show()
+plt.close()
+```
+```{python,warning=F,message=F,echo=F}
+# edited/added
+import pandas as pd
+import matplotlib.pyplot as plt
+summer_2016_medals = pd.read_csv('archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/summer2016.csv')
+mens_rowing = summer_2016_medals[(summer_2016_medals['Sport'] == 'Rowing') & (summer_2016_medals['Sex'] == 'M')]
+mens_gymnastics = summer_2016_medals[(summer_2016_medals['Sport'] == 'Gymnastics') & (summer_2016_medals['Sex'] == 'M')]
+fig, ax = plt.subplots()
+
+# Plot a histogram of "Weight" for mens_rowing
+ax.hist(mens_rowing["Weight"], histtype='step', label="Rowing", bins=5)
+
+# Compare to histogram of "Weight" for mens_gymnastics
+ax.hist(mens_gymnastics["Weight"], histtype='step', label="Gymnastics", bins=5)
+
+ax.set_xlabel("Weight (kg)")
+ax.set_ylabel("# of observations")
+
+# Add the legend and show the Figure
+ax.legend()
+plt.show()
+plt.close()
+```
+
+<p class="">Well done! Let's see how to use these distributions in statistical plots.</p>
+
+#### Statistical plotting {.unnumbered}
+
+
+
+##### Adding error-bars to a bar chart {.unnumbered}
+
+
+<div class>
+<p>Statistical plotting techniques add quantitative information for comparisons into the visualization. For example, in this exercise, we will add error bars that quantify not only the difference in the means of the height of medalists in the 2016 Olympic Games, but also the standard deviation of each of these groups, as a way to assess whether the difference is substantial relative to the variability within each group.</p>
+<p>For the purpose of this exercise, you will have two DataFrames: <code>mens_rowing</code> holds data about the medalists in the rowing events and <code>mens_gymnastics</code> will hold information about the medalists in the gymnastics events.</p>
+</div>
+
+<li>Add a bar with size equal to the mean of the <code>"Height"</code> column in the <code>mens_rowing</code> DataFrame and an error-bar of its standard deviation.</li>
+<li>Add another bar for the mean of the <code>"Height"</code> column in <code>mens_gymnastics</code> with an error-bar of its standard deviation.</li>
+<li>Add a label to the the y-axis: <code>"Height (cm)"</code>.</li>
+```{python,warning=F,message=F,eval=F}
+# edited/added
+import pandas as pd
+import matplotlib.pyplot as plt
+summer_2016_medals = pd.read_csv('archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/summer2016.csv')
+mens_rowing = summer_2016_medals[(summer_2016_medals['Sport'] == 'Rowing') & (summer_2016_medals['Sex'] == 'M')]
+mens_gymnastics = summer_2016_medals[(summer_2016_medals['Sport'] == 'Gymnastics') & (summer_2016_medals['Sex'] == 'M')]
+fig, ax = plt.subplots()
+
+# Add a bar for the rowing & gymnastics "Height" column mean/std
+ax.bar(range(1, 1 + len(["Rowing", "Gymnastics"])), [mens_rowing["Height"].mean(), mens_gymnastics["Height"].mean()], yerr = [mens_rowing["Height"].std(), mens_gymnastics["Height"].std()], alpha = 0.5, ecolor = 'black', capsize = 10)
+
+# Label the y-axis
+ax.set_ylabel("Height (cm)")
+
+# Label the x-axis
+plt.xticks(range(1, 1 + len(["Rowing", "Gymnastics"])), ["Rowing", "Gymnastics"], rotation=90)
+plt.show()
+plt.close()
+```
+```{python,warning=F,message=F,echo=F}
+# edited/added
+import pandas as pd
+import matplotlib.pyplot as plt
+summer_2016_medals = pd.read_csv('archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/summer2016.csv')
+mens_rowing = summer_2016_medals[(summer_2016_medals['Sport'] == 'Rowing') & (summer_2016_medals['Sex'] == 'M')]
+mens_gymnastics = summer_2016_medals[(summer_2016_medals['Sport'] == 'Gymnastics') & (summer_2016_medals['Sex'] == 'M')]
+fig, ax = plt.subplots()
+
+# Add a bar for the rowing & gymnastics "Height" column mean/std
+ax.bar(range(1, 1 + len(["Rowing", "Gymnastics"])), [mens_rowing["Height"].mean(), mens_gymnastics["Height"].mean()], yerr = [mens_rowing["Height"].std(), mens_gymnastics["Height"].std()], alpha = 0.5, ecolor = 'black', capsize = 10)
+
+# Label the y-axis
+ax.set_ylabel("Height (cm)")
+
+# Label the x-axis
+plt.xticks(range(1, 1 + len(["Rowing", "Gymnastics"])), ["Rowing", "Gymnastics"], rotation=90)
+plt.show()
+plt.close()
+```
+
+<p class="">That's great! These error bars can help you see that the difference in heights is rather large in terms of the standard deviation within every group.</p>
+
+##### Adding error-bars to a plot {.unnumbered}
+
+
+<div class>
+<p>Adding error-bars to a plot is done by using the <code>errorbar</code> method of the <code>Axes</code> object.</p>
+<p>Here, you have two DataFrames loaded: <code>seattle_weather</code> has data about the weather in Seattle and <code>austin_weather</code> has data about the weather in Austin. Each DataFrame has a column <code>"MONTH"</code> that has the names of the months, a column <code>"MLY-TAVG-NORMAL"</code> that has the average temperature in each month and a column <code>"MLY-TAVG-STDDEV"</code> that has the standard deviation of the temperatures across years. </p>
+<p>In the exercise, you will plot the mean temperature across months and add the standard deviation at each point as y errorbars.</p>
+</div>
+
+<li>Use the <code>ax.errorbar</code> method to add the Seattle data: the <code>"MONTH"</code> column as x values, the <code>"MLY-TAVG-NORMAL"</code> as y values and <code>"MLY-TAVG-STDDEV"</code> as <code>yerr</code> values.</li>
+
+<li>Add the Austin data: the <code>"MONTH"</code> column as x values, the <code>"MLY-TAVG-NORMAL"</code> as y values and <code>"MLY-TAVG-STDDEV"</code> as <code>yerr</code> values.</li>
+
+<li>Set the y-axis label as <code>"Temperature (Fahrenheit)"</code>.</li>
+```{python,warning=F,message=F,eval=F}
+# edited/added
+import numpy as np
+import pandas as pd
+import calendar
+import matplotlib.pyplot as plt
+austin_weather = pd.read_csv("archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/austin_weather.csv")
+seattle_weather = pd.read_csv("archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/seattle_weather.csv")
+seattle_weather = seattle_weather[seattle_weather['STATION'] == 'USW00094290']
+seattle_weather.index = np.arange(12)
+fig, ax = plt.subplots()
+
+# Add the Seattle temperature data in each month with standard deviation error bars
+ax.errorbar(seattle_weather["DATE"], seattle_weather["MLY-TAVG-NORMAL"], yerr=seattle_weather["MLY-TAVG-STDDEV"])
+
+# Add the Austin temperature data in each month with standard deviation error bars
+ax.errorbar(austin_weather["DATE"], austin_weather["MLY-TAVG-NORMAL"], yerr=austin_weather["MLY-TAVG-STDDEV"])
+
+# Set the y-axis label
+ax.set_ylabel("Temperature (Fahrenheit)")
+
+plt.xticks(range(1, 1 + len(austin_weather["DATE"])), austin_weather['DATE'].apply(lambda x: calendar.month_abbr[x]))
+plt.show()
+plt.close()
+```
+```{python,warning=F,message=F,echo=F}
+# edited/added
+import numpy as np
+import pandas as pd
+import calendar
+import matplotlib.pyplot as plt
+austin_weather = pd.read_csv("archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/austin_weather.csv")
+seattle_weather = pd.read_csv("archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/seattle_weather.csv")
+seattle_weather = seattle_weather[seattle_weather['STATION'] == 'USW00094290']
+seattle_weather.index = np.arange(12)
+fig, ax = plt.subplots()
+
+# Add the Seattle temperature data in each month with standard deviation error bars
+ax.errorbar(seattle_weather["DATE"], seattle_weather["MLY-TAVG-NORMAL"], yerr=seattle_weather["MLY-TAVG-STDDEV"])
+
+# Add the Austin temperature data in each month with standard deviation error bars
+ax.errorbar(austin_weather["DATE"], austin_weather["MLY-TAVG-NORMAL"], yerr=austin_weather["MLY-TAVG-STDDEV"])
+
+# Set the y-axis label
+ax.set_ylabel("Temperature (Fahrenheit)")
+
+plt.xticks(range(1, 1 + len(austin_weather["DATE"])), austin_weather['DATE'].apply(lambda x: calendar.month_abbr[x]))
+plt.show()
+plt.close()
+```
+<p class="">Nicely done! Next, let's create boxplots.</p>
+
+##### Creating boxplots {.unnumbered}
+
+
+<div class>
+<p>Boxplots provide additional information about the distribution of the data that they represent. They tell us what the median of the distribution is, what the inter-quartile range is and also what the expected range of approximately 99% of the data should be. Outliers beyond this range are particularly highlighted.</p>
+<p>In this exercise, you will use the data about medalist heights that you previously visualized as histograms, and as bar charts with error bars, and you will visualize it as boxplots.</p>
+<p>Again, you will have the <code>mens_rowing</code> and <code>mens_gymnastics</code> DataFrames available to you, and both of these DataFrames have columns called <code>"Height"</code> that you will compare.</p>
+</div>
+
+<li>Create a boxplot that contains the <code>"Height"</code> column for <code>mens_rowing</code> on the left and <code>mens_gymnastics</code> on the right.</li>
+<li>Add x-axis tick labels: <code>"Rowing"</code> and <code>"Gymnastics"</code>.</li>
+<li>Add a y-axis label: <code>"Height (cm)"</code>.</li>
+```{python,warning=F,message=F,eval=F}
+# edited/added
+import pandas as pd
+import matplotlib.pyplot as plt
+summer_2016_medals = pd.read_csv('archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/summer2016.csv')
+mens_rowing = summer_2016_medals[(summer_2016_medals['Sport'] == 'Rowing') & (summer_2016_medals['Sex'] == 'M')]
+mens_gymnastics = summer_2016_medals[(summer_2016_medals['Sport'] == 'Gymnastics') & (summer_2016_medals['Sex'] == 'M')]
+fig, ax = plt.subplots()
+
+# Add a boxplot for the "Height" column in the DataFrames
+ax.boxplot([mens_rowing["Height"], mens_gymnastics["Height"]])
+
+# Add x-axis tick labels:
+ax.set_xticklabels(["Rowing", "Gymnastics"])
+
+# Add a y-axis label
+ax.set_ylabel("Height (cm)")
+plt.show()
+plt.close()
+```
+```{python,warning=F,message=F,echo=F}
+# edited/added
+import pandas as pd
+import matplotlib.pyplot as plt
+summer_2016_medals = pd.read_csv('archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/summer2016.csv')
+mens_rowing = summer_2016_medals[(summer_2016_medals['Sport'] == 'Rowing') & (summer_2016_medals['Sex'] == 'M')]
+mens_gymnastics = summer_2016_medals[(summer_2016_medals['Sport'] == 'Gymnastics') & (summer_2016_medals['Sex'] == 'M')]
+fig, ax = plt.subplots()
+
+# Add a boxplot for the "Height" column in the DataFrames
+ax.boxplot([mens_rowing["Height"], mens_gymnastics["Height"]])
+
+# Add x-axis tick labels:
+ax.set_xticklabels(["Rowing", "Gymnastics"])
+
+# Add a y-axis label
+ax.set_ylabel("Height (cm)")
+plt.show()
+plt.close()
+```
+<p class="">Very good. This provides even more information. For example, we can see how many individuals are outliers within their group. Next, let's see how we compare two variables within a single sample.</p>
+
+#### Scatter plots {.unnumbered}
+
+
+
+##### Simple scatter plot {.unnumbered}
+
+
+<div class>
+<p>Scatter are a bi-variate visualization technique. They plot each record in the data as a point. The location of each point is determined by the value of two variables: the first variable determines the distance along the x-axis and the second variable determines the height along the y-axis.</p>
+<p>In this exercise, you will create a scatter plot of the <code>climate_change</code> data. This DataFrame, which is already loaded, has a column <code>"co2"</code> that indicates the measurements of carbon dioxide every month and another column, <code>"relative_temp"</code> that indicates the temperature measured at the same time.</p>
+</div>
+
+<li>Using the <code>ax.scatter</code> method, add the data to the plot: <code>"co2"</code> on the x-axis and <code>"relative_temp"</code> on the y-axis.</li>
+<li>Set the x-axis label to <code>"CO2 (ppm)"</code>.</li>
+<li>Set the y-axis label to <code>"Relative temperature (C)"</code>.</li>
+```{python,warning=F,message=F}
+# edited/added
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Read the data from file using read_csv
+climate_change = pd.read_csv('archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/climate_change.csv', parse_dates=["date"], index_col="date")
+
+fig, ax = plt.subplots()
+
+# Add data: "co2" on x-axis, "relative_temp" on y-axis
+ax.scatter(climate_change["co2"], climate_change["relative_temp"])
+
+# Set the x-axis label to "CO2 (ppm)"
+ax.set_xlabel("CO2 (ppm)")
+
+# Set the y-axis label to "Relative temperature (C)"
+ax.set_ylabel("Relative temperature (C)")
+plt.show()
+plt.close()
+```
+
+<p class="">Nicely done. Now, let's encode the time dimension with color.</p>
+
+##### Encoding time by color {.unnumbered}
+
+
+<div class><p>The screen only has two dimensions, but we can encode another dimension in the scatter plot using color. Here, we will visualize the <code>climate_change</code> dataset, plotting a scatter plot of the <code>"co2"</code> column, on the x-axis, against the <code>"relative_temp"</code> column, on the y-axis. We will encode time using the color dimension, with earlier times appearing as darker shades of blue and later times appearing as brighter shades of yellow.</p></div>
+
+<li>Using the <code>ax.scatter</code> method add a scatter plot of the <code>"co2"</code> column (x-axis) against the <code>"relative_temp"</code> column.</li>
+<li>Use the <code>c</code> key-word argument to pass in the index of the DataFrame as input to color each point according to its date.</li>
+<li>Set the x-axis label to <code>"CO2 (ppm)"</code> and the y-axis label to <code>"Relative temperature (C)"</code>.</li>
+```{python,warning=F,message=F}
+# edited/added
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Read the data from file using read_csv
+climate_change = pd.read_csv('archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/climate_change.csv', parse_dates=["date"], index_col="date")
+
+fig, ax = plt.subplots()
+
+# Add data: "co2", "relative_temp" as x-y, index as color
+ax.scatter(climate_change["co2"], climate_change["relative_temp"], c=climate_change.index)
+
+# Set the x-axis label to "CO2 (ppm)"
+ax.set_xlabel("CO2 (ppm)")
+
+# Set the y-axis label to "Relative temperature (C)"
+ax.set_ylabel("Relative temperature (C)")
+plt.show()
+plt.close()
+```
+
+<p class="">This is beautiful! In the next chapter you will learn to share you figures with others and how to automate their creation.</p>
+
+### Sharing visualizations {.unnumbered}
+
+<p class="chapter__description">
+    This chapter shows you how to share your visualizations with others: how to save your figures as files, how to adjust their look and feel, and how to automate their creation based on input data.
+  </p>
+  
+#### Preparing your figures {.unnumbered}
+
+
+
+##### Selecting a style for printing {.unnumbered}
+
+
+<div class>
+<p>You are creating a figure that will be included in a leaflet printed on a black-and-white printer. What style should you choose for your figures?</p>
+<p>In the console, we have loaded the medals dataset. Before initializing Axes and Figure objects and plotting them, you can try setting a style to use.</p>
+</div>
+
+- [ ] <code>'seaborn-colorblind'</code>
+- [x] <code>'grayscale'</code>
+- [ ] <code>'tableau-colorblind10'</code>
+- [ ] <code>'bmh'</code>
+
+<p class="">Correct! This style would make sure that your figures appear the same on your screen and on the page.</p>
+
+##### Switching between styles {.unnumbered}
+
+
+<div class>
+<p>Selecting a style to use affects all of the visualizations that are created after this style is selected.</p>
+<p>Here, you will practice plotting data in two different styles. The data you will use is the same weather data we used in the first lesson: you will have available to you the DataFrame <code>seattle_weather</code> and the DataFrame <code>austin_weather</code>, both with records of the average temperature in every month.</p>
+</div>
+<div class="exercise--instructions__content"><p>Select the <code>'ggplot'</code> style, create a new Figure called <code>fig</code>, and a new Axes object called <code>ax</code> with <code>plt.subplots</code>.</p></div>
+
+<div class="exercise--instructions__content"><p>Select the <code>'Solarize_Light2'</code> style, create a new Figure called <code>fig</code>, and a new Axes object called <code>ax</code> with <code>plt.subplots</code>.</p></div>
+```{python,warning=F,message=F,eval=F}
+# edited/added
+import pandas as pd
+import matplotlib.pyplot as plt
+import calendar
+austin_weather = pd.read_csv("archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/austin_weather.csv")
+seattle_weather = pd.read_csv("archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/seattle_weather.csv")
+seattle_weather = seattle_weather[seattle_weather['STATION'] == 'USW00094290']
+
+# Use the "ggplot" style and create new Figure/Axes
+plt.style.use('ggplot')
+fig, ax = plt.subplots()
+ax.plot(seattle_weather["DATE"], seattle_weather["MLY-TAVG-NORMAL"])
+plt.xticks(range(1, 1 + len(austin_weather["DATE"])), austin_weather['DATE'].apply(lambda x: calendar.month_abbr[x]))
+plt.show()
+plt.close()
+```
+```{python,warning=F,message=F,echo=F}
+# edited/added
+import pandas as pd
+import matplotlib.pyplot as plt
+import calendar
+austin_weather = pd.read_csv("archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/austin_weather.csv")
+seattle_weather = pd.read_csv("archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/seattle_weather.csv")
+seattle_weather = seattle_weather[seattle_weather['STATION'] == 'USW00094290']
+
+# Use the "ggplot" style and create new Figure/Axes
+plt.style.use('ggplot')
+fig, ax = plt.subplots()
+ax.plot(seattle_weather["DATE"], seattle_weather["MLY-TAVG-NORMAL"])
+plt.xticks(range(1, 1 + len(austin_weather["DATE"])), austin_weather['DATE'].apply(lambda x: calendar.month_abbr[x]))
+plt.show()
+plt.close()
+```
+
+<div class="exercise--instructions__content"><p>Select the <code>'Solarize_Light2'</code> style, create a new Figure called <code>fig</code>, and a new Axes object called <code>ax</code> with <code>plt.subplots</code>.</p></div>
+```{python,warning=F,message=F,eval=F}
+# edited/added
+import pandas as pd
+import calendar
+import matplotlib.pyplot as plt
+austin_weather = pd.read_csv("archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/austin_weather.csv")
+seattle_weather = pd.read_csv("archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/seattle_weather.csv")
+seattle_weather = seattle_weather[seattle_weather['STATION'] == 'USW00094290']
+
+# Use the "Solarize_Light2" style and create new Figure/Axes
+plt.style.use(plt.style.available[1])
+fig, ax = plt.subplots()
+ax.plot(austin_weather["DATE"], austin_weather["MLY-TAVG-NORMAL"])
+plt.xticks(range(1, 1 + len(austin_weather["DATE"])), austin_weather['DATE'].apply(lambda x: calendar.month_abbr[x]))
+plt.show()
+plt.close()
+```
+```{python,warning=F,message=F,echo=F}
+# edited/added
+import pandas as pd
+import calendar
+import matplotlib.pyplot as plt
+austin_weather = pd.read_csv("archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/austin_weather.csv")
+seattle_weather = pd.read_csv("archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/seattle_weather.csv")
+seattle_weather = seattle_weather[seattle_weather['STATION'] == 'USW00094290']
+
+# Use the "Solarize_Light2" style and create new Figure/Axes
+plt.style.use(plt.style.available[1])
+fig, ax = plt.subplots()
+ax.plot(austin_weather["DATE"], austin_weather["MLY-TAVG-NORMAL"])
+plt.xticks(range(1, 1 + len(austin_weather["DATE"])), austin_weather['DATE'].apply(lambda x: calendar.month_abbr[x]))
+plt.show()
+plt.close()
+```
+<p class="">Great! As you've seen, the style will only apply to a figure that is created after the style to use is selected.</p>
+
+#### Saving your visualizations {.unnumbered}
+
+
+
+##### Saving a file several times {.unnumbered}
+
+
+<div class><p>If you want to share your visualizations with others, you will need to save them into files. Matplotlib provides as way to do that, through the <code>savefig</code> method of the <code>Figure</code> object. In this exercise, you will save a figure several times. Each time setting the parameters to something slightly different. We have provided and already created <code>Figure</code> object.</p></div>
+<div class="exercise--instructions__content"><p>Examine the figure by calling the <code>plt.show()
+plt.close()</code> function.</p></div>
+```{python,warning=F,message=F,eval=F}
+# edited/added
+import pandas as pd
+import matplotlib.pyplot as plt
+medals = pd.read_csv('archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/medals_by_country_2016.csv', index_col = "Unnamed: 0")
+plt.style.use('default')
+fig, ax = plt.subplots()
+# Plot a bar-chart of gold medals as a function of country
+ax.bar(medals.index, medals["Gold"])
+# Set the x-axis tick labels to the country names
+ax.set_xticklabels(medals.index, rotation=90)
+# Set the y-axis label
+ax.set_ylabel("Number of medals")
+
+# Show the figure
+plt.show()
+plt.close()
+```
+```{python,warning=F,message=F,echo=F}
+# edited/added
+import pandas as pd
+import matplotlib.pyplot as plt
+medals = pd.read_csv('archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/medals_by_country_2016.csv', index_col = "Unnamed: 0")
+plt.style.use('default')
+fig, ax = plt.subplots()
+# Plot a bar-chart of gold medals as a function of country
+ax.bar(medals.index, medals["Gold"])
+# Set the x-axis tick labels to the country names
+ax.set_xticklabels(medals.index, rotation=90)
+# Set the y-axis label
+ax.set_ylabel("Number of medals")
+
+# Show the figure
+plt.show()
+plt.close()
+```
+
+<div class="exercise--instructions__content"><p>Save the figure into the file <code>my_figure.png</code>, using the default resolution.</p></div>
+```{python,warning=F,message=F,eval=F}
+# edited/added
+import pandas as pd
+import matplotlib.pyplot as plt
+medals = pd.read_csv('archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/medals_by_country_2016.csv', index_col = "Unnamed: 0")
+plt.style.use('default')
+fig, ax = plt.subplots()
+# Plot a bar-chart of gold medals as a function of country
+ax.bar(medals.index, medals["Gold"])
+# Set the x-axis tick labels to the country names
+ax.set_xticklabels(medals.index, rotation=90)
+# Set the y-axis label
+ax.set_ylabel("Number of medals")
+
+# Show the figure
+plt.show()
+plt.close()
+
+# Save as a PNG file
+fig.savefig('outputs/my_figure.png')
+```
+```{python,warning=F,message=F,echo=F}
+# edited/added
+import pandas as pd
+import matplotlib.pyplot as plt
+medals = pd.read_csv('archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/medals_by_country_2016.csv', index_col = "Unnamed: 0")
+plt.style.use('default')
+fig, ax = plt.subplots()
+# Plot a bar-chart of gold medals as a function of country
+ax.bar(medals.index, medals["Gold"])
+# Set the x-axis tick labels to the country names
+ax.set_xticklabels(medals.index, rotation=90)
+# Set the y-axis label
+ax.set_ylabel("Number of medals")
+
+# Show the figure
+plt.show()
+plt.close()
+
+# Save as a PNG file
+fig.savefig('outputs/my_figure.png')
+```
+
+<div class="exercise--instructions__content"><p>Save the figure into the file <code>my_figure_300dpi.png</code> and set the resolution to 300 dpi.</p></div>
+```{python,warning=F,message=F,eval=F}
+# edited/added
+import pandas as pd
+import matplotlib.pyplot as plt
+medals = pd.read_csv('archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/medals_by_country_2016.csv', index_col = "Unnamed: 0")
+plt.style.use('default')
+fig, ax = plt.subplots()
+# Plot a bar-chart of gold medals as a function of country
+ax.bar(medals.index, medals["Gold"])
+# Set the x-axis tick labels to the country names
+ax.set_xticklabels(medals.index, rotation=90)
+# Set the y-axis label
+ax.set_ylabel("Number of medals")
+
+# Show the figure
+plt.show()
+plt.close()
+
+# Save as a PNG file with 300 dpi
+fig.savefig('outputs/my_figure_300dpi.png', dpi=300)
+```
+```{python,warning=F,message=F,echo=F}
+# edited/added
+import pandas as pd
+import matplotlib.pyplot as plt
+medals = pd.read_csv('archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/medals_by_country_2016.csv', index_col = "Unnamed: 0")
+plt.style.use('default')
+fig, ax = plt.subplots()
+# Plot a bar-chart of gold medals as a function of country
+ax.bar(medals.index, medals["Gold"])
+# Set the x-axis tick labels to the country names
+ax.set_xticklabels(medals.index, rotation=90)
+# Set the y-axis label
+ax.set_ylabel("Number of medals")
+
+# Show the figure
+plt.show()
+plt.close()
+
+# Save as a PNG file with 300 dpi
+fig.savefig('outputs/my_figure_300dpi.png', dpi=300)
+```
+
+<p class="">Nice! You are ready to share your visualizations in all kinds of formats! Don't forget that you can also use other formats. For example, JPG can be used to save images with lossy compression.</p>
+
+##### Save a figure with different sizes {.unnumbered}
+
+
+<div class>
+<p>Before saving your visualization, you might want to also set the size that the figure will have on the page. To do so, you can use the <code>Figure</code> object's <code>set_size_inches</code> method. This method takes a sequence of two values. The first sets the width and the second sets the height of the figure.</p>
+<p>Here, you will again have a <code>Figure</code> object called <code>fig</code> already provided (you can run <code>plt.show</code> if you want to see its contents). Use the <code>Figure</code> methods <code>set_size_inches</code> and <code>savefig</code> to change its size and save two different versions of this figure.</p>
+</div>
+<div class="exercise--instructions__content"><p>Set the figure size as width of 3 inches and height of 5 inches and save it as <code>'figure_3_5.png'</code> with default resolution.</p></div>
+```{python,warning=F,message=F,eval=F}
+# edited/added
+import pandas as pd
+import matplotlib.pyplot as plt
+medals = pd.read_csv('archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/medals_by_country_2016.csv', index_col = "Unnamed: 0")
+plt.style.use('default')
+fig, ax = plt.subplots()
+# Plot a bar-chart of gold medals as a function of country
+ax.bar(medals.index, medals["Gold"])
+# Set the x-axis tick labels to the country names
+ax.set_xticklabels(medals.index, rotation=90)
+# Set the y-axis label
+ax.set_ylabel("Number of medals")
+
+# Show the figure
+plt.show()
+plt.close()
+
+# Set figure dimensions and save as a PNG
+fig.set_size_inches([3, 5])
+fig.savefig('outputs/figure_3_5.png')
+```
+```{python,warning=F,message=F,echo=F}
+# edited/added
+import pandas as pd
+import matplotlib.pyplot as plt
+medals = pd.read_csv('archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/medals_by_country_2016.csv', index_col = "Unnamed: 0")
+plt.style.use('default')
+fig, ax = plt.subplots()
+# Plot a bar-chart of gold medals as a function of country
+ax.bar(medals.index, medals["Gold"])
+# Set the x-axis tick labels to the country names
+ax.set_xticklabels(medals.index, rotation=90)
+# Set the y-axis label
+ax.set_ylabel("Number of medals")
+
+# Show the figure
+plt.show()
+plt.close()
+
+# Set figure dimensions and save as a PNG
+fig.set_size_inches([3, 5])
+fig.savefig('outputs/figure_3_5.png')
+```
+
+<div class="exercise--instructions__content"><p>Set the figure size to width of 5 inches and height of 3 inches and save it as <code>'figure_5_3.png'</code> with default settings.</p></div>
+```{python,warning=F,message=F,eval=F}
+# edited/added
+import pandas as pd
+import matplotlib.pyplot as plt
+medals = pd.read_csv('archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/medals_by_country_2016.csv', index_col = "Unnamed: 0")
+plt.style.use('default')
+fig, ax = plt.subplots()
+# Plot a bar-chart of gold medals as a function of country
+ax.bar(medals.index, medals["Gold"])
+# Set the x-axis tick labels to the country names
+ax.set_xticklabels(medals.index, rotation=90)
+# Set the y-axis label
+ax.set_ylabel("Number of medals")
+
+# Show the figure
+plt.show()
+plt.close()
+
+# Set figure dimensions and save as a PNG
+fig.set_size_inches([5, 3])
+fig.savefig('outputs/figure_5_3.png')
+```
+```{python,warning=F,message=F,echo=F}
+# edited/added
+import pandas as pd
+import matplotlib.pyplot as plt
+medals = pd.read_csv('archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/medals_by_country_2016.csv', index_col = "Unnamed: 0")
+plt.style.use('default')
+fig, ax = plt.subplots()
+# Plot a bar-chart of gold medals as a function of country
+ax.bar(medals.index, medals["Gold"])
+# Set the x-axis tick labels to the country names
+ax.set_xticklabels(medals.index, rotation=90)
+# Set the y-axis label
+ax.set_ylabel("Number of medals")
+
+# Show the figure
+plt.show()
+plt.close()
+
+# Set figure dimensions and save as a PNG
+fig.set_size_inches([5, 3])
+fig.savefig('outputs/figure_5_3.png')
+```
+
+<p class="">Great work! This gives you two versions of your figure to choose between.</p>
+
+#### Automating figures from data {.unnumbered}
+
+
+
+##### Unique values of a column {.unnumbered}
+
+
+<div class>
+<p>One of the main strengths of Matplotlib is that it can be automated to adapt to the data that it receives as input. For example, if you receive data that has an unknown number of categories, you can still create a bar plot that has bars for each category.</p>
+<p>In this exercise and the next, you will be visualizing the weight of athletes in the 2016 summer Olympic Games again, from a dataset that has some unknown number of branches of sports in it. This will be loaded into memory as a pandas <code>DataFrame</code> object called <code>summer_2016_medals</code>, which has a column called <code>"Sport"</code> that tells you to which branch of sport each row corresponds. There is also a <code>"Weight"</code> column that tells you the weight of each athlete.</p>
+<p>In this exercise, we will extract the unique values of the <code>"Sport"</code> column</p>
+</div>
+
+<li>Create a variable called <code>sports_column</code> that holds the data from the <code>"Sport"</code> column of the <code>DataFrame</code> object.</li>
+
+<li>Use the <code>unique</code> method of this variable to find all the unique different sports that are present in this data, and assign these values into a new variable called <code>sports</code>.</li>
+
+<li>Print the <code>sports</code> variable to the console.</li>
+```{python,warning=F,message=F}
+# edited/added
+import pandas as pd
+import matplotlib.pyplot as plt
+summer_2016_medals = pd.read_csv('archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/summer2016.csv')
+
+# Extract the "Sport" column
+sports_column = summer_2016_medals["Sport"]
+
+# Find the unique values of the "Sport" column
+sports = sports_column.unique()
+
+# Print out the unique sports values
+print(sports)
+```
+
+<p class="">Well done! Now you are ready to use these unique values to visualize the data.</p>
+
+##### Automate your visualization {.unnumbered}
+
+
+<div class>
+<p>One of the main strengths of Matplotlib is that it can be automated to adapt to the data that it receives as input. For example, if you receive data that has an unknown number of categories, you can still create a bar plot that has bars for each category.</p>
+<p>This is what you will do in this exercise. You will be visualizing data about medal winners in the 2016 summer Olympic Games again, but this time you will have a dataset that has some unknown number of branches of sports in it. This will be loaded into memory as a pandas <code>DataFrame</code> object called <code>summer_2016_medals</code>, which has a column called <code>"Sport"</code> that tells you to which branch of sport each row corresponds. There is also a <code>"Weight"</code> column that tells you the weight of each athlete.</p>
+</div>
+
+<li>Iterate over the values of <code>sports</code> setting <code>sport</code> as your loop variable.</li>
+<li>In each iteration, extract the rows where the <code>"Sport"</code> column is equal to <code>sport</code>.</li>
+<li>Add a bar to the provided <code>ax</code> object, labeled with the sport name, with the mean of the <code>"Weight"</code> column as its height, and the standard deviation as a y-axis error bar.</li>
+```{python,warning=F,message=F,eval=F}
+# edited/added
+import pandas as pd
+import matplotlib.pyplot as plt
+summer_2016_medals = pd.read_csv('archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/summer2016.csv')
+# Extract the "Sport" column
+sports_column = summer_2016_medals["Sport"]
+# Find the unique values of the "Sport" column
+sports = sports_column.unique()
+
+fig, ax = plt.subplots()
+
+# Loop over the different sports branches
+for sport in sports:
+  # Extract the rows only for this sport
+  sport_df = summer_2016_medals[summer_2016_medals["Sport"] == sport]
+  # Add a bar for the "Weight" mean with std y error bar
+  ax.bar(sport, sport_df["Weight"].mean(), yerr=sport_df["Weight"].std())
+
+ax.set_ylabel("Weight")
+ax.set_xticklabels(sports, rotation=90)
+plt.show()
+```
+```{python,warning=F,message=F,echo=F}
+# edited/added
+import pandas as pd
+import matplotlib.pyplot as plt
+summer_2016_medals = pd.read_csv('archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/summer2016.csv')
+# Extract the "Sport" column
+sports_column = summer_2016_medals["Sport"]
+# Find the unique values of the "Sport" column
+sports = sports_column.unique()
+
+fig, ax = plt.subplots()
+
+# Loop over the different sports branches
+for sport in sports:
+  # Extract the rows only for this sport
+  sport_df = summer_2016_medals[summer_2016_medals["Sport"] == sport]
+  # Add a bar for the "Weight" mean with std y error bar
+  ax.bar(sport, sport_df["Weight"].mean(), yerr=sport_df["Weight"].std())
+
+ax.set_ylabel("Weight")
+ax.set_xticklabels(sports, rotation=90)
+plt.show()
+```
+
+<li>Save the figure into the file <code>"sports_weights.png"</code>.</li>
+```{python,warning=F,message=F,eval=F}
+# edited/added
+import pandas as pd
+import matplotlib.pyplot as plt
+summer_2016_medals = pd.read_csv('archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/summer2016.csv')
+# Extract the "Sport" column
+sports_column = summer_2016_medals["Sport"]
+# Find the unique values of the "Sport" column
+sports = sports_column.unique()
+
+fig, ax = plt.subplots()
+
+# Loop over the different sports branches
+for sport in sports:
+  # Extract the rows only for this sport
+  sport_df = summer_2016_medals[summer_2016_medals["Sport"] == sport]
+  # Add a bar for the "Weight" mean with std y error bar
+  ax.bar(sport, sport_df["Weight"].mean(), yerr=sport_df["Weight"].std())
+
+ax.set_ylabel("Weight")
+ax.set_xticklabels(sports, rotation=90)
+
+# Save the figure to file
+fig.savefig('outputs/sports_weights.png')
+```
+```{python,warning=F,message=F,echo=F}
+# edited/added
+import pandas as pd
+import matplotlib.pyplot as plt
+summer_2016_medals = pd.read_csv('archive/Introduction-to-Data-Visualization-with-Matplotlib/datasets/summer2016.csv')
+# Extract the "Sport" column
+sports_column = summer_2016_medals["Sport"]
+# Find the unique values of the "Sport" column
+sports = sports_column.unique()
+
+fig, ax = plt.subplots()
+
+# Loop over the different sports branches
+for sport in sports:
+  # Extract the rows only for this sport
+  sport_df = summer_2016_medals[summer_2016_medals["Sport"] == sport]
+  # Add a bar for the "Weight" mean with std y error bar
+  ax.bar(sport, sport_df["Weight"].mean(), yerr=sport_df["Weight"].std())
+
+ax.set_ylabel("Weight")
+ax.set_xticklabels(sports, rotation=90)
+
+# Save the figure to file
+fig.savefig('outputs/sports_weights.png')
+```
+
+<p class="">That's great! You are now ready to create automated reports from your data.<br><br><i> Don't forget to download the <a href="https://datacamp-community-prod.s3.amazonaws.com/e1a8f39d-71ad-4d13-9a6b-618fe1b8c9e9" target="_blank" rel="noopener noreferrer">Cheat Sheet</a> for this course to keep track of what you've learned today! <i></i></i></p>
+
+#### Where to go next {.unnumbered}
+
+
+##### Where to go next {.unnumbered}
+
+Congratulations! You have completed this introduction to Matplotlib. And yet, we have only scratched the surface in what Matplotlib can do.
+
+##### The Matplotlib gallery {.unnumbered}
+
+One way to learn about other kinds of visualizations that you can create with Matplotlib is to visit the online gallery of examples on the Matplotlib website, at this URL.
+
+##### Gallery of examples {.unnumbered}
+
+The gallery contains several dozen examples of figures that you can create with Matplotlib. If you click on one of the figures, you will land in a page
+
+##### Example page with code {.unnumbered}
+
+that contains not only a larger version of the example, but also the full Python code that would generate this example from scratch. If you are interested in creating a visualization that is a variation on this example, you can start by copying over this example code and editing it to fit your particular use-case. This is much better than starting from scratch!
+
+##### Plotting data in 3D {.unnumbered}
+
+Here are a few of the things that you might want to do next. In this course we always visualized data using the two dimensions of the page, but you can also extend your capability to visualize data, by adding perspective to your visualizations to make them appear three-dimensional. For example, here is a parametric curve through a three-dimensional space. In this web page, you can learn more about creating three-dimensional visualizations.
+
+##### Visualizing images with pseudo-color {.unnumbered}
+
+Another capability of Matplotlib is visualizing data from images. For example, here is an image visualized using pseudo-color, where each value in the image is translated into a color. You can learn more about working with images in this URL.
+
+##### Animations {.unnumbered}
+
+You might remember this visualization that I showed you in the very first lesson of this course. It used one more dimension, time, by varying the display through animation. You can create animations by creating multiple frames of the movie, each as its own visualization, and then stitching them together into a movie using tools such as Quicktime, but Matplotlib also has its own interface for creating animations. You can learn about this interface at this URL.
+
+##### Using Matplotlib for geospatial data {.unnumbered}
+
+There are multiple software packages that extend Matplotlib's capability to a variety of different kinds of data. For example, Cartopy extends Matplotlib to be used with geospatial data, such as maps.
+
+##### pandas + Matplotlib = Seaborn {.unnumbered}
+
+Another library that extends Matplotlib is Seaborn. This library creates very sophisticated statistical visualizations from pandas data structures, such as DataFrames. The nice thing about Seaborn is that you can create elegant and sophisticated visualizations of your data with very little code. For example, this code would create this visualization that encodes the fuel efficiency of cars as a function of their horsepower, but also encodes the country in which the car was manufactured, using the color of the bubbles, as well as their weight, using the size of each bubble.
+
+##### Seaborn example gallery {.unnumbered}
+
+Seaborn also has an extensive example gallery that you can visit in this URL.
+
+##### Good luck visualizing your data! {.unnumbered}
+
+So as you can see, there is a lot more to learn about data visualization. But thanks to this course, you have already taken your first step along the path to visualizing your data in Python, using Matplotlib. Good luck visualizing your data!

@@ -1,0 +1,1636 @@
+---
+title: "Interactive Maps with leaflet in R"
+subtitle: "Rich Majerus - DataCamp"
+date: "1 November 2022"
+author:
+  - name: "Dat Tran"
+output:
+  rmdformats::robobook:
+    keep_md: true
+    thumbnails: true
+    lightbox: true
+    gallery: true
+    use_bookdown: true
+---
+
+***
+
+<style>
+
+h1,h2,h3,h4,h5,h6,h {
+  font-family: Futura;
+}
+
+body {
+  font-family: "Georgia";
+  text-align: justify;
+}
+
+p {
+  font-family: "Georgia";
+  color: black;
+  font-style: normal;
+}
+</style>
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning=FALSE)
+library(reticulate)
+```
+
+**Course Description**
+
+
+<p class="course__description">Get ready to have some fun with maps! Interactive Maps with leaflet in R will give you the tools to make attractive and interactive web maps using spatial data and the tidyverse. In this course, you will create maps using the IPEDS dataset, which contains data on U.S. colleges and universities. Along the way, you will customize our maps using labels, popups, and custom markers, and add layers to enhance interactivity. Following the course, you will be able to create and customize your own interactive web maps to reveal patterns in your data.</p>
+
+# Setting Up Interactive Web Maps
+
+<p class="chapter__description">
+    Chapter 1 will introduce students to the htmlwidgets package and the leaflet package. Following this introduction, students will build their first interactive web map using leaflet. Through the process of creating this first map students will be introduced to many of the core features of the leaflet package, including adding different map tiles, setting the center point and zoom level, plotting single points based on latitude and longitude coordinates, and storing leaflet maps as objects. Chapter 1 will conclude with students geocoding DataCamp’s headquarters, and creating a leaflet map that plots the headquarters and displays a popup describing the location.
+  </p>
+
+## Introduction to leaflet
+
+
+
+### Loading the leaflet Library
+
+
+<div class>
+<p>Using the <code>htmlwidgets</code> and <code>leaflet</code> packages in R you can create interactive maps with only a couple of lines of R code.   </p>
+<p>There are three steps that are required to create an interactive web map in R using <code>leaflet</code>:</p>
+<ol>
+<li>loading the <code>leaflet</code> library </li>
+<li>initializing the <code>leaflet</code> widget using the <code>leaflet()</code> function</li>
+<li>adding a map tile </li>
+</ol>
+<p>Load <code>leaflet</code> and access the help file.  What are the required arguments to the <code>leaflet()</code> function?</p>
+</div>
+
+- [ ] data
+- [ ] data, width, and height
+- [ ] options
+- [x] None of the above
+
+<p class="">Nice job. Calling the <code>leaflet()</code> function without any arguments will initialize the htmlwidget. You can supply arguments to customize your map, but they are not required.
+</p>
+
+### Creating an Interactive Web Map
+
+
+<div class>
+<p>Similar to the packages in the <code>tidyverse</code>, the <code>leaflet</code> package makes use of the pipe operator (i.e., <code>%&gt;%</code>) from the <code>magrittr</code> package to chain function calls together. This means we can pipe the result of one function into another without having to store the intermediate output in an object. For example, one way to find every car in the <code>mtcars</code> data set with a mpg &gt;= 25 is to pipe the data through a series of functions.</p>
+<pre><code>mtcars  %&gt;% 
+    mutate(car = rownames(.))  %&gt;% 
+    select(car, mpg)  %&gt;% 
+    filter(mpg &gt;= 25)  
+</code></pre>
+<p>To create a web map in R, you will chain together a series of function calls using the <code>%&gt;%</code> operator. Our first function <code>leaflet()</code> will initialize the htmlwidget then we will add a map tile using the <code>addTiles()</code> function.</p>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Load the <code>leaflet</code> library.</li>
+<li>Call the <code>leaflet()</code> function.</li>
+<li>Pipe the output of <code>leaflet()</code> into <code>addTiles()</code>.</li>
+<li>Experiment with zooming and panning your first interactive web map.</li>
+```{r}
+# Load the leaflet library
+library(leaflet)
+
+# Create a leaflet map with default map tile using addTiles()
+leaflet() %>%
+    addTiles()
+```
+</div>
+
+<p class="">Nice work. You created an interactive web map with just two lines of R code!
+</p>
+
+## Map Tiles
+
+
+
+### Provider Tiles
+
+
+<div class>
+<p>In the previous exercise, <code>addTiles()</code> added the default OpenStreetMap (OSM) tile to your <code>leaflet</code> map. Map tiles weave multiple map images together. The map tiles presented adjust when a user zooms or pans the map enabling the interactive features you experimented with in exercise 2.  </p>
+<p>The <code>leaflet</code> package comes with more than 100 map tiles that you can use.  These tiles are stored in a list called <code>providers</code> and can be added to your map using <code>addProviderTiles()</code> instead of <code>addTiles()</code>. </p>
+<p>The <code>leaflet</code> and <code>tidyverse</code> libraries have been loaded for you.</p>
+</div>
+<div class="exercise--instructions__content">
+```{r}
+# edited/added
+library(stringr)
+```
+<li>Print the list of 100+ provider tiles that are included in the <code>leaflet</code> package.</li>
+<li>To make this output more readable, print just the names of the provider tiles using the <code>names()</code> function.</li>
+<li>Use the <code>str_detect()</code> function from the stringr package to determine which provider tiles include the string "CartoDB".</li>
+<li>Print the name of every provider map tile that includes the string "CartoDB".</li>
+```{r}
+# Print the providers list included in the leaflet library
+providers
+
+# Print only the names of the map tiles in the providers list 
+names(providers)
+
+# Use str_detect() to determine if the name of each provider tile contains the string "CartoDB"
+str_detect(names(providers), "CartoDB")
+
+# Use str_detect() to print only the provider tile names that include the string "CartoDB"
+names(providers)[str_detect(names(providers), "CartoDB")]
+```
+</div>
+
+<p class="">Nicely done. Now that we know what CartoDB tiles come with leaflet let's try one out!
+</p>
+
+### Adding a Custom Map Tile
+
+
+<div class>
+<p>Did any tile names look familiar? If you have worked with the mapping software you may recognize the name ESRI or CartoDB. </p>
+<p>We create our first <code>leaflet</code> map using the default OSM map tile. </p>
+<pre><code>leaflet() %&gt;% 
+    addTiles()
+</code></pre>
+<p>We will primarily use CartoDB provider tiles, but feel free to try others, like Esri. To add a custom provider tile to our map we will use the <code>addProviderTiles()</code> function. The first argument to <code>addProviderTiles()</code> is your <code>leaflet</code> map, which allows us to pipe <code>leaflet()</code> output directly into <code>addProviderTiles()</code>. The second argument is <code>provider</code>, which accepts any of the map tiles included in the <code>providers</code> list.</p>
+<p>Familiarize yourself with the <strong>SCRIPT.R</strong> and <strong>HTML VIEWER</strong> tabs. Click back and forth to type your code and view your maps.</p>
+</div>
+<div class="exercise--instructions__content">
+
+<p>Change <code>addTiles()</code> to <code>addProviderTiles()</code> and set the provider argument to "CartoDB".</p></div>
+```{r}
+# Change addTiles() to addProviderTiles() and set the provider argument to "CartoDB"
+leaflet() %>% 
+    addProviderTiles(provider = "CartoDB")
+```
+
+<p>Create a <code>leaflet</code> map that uses the "Esri" provider tile.</p>
+```{r}
+# Create a leaflet map that uses the Esri provider tile
+leaflet() %>%
+    addProviderTiles("Esri")
+```
+
+<p>Create a <code>leaflet</code> map that uses the "CartoDB.PositronNoLabels" provider tile.</p>
+```{r}
+# Create a leaflet map that uses the CartoDB.PositronNoLabels provider tile
+leaflet() %>%
+    addProviderTiles("CartoDB.PositronNoLabels")
+```
+
+<p class="">Nice maps! Now let's take a closer look at them by setting the zoom.
+</p>
+
+## Setting the Default Map View
+
+
+
+### A Map with a View I
+
+
+<div class>
+<p>You may have noticed that, by default, maps are zoomed out to the farthest level. Rather than manually zooming and panning, we can load the map centered on a particular point using the <code>setView()</code> function. </p>
+<pre><code>leaflet()  %&gt;% 
+    addProviderTiles("CartoDB")  %&gt;% 
+    setView(lat = 40.7, lng = -74.0, zoom = 10)
+</code></pre>
+<p>Currently, DataCamp has offices at the following locations: </p>
+<p>350 5th Ave, Floor 77, New York, NY 10118</p>
+<p>Martelarenlaan 38, 3010 Kessel-Lo, Belgium</p>
+<p>These addresses were converted to coordinates using the <code>geocode()</code> function in the <code>ggmaps</code> package. </p>
+
+<li>NYC: (-73.98575, 40.74856) </li>
+<li>Belgium: (4.717863, 50.881363)</li>
+
+</div>
+<div class="exercise--instructions__content">
+```{r}
+# edited/added
+dc_hq = data.frame(hq = c("DataCamp - NYC","DataCamp - Belgium"), lon = c(-74.0,4.72), lat = c(40.7,50.9))
+```
+
+<p>Use the coordinates above to create a map with the "CartoDB" provider tile that is centered on DataCamp's New York office with a zoom of 6.</p></div>
+```{r}
+# Map with CartoDB tile centered on DataCamp's NYC office with zoom of 6
+leaflet()  %>% 
+    addProviderTiles("CartoDB")  %>% 
+    setView(lng = -73.98575, lat = 40.74856, zoom = 6)
+```
+
+<p>Now create a map with the "CartoDB.PositronNoLabels" provider tile that is centered on DataCamp's Belgium office with a zoom of 4.</p>
+```{r}
+# Map with CartoDB.PositronNoLabels tile centered on DataCamp's Belgium office with zoom of 4
+leaflet() %>% 
+    addProviderTiles("CartoDB.PositronNoLabels") %>% 
+    setView(lng = dc_hq$lon[2], lat = dc_hq$lat[2], zoom = 4)
+```
+
+<p class="">You found DataCamp. Nice job. Let's take a look at an alternative approach to defining the default view of our map.
+</p>
+
+### A Map with a Narrower View
+
+
+<div class>
+<p>We can limit users' ability to pan away from the map's focus using the <code>options</code> argument in the <code>leaflet()</code> function. By setting <code>minZoom</code> and<code>dragging</code>, we can create an interactive web map that will always be focused on a specific area.</p>
+<pre><code>leaflet(options = 
+        leafletOptions(minZoom = 14, dragging = FALSE))  %&gt;% 
+  addProviderTiles("CartoDB")  %&gt;% 
+  setView(lng = -73.98575, lat = 40.74856, zoom = 14) 
+</code></pre>
+<p>Alternatively, if we want our users to be able to drag the map while ensuring that they do not stray too far, we can set the maps maximum boundaries by specifying two diagonal corners of a rectangle. </p>
+<p>You'll use <code>dc_hq</code> to create a map with the "CartoDB" provider tile that is centered on DataCamp's Belgium office.</p>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Use a minimum zoom level of 12.</li>
+<li>Set the <code>dragging</code> option to <code>TRUE</code>.</li>
+<li>Use maximum bounds of .05 decimal degrees from the headquarters.</li>
+```{r}
+leaflet(options = leafletOptions(
+                    # Set minZoom and dragging 
+                    minZoom = 12, dragging = TRUE)) %>% 
+  addProviderTiles("CartoDB") %>% 
+  
+  # Set default zoom level
+  setView(lng = dc_hq$lon[2], lat = dc_hq$lat[2], zoom = 14) %>% 
+  
+  # Set max bounds of map
+  setMaxBounds(lng1 = dc_hq$lon[2] + .05,
+               lat1 = dc_hq$lat[2] + .05,
+               lng2 = dc_hq$lon[2] - .05,
+               lat2 = dc_hq$lat[2] - .05)
+```
+</div>
+
+<p class="">You found DataCamp. Twice! Nice job. Now we'll mark these locations so we don't forget where DataCamp is located.
+</p>
+
+## Plotting DataCamp HQ
+
+
+
+### Mark it
+
+
+<div class>
+<p>So far we have been creating maps with a single layer: a base map. We can add layers to this base map similar to how you add layers to a plot in <code>ggplot2</code>. One of the most common layers to add to a <code>leaflet</code> map is location markers, which you can add by piping the result of <code>addTiles()</code> or <code>addProviderTiles()</code> into the add markers function. </p>
+<p>For example, if we plot DataCamp's NYC HQ by passing the coordinates to <code>addMarkers()</code> as numeric vectors with one element, our web map will place a blue drop pin at the coordinate. In chapters 2 and 3, we will review some options for customizing these markers. </p>
+<pre><code>leaflet()  %&gt;% 
+    addProviderTiles("CartoDB")  %&gt;% 
+    addMarkers(lng = -73.98575, lat = 40.74856)
+</code></pre>
+<p>The <code>dc_hq</code> tibble is available in your work space.</p>
+</div>
+<div class="exercise--instructions__content">
+
+<p>Plot DataCamp's NYC HQ using <code>addMarkers()</code>.</p></div>
+```{r}
+# Plot DataCamp's NYC HQ 
+leaflet() %>% 
+    addProviderTiles("CartoDB") %>% 
+    addMarkers(lng = dc_hq$lon[1], lat = dc_hq$lat[1])
+```
+<p>Keeping your map centered on DataCamp's NYC HQ set the zoom to 12.</p>
+```{r}
+# Plot DataCamp's NYC HQ with zoom of 12    
+leaflet() %>%
+    addProviderTiles("CartoDB") %>%
+    addMarkers(lng = -73.98575, lat = 40.74856)  %>%
+    setView(lng = -73.98575, lat = 40.74856, zoom = 12)
+```
+<p>Plot both DataCamp's NYC and Belgium locations.</p>
+```{r}
+# Plot both DataCamp's NYC and Belgium locations
+leaflet() %>%
+    addProviderTiles("CartoDB") %>%
+    addMarkers(lng = dc_hq$lon, lat = dc_hq$lat)
+```
+<p class="">Mark it! You are stacking up map layers. Great work. Now let's add a little flair to our markers.
+</p>
+
+### Adding Popups and Storing your Map
+
+
+<div class>
+<p>To make our map more informative we can add popups. To add popups that appear when a marker is clicked we need to specify the <code>popup</code> argument in the <code>addMarkers()</code> function. Once we have a map we would like to preserve, we can store it in an object. Then we can pipe this object into functions to add or edit the map's layers. </p>
+<pre><code>dc_nyc &lt;- 
+    leaflet() %&gt;% 
+        addTiles() %&gt;% 
+        addMarkers(lng = -73.98575, lat = 40.74856, 
+                   popup = "DataCamp - NYC") 
+
+dc_nyc %&gt;% 
+    setView(lng = -73.98575, lat = 40.74856, 
+            zoom = 2)
+</code></pre>
+<p>Let's try adding popups to both DataCamp location markers and storing our map in an object.</p>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Add the <code>popup</code> argument to <code>addMarkers()</code> to display the value in the hq column and store the <code>leaflet</code> map in an object called <code>map</code>.</li>
+<li>Center the view of <code>map</code> on the Belgium HQ with a zoom of 5 and store it in <code>map_zoom</code>.</li>
+<li>Print the <code>map_zoom</code> object.</li>
+```{r}
+# Store leaflet hq map in an object called map
+map <- leaflet() %>%
+          addProviderTiles("CartoDB") %>%
+          # Use dc_hq to add the hq column as popups
+          addMarkers(lng = dc_hq$lon, lat = dc_hq$lat,
+                     popup = dc_hq$hq)
+
+# Center the view of map on the Belgium HQ with a zoom of 5
+map_zoom <- map %>%
+      setView(lat = 50.881363, lng = 4.717863,
+              zoom = 5)
+
+# Print map_zoom
+map_zoom
+```
+</div>
+
+<p class="">Great job! In Chapter 2, we will create a <code>leaflet</code> map of every College and University in California. How many colleges do you think there are in California?
+</p>
+
+# Plotting Points
+
+<p class="chapter__description">
+    In chapter 2 students will build on the leaflet map they created in chapter 1 to create an interactive web map of every four year college in California. After plotting hundreds of points on an interactive leaflet map, students will learn to customize the markers on their leaflet map. This chapter will also how to color code markers based on a factor variable.
+  </p>
+
+## Introduction to IPEDS Data
+
+
+
+### Cleaning up the Base Map
+
+
+<div class>
+<p>If you are storing <code>leaflet</code> maps in objects, there will come a time when you need to remove markers or reset the view. You can accomplish these tasks with the following functions.</p>
+
+<li>
+<code>clearMarkers()</code>- Remove one or more features from a map</li>
+<li>
+<code>clearBounds()</code>- Clear bounds and automatically determine bounds based on map elements</li>
+
+<p>To remove the markers and to reset the bounds of our <code>m</code> map we would:</p>
+<pre><code>m &lt;- m  %&gt;% 
+        addMarkers(lng = dc_hq$lon, lat = dc_hq$lat) %&gt;% 
+        setView(lat = 50.9, lng = 4.7, zoom = 5)
+
+m  %&gt;% 
+    clearMarkers() %&gt;% 
+    clearBounds()
+</code></pre>
+<p>The <code>leaflet</code> map of DataCamp's headquarters has been printed for you.</p>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Use <code>clearMarkers()</code> to remove markers and <code>clearBounds()</code> to restore the default view and store in the <code>map_clear</code> object.</li>
+```{r}
+# Remove markers, reset bounds, and store the updated map in the m object
+map_clear <- map %>%
+        clearMarkers() %>% 
+        clearBounds()
+
+```
+
+<li>Print <code>map_clear</code>.</li>
+```{r}
+# Print the cleared map
+map_clear
+```
+
+</div>
+<p class="">Nice job. Now that we have cleaned the slate, let's take a look at the data we will be mapping in Chapter 2.
+</p>
+
+### Exploring the IPEDS Data
+
+
+<div class>
+<p>In Chapters 2 and 3, we will be using a subset of the IPEDS data that focuses on public, private, and for-profit four-year institutions. The United States also has many institutions that are classified as two-year colleges or vocational institutions, which are not included this course. Our subset has five variables on 3,146 colleges.  </p>
+<p>The <code>sector_label</code> column in the <code>ipeds</code> data frame indicates whether a college is public, private, or for-profit. In the console, use the <code>group_by()</code> and the <code>count()</code> functions from the <code>dplyr</code> package to determine which sector of college is most common. </p>
+<p>The <code>tidyverse</code> package, which includes <code>dplyr</code>, has been loaded for you. In your workspace, you also have access to the <code>ipeds</code> dataframe.</p>
+<p>Which sector of college is most common in the IPEDS data?</p>
+</div>
+
+- [ ] Public
+- [x] Private
+- [ ] For-Profit
+- [ ] NA
+
+<p class="">Nice job. Believe it or not private colleges outnumber public colleges in America.
+</p>
+
+### Exploring the IPEDS Data II
+
+
+<div class>
+<p>Most analyses require data wrangling. Luckily, there are many functions in the <code>tidyverse</code> that facilitate data frame cleaning. For example, the <code>drop_na()</code> function will remove observations with missing values. By default, <code>drop_na()</code> will check all columns for missing values and will remove all observations with one or more missing values.</p>
+<pre><code>miss_ex &lt;- tibble(
+             animal = c("dog", "cat", "rat", NA),
+             name   = c("Woodruf", "Stryker", NA, "Morris"),
+             age    = c(1:4))
+miss_ex
+
+miss_ex %&gt;% 
+     drop_na() %&gt;% 
+     arrange(desc(age))</code>
+
+<code># A tibble: 2 x 3
+  animal    name   age
+   &lt;chr&gt;   &lt;chr&gt; &lt;dbl&gt;
+1    cat Stryker     2
+2    dog Woodruf     1
+</code></pre>
+</div>
+<div class="exercise--instructions__content">
+```{r}
+# edited/added
+library(tidyr)
+library(tidyverse)
+ipeds_missing = read.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vQBIRl0-l4VgBOFxh8en-btFKbhoAezXgq6ajGDUbuB2vf3Cy8ZcOINijsMOdGKBV-4GmE8gnT8Mr9_/pub?gid=0&single=true&output=csv")
+```
+
+<p>Remove colleges with missing sector information using <code>drop_na()</code>.</p>
+```{r}
+# Remove colleges with missing sector information
+ipeds <- 
+    ipeds_missing %>% 
+    drop_na()
+```
+<p>Count the number of four-year colleges in each state.</p>
+```{r}
+# Count the number of four-year colleges in each state
+ipeds %>% 
+    group_by(state) %>% 
+    count()
+```
+<p>Print the US states in descending order by the number of colleges in each state.</p>
+```{r}
+# Create a list of US States in descending order by the number of colleges in each state
+ipeds %>% 
+    group_by(state) %>% 
+    count() %>% 
+    arrange(desc(n))
+```
+</div>
+
+<p class="">Great work! Wow, California has a lot of colleges! I wonder where they are concentrated, let's take a look at all of them on a <code>leaflet</code> map to find out.
+</p>
+
+
+## Mapping California Colleges
+
+
+
+### California Colleges
+
+
+<div class>
+<p>Now it is your turn to map all of the colleges in a state. In this exercise, we'll apply our example of mapping Maine's colleges to California's colleges. The first step is to set up your data by filtering the <code>ipeds</code> data frame to include only colleges in California. For reference, you will find how we accomplished this with the colleges in Maine below.</p>
+<pre><code>maine_colleges &lt;- 
+    ipeds %&gt;% 
+        filter(state == "ME")
+
+maine_colleges</code>
+
+<code># A tibble: 21 x 5
+                     name       lng      lat state sector_label
+                    &lt;chr&gt;     &lt;dbl&gt;    &lt;dbl&gt; &lt;chr&gt;        &lt;chr&gt;
+1           Bates College -70.20333 44.10530    ME      Private
+2         Bowdoin College -69.96524 43.90690    ME      Private
+</code></pre>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Create a data frame called <code>ca</code> with data on only colleges in California.</li>
+<li>Use <code>addMarkers()</code> to plot all of the colleges in <code>ca</code> on <code>map</code>.</li>
+```{r}
+# Create a dataframe called `ca` with data on only colleges in California
+ca <- ipeds %>%
+        filter(state == "CA")
+
+# Use `addMarkers` to plot all of the colleges in `ca` on the `map` leaflet map
+map %>% 
+    addMarkers(lng = ca$lng, lat = ca$lat)
+```
+</div>
+
+<p class="">Look at all of those markers! Great work. Let's take an even closer look at the colleges around LA.
+</p>
+
+### The City of Colleges
+
+
+<div class>
+<p>Based on our map of California colleges it appears that there is a cluster of colleges in and around the City of Angels (e.g., Los Angeles). Let's take a closer look at these institutions on our <code>leaflet</code> map.    </p>
+<p>The coordinates for the center of LA are provided for you in the <code>la_coords</code> data frame. </p>
+<pre><code>la_coords &lt;- data.frame(lat = 34.05223, lon = -118.2437) 
+</code></pre>
+<p>Once you create a map focused on LA, try panning and zooming the map. Can you find the cluster of colleges East of LA known as the Claremont Colleges? </p>
+<p>When there are hundreds of markers, do you find the pin markers helpful or do they get in your way? </p>
+<p>The coordinates of LA have been provided in the <code>la_coords</code> data frame and the <code>ca</code> data frame of California colleges and the <code>map</code> have been loaded for you.</p>
+</div>
+<div class="exercise--instructions__content">
+```{r}
+# edited/added
+la_coords = data.frame(lat = 34.05223, lon = -118.2437)
+```
+
+<p>Center the map on LA.</p>
+```{r}
+# Center the map on LA 
+map %>% 
+    addMarkers(data = ca) %>% 
+    setView(lat = la_coords$lat, lng = la_coords$lon, zoom = 12)
+```
+
+
+<li>Set the zoom level to 8 and store the map in the <code>map_zoom</code> object.</li>
+<li>Print the map stored in the <code>map_zoom</code> object.</li>
+```{r}
+# Set the zoom level to 8 and store in the map_zoom object
+map_zoom <- 
+    map %>% 
+      addMarkers(data = ca) %>% 
+      setView(lat = la_coords$lat, lng = la_coords$lon, zoom = 8)
+      
+map_zoom
+```
+
+</div>
+
+<p class="">Nice job. That is a lot of markers. Let's try to make our map clearer by replacing the pins with circles.
+</p>
+
+### Circle Markers
+
+
+<div class>
+<p>Circle markers are notably different from pin markers: </p>
+
+<li>We can control their size</li>
+<li>They do not "stand-up" on the map</li>
+<li>We can more easily change their color</li>
+
+<p>There are many ways to customize circle markers and the design of your <code>leaflet</code> map. To get started we will focus on the following arguments.</p>
+<pre><code>addCircleMarkers(map, lng = NULL, lat = NULL, 
+                 radius = 10, color = "#03F", popup = NULL)
+</code></pre>
+<p>The first argument <code>map</code> takes a <code>leaflet</code> object, which we will pipe directly into <code>addCircleMarkers()</code>. <code>lng</code> and <code>lat</code> are the coordinates we are mapping. The other arguments can customize the appearance and information presented by each marker. </p>
+<p>The <code>ca</code> data frame and the <code>leaflet</code> object <code>map</code> have been loaded for you.</p>
+</div>
+<div class="exercise--instructions__content">
+
+<p>Clear the pin markers from the map.</p>
+```{r}
+# Clear the markers from the map 
+map2 <- map %>% 
+            clearMarkers()
+```
+
+<p>Use <code>addCircleMarkers()</code> to plot each college as a circle.</p>
+```{r}
+# Use addCircleMarkers() to plot each college as a circle
+map2 %>%
+    addCircleMarkers(lng = ca$lng, lat = ca$lat)
+```
+<p>Change the radius of each circle to be 2 pixels and the color to red.</p>
+```{r}
+# Change the radius of each circle to be 2 pixels and the color to red
+map2 %>% 
+    addCircleMarkers(lng = ca$lng, lat = ca$lat,
+                     radius = 2, color = "red")
+```
+
+</div>
+<p class="">Great work! Now we can more easily see the colleges in the LA area. Let's add some information to the markers so we can tell which college is represented by each circle.
+</p>
+
+## Labels and Pop-ups
+
+
+
+### Making our Map Pop
+
+
+<div class>
+<p>Similar to building a plot with <code>ggplot2</code> or manipulating data with <code>dplyr</code>, your map needs to be stored in an object if you reference it later in your code.  </p>
+<p>Speaking of <code>dplyr</code>, the <code>%&gt;%</code> operator can pipe data into the function chain that creates a <code>leaflet</code> map. </p>
+<pre><code>ipeds %&gt;% 
+    leaflet()  %&gt;% 
+        addTiles() %&gt;% 
+        addCircleMarkers(popup = ~name, color = "#FF0000")
+</code></pre>
+<p><br>
+Piping makes our code more readable and allows us to refer to variables using the <code>~</code> operator rather than repeatedly specifying the data frame. </p>
+<p>The color argument in <code>addCircleMarkers()</code> takes the name of a color or a hex code. For example, red or <code>#FF0000</code>.</p>
+<p><code>map</code> has been printed for you. Notice the circle markers are gone!</p>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Add circle markers with popups for college names.</li>
+```{r}
+# Add circle markers with popups for college names
+map %>%
+    addCircleMarkers(data = ca, radius = 2, popup = ~name)
+
+```
+
+<li>Change circle markers' color to <code>"#2cb42c"</code> (this case exactly!) and store <code>map</code> in the <code>map_color</code> object.</li>
+```{r}
+# Change circle color to #2cb42c and store map in map_color object
+map_color <- map %>% 
+    addCircleMarkers(data = ca, radius = 2, color = "#2cb42c", popup = ~name)
+
+```
+
+<li>Print <code>map_color</code>.</li>
+```{r}
+# Print map_color
+map_color
+```
+
+</div>
+
+<p class="">Nice job. Now let's use this map we have been working so hard to create.
+</p>
+
+### What is California's Northernmost College?
+
+
+<div class>
+<p>Let's use that map! Not surprisingly, most of the colleges in California are concentrated in and around metropolitan areas, like LA. </p>
+<p>Using the console, print the map stored in the <code>m</code> object, then pan the map northward from these larger metro areas to find the name of the college that is the furthest north in California.</p>
+</div>
+
+- [ ] Humboldt State University
+- [x] Dell'Arte International School of Physical Theatre
+- [ ] University of Antelope Valley
+- [ ] California State University Northridge
+
+<p class="">Nice job. It looks like Dell'Arte International School of Physical Theatre is the northernmost college in our data on California colleges.
+</p>
+
+### Building a Better Pop-up
+
+
+<div class>
+<p>With the <code>paste0()</code> function and a few html tags, we can customize our popups. <code>paste0()</code> converts its arguments to characters and combines them into a single string without separating the arguments.</p>
+<pre><code>addCircleMarkers(popup = ~paste0(name,
+                                 "&lt;br/&gt;",
+                                 sector_label))
+</code></pre>
+<p>We can use the <code>&lt;br/&gt;</code> tag to create a line break to have each element appear on a separate line.</p>
+<p>To distinguish different data elements, we can make the name of each college italics by wrapping the <code>name</code> variable in <code>&lt;i&gt;&lt;/i&gt;</code></p>
+<pre><code>addCircleMarkers(popup = ~paste0("&lt;i&gt;",
+                                 name,
+                                 "&lt;/i&gt;", 
+                                 "&lt;br/&gt;", 
+                                 sector_label))
+</code></pre>
+</div>
+<div class="exercise--instructions__content"><p>Clear the bounds and markers on the map stored in <code>map</code>.</p></div>
+```{r}
+# Clear the bounds and markers on the map object and store in map2
+map2 <- map %>% 
+            clearMarkers() %>% 
+            clearBounds()
+```
+
+<div class="exercise--instructions__content"><p>Add circle markers with pop-ups that display both the institution name and sector.</p></div>
+```{r}
+# Add circle markers with popups that display both the institution name and sector
+map2 %>% 
+    addCircleMarkers(data = ca, radius = 2, 
+                     popup = ~paste0(name, "<br/>", sector_label))
+```
+
+<div class="exercise--instructions__content"><p>Make the institution name in each pop-up bold.</p></div>
+```{r}
+# Make the institution name in each popup bold
+map2 %>% 
+    addCircleMarkers(data = ca, radius = 2, 
+                     popup = ~paste0("<b>", name, "</b>", "<br/>", sector_label))
+```
+
+<p class="">Look at that, only Chapter 2 and we are combining R and HTML to create some great maps. Nice work.
+</p>
+
+### Swapping Popups for Labels
+
+
+<div class>
+<p>Popups are great, but they require a little extra effort. That is when labels come to our the aid. Using the <code>label</code> argument in the <code>addCircleMarkers()</code> function we can get more information about one of our markers with a simple hover!</p>
+<pre><code>ipeds %&gt;% 
+    leaflet()  %&gt;% 
+    addProviderTiles("CartoDB")  %&gt;% 
+    addCircleMarkers(label = ~name, radius = 2)
+</code></pre>
+<p>Labels are especially helpful when mapping more than a few locations as they provide quick access to detail about what each marker represents.</p>
+</div>
+<div class="exercise--instructions__content"><p>Add circle markers with labels identifying the name of each college to the current map.</p></div>
+```{r}
+# Add circle markers with labels identifying the name of each college
+map %>% 
+    addCircleMarkers(data = ca, radius = 2, label = ~name)
+```
+
+<div class="exercise--instructions__content"><p>Add sector information to the label inside parentheses.</p></div>
+```{r}
+# Use paste0 to add sector information to the label inside parentheses 
+map %>% 
+    addCircleMarkers(data = ca, radius = 2, label = ~paste0(name, " (", sector_label, ")"))
+```
+
+<p class="">That's better! No more mouse clicking to see the names of the college we are mapping. Now let's add some more color.
+</p>
+
+## Color Coding Colleges
+
+
+
+### Creating a Color Palette using colorFactor
+
+
+<div class>
+<p>So far we have only used color to customize the style of our map. With <code>colorFactor()</code> we can create a color palette that maps colors the levels of a factor variable. </p>
+<pre><code>pal &lt;- 
+   colorFactor(palette = c("blue", "red", "green"), 
+               levels = c("Public", "Private", "For-Profit"))
+
+m %&gt;% 
+    addCircleMarkers(color = ~pal(sector_label))
+</code></pre>
+<p>Why might we not want to use this particular color palette? </p>
+<p>If you are interested in using a continuous variable to color a map see <code>colorNumeric()</code>.  </p>
+<pre><code>pal &lt;- colorNumeric(palette = "RdBu", domain = c(25:50))
+
+ipeds %&gt;% 
+    leaflet() %&gt;% 
+        addProviderTiles("CartoDB")  %&gt;% 
+        addCircleMarkers(radius = 2, color = ~pal(lat))
+</code></pre>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Make a color palette called <code>pal</code> for the values of <code>sector_label</code> using <code>colorFactor()</code> using "red", blue", and "#9b4a11".</li>
+<li>Add circle markers that color colleges using <code>pal()</code> and the values of <code>sector_label</code>.</li>
+```{r}
+# Make a color palette called pal for the values of `sector_label` using `colorFactor()`  
+# Colors should be: "red", "blue", and "#9b4a11" for "Public", "Private", and "For-Profit" colleges, respectively
+pal <- colorFactor(palette = c("red", "blue", "#9b4a11"), 
+                   levels = c("Public", "Private", "For-Profit"))
+
+# Add circle markers that color colleges using pal() and the values of sector_label
+map2 <- 
+    map %>% 
+        addCircleMarkers(data = ca, radius = 2, 
+                         color = ~pal(sector_label), 
+                         label = ~paste0(name, " (", sector_label, ")"))
+
+# Print map2
+map2
+```
+</div>
+
+<p class="">Great work! Let's add a legend so it is easy for us to remember which color represents which sector.
+</p>
+
+### A Legendary Map
+
+
+<div class>
+<p>Adding information to our map using color is great, but it is only helpful if we remember what the colors represent.  With <code>addLegend()</code> we can add a legend to remind us.  </p>
+<p>There are several arguments we can use to custom the legend to our liking, including <code>opacity</code>, <code>title</code>, and <code>position</code>.  To create a legend for our <code>colorNumeric()</code> example, we would do the following.</p>
+<pre><code>pal &lt;- colorNumeric(palette = "RdBu", domain = c(25:50))
+
+ipeds %&gt;% 
+    leaflet() %&gt;% 
+        addProviderTiles("CartoDB")  %&gt;% 
+        addCircleMarkers(radius = 2,
+                         color = ~pal(lat)) %&gt;% 
+         addLegend(pal = pal,
+                   values = c(25:50),
+                   opacity = 0.75,
+                   title = "Latitude",
+                   position = "topleft")
+</code></pre>
+</div>
+
+```{r}
+# edited/added
+m = map2
+```
+
+<div class="exercise--instructions__content">
+
+<p>Add a legend that displays the colors used in <code>pal</code> to <code>m</code>.</p></div>
+```{r}
+# Add a legend that displays the colors used in pal
+m %>% 
+    addLegend(pal = pal, 
+              values = c("Public", "Private", "For-Profit"))
+```
+
+<div class="exercise--instructions__content"><p>Customize the legend to have an <code>opacity</code> of .5, a <code>title</code> of "Sector", and a <code>position</code> of "topright".</p></div>
+```{r}
+# Customize the legend
+m %>% 
+    addLegend(pal = pal, 
+              values = c("Public", "Private", "For-Profit"),
+              # opacity of .5, title of Sector, and position of topright
+              opacity = 0.5, title = "Sector", position = "topright")
+```
+
+<p class="">That's a wrap for Chapter 2. Great work. In Chapter 3, we will build on our current <code>leaflet</code> map to plot every college in America.
+</p>
+
+# Groups, Layers, and Extras
+
+<p class="chapter__description">
+    In chapter 3 students will expand on their map of all four year colleges in California to create a map of all American colleges. First, in section 3.1 students will review and build on the material from Chapter 2 to create a map of all American colleges. Then students will re-plot the colleges on their leaflet map by sector (public, private, or for-profit) using groups to enable users to toggle the colleges that are displayed on the map. In section 3.3 students will learn to add multiple base maps so that users can toggle between multiple map tiles.
+  </p>
+
+## The Leaflet Extras Package
+
+
+
+### Middle America
+
+
+<div class>
+<p>Starting from scratch, our first step is to create a base map and to set our map's view. Rather than using the <code>geocode()</code> function from <code>ggmaps</code>, we'll add an extra feature to our map so we can use the map to geocode.</p>
+
+<hr>
+<p>After creating the map in Step 1, search for "U.S. Center Chapel " in Kansas and click the marker to add a pin.</p>
+<p>When you hover over the pin what are the coordinates?</p>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Load <code>leaflet.extras</code>.</li>
+<li>Pipe the result of <code>addtiles</code> into <code>addSearchOSM</code>.</li>
+<li>Add <code>addReverseSearchOSM</code> as the final call in the function chain.</li>
+```{r}
+library(leaflet.extras)
+
+leaflet() %>%
+  addTiles() %>% 
+  addSearchOSM() %>%
+  addReverseSearchOSM()
+```
+</div>
+
+- [ ] Lat = -98.5795 , Lng = 39.8282
+- [x] Lat = 39.8282, Lng = -98.5795
+- [ ] Lat = 33.1771, Lng = -85.3322
+- [ ] Lat = -85.3322 , Lng = 33.1771
+
+<p class="">Nice job. Pretty cool that we can geocode directly on our <code>leaflet</code> maps!
+</p>
+
+### Building a Base
+
+
+<div class>
+<p>Now that we know where to center our map (Lat =  39.8282, Lng = -98.5795), let's build a new basemap. Remember that we can use either <code>addTiles()</code> or <code>addProviderTiles()</code> to add a map tile to our <code>leaflet</code> object. </p>
+<p>Since we are working toward mapping all of America's colleges, we can include the <code>ipeds</code> data at the start of the chain of functions that will create our base map. This way the <code>ipeds</code> data will be stored with our base map so that we can easily access it. 
+Once we have built a solid base, we can map every college in America with just two lines of R code. </p>
+<p>The <code>ipeds</code> data and <code>leaflet</code> and <code>tidyverse</code> libraries have been loaded for you.</p>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Store a new map in the <code>m2</code> object that:
+<li>Uses the CartoDB provider tile.</li>
+<li>Has a zoom level of 3.</li>
+<li>Then add circle markers to <code>m2</code> to map all of America's colleges.</li>
+
+</li>
+```{r}
+m2 <- 
+    ipeds %>% 
+        leaflet() %>% 
+            # use the CartoDB provider tile
+            addProviderTiles("CartoDB") %>% 
+            # center on the middle of the US with zoom of 3
+            setView(lat = 39.8282, lng = -98.5795, zoom = 3)
+
+# Map all American colleges 
+m2 %>% 
+    addCircleMarkers() 
+```
+</div>
+
+<p class="">Great job. Now that we have built our base, let's add a layer!
+</p>
+
+### Down South
+
+
+<div class>
+<p>Building a solid base has set us up to map every college with just a few lines of code. Run the following in the console and explore the map to determine which college is the southernmost public college in the <strong>continental</strong> (i.e., mainland) US.</p>
+<pre><code>pal &lt;- colorFactor(palette = c("red", "blue", "#9b4a11"), 
+                   levels = c("Public", "Private", "For-Profit"))
+
+m2 %&gt;% 
+    addCircleMarkers(radius = 2, label = ~name, color = ~pal(sector_label))
+</code></pre>
+</div>
+
+- [x] Florida International University
+- [ ] Miami Dade College
+- [ ] American Samoa Community College
+- [ ] University of Puerto Rico - Ponce
+
+<p class="">Correct! Wouldn't it be nice if we could see only the public colleges to answer questions like this?
+</p>
+
+## Overlay Groups
+
+
+
+### Mapping Public Colleges
+
+
+<div class>
+<p>We can add each sector to our map as a layer providing users with the ability to select which sectors are displayed. To do this we will make use of a new argument to the <code>addCircleMarkers()</code> function, called a <code>group</code>. </p>
+<pre><code>leaflet() %&gt;% 
+        addProviderTiles("CartoDB") %&gt;% 
+        addCircleMarkers(data = public, 
+                         label = ~htmlEscape(name), 
+                         group = "Public")
+</code></pre>
+<p>We'll integrate another feature into our map from the <code>htmltools</code> library. Wrapping our labels with the <code>htmlEscape()</code> function will sanitize characters that may be interpreted as HTML. This will prevent any of the college names from appearing with unintended formatting. </p>
+<p>The color palette <code>pal</code> we created in Chapter 2 has been loaded for you.</p>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Load the <code>htmltools</code> package.</li>
+<li>Filter the <code>ipeds</code> data to create a data frame with only public colleges.</li>
+<li>Create a <code>leaflet</code> map of public colleges.</li>
+<li>Add the <code>group</code> argument to <code>addCircleMarkers()</code>.</li>
+```{r}
+# Load the htmltools package
+library(htmltools)
+
+# Create data frame called public with only public colleges
+public <- filter(ipeds, sector_label == "Public")  
+
+# Create a leaflet map of public colleges called m3 
+m3 <- leaflet() %>% 
+        addProviderTiles("CartoDB") %>% 
+        addCircleMarkers(data = public, radius = 2, label = ~htmlEscape(name),
+                         color = ~pal(sector_label), group = "Public")
+
+m3
+```
+</div>
+
+<p class="">Nice job. Now, let's layer up and add private colleges back to our map.
+</p>
+
+### Mapping Public and Private Colleges
+
+
+<div class>
+<p>We can add private colleges exactly how we added public colleges. Then using the <code>addLayersControl()</code> function with the <code>overlayGroups</code> argument we can give our users the ability to display public and/or private colleges.  The <code>overlayGroups</code> argument takes a vector of groups that we have defined while creating our layers (i.e., public and private). As a reminder, here is how we can add public colleges to our map as a layer:</p>
+<pre><code># Create data frame called public with only public colleges
+public &lt;- filter(ipeds, sector_label == "Public")</code>  
+
+<code># Add public colleges as a layer and save map as `m3`
+m3 &lt;- leaflet() %&gt;% 
+        addProviderTiles("CartoDB") %&gt;% 
+        addCircleMarkers(data = public, radius = 2, 
+                         label = ~htmlEscape(name),
+                         color = ~pal(sector_label),
+                         group = "Public") %&gt;% 
+        addLayersControl(overlayGroups = c("Public"))
+</code></pre>
+<p>The <code>htmltools</code> library, color palette <code>pal</code> and the <code>m3</code> map with public colleges have been loaded for you.</p>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Filter the ipeds data to create a data frame with only private colleges.</li>
+<li>Add private colleges to <code>m3</code> as a new layer.</li>
+<li>Use the <code>addLayersControl()</code> function and <code>overlayGroups</code> argument to allow users to toggle the public and private layers.</li>
+```{r}
+# Create data frame called private with only private colleges
+private <- filter(ipeds, sector_label == "Private")  
+
+# Add private colleges to `m3` as a new layer
+m3 <- m3 %>% 
+        addCircleMarkers(data = private, radius = 2, label = ~htmlEscape(name),
+                         color = ~pal(sector_label), group = "Private") %>% 
+        addLayersControl(overlayGroups = c("Public", "Private"))
+
+m3
+```
+</div>
+
+<p class="">Nice map. Did you try toggling the sectors that are included? One more sector to add.
+</p>
+
+### Mapping All Colleges
+
+
+<div class>
+<p>Let's keep layering up and add for-profit colleges to our <code>leaflet</code> map that is stored in the <code>m3</code> object. </p>
+<p>After you <code>print()</code> the <code>m3</code> map with public, private, and for-profit colleges as their own layers, then try removing all three layers and adding them back to the map in a different order. </p>
+<p>The different college sectors are added back to the map as layers in the order you specify (i.e., the last sector that you select will be on top). </p>
+<p>The color palette <code>pal</code> and the <code>m3</code> map with public and private colleges have been loaded for you.</p>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Filter the ipeds data to create a data frame with only for-profit colleges and assign it to <code>profit</code>.</li>
+<li>Create a <code>leaflet</code> map of public, private, and for-profit colleges.</li>
+<li>Use the <code>addLayersControl()</code> function and <code>overlayGroups</code> argument to allow users to toggle all three sectors of colleges.</li>
+<li>Center the map on the middle of the US and set the zoom level to 4.</li>
+```{r}
+# Create data frame called profit with only for-profit colleges
+profit <- filter(ipeds, sector_label == "For-Profit")  
+
+# Add for-profit colleges to `m3` as a new layer
+m3 <- m3 %>% 
+        addCircleMarkers(data = profit, radius = 2, label = ~htmlEscape(name),
+                         color = ~pal(sector_label),   group = "For-Profit")  %>% 
+        addLayersControl(overlayGroups = c("Public", "Private", "For-Profit"))  
+
+# Center the map on the middle of the US with a zoom of 4
+m4 <- m3 %>%
+        setView(lat = 39.8282, lng = -98.5795, zoom = 4) 
+        
+m4
+```
+</div>
+
+<p class="">Nice layers! Let's take a look at how we can allow our users to easily toggle between base maps as well. Keep up the great work.
+</p>
+
+## Base Groups
+
+
+
+### Change up the Base
+
+
+<div class>
+<p>Similar to how we added overlay groups (i.e., college sectors), we can allow our users to toggle between different base maps using the <code>baseGroups</code> argument to the <code>addLayersControl()</code> function. </p>
+<p>First we will need to add multiple basemaps and specify the name of a <code>group</code> for each. </p>
+<pre><code>leaflet() %&gt;% 
+  addTiles(group = "OSM") %&gt;% 
+  addProviderTiles("CartoDB", group = "CartoDB") 
+</code></pre>
+<p>Try running the above code in the console. You should see a <code>leaflet</code> map in the viewer with the <code>CartoDB</code> basemap. This is because we added the <code>CartoDB</code> base map after the default OpenStreetMap tile. If we add <code>addLayerControl()</code>, our users will be able to toggle between the two base maps (you can include many base maps, but only one can be selected at a time).</p>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Add the OSM, CartoDB and Esri tiles.</li>
+<li>Use the <code>addLayersControl()</code> function to allow users to toggle between the three base maps.</li>
+```{r}
+leaflet() %>% 
+  # Add the OSM, CartoDB and Esri tiles
+  addTiles(group = "OSM") %>% 
+  addProviderTiles("CartoDB", group = "CartoDB") %>% 
+  addProviderTiles("Esri", group = "Esri") %>% 
+  # Use addLayersControl to allow users to toggle between basemaps
+  addLayersControl(baseGroups = c("OSM", "CartoDB", "Esri"))
+```
+</div>
+
+<p class="">Nice job. Let's put some dots back on those basemaps!
+</p>
+
+### Putting it all Together
+
+
+<div class>
+<p>Let's try putting this all together at one time. Building our interactive map of every four-year college in America can be broken down into four steps: </p>
+<ol>
+<li>Initialize the web map </li>
+<li>Lay down our base maps </li>
+<li>Plot each sector of colleges as its own layer</li>
+<li>Add layer controls so users can toggle base and overlay groups</li>
+</ol>
+<p>The <code>public</code>, <code>private</code>, and <code>profit</code> data frames as well as the color palette <code>pal</code> have been loaded for you.</p>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Fill in the function names to create an interactive web map that has multiple overlay and base map groups.</li>
+```{r}
+m4 <- leaflet() %>% 
+        addTiles(group = "OSM") %>% 
+        addProviderTiles("CartoDB", group = "Carto") %>% 
+        addProviderTiles("Esri", group = "Esri") %>% 
+        addCircleMarkers(data = public, radius = 2, label = ~htmlEscape(name),
+                         color = ~pal(sector_label), group = "Public") %>% 
+        addCircleMarkers(data = private, radius = 2, label = ~htmlEscape(name),
+                           color = ~pal(sector_label), group = "Private")  %>% 
+        addCircleMarkers(data = profit, radius = 2, label = ~htmlEscape(name),
+                         color = ~pal(sector_label), group = "For-Profit")  %>% 
+        addLayersControl(baseGroups = c("OSM", "Carto", "Esri"), 
+                         overlayGroups = c("Public", "Private", "For-Profit")) %>% 
+        setView(lat = 39.8282, lng = -98.5795, zoom = 4) 
+
+m4
+```
+</div>
+
+<p class="">Great job! You have created a map with only R code that allows users to interact with our data in various ways! Nice job.
+</p>
+
+## Pieces of Flair
+
+
+
+### Adding a Piece of Flair
+
+
+<div class>
+<p>Earlier in this chapter, we used <code>addSearchOSM()</code> to find the middle of the US. To search for markers, rather than locations, we can use the <code>addSearchFeatures()</code> function. <code>addSearchFeatures()</code> will add a search box that you can use to find markers in the group(s) passed to the <code>targetGroups</code> argument. For example, to search our map for public colleges we could use the following code. </p>
+<pre><code>m4  %&gt;% 
+  addSearchFeatures(
+    targetGroups = 'Public',
+    options = searchFeaturesOptions(zoom = 10)) 
+</code></pre>
+<p>The <code>m4</code> map and the <code>leaflet.extras</code> package have been loaded for you.</p>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Use the <code>addSearchFeatures()</code> function to make colleges in all sectors searchable.</li>
+<li>Set the search zoom level to 18.</li>
+```{r}
+# Make each sector of colleges searchable 
+m4_search <- m4  %>% 
+        addSearchFeatures(
+            targetGroups = c("Public", "Private", "For-Profit"), 
+            # Set the search zoom level to 18
+            options = searchFeaturesOptions(zoom = 18)) 
+
+# Try searching the map for a college
+m4_search
+```
+</div>
+
+<p class="">Nice job. Now let's test out that search feature!
+</p>
+
+### A Cluster Approach
+
+
+<div class>
+<p>Rather than using layers to improve the usability of our map, we could elect to cluster the colleges by clustering groups of nearby colleges together to reduce the number of points on the map. Zooming in will cause the clusters to break apart and the individual colleges to appear. This can be a useful tactic for mapping a large number of points in a user-friendly manner. </p>
+<p>We can cluster all of our colleges by setting the <code>clusterOptions</code> argument of <code>addCircleMarkers()</code> as follows. </p>
+<pre><code>ipeds %&gt;% 
+  leaflet() %&gt;%
+    addTiles() %&gt;% 
+    addCircleMarkers(clusterOptions = markerClusterOptions())
+</code></pre>
+<p>The <code>ipeds</code> data, <code>htmltools</code> library, and color palette <code>pal</code> have been loaded for you.</p>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Sanitize any html in our labels.</li>
+<li>Color code colleges by sector using the <code>pal</code> color palette.</li>
+<li>Cluster all colleges using <code>clusterOptions</code>.</li>
+```{r}
+ipeds %>% 
+    leaflet() %>% 
+        addTiles() %>% 
+        # Sanitize any html in our labels
+        addCircleMarkers(radius = 2, label = ~htmlEscape(name),
+                         # Color code colleges by sector using the `pal` color palette
+                         color = ~pal(sector_label),
+                         # Cluster all colleges using `clusterOptions`
+                         clusterOptions = markerClusterOptions()) 
+```
+</div>
+
+<p class="">Wow! That is pretty cool. We can cluster our markers by specifying a single argument to <code>addCircleMarkers()</code>.
+</p>
+
+# Plotting Polygons
+
+<p class="chapter__description">
+    In Chapter 4 students will learn to map polygons, which can be used to define geographic regions (e.g., zip codes, states, countries, etc.).  Chapter 4 will start by plotting the zip codes in North Carolina that fall in the top quartile of mean family incomes. Students will learn to customize the polygons with color palettes and labels. Chapter 4 will conclude with adding a new layer to the map of every college in America that displays every zip code with a mean income of $200,000 or more during the 2015 tax year. Through the process of mapping zip codes students will learn about spatial data generally, geoJSON data, the @ symbol, and the addPolygons() function. Furthermore, students will have an opportunity to practice applying many of the options that they learned about in the previous chapters, such as popups and labels, as well as new ways to customize their maps, such as the highlight option in addPolygons().
+  </p>
+
+## Spatial Data
+
+
+
+### Introduction to Spatial Data
+
+
+<div class>
+<p>We have been mapping points, but there are several spatial features that can be mapped, including polygons. In R, polygons are often stored in a SpatialPolygonsDataFrame that holds the polygon, coordinate information, and a data frame with one row per polygon.   </p>
+<p>A SpatialPolygonsDataFrame called <code>shp</code> that contains the zip code boundaries for North Carolina has been loaded for you. <code>shp</code> has five slots that store various types of information:</p>
+<ol>
+<li>
+<strong>data</strong>: data associated with each polygon</li>
+<li>
+<strong>polygons</strong>: coordinates to plot polygons</li>
+<li>
+<strong>plotOrder</strong>: order in which polygons are plotted</li>
+<li>
+<strong>bbox</strong>: bounding box for geographic data (i.e., a rectangle)</li>
+<li>
+<strong>proj4string</strong>: coordinate reference system </li>
+</ol>
+<p>Let's take a closer look inside  the <code>shp</code> object.</p>
+</div>
+<div class="exercise--instructions__content">
+```{r}
+# edited/added
+library(sp)
+load("nc_zips.Rda")
+```
+
+<p>Print the <code>summary()</code> of the <code>shp</code> data.</p></div>
+```{r}
+# Print a summary of the `shp` data
+summary(shp)
+```
+
+<div class="exercise--instructions__content"><p>Print the class of <code>shp</code>.</p></div>
+```{r}
+# Print the class of `shp`
+class(shp)
+```
+
+<div class="exercise--instructions__content"><p>Print the slot names of <code>shp</code>.</p></div>
+```{r}
+# Print the slot names of `shp`
+slotNames(shp)
+```
+
+<p class="">Nice job. Exploring new types of objects in R can be daunting, but understanding the structure of the object will help us leverage all of the information it contains.
+</p>
+
+### Exploring Spatial Data
+
+
+<div class>
+<p>The data slot in <code>shp</code> holds a data frame like we are used to working with. However, since it is stored inside a SpatialPolygonsDataFrame, we access the data frame a little differently using the <code>@</code> operator.</p>
+<pre><code>glimpse(<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="3d4e554d7d595c495c">[email protected]</a>) 
+
+Observations: 808
+Variables: 2
+$ GEOID10 &lt;fct&gt; 27925, 28754, 28092...
+$ ALAND10 &lt;fct&gt; 624688620, 223734670, 317180853 ...
+</code></pre>
+<p>Our data frame has 808 observations of two variables: </p>
+<ol>
+<li>GEOID10: the zip code of each polygon </li>
+<li>ALAND10: the area (square meters) of each polygon</li>
+</ol>
+</div>
+<div class="exercise--instructions__content"><p>Use the <code>glimpse()</code> function to look at the <code>data</code> slot of <code>shp</code>.</p></div>
+```{r}
+# Glimpse the data slot of shp
+glimpse(shp@data)
+```
+
+<div class="exercise--instructions__content"><p>Print the class of the data slot of <code>shp</code>.</p></div>
+```{r}
+# Print the class of the data slot of shp
+class(shp@data)
+```
+
+<div class="exercise--instructions__content"><p>Print the <code>GEOID10</code> variable.</p></div>
+```{r}
+# Print GEOID10
+shp@data$GEOID10
+```
+
+<p class="">Great job. Now let's use the data frame stored in the data slot.
+</p>
+
+### Joining Spatial Data
+
+
+<div class>
+<p>We can join data onto the data frame stored in the data slot of our SpatialPolygonsDataFrame. In this chapter, we are interested in the mean income at the zip code level as reported by the IRS. Once we have the income data joined onto the information in the data slot of <code>shp</code> we can map the mean income of zip codes on our <code>leaflet</code> map.  </p>
+<p>A data frame called <code>nc_income</code> has been loaded for you. Let's get started by taking a look at the <code>nc_income</code> data. Then we'll join it onto the information in the data slot of <code>shp</code> and see if there are any zip codes in our data that are missing income information.</p>
+</div>
+<div class="exercise--instructions__content">
+```{r}
+# edited/added
+nc_income = read.csv("https://assets.datacamp.com/production/repositories/1942/datasets/09d53d484e4979a41a51a427a59a49d2654feb5d/mean_income_by_zip_nc.csv") %>% mutate(zipcode = as.factor(zipcode))
+```
+<p>Use the <code>glimpse()</code> function to look at <code>nc_income</code>.</p>
+```{r}
+# Glimpse the nc_income data
+glimpse(nc_income)
+
+```
+
+<p>Summarize the <code>nc_income</code> data using the <code>summary()</code> function.</p>
+```{r}
+# Summarize the nc_income data
+summary(nc_income)
+```
+<p><code>left_join()</code> the <code>nc_income</code> data onto <code>shp@data</code>.</p>
+```{r}
+# Left join nc_income onto shp@data
+shp_nc_income <- shp@data %>% 
+                left_join(nc_income, by = c("GEOID10" = "zipcode"))
+```
+<p>Use the <code>summarize_all()</code> function to print the number of missing values in each variable in <code>shp_nc_income</code>.</p>
+```{r}
+# Print the number of missing values of each variable in shp_nc_income
+shp_nc_income  %>%
+  summarize_all(funs(sum(is.na(.))))
+```
+
+</div>
+
+<p class="">Great job. Why do you think some zip codes are missing income data? Let's map these zip codes to see if we can figure it out.
+</p>
+
+## Mapping Polygons
+
+
+
+### addPolygons() Function
+
+
+<div class>
+<p>Let's look at those zip codes with missing data to hypothesize why they do not have income data.  </p>
+<p>We are mapping ZCTAs (not actual zip codes) so not every part of NC will have a boundary. Our boundaries may overlap because the file was simplified to reduce size. These are trade offs to consider when mapping polygons. </p>
+<p>Enough nuance, let's make a map. You can pipe the <code>shp</code> data directly into our calls to <code>leaflet()</code>, <code>addTiles()</code>, and <code>addPolygons()</code> without supplying any additional arguments to map North Carolina's zip codes. 
+To get you started, the <code>shp</code> SpatialPolygonsDataFrame including the IRS income variables has been loaded for you.</p>
+</div>
+<div class="exercise--instructions__content">
+
+<p>Map the polygons in <code>shp</code> using <code>addPolygons()</code>.</p>
+```{r}
+# map the polygons in shp
+shp %>% 
+    leaflet() %>% 
+    addTiles() %>% 
+    addPolygons()
+
+```
+
+<p>Create a new SpatialPolygonsDataFrame called <code>shp_na</code> that contains information on zip codes with missing income data.</p>
+```{r}
+# which zips were not in the income data?
+shp_na <- shp[is.na(shp$mean_income),]
+
+```
+
+<p>Map the polygons in <code>shp_na</code> using <code>addPolygons()</code>.</p>
+```{r}
+# map the polygons in shp_na
+shp_na %>% 
+    leaflet() %>% 
+    addTiles() %>% 
+    addPolygons()
+```
+
+</div>
+
+<p class="">Look at those polygons. Great work. Now let's use our polygons to identify the highest income areas in North Carolina.
+</p>
+
+### NC High Income Zips
+
+
+<div class>
+<p>Did you have a hypothesis of why certain zip codes are missing income information? It looks to me like many of them are areas that likely have low populations (e.g., parks, colleges, etc.) and the IRS only reports income data on zip codes with more than 100 filers. </p>
+<p>Now let's focus in on a subset of zip codes with income data, namely the 25% of zip codes in NC with the highest mean incomes. Where do think these will fall within the states?</p>
+<p>Let's take a look and find out.</p>
+</div>
+<div class="exercise--instructions__content">
+```{r}
+# edited/added
+load("/Users/maccenter/Desktop/scrape/wealthiest_zips.Rda")
+```
+<p>Summarize the mean income variable to find the cut point for the top quartile of mean income.</p>
+```{r}
+# summarize the mean income variable
+summary(shp$mean_income)
+
+```
+
+<p>Create a subset called <code>high_inc</code> that includes only zip codes in the top quartile of mean income.</p>
+```{r}
+# subset shp to include only zip codes in the top quartile of mean income
+high_inc <- shp[!is.na(shp$mean_income) & shp$mean_income > 55917,]
+```
+
+<p>Map the boundaries of the zip codes in the top quartile of mean income.</p>
+```{r}
+# map the boundaries of the zip codes in the top quartile of mean income
+high_inc %>%
+  leaflet() %>%
+  addTiles() %>%
+  addPolygons()
+```
+
+</div>
+
+<p class="">Great work. Now let's add some color and custom features.
+</p>
+
+### addPolygon() Options
+
+
+<div class>
+<p>So far we have used the default appearance for <code>addPolygons()</code>. There are several more ways to customize the polygons. </p>
+<p>The arguments to <code>addPolygons()</code> we will focus on are:</p>
+
+<li>
+<strong>weight</strong>: the thickness of the boundary lines in pixels</li>
+<li>
+<strong>color</strong>: the color of the polygons</li>
+<li>
+<strong>label</strong>: the information to appear on hover</li>
+<li>
+<strong>highlightOptions</strong>: options to highlight a polygon on hover</li>
+
+<pre><code>addPolygons(weight = 2,
+           color = "red",
+           label = ~paste0("Total Income: ", dollar(income)),
+           highlight = highlightOptions(weight = 10,
+                                       color = "blue",
+                                       bringToFront = TRUE))
+</code></pre>
+<p>The <code>high_inc</code> SpatialPolygonsDataFrame you created in the previous exercise has been loaded for you.</p>
+</div>
+<div class="exercise--instructions__content">
+```{r}
+# edited/added
+library(scales)
+```
+<li>Use the arguments of <code>addPolygons()</code> to map the high income zip codes in NC with: 
+<li>A boundary thickness of 1 pixel, </li>
+<li>Polygons that are colored with the <code>nc_pal</code> palette and are highlighted on hover, and</li>
+<li>Labels that display the words "Mean Income:" followed by the mean income of the zip code.</li>
+
+</li>
+```{r}
+# create color palette with colorNumeric()
+nc_pal <- colorNumeric("YlGn", domain = high_inc@data$mean_income)
+
+high_inc %>%
+  leaflet() %>%
+  addTiles() %>%
+  # set boundary thickness to 1 and color polygons
+  addPolygons(weight = 1, color = ~nc_pal(mean_income),
+              # add labels that display mean income
+              label = ~paste0("Mean Income: ", dollar(mean_income)),
+              # highlight polygons on hover
+              highlightOptions = highlightOptions(weight = 5, color = "white",
+              bringToFront = TRUE))
+```
+</div>
+
+<p class="">Great work. We can customize our polygons in many of the same ways we customize circle markers, like adding a color palette. Let's give that a shot.
+</p>
+
+### Let's do some Logging
+
+
+<div class>
+<p>Let's look at the quartiles of mean zip code incomes in NC. </p>
+<pre><code>summary(high_inc$mean_income)
+
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  55947   62380   71655   83682   90695  550849
+</code></pre>
+<p>The range is nearly $500,000! However, the median is much closer to the min than to the max, indicating a right-skew. Since the mean income variable contains exceptionally large values, the continuous color gradient is not very helpful. Log transforming a right-skewed variable pulls large values closer to the mean and yields a more symmetrically distributed variable. </p>
+<p>Log transforming the mean income on our map increases the variation in the color gradient across the high income zip codes and enables better visualization of the distribution of mean income across the state.</p>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Create a logged version of the nc_pal color palette.</li>
+<li>Apply the logged color palette to the <code>leaflet</code> map.</li>
+<li>Comment out the map tile from the <code>leaflet</code> map to more easily visualize the variation in mean income (add # without a space prior to the function that adds the map tile).</li>
+```{r}
+# Create a logged version of the nc_pal color palette
+nc_pal <- colorNumeric("YlGn", domain = log(high_inc@data$mean_income))
+
+# apply the nc_pal
+high_inc %>%
+  leaflet() %>%
+  #addProviderTiles("CartoDB") %>%
+  addPolygons(weight = 1, color = ~nc_pal(log(mean_income)), fillOpacity = 1,
+              label = ~paste0("Mean Income: ", dollar(mean_income)),
+              highlightOptions = highlightOptions(weight = 5, color = "white", bringToFront = TRUE))
+```
+</div>
+
+<p class="">That looks better. Nice job. Now we will apply our knowledge of polygons to our map of American colleges.
+</p>
+
+## Putting it All Together
+
+
+
+### Wealthiest Zip Codes in America
+
+
+<div class>
+<p>Zooming out from North Carolina, let's put together a polygon layer for the entire country. Then we will work to add this layer to our map of American colleges. </p>
+<p>According to the 2015 IRS data, there are 427 zip codes in America with a mean income of $200,000 or more. It might be interesting to know which colleges are located in these affluent areas. Let's map these 427 polygons and explore our <code>leaflet</code> map to better understand where the highest income zip codes in America are. To get us started, a SpatialPolygonsDataFrame called <code>wealthy_zip</code> that contains information on each zip code in America with a mean income of $200,000 or more has been loaded for you. </p>
+<p>Before we work with this data, take a minute to hypothesize where many of these zip codes are located.</p>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Call the <code>slotNames</code> function to print the slot names of <code>wealthy_zips</code>.</li>
+```{r}
+# Print the slot names of `wealthy_zips`
+slotNames(wealthy_zips)
+```
+
+<li>Print a summary of the <code>mean_income</code> variable.</li>
+```{r}
+# Print a summary of the `mean_income` variable
+summary(wealthy_zips@data$mean_income)
+```
+
+<li>Add the boundaries from <code>wealthy_zips</code> to a <code>leaflet</code> map using the <code>addPolygons()</code> function and customize the polygons so they are green and are included in a group called "Wealthy Zipcodes".</li>
+```{r}
+# plot zip codes with mean incomes >= $200k
+wealthy_zips %>% 
+  leaflet() %>% 
+  addProviderTiles("CartoDB") %>% 
+  # set color to green and create Wealth Zipcodes group
+  addPolygons(weight = 1, fillOpacity = .7, color = "green",  group = "Wealthy Zipcodes", 
+              label = ~paste0("Mean Income: ", dollar(mean_income)),
+              highlightOptions = highlightOptions(weight = 5, color = "white", bringToFront = TRUE))
+```
+
+</div>
+
+<p class="">Was your hypothesis about the location of high income zip codes correct? Now let's add the Wealthy Zip Codes layer to our map of colleges.
+</p>
+
+### Final Map
+
+
+<div class>
+<p>Because our <code>leaflet</code> map is built in layers, we can add different types of information to the same base map (e.g., points and polygons). When adding new layers based on different data to an existing <code>leaflet</code> object we must specify the data argument with the function that creates the new layer to override the data that is piped through the chain of functions. </p>
+<pre><code>m4  %&gt;% 
+    addCircleMarkers(data = private)
+</code></pre>
+<p>Let's combine our point and polygon maps to add a layer highlighting America's wealthiest zip codes to our map of every college in America. To get us started, the last layered version of the college map <code>m4</code> has been printed for you and the <code>wealthy_zips</code> SpatialPolygonsDataFrame is pre-loaded. </p>
+<p>After you create the final map, take a few minutes to explore (and enjoy) your <code>leaflet</code> map!</p>
+</div>
+<div class="exercise--instructions__content">
+
+<p>Add a layer of polygons to <code>m4</code> using the information in <code>wealthy_zips</code> and update the layer controls to include the "Wealthy Zip Codes" group.</p>
+```{r}
+# Add polygons using wealthy_zips
+final_map <- m4 %>% 
+   addPolygons(data = wealthy_zips, weight = 1, fillOpacity = .5, color = "Grey",  group = "Wealthy Zip Codes", 
+              label = ~paste0("Mean Income: ", dollar(mean_income)),
+              highlightOptions = highlightOptions(weight = 5, color = "white", bringToFront = TRUE)) %>% 
+    # Update layer controls including "Wealthy Zip Codes"
+    addLayersControl(baseGroups = c("OSM", "Carto", "Esri"), 
+                         overlayGroups = c("Public", "Private", "For-Profit", "Wealthy Zip Codes"))     
+
+```
+
+<p>Have fun exploring the final map of the course!</p>
+```{r}
+# Add polygons using wealthy_zips
+final_map <- m4 %>% 
+   addPolygons(data = wealthy_zips, weight = 1, fillOpacity = .5, color = "Grey",  group = "Wealthy Zip Codes", 
+              label = ~paste0("Mean Income: ", dollar(mean_income)),
+              highlightOptions = highlightOptions(weight = 5, color = "white", bringToFront = TRUE)) %>% 
+    # Update layer controls including "Wealthy Zip Codes"
+    addLayersControl(baseGroups = c("OSM", "Carto", "Esri"), 
+                         overlayGroups = c("Public", "Private", "For-Profit", "Wealthy Zip Codes"))     
+
+# Print and explore your very last map of the course!
+final_map
+```
+
+</div>
+
+<p class="">Great job! That's a wrap. I hope you enjoyed the course and learned (a lot) about <code>leaflet</code>!
+</p>
+
+## Thank you!
+
+### Thank you!
+
+Thank you for taking this course. I hope that you found it helpful and if you have ideas about how we can improve the course, please share your feedback.
+
+### Learning more about `leaflet`
+
+If you are interested in learning more about leaflet, the best resource is RStudio's leaflet page. The GitHub page for the leaflet extras package has demos of some of the additional features that can be added to your maps. If you are interested in learning more about the JavaScript library, leaflet, you can check out leafletjs.com.
+
+### Next Steps
+
+For more information about interactive data visualization or spatial data, check out these courses on DataCamp.
+
+### Thank you!
+
+Thanks again for taking the course and congratulations on all that you have accomplished.

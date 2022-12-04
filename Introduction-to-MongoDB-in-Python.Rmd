@@ -1,0 +1,1320 @@
+# MongoDB {.unnumbered}
+
+<h3 class="course__description-title">Donny Winston</h3>
+<p class="course__instructor-description display-none-mobile-course-page-experiment">
+    Donny is a computer systems engineer at Lawrence Berkeley National Lab. He is the principal web developer for the <a href="https://materialsproject.org/">Materials Project</a>, and he co-maintains several codebases and services for data-driven discovery of advanced materials. MongoDB helps him support rapid collaboration and schema evolution for these services. An instructor for the Software Carpentry Foundation, he has taught workshop lessons on Python, Git, Bash, SQL, and MongoDB. In the past, he studied nano-fabrication and scanning-charged-particle-beam lithography before shifting professional focus to software-as-a-service. He likes hyphens.
+  </p>
+
+**Course Description**
+
+<p class="course__description">MongoDB is a tool to explore data structured as you see fit. As a NoSQL database, it doesn't follow the strict relational format imposed by SQL. By providing capabilities that typically require adding layers to SQL, it collapses complexity. With dynamic schema, you can handle vastly different data together and consolidate analytics. The flexibility of MongoDB empowers you to keep improving and fix issues as your requirements evolve. In this course, you will learn the MongoDB language and apply it to search and analytics. Working with unprocessed data from the official nobelprize.org API, you will explore and answer questions about Nobel Laureates and prizes.</p>
+
+## Flexibly Structured Data {.unnumbered}
+
+<p class="chapter__description">
+    This chapter is about getting a bird's-eye view of the Nobel Prize data's structure. You will relate MongoDB documents, collections, and databases to JSON and Python types. You'll then use filters, operators, and dot notation to explore substructure.
+  </p>
+
+### Intro to MongoDB and the Nobel Prize dataset {.unnumbered}
+
+
+
+#### Count documents in a collection {.unnumbered}
+
+
+<div class>
+<p>In the video, you learned that a MongoDB <em>database</em> can consist of several <em>collections</em>. Collections, in turn, consist of <em>documents</em>, which store the data.</p>
+<p>You will be working with the Nobel laureates database which we have retrieved as <code>nobel</code>. The database has two collections, <code>prizes</code> and <code>laureates</code>. In the <code>prizes</code> collection, every document correspond to a single Nobel prize, and in the <code>laureates</code> collection - to a single Nobel laureate. </p>
+<p>Recall that you can access databases by name as attributes of the client, like <code>client.my_database</code> (a connected client is already provided to you as <code>client</code>). Similarly, collections can be accessed by name as attributes of databases (<code>my_database.my_collection</code>).</p>
+<p>Use the console on the right to compare the number of laureates and prizes using the <code>.count_documents()</code> method on a collection (don't forget to specify an empty filter document as the argument!), and pick a statement that is <em><strong>TRUE</strong></em>.</p>
+</div>
+
+- [ ] The number of prizes and laureates are equal.
+- [ ] Prizes outnumber laureates.
+- [x] Laureates outnumber prizes.
+
+<p class="">Correct! Many laureates have shared prizes!</p>
+
+#### Listing databases and collections {.unnumbered}
+
+
+<div class><p>Our <code>MongoClient</code> object is not actually a dictionary, so we can't call <code>keys()</code> to list the names of accessible databases. The same is true for listing collections of a database. Instead, we can list database names by calling <code>.list_database_names()</code> on a client instance, and we can list collection names by calling <code>.list_collection_names()</code> on a database instance.</p></div>
+
+```{python}
+# edited/added
+import requests
+from pymongo import MongoClient
+# Client connects to "localhost" by default
+client = MongoClient()
+# Create local "nobel" database on the fly
+db = client["nobel"]
+for collection_name in ["prizes", "laureates"]:
+  # collect the data from the API
+  response = requests.get(
+  "http://api.nobelprize.org/v1/{}.json".\
+  format(collection_name[:-1] ))
+  # convert the data to json
+  documents = response.json()[collection_name]
+  # Create collections on the fly
+  db[collection_name].insert_many(documents)
+```
+<li>Save a list, called <code>db_names</code>, of the names of the databases managed by our connected <code>client</code>.</li>
+<li>Similarly, save a list, called <code>nobel_coll_names</code>, of the names of the collections managed by the "nobel" database.</li>
+```{python}
+# Save a list of names of the databases managed by client
+db_names = client.list_database_names()
+print(db_names)
+# Save a list of names of the collections managed by the "nobel" database
+nobel_coll_names = client.nobel.list_collection_names()
+print(nobel_coll_names)
+```
+
+<p class="">Excellent! Did you notice any strange database/collection names? Every Mongo host has 'admin' and 'local' databases for internal bookkeeping, and every Mongo database has a 'system.indexes' collection to store indexes that make searches faster.</p>
+
+#### List fields of a document {.unnumbered}
+
+
+<div class>
+<p>The <code>.find_one()</code> method of a collection can be used to retrieve a single document. This method accepts an optional <code>filter</code> argument that specifies the pattern that the document must match. You will learn more about filters in the next lesson, but for now, you can specify no filter or an empty document filter (<code>{}</code>), in which case MongoDB will return the document that is first in the internal order of the collection.</p>
+<p>This method is useful when you want to learn the structure of documents in the collection.</p>
+<p>In Python, the returned document takes the form of a <em>dictionary</em>:</p>
+<pre><code>    sample_doc = {'id' : 12345, 'name':'Donny Winston', 'instructor': True}
+</code></pre>
+<p>The keys of the dictionary  are the (root-level) "fields" of the document, e.g. <code>'id'</code>, <code>'name'</code>,<code>'instructor'</code>.</p>
+</div>
+
+
+<li>Connect to the <em>nobel</em> database.</li>
+```{python}
+```
+<li>Fetch <strong>one</strong> document from each of the <em>prizes</em> and <em>laureates</em> collections, and then take a look at the output in the console to see the format and type of the documents in Python.</li>
+```{python}
+```
+<div class="exercise--instructions__content"><p>Since <code>prize</code> and <code>laureate</code> are dictionaries, you can use the <code>.keys()</code> method to return the keys (i.e. the field names). But it's often more convenient to work with <em>lists</em> of fields. </p>
+<ul>
+<li>Use the <code>list()</code> constructor to save a <em><strong>list</strong></em> of the fields present in the <code>prize</code> and <code>laureate</code> documents.</li>
+</ul></div>
+```{python}
+# Connect to the "nobel" database
+db = client.nobel
+# Retrieve sample prize and laureate documents
+prize = db.prizes.find_one()
+laureate = db.laureates.find_one()
+# Print the sample prize and laureate documents
+print(prize)
+print(laureate)
+print(type(laureate))
+# Get the list of fields present in each type of document
+prize_fields = list(prize.keys())
+laureate_fields = list(laureate.keys())
+print(prize_fields)
+print(laureate_fields)
+```
+
+<p class="">Way to fetch those fields! Notice that the <code>prize</code> documents contains a <code>laureates</code> field that stores the information on all the laureates sharing the prize, and the <code>laureate</code> document contains a <code>prizes</code> field, that stores the info on all the prizes they won.</p>
+
+### Finding documents {.unnumbered}
+
+
+
+#### &quot;born&quot; approximation {.unnumbered}
+
+
+<div class>
+<p>The <code>"born"</code> field in a laureate collection document records the date of birth of that laureate. <code>"born"</code> values are of the form "YYYY-MM-DD", also known as ISO 8601 format. An example value is "1937-02-01", for February 1st, 1937. This format is convenient for lexicographic comparison. For example, the query</p>
+<pre><code>db.laureates.count_documents({"born": {"$lt": "1900"}})
+</code></pre>
+<p>returns the number of laureates with recorded dates of birth earlier than the year 1900 (<code>"$lt"</code> is for "<strong>l</strong>ess <strong>t</strong>han"). Using the query format above, what is the number of laureates born prior to 1800? What about prior to 1700?</p>
+</div>
+
+```{python}
+db.laureates.count_documents({"born": {"$lt": "1800"}})
+db.laureates.count_documents({"born": {"$lt": "1700"}})
+```
+
+- [ ] 38 prior to 1800, and 0 prior to 1700
+- [ ] 324 prior to 1800, and 35 prior to 1700
+- [x] 2 prior to 1800, and 2 prior to 1700
+
+<p class="">Correct! The first Nobel Prize was awarded in 1901, they are not awarded posthumously, so...some laureates lived to be more than 200 years old?? It turns out that a laureate's date of birth is recorded as '0000-00-00' when it is not known. Check your assumptions when working with data!</p>
+
+#### Composing filters {.unnumbered}
+
+
+<div class><p>It is often useful to incrementally build up a filter document in order to see the effect of adding constraints one at a time. In this exercise, we will count the number of laureate documents matching some criteria, and we will gradually add criteria.</p></div>
+
+
+<li>Create a filter <code>criteria</code> to count laureates who died (<code>"diedCountry"</code>) in the USA (<code>"USA"</code>). Save the document count as <code>count</code>.</li>
+```{python}
+# Create a filter for laureates who died in the USA
+criteria = {"diedCountry": "USA"}
+# Save the count of these laureates
+count = db.laureates.count_documents(criteria)
+print(count)
+```
+
+
+
+
+<li>Create a filter to count laureates who died in the United States but were born (<code>"bornCountry"</code>) in Germany.</li>
+```{python}
+# Create a filter for laureates who died in the USA but were born in Germany
+criteria = {'diedCountry': 'USA', 
+            'bornCountry': 'Germany'}
+# Save the count
+count = db.laureates.count_documents(criteria)
+print(count)
+```
+
+
+
+<li>Count laureates who died in the USA, were born in Germany, and whose first name (<code>"firstname"</code>) was <code>"Albert"</code>.</li>
+```{python}
+# Create a filter for Germany-born laureates who died in the USA and with the first name "Albert"
+criteria = {'diedCountry': 'USA', 
+            'bornCountry': 'Germany', 
+            'firstname': 'Albert'}
+# Save the count
+count = db.laureates.count_documents(criteria)
+print(count)
+```
+
+<p class="">Great work!</p>
+
+#### We've got options {.unnumbered}
+
+
+<div class>
+<p>Sometimes, we wish to find documents where a field's value matches any of a set of options. We saw that the <code>$in</code> query operator can be used for this purpose. For example, how many laureates were born in any of "Canada", "Mexico", or "USA"? </p>
+<p>If we wish to accept all but one option as a value for a field, we can use the <code>$ne</code> (<strong>n</strong>ot <strong>e</strong>qual) operator. For example, how many laureates died in the USA but were not born in the USA?</p>
+</div>
+
+
+<li>How many laureates were born in "USA", "Canada", or "Mexico"? Save a filter as <code>criteria</code> and your count as <code>count</code>.</li>
+```{python}
+# Save a filter for laureates born in the USA, Canada, or Mexico
+criteria = { "bornCountry": 
+                { "$in": ["USA", "Canada", "Mexico"]}
+             }
+# Count them and save the count
+count = db.laureates.count_documents(criteria)
+print(count)
+```
+
+
+
+
+<li>How many laureates died in the USA but were not born there? Save your filter as <code>criteria</code> and your count as <code>count</code>.</li>
+```{python}
+# Save a filter for laureates who died in the USA and were not born there
+criteria = { 'diedCountry': 'USA',
+               'bornCountry': { "$ne": 'USA'},
+             }
+# Count them
+count = db.laureates.count_documents(criteria)
+print(count)
+```
+
+<p class="">Good work! \$ne is great when you don't want to have to list all other options to \$in.</p>
+
+### Dot notation: reach into substructure {.unnumbered}
+
+
+
+#### Choosing tools {.unnumbered}
+
+
+<div class>
+<p>We saw from his laureate document that Walter Kohn's country of birth was "Austria" and that his prize affiliation country was "USA". If we want to count the number of laureates born in Austria with a prize <strong>affiliation</strong> country that is <strong>not</strong> also Austria, what MongoDB concepts/tools should we use?</p>
+<p><em>(The <code>nobel</code> database is available in the console as <code>db</code>, and the Walter's Kohn document is available to you as <code>doc</code>. Feel free to examine the structure of the document <code>doc</code> in the console, and play around with database queries!)</em></p>
+</div>
+
+- [x] dot notation and the <code>$ne</code> operator
+- [ ] dot notation and the <code>$exists</code> operator
+- [ ] dot notation and the <code>$in</code> operator
+- [ ] dot notation is not needed here, a query operator will suffice
+
+<p class="">Correct! We will need dot notation to specify criteria for the prize affiliation country. We will need <code>$ne</code> to exclude the value "Austria".</p>
+
+#### Starting our ascent {.unnumbered}
+
+
+<div class>
+<p>Throughout this course, we will gradually build up a set of tools to examine the proportion of Nobel prizes that were awarded to immigrants. In this exercise, you will answer a limited but related question using tools we have introduced so far.</p>
+<p>We saw from his laureate document that Walter Kohn's country of birth was "Austria" and that his prize affiliation country was "USA". Count the number of laureates born in Austria with a prize affiliation country that is <strong>not</strong> also Austria.</p>
+</div>
+
+
+<li>Save a filter <code>criteria</code> for laureates born in (<code>bornCountry</code>) "Austria" with a non-Austria <code>prizes.affiliations.country</code>.</li>
+<li>Save your count of laureates as <code>count</code>.</li>
+```{python}
+# Filter for laureates born in Austria with non-Austria prize affiliation
+criteria = {"bornCountry": "Austria", 
+              "prizes.affiliations.country": {"$ne": "Austria"}}
+# Count the number of such laureates
+count = db.laureates.count_documents(criteria)
+print(count)
+```
+
+<p class="">I am doting about your dot notation!</p>
+
+#### Our 'born' approximation, and a special laureate {.unnumbered}
+
+
+<div class>
+<p>We saw earlier that the laureates collection encodes uncertainty about birthdate in a special way. When a birthdate is unknown, the <code>"born"</code> field has the value <code>"0000-00-00"</code>. Thus,</p>
+<pre><code>db.laureates.count_documents({"born": "0000-00-00"})
+</code></pre>
+<p>counts the number of such laureates. Or does it?</p>
+<p>We also saw that the total number of laureate prizes is more than the number of laureates -- some were awarded more than one prize. There is one in particular with a whopping three prizes, and this laureate holds key information to aid our quest to determine the proportion of prizes awarded to immigrants.</p>
+</div>
+
+
+<li>Use a filter document (<code>criteria</code>) to count the documents that don't have a <code>"born"</code> field.</li>
+```{python}
+# Filter for documents without a "born" field
+criteria = {"born": {"$exists": False}}
+# Save the count
+count = db.laureates.count_documents(criteria)
+print(count)
+```
+
+
+
+
+<li>Use a filter document (<code>criteria</code>) to <strong>find</strong> a document for a laureate with at least three elements in its <code>"prizes"</code> array. In other words, does a third element exist for the array? Remember about the zero-based indexing!</li>
+```{python}
+# Filter for laureates with at least three prizes
+criteria = {"prizes.2": {"$exists": True}}
+# Find one laureate with at least three prizes
+doc = db.laureates.find_one(criteria)
+# Print the document
+print(doc)
+```
+
+<p class="">Well done. Take a look at the document in the counsole. What about this laureate presents a challenge to our goal of partitioning laureates into immigrant and non-immigrant Prize recipients?</p>
+
+## Working with Distinct Values and Sets {.unnumbered}
+
+<p class="chapter__description">
+    Now you have a sense of the data's structure. This chapter is about dipping your toes into the pools of values for various fields. You'll collect distinct values, test for membership in sets, and match values to patterns.
+  </p>
+
+### Survey Distinct Values {.unnumbered}
+
+
+
+#### Categorical data validation {.unnumbered}
+
+
+<div class><p>What expression asserts that the distinct Nobel Prize categories catalogued by the "prizes" collection are the same as those catalogued by the "laureates"? Remember to explore example documents in the console via e.g. <code>db.prizes.find_one()</code> and <code>db.laureates.find_one()</code>.</p></div>
+
+- [ ] <code>assert db.prizes.distinct("category") == db.laureates.distinct("prizes.category")</code>
+- [ ] <code>assert db.prizes.distinct("laureates.category") == db.laureates.distinct("prizes.category")</code>
+- [x] <code>assert set(db.prizes.distinct("category")) == set(db.laureates.distinct("prizes.category"))</code>
+
+<p class="">Correct! Converting the lists returned by <code>&lt;collection&gt;.distinct</code> to sets ensures that a check for equality is reliable.</p>
+
+#### Never from there, but sometimes there at last {.unnumbered}
+
+
+<div class><p>There are some recorded countries of death (<code>"diedCountry"</code>) that do not appear as a country of birth (<code>"bornCountry"</code>) for laureates. One such country is "East Germany".</p></div>
+
+
+<li>Return a set of all such countries as <code>countries</code>.</li>
+```{python}
+# Countries recorded as countries of death but not as countries of birth
+countries = set(db.laureates.distinct("diedCountry")) - set(db.laureates.distinct("bornCountry"))
+print(countries)
+```
+
+<p class="">Well done! Some of these countries are likely to remain in this set, as they no longer exist!</p>
+
+#### Countries of affiliation {.unnumbered}
+
+
+<div class><p>We saw in the last exercise that countries can be associated with a laureate as their country of birth and as their country of death. For each prize a laureate received, they may also have been affiliated with an institution at the time, located in a country.</p></div>
+
+
+<li>Determine the number of distinct countries recorded as part of an affiliation for laureates' prizes. Save this as <code>count</code>.</li>
+```{python}
+# The number of distinct countries of laureate affiliation for prizes
+count = len(db.laureates.distinct("prizes.affiliations.country"))
+print(count)
+```
+
+<p class="">Bravo! This number is less than the number of distinct countries of death, and <em>far</em> less than the number of distinct countries of birth.</p>
+
+### Distinct Values Given Filters {.unnumbered}
+
+
+
+#### Born here, went there {.unnumbered}
+
+
+<div class><p>In which countries have USA-born laureates had affiliations for their prizes?</p></div>
+
+- [ ] Australia, Denmark, United Kingdom, USA
+- [ ] Australia, France, Sweden, United Kingdom, USA
+- [ ] Australia, Canada, Israel, United Kingdom, USA
+
+<p class="">Yes! This is the output of <code>db.laureates.distinct('prizes.affiliations.country', {'bornCountry': 'USA'})</code>.</p>
+
+#### Triple plays (mostly) all around {.unnumbered}
+
+
+<div class><p>Prizes can be shared, even by more than two laureates. In fact, all prize categories but one – literature – have had prizes shared by three or more laureates.</p></div>
+
+
+<li>Save a filter document <code>criteria</code> that, when passed to <code>db.prizes.distinct</code>, returns all prize categories shared by three or more laureates. That is, <code>"laureates.2"</code> must exist for such documents.</li>
+<li>Save these prize categories as a Python <code>set</code> called <code>triple_play_categories</code>.</li>
+<li>Confirm via an assertion that "literature" is the only prize category with no prizes shared by three or more laureates.</li>
+```{python}
+# Save a filter for prize documents with three or more laureates
+criteria = {"laureates.2": {"$exists": True}}
+# Save the set of distinct prize categories in documents satisfying the criteria
+triple_play_categories = set(db.prizes.distinct("category", criteria))
+assert set(db.prizes.distinct("category")) - triple_play_categories == {"literature"}
+```
+
+<p class="">Around the horn! One day, literature, one day...</p>
+
+### Filter Arrays using Distinct Values {.unnumbered}
+
+
+
+#### Sharing in physics after World War II {.unnumbered}
+
+
+<div class>
+<p>What is the approximate ratio of the number of laureates who won an unshared (<code>{"share": "1"}</code>) prize in physics after World War II (<code>{"year": {"$gte": "1945"}}</code>) to the number of laureates who won a shared prize in physics after World War II?</p>
+<p>For reference, the code below determines the number of laureates who won a <em>shared</em> prize in physics <em>before</em> 1945.</p>
+<pre><code>db.laureates.count_documents({
+    "prizes": {"$elemMatch": {
+        "category": "physics",
+        "share": {"$ne": "1"},
+        "year": {"$lt": "1945"}}}})
+</code></pre>
+</div>
+
+- [ ] 0.06
+- [x] 0.13
+- [ ] 0.33
+- [ ] 0.50
+
+<p class="">Right-o! There has been significant sharing of physics prizes since World War II</p>
+
+#### Meanwhile, in other categories... {.unnumbered}
+
+
+<div class><p>We learned in the last exercise that there has been significantly more sharing of physics prizes since World War II: the ratio of the number of laureates who won an unshared prize in physics in or after 1945 to the number of laureates who shared a prize in physics in or after 1945 is approximately 0.13. What is this ratio for prize categories other than physics, chemistry, and medicine?</p></div>
+
+
+<li>Save an <code>$elemMatch</code> filter <code>unshared</code> to count laureates with unshared prizes in categories other than ("not in") <code>["physics", "chemistry", "medicine"]</code> in or after 1945.</li>
+<li>Save an <code>$elemMatch</code> filter <code>shared</code> to count laureates with shared (i.e., "share" is not "1") prizes in categories other than <code>["physics", "chemistry", "medicine"]</code> in or after 1945.</li>
+```{python}
+# Save a filter for laureates with unshared prizes
+unshared = {
+    "prizes": {"$elemMatch": {
+        "category": {"$nin": ["physics", "chemistry", "medicine"]},
+        "share": "1",
+        "year": {"$gte": "1945"},
+    }}}
+# Save a filter for laureates with shared prizes
+shared = {
+    "prizes": {"$elemMatch": {
+        "category": {"$nin": ["physics", "chemistry", "medicine"]},
+        "share": {"$ne": "1"},
+        "year": {"$gte": "1945"},
+    }}}
+ratio = db.laureates.count_documents(unshared) / db.laureates.count_documents(shared)
+print(ratio)
+```
+
+<p class="">Wow! This ratio is 1.42, a ten-fold jump over the ratio for physics!</p>
+
+#### Organizations and prizes over time {.unnumbered}
+
+
+<div class><p>How many organizations won prizes before 1945 versus in or after 1945?</p></div>
+
+
+<li>You won't need the <code>$elemMatch</code> operator at all for this exercise.</li>
+<li>Save a filter <code>before</code> to count organization laureates with prizes won before 1945. Recall that organization status is encoded with the <code>"gender"</code> field, and that dot notation is needed to access a laureate's <code>"year"</code> field within its <code>"prizes"</code> array.</li>
+<li>Save a filter <code>in_or_after</code> to count organization laureates with prizes won in or after 1945.</li>
+```{python}
+# Save a filter for organization laureates with prizes won before 1945
+before = {
+    "gender": "org",
+    "prizes.year": {"$lt": "1945"},
+    }
+# Save a filter for organization laureates with prizes won in or after 1945
+in_or_after = {
+    "gender": "org",
+    "prizes.year": {"$gte": "1945"},
+    }
+n_before = db.laureates.count_documents(before)
+n_in_or_after = db.laureates.count_documents(in_or_after)
+ratio = n_in_or_after / (n_in_or_after + n_before)
+print(ratio)
+```
+
+<p class="">Cool! Even though fewer than two thirds of Nobel prizes were awarded in 1945 and later, over 80% of organizations won prizes then.</p>
+
+### Distinct As You Like It {.unnumbered}
+
+
+
+#### Glenn, George, and others in the G.B. crew {.unnumbered}
+
+
+<div class>
+<p>There are two laureates with Berkeley, California as a prize affiliation city that have the initials G.S. - Glenn Seaborg and George Smoot. How many laureates in total have a first name beginning with "G" and a surname beginning with "S"?</p>
+<p>Evaluate the expression</p>
+<pre><code>db.laureates.count_documents({"firstname": Regex(____), "surname": Regex(____)})
+</code></pre>
+<p>in the console, filling in the blanks appropriately.</p>
+</div>
+
+- [x] 9 laureates
+- [ ] 12 laureates
+- [ ] 50 laureates
+
+<p class="">Correct! The filter <code>{"firstname": Regex("^G"), "surname": Regex("^S")}</code> gives us the right answer.</p>
+
+#### Germany, then and now {.unnumbered}
+
+
+<div class><p>Just as we saw with Poland, there are laureates who were born somewhere that was in Germany at the time but is now not, and others born somewhere that was not in Germany at the time but now is.</p></div>
+
+
+<li>Use a regular expression object to filter for laureates with "Germany" in their "bornCountry" value.</li>
+```{python}
+from bson.regex import Regex
+# Filter for laureates with "Germany" in their "bornCountry" value
+criteria = {"bornCountry": Regex("Germany")}
+print(set(db.laureates.distinct("bornCountry", criteria)))
+```
+
+
+
+
+<li>Use a regular expression object to filter for laureates with a "bornCountry" value starting with "Germany".</li>
+```{python}
+from bson.regex import Regex
+# Filter for laureates with a "bornCountry" value starting with "Germany"
+criteria = {"bornCountry": Regex("^Germany")}
+print(set(db.laureates.distinct("bornCountry", criteria)))
+```
+
+
+
+<li>Use a regular expression object to filter for laureates born in what was at the time Germany but is now another country.</li>
+```{python}
+from bson.regex import Regex
+# Fill in a string value to be sandwiched between the strings "^Germany " and "now"
+criteria = {"bornCountry": Regex("^Germany " + "\(" + "now")}
+print(set(db.laureates.distinct("bornCountry", criteria)))
+```
+
+
+
+<li>Use a regular expression object to filter for laureates born in what is now Germany but at the time was another country.</li>
+```{python}
+from bson.regex import Regex
+# Fill in a string value to be sandwiched between the strings "now" and "$"
+criteria = {"bornCountry": Regex("now" + " Germany\)" + "$")}
+print(set(db.laureates.distinct("bornCountry", criteria)))
+```
+
+<p class="">Wunderbar! There are twelve distinct values that represent countries that were or became part of Germany. Also, some laureates were born in parts of modern-day Poland, France, and Russia that were at the time part of Germany. Finally, it's true – the home of Oktoberfest, Bavaria, was really its own country at one time!</p>
+
+#### The prized transistor {.unnumbered}
+
+
+<div class><p>Three people shared a Nobel prize "for their researches on semiconductors and their discovery of the transistor effect". We can filter on "transistor" as a substring of a laureate's "prizes.motivation" field value to find these laureates.</p></div>
+
+
+<li>Save a filter <code>criteria</code> that finds laureates with <code>prizes.motivation</code> values containing "transistor" as a substring. The substring can appear anywhere within the value, so no anchoring characters are needed.</li>
+<li>Save to <code>first</code> and <code>last</code> the field names corresponding to a laureate's first name and last name (i.e. "surname") so that we can print out the names of these laureates.</li>
+```{python}
+from bson.regex import Regex
+# Save a filter for laureates with prize motivation values containing "transistor" as a substring
+criteria = {"prizes.motivation": Regex("transistor")}
+# Save the field names corresponding to a laureate's first name and last name
+first, last = "firstname", "surname"
+print([(laureate[first], laureate[last]) for laureate in db.laureates.find(criteria)])
+```
+
+<p class="">Great! Shockley and Bareen and Brattain were a great team.</p>
+
+## Get Only What You Need, and Fast {.unnumbered}
+
+<p class="chapter__description">
+    You can now query collections with ease and collect documents to examine and analyze with Python. But this process is sometimes slow and onerous for large collections and documents. This chapter is about various ways to speed up and simplify that process.
+  </p>
+
+### Projection {.unnumbered}
+
+
+
+#### Shares of the 1903 Prize in Physics {.unnumbered}
+
+
+<div class>
+<p>You want to examine the laureates of the 1903 prize in physics and how they split the prize. Here is a query without projection:</p>
+<pre><code>db.laureates.find_one({"prizes": {"$elemMatch": {"category": "physics", "year": "1903"}}})
+</code></pre>
+<p>Which projection(s) will fetch <strong>ONLY</strong> the laureates' full names and prize share info? I encourage you to experiment with the console and re-familiarize yourself with the structure of laureate collection documents.</p>
+</div>
+
+- [ ] <code>["firstname", "surname", "prizes"]</code>
+- [ ] <code>["firstname", "surname", "prizes.share"]</code>
+- [ ] <code>{"firstname": 1, "surname": 1, "prizes.share": 1, "_id": 0}</code>
+- [ ] All of the above
+
+<p class="">This represents the minimal projection to get the info we need. Great!</p>
+
+#### Rounding up the G.S. crew {.unnumbered}
+
+
+<div class>
+<p>In chapter 2, you used a regular expression object <code>Regex</code> to find values that follow a pattern. We can also use the regular expression <em>operator</em> <code>$regex</code> for the same purpose. For example, the following query:</p>
+<pre><code>{ "name": {$regex: "^Py"}    }
+</code></pre>
+<p>will fetch documents where the field <code>'name'</code> starts with <code>"Py"</code>. Here the caret symbol <code>^</code> means "starts with".</p>
+<p>In this exercise, you will use regular expressions, projection, and list comprehension to collect the full names of laureates whose initials are "G.S.".</p>
+</div>
+
+
+<li>First, use regular expressions to fetch the documents for the laureates whose <code>"firstname"</code> starts with <code>"G"</code> and whose <code>"surname"</code> starts with <code>"S"</code>.</li>
+```{python}
+# Find laureates whose first name starts with "G" and last name starts with "S"
+docs = db.laureates.find(
+       filter= {"firstname" : {"$regex" : "^G"},
+                "surname" : {"$regex" : "^S"}  })
+# Print the first document 
+print(docs[0])
+```
+
+<div class="exercise--instructions__content"><p>In the previous step, we fetched all the data for all the laureates with initials G.S. This is unnecessary if we only want their full names!</p>
+<ul>
+<li>Use projection and adjust the query to select only the <code>"firstname"</code> and <code>"surname"</code> fields.</li>
+</ul></div>
+```{python}
+# Use projection to select only firstname and surname
+docs = db.laureates.find(
+       filter= {"firstname" : {"$regex" : "^G"},
+                "surname" : {"$regex" : "^S"}  },
+   projection= ["firstname", "surname"]  )
+# Print the first document 
+print(docs[0])
+```
+
+<div class="exercise--instructions__content"><p>Now the documents you fetched contain only the relevant information!</p>
+<ul>
+<li>Iterate over the documents, and for each document, concatenate the first name and the surname fields together with a space in between to obtain full names.</li>
+</ul></div>
+```{python}
+# Use projection to select only firstname and surname
+docs = db.laureates.find(
+       filter= {"firstname" : {"$regex" : "^G"},
+                "surname" : {"$regex" : "^S"}  },
+   projection= ["firstname", "surname"]  )
+# Iterate over docs and concatenate first name and surname
+full_names = [doc["firstname"] + " " + doc["surname"]  for doc in docs]
+# Print the full names
+print(full_names)
+```
+
+<p class="">Great work!</p>
+
+#### Doing our share of data validation {.unnumbered}
+
+
+<div class>
+<p>In our Nobel <code>prizes</code> collection, each document has an array of laureate subdocuments <code>"laureates"</code>, each containing information such as the prize share for a laureate:</p>
+<pre><code>{'_id': ObjectId('5bc56145f35b634065ba1997'),
+ 'category': 'chemistry',
+ 'laureates': [{'firstname': 'Frances H.',
+   'id': '963',
+   'motivation': '"for the directed evolution of enzymes"',
+   'share': '2',
+   'surname': 'Arnold'},
+  {'firstname': 'George P.',
+   'id': '964',
+   'motivation': '"for the phage display of peptides and antibodies"',
+   'share': '4',
+   'surname': 'Smith'},
+ {...
+</code></pre>
+<p>Each <code>"laureates.share"</code> value appears to be the reciprocal of a laureate's fractional share of that prize, encoded as a string. For example, a laureate <code>"share"</code> of <code>"4"</code> means that this laureate received a \(\frac{1}{4}\) share of the prize. Let's check that for each prize, all the shares of all the laureates add up to 1!</p>
+<p>Notice the quotes around the values in the <code>"share"</code> field: these values are actually given as strings! You'll have to convert then to numbers before you find the reciprocals and add up the shares.</p>
+</div>
+
+
+<li>Save a list of prizes (<code>prizes</code>), projecting out only the <code>"laureates.share"</code> values for each prize.</li>
+<li>For each prize, compute the total share as follows:<ul>
+<li>Initialize the variable <code>total_share</code> to 0.</li>
+<li>Iterate over the laureates for each prize, converting the <code>"share"</code> field of the <code>"laureate"</code> to <code>float</code> and adding the reciprocal of it (that is, 1 divided by it) to <code>total_share</code>.</li>
+</ul>
+</li>
+```{python}
+# Save documents, projecting out laureates share
+prizes = db.prizes.find({}, ['laureates.share'])
+# Iterate over prizes
+for prize in prizes[0:50]: # edited/added
+    # Initialize total share
+    total_share = 0
+    
+    # Iterate over laureates for the prize
+    for laureate in prize["laureates"]:
+        # convert the laureate's share to float and add the reciprocal to total_share
+        total_share += 1 / float(laureate["share"])
+        
+    # Print the total share    
+    print(total_share)    
+```
+
+<p class="">Phenominal! It seems like all the shares add up to 1 for all the prizes!</p>
+
+### Sorting {.unnumbered}
+
+
+
+#### What the sort? {.unnumbered}
+
+
+<div class>
+<p>This block prints out the first five projections of a sorted query. What "sort" argument fills the blank?</p>
+<pre><code>docs = list(db.laureates.find(
+    {"born": {"$gte": "1900"}, "prizes.year": {"$gte": "1954"}},
+    {"born": 1, "prizes.year": 1, "_id": 0},
+    sort=____))
+for doc in docs[:5]:
+    print(doc)
+</code></pre>
+<pre><code>{'born': '1916-08-25', 'prizes': [{'year': '1954'}]}
+{'born': '1915-06-15', 'prizes': [{'year': '1954'}]}
+{'born': '1901-02-28', 'prizes': [{'year': '1954'}, {'year': '1962'}]}
+{'born': '1913-07-12', 'prizes': [{'year': '1955'}]}
+{'born': '1911-01-26', 'prizes': [{'year': '1955'}]}
+</code></pre>
+</div>
+
+- [x] <code>[("prizes.year", 1), ("born", -1)]</code>
+- [ ] <code>{"prizes.year": 1, "born": -1}</code>
+- [ ] <code>None</code>
+- [ ] <code>[("prizes.year", 1)]</code>
+
+<p class="">Yes! Does the 'prizes.year' field sort like you expect?</p>
+
+#### Sorting together: MongoDB + Python {.unnumbered}
+
+
+<div class>
+<p>In this exercise you'll explore the prizes in the physics category.<strong>You will use Python to sort laureates for one prize by last name, and then MongoDB to sort prizes by year:</strong></p>
+<pre><code>1901: Röntgen
+1902: Lorentz and Zeeman
+1903: Becquerel and Curie and Curie, née Sklodowska
+</code></pre>
+<p>You'll start by writing a function that takes a prize document as an argument, extracts all the laureates from that document, arranges them in alphabetical order, and returns a string containing the last names separated by <code>" and "</code>.</p>
+<p>The Nobel database is again available to you as <code>db</code>. We also pre-loaded a sample document <code>sample_doc</code> so you can test your laureate-extracting function.</p>
+<p><em>(Remember that you can always type <code>help(function_name)</code> in console to get a refresher on functions you might be less familiar with, e.g. <code>help(sorted)</code>!)</em></p>
+</div>
+<div class="exercise--instructions__content">
+<p>Complete the definition of <code>all_laureates(prize)</code>. Within the body of the function:</p>
+<ul>
+<li>Sort the <code>"laureates"</code> list of the <code>prize</code> document according to the <code>"surname"</code> key.</li>
+<li>For each of the laureates in the sorted list, extract the <code>"surname"</code> field.</li>
+<li>The code for joining the last names into a single string is already written for you.</li>
+</ul>
+<p>Take a look at the console to make sure the output looks like what you'd expect!</p>
+</div>
+```{python}
+# edited/added
+#sample_prize = db.prizes.aggregate([{"$sample":{"size":2}}])
+sample_prize = {'_id': '5bc56145f35b634065ba1bd5',
+ 'category': 'physics',
+ 'laureates': [{'firstname': 'Antoine Henri',
+   'id': '4',
+   'motivation': '"in recognition of the extraordinary services he has rendered by his discovery of spontaneous radioactivity"',
+   'share': '2',
+   'surname': 'Becquerel'},
+  {'firstname': 'Pierre',
+   'id': '5',
+   'motivation': '"in recognition of the extraordinary services they have rendered by their joint researches on the radiation phenomena discovered by Professor Henri Becquerel"',
+   'share': '4',
+   'surname': 'Curie'},
+  {'firstname': 'Marie',
+   'id': '6',
+   'motivation': '"in recognition of the extraordinary services they have rendered by their joint researches on the radiation phenomena discovered by Professor Henri Becquerel"',
+   'share': '4',
+   'surname': 'Curie, née Sklodowska'}],
+ 'year': '1903'}
+```
+
+<li>Find the documents for the prizes in the physics category, sort them in chronological order (by <code>"year"</code>, ascending), and only fetch the <code>"year"</code>, <code>"laureates.firstname"</code>, and <code>"laureates.surname"</code> fields.</li>
+
+<p>Now that you have the prizes, and the function to extract laureates from a prize, print the year and the names of the laureates (use your <code>all_laureates()</code> function) for each prize document.</p>
+```{python}
+from operator import itemgetter
+def all_laureates(prize):  
+  # sort the laureates by surname
+  sorted_laureates = sorted(prize["laureates"], key=itemgetter("surname"))
+  
+  # extract surnames
+  surnames = [laureate["surname"] for laureate in sorted_laureates]
+  
+  # concatenate surnames separated with " and " 
+  all_names = " and ".join(surnames)
+  
+  return all_names
+# test the function on a sample doc
+print(all_laureates(sample_prize))
+```
+
+```{python}
+# find physics prizes, project year and name, and sort by year
+docs = db.prizes.find(
+           filter= {"category": "physics"}, 
+           projection= ["year", "laureates.firstname", "laureates.surname"], 
+           sort= [("year", 1)])
+# print the year and laureate names (from all_laureates)
+for doc in docs[1:50]:
+  print("{year}: {names}".format(year=doc["year"], names=all_laureates(doc)))
+```
+
+<p class="">Excellent! You worked through stages of filtering, projecting, sorting, adding a derived field ("names"), and producing formatted output for each document.</p>
+
+#### Gap years {.unnumbered}
+
+
+<div class>
+<p>The prize in economics was not added until 1969. There have also been many years for which prizes in one or more of the original categories were not awarded. </p>
+<p>In this exercise, you will utilize sorting by multiple fields to see which categories are missing in which years. </p>
+<p>For now, you will just print the list of all documents, but in the next chapter, you'll learn how to use MongoDB to group and aggregate data to present this information in a more convenient format.</p>
+</div>
+
+
+<li>Find the original prize categories established in 1901 by looking at the <code>distinct</code> values of the <code>"category"</code> field for prizes from year 1901.</li>
+<li>Fetch ONLY the year and category  from all the documents <em>(without the</em> <code>"_id"</code> <em>field)</em>.</li>
+<li>Sort by <code>"year"</code> in <strong>descending</strong> order, then by <code>"category"</code> in <strong>ascending</strong> order.</li>
+```{python}
+# original categories from 1901
+original_categories = db.prizes.distinct("category", {"year": "1901"})
+print(original_categories)
+# project year and category, and sort
+docs = db.prizes.find(
+        filter={},
+        projection={"year":1, "category":1, "_id":0},
+        sort=[("year", -1), ("category", 1)]
+)
+#print the documents
+for doc in docs:
+  print(doc)
+```
+
+<p class="">Great work! We can see that, for example, 'literature' is mising from 2018 prizes. Also, there were few prizes were awarded between 1914 and 1920. Why do you think that is?</p>
+
+### What are indexes? {.unnumbered}
+
+
+
+#### High-share categories {.unnumbered}
+
+<div class=""><p>In the year 3030, everybody wants to be a Nobel laureate. Over the last thousand years, many new categories have been added. You serve a MongoDB prizes collection with the same schema as we've seen. Many people theorize that they have a better chance in "high-share" categories. They are hitting your server with similar, long-running queries. It's time to cover those queries with an index.</p>
+<p>Which of the following indexes is best suited to speeding up the operation <code>db.prizes.distinct("category", {"laureates.share": {"$gt": "3"}})</code>?</p></div>
+
+- [ ] <code>[("category", 1)]</code>
+- [ ] <code>[("category", 1), ("laureates.share", 1)]</code>
+- [ ] <code>[("laureates.share", 1)]</code>
+- [ ] <code>[("laureates.share", 1), ("category", 1)]</code>
+
+<p class="dc-completion-pane__message dc-u-maxw-100pc">Excellent! For a <code>distinct</code> query the filter argument is passed as a second argument, whereas the projected field is passed first.</p>
+
+#### Recently single? {.unnumbered}
+
+
+<div class><p>A prize might be awarded to a single laureate or to several. For each prize category, report the most recent year that a single laureate -- rather than several -- received a prize in that category. As part of this task, you will ensure an index that speeds up finding prizes by category and then sorting results by decreasing year</p></div>
+
+
+<li>Specify an index model that indexes first on category (ascending) and second on year (descending).</li>
+<li>Save a string <code>report</code> for printing the last single-laureate year for each distinct category, one category per line. To do this, for each distinct prize category, find the latest-year prize (requiring a descending sort by year) of that category (so, find matches for that category) with a laureate share of "1".</li>
+```{python}
+# Specify an index model for compound sorting
+index_model = [("category", 1), ("year", -1)]
+db.prizes.create_index(index_model)
+# Collect the last single-laureate year for each category
+report = ""
+for category in sorted(db.prizes.distinct("category")):
+    doc = db.prizes.find_one(
+        {"category": category, "laureates.share": "1"},
+        sort=[("year", -1)]
+    )
+    report += "{category}: {year}\n".format(**doc)
+print(report)
+```
+
+<p class="">Simply singular! It seems that physics is the most consistently shared prize category in modern times.</p>
+
+#### Born and affiliated {.unnumbered}
+
+
+<div class><p>Some countries are, for one or more laureates, both their country of birth ("bornCountry") and a country of affiliation for one or more of their prizes ("prizes.affiliations.country"). You will find the five countries of birth with the highest counts of such laureates.</p></div>
+
+
+<li>Create an index on country of birth ("bornCountry") for <code>db.laureates</code> to ensure efficient gathering of distinct values and counting of documents</li>
+<li>Complete the skeleton dictionary comprehension to construct <code>n_born_and_affiliated</code>, the count of laureates as described above for each distinct country of birth. For each call to <code>count_documents</code>, ensure that you use the value of <code>country</code> to filter documents properly.</li>
+```{python}
+from collections import Counter
+# Ensure an index on country of birth
+db.laureates.create_index([("bornCountry", 1)])
+# Collect a count of laureates for each country of birth
+n_born_and_affiliated = {
+    country: db.laureates.count_documents({
+        "bornCountry": country,
+        "prizes.affiliations.country": country
+    })
+    for country in db.laureates.distinct("bornCountry")
+}
+five_most_common = Counter(n_born_and_affiliated).most_common(5)
+print(five_most_common)
+```
+
+<p class="">Good work! As you may guess, simple string matching of country names for this dataset is problematic, but this is a solid first pass.</p>
+
+### Limits {.unnumbered}
+
+
+
+#### Setting a new limit? {.unnumbered}
+
+
+<div class>
+<p>How many documents does the following expression return?</p>
+<pre><code>list(db.prizes.find({"category": "economics"},
+                    {"year": 1, "_id": 0})
+     .sort("year")
+     .limit(3)
+     .limit(5))
+</code></pre>
+</div>
+
+- [ ] 3: the first call to <code>limit</code> takes precedence
+- [x] 5: the second call to <code>limit</code> overrides the first
+- [ ] none: instead, an error is raised
+
+<p class="">Correct! You can think of the query parameters as being updated like a dictionary in Python: <code>d = {'limit': 3}; d.update({'limit': 5}); print(d)</code> will print "{'limit': 5}"</p>
+
+#### The first five prizes with quarter shares {.unnumbered}
+
+
+<div class><p>Find the first five prizes with one or more laureates sharing 1/4 of the prize. Project our prize category, year, and laureates' motivations.</p></div>
+
+
+<li>Save to <code>filter_</code> the filter document to fetch only prizes with one or more quarter-share laureates, i.e. with a "laureates.share" of "4".</li>
+<li>Save to <code>projection</code> the list of field names so that prize category, year and laureates' motivations ("laureates.motivation") may be fetched for inspection.</li>
+<li>Save to <code>cursor</code> a cursor that will yield prizes, sorted by ascending year. Limit this to five prizes, and sort using the most concise specification.</li>
+```{python}
+from pprint import pprint
+# Fetch prizes with quarter-share laureate(s)
+filter_ = {'laureates.share': '4'}
+# Save the list of field names
+projection = ['category', 'year', 'laureates.motivation']
+# Save a cursor to yield the first five prizes
+cursor = db.prizes.find(filter_, projection).sort("year").limit(5)
+pprint(list(cursor))
+```
+
+<p class="">Great work! For all of these prizes, there were two laureates with quarter shares for their work together, and there was a third laureate with a half share for separate work (as evidenced by the motivation fields).</p>
+
+#### Pages of particle-prized people {.unnumbered}
+
+
+<div class><p>You and a friend want to set up a website that gives information on Nobel laureates with awards relating to particle phenomena. You want to present these laureates one page at a time, with three laureates per page. You decide to order the laureates chronologically by award year. When there is a "tie" in ordering (i.e. two laureates were awarded prizes in the same year), you want to order them alphabetically by surname.</p></div>
+
+
+<li>Complete the function <code>get_particle_laureates</code> that, given <code>page_number</code> and <code>page_size</code>, retrieves a given page of prize data on laureates who have the word "particle" (use <code>$regex</code>) in their prize motivations ("prizes.motivation"). Sort laureates first by ascending "prizes.year" and next by ascending "surname".</li>
+<li>Collect and save the first nine pages of laureate data to <code>pages</code>.</li>
+```{python}
+from pprint import pprint
+# Write a function to retrieve a page of data
+def get_particle_laureates(page_number=1, page_size=3):
+    if page_number < 1 or not isinstance(page_number, int):
+        raise ValueError("Pages are natural numbers (starting from 1).")
+    particle_laureates = list(
+        db.laureates.find(
+            {"prizes.motivation": {"$regex": "particle"}},
+            ["firstname", "surname", "prizes"])
+        .sort([("prizes.year", 1), ("surname", 1)])
+        .skip(page_size * (page_number - 1))
+        .limit(page_size))
+    return particle_laureates
+# Collect and save the first nine pages
+pages = [get_particle_laureates(page_number=page) for page in range(1,9)]
+pprint(pages[0])
+```
+
+<p class="">Great! Particles may be small, but discoveries related to them have made quite an impact!</p>
+
+## Aggregation Pipelines: Let the Server Do It For You {.unnumbered}
+
+<p class="chapter__description">
+    You've used projection, sorting, indexing, and limits to speed up data fetching. But there are still annoying performance bottlenecks in your analysis pipelines. You still need to fetch a ton of data. Thus, network bandwidth and downstream processing and memory capacity still impact performance. This chapter is about using MongoDB to perform aggregations for you on the server.
+  </p>
+
+### Intro to Aggregation {.unnumbered}
+
+
+
+#### Sequencing stages {.unnumbered}
+
+
+<div class>
+<p>Here is a cursor, followed by four aggregation pipeline stages:</p>
+<pre><code>cursor = (db.laureates.find(
+    projection={"firstname": 1, "prizes.year": 1, "_id": 0},
+    filter={"gender": "org"})
+ .limit(3).sort("prizes.year", -1))
+
+project_stage = {"$project": {"firstname": 1, "prizes.year": 1, "_id": 0}}
+match_stage = {"$match": {"gender": "org"}}
+limit_stage = {"$limit": 3}
+sort_stage = {"$sort": {"prizes.year": -1}}
+</code></pre>
+<p>What sequence <code>pipeline</code> of the above four stages can produce a cursor <code>db.laureates.aggregate(pipeline)</code> equivalent to <code>cursor</code> above?</p>
+</div>
+
+- [ ] <code>[project_stage, match_stage, limit_stage, sort_stage]</code>
+- [ ] <code>[project_stage, match_stage, sort_stage, limit_stage]</code>
+- [ ] <code>[match_stage, project_stage, limit_stage, sort_stage]</code>
+- [x] <code>[match_stage, project_stage, sort_stage, limit_stage]</code>
+
+<p class="">Yay! Note that you may need to put a $sort stage <em>before</em> a $project stage if you are sorting on a field left out in that projection (not the case in this exercise).</p>
+
+#### Aggregating a few individuals' country data {.unnumbered}
+
+
+<div class>
+<p>The following query cursor yields birth-country and prize-affiliation-country information for three non-organization laureates:</p>
+<pre><code>cursor = (db.laureates.find(
+    {"gender": {"$ne": "org"}},
+    ["bornCountry", "prizes.affiliations.country"]
+).limit(3))
+</code></pre>
+</div>
+
+
+<li>Translate the above cursor <code>cursor</code> to an equivalent aggregation cursor, saving the pipeline stages to <code>pipeline</code>. Recall that the <code>find</code> collection method's "filter" parameter maps to the "\$match" aggregation stage, its "projection" parameter maps to the "\$project" stage, and the "limit" parameter (or cursor method) maps to the "$limit" stage.</li>
+```{python}
+# Translate cursor to aggregation pipeline
+pipeline = [
+    {"$match": {"gender": {"$ne": "org"}}},
+    {"$project": {"bornCountry": 1, "prizes.affiliations.country": 1}},
+    {"$limit": 3}  
+]
+for doc in db.laureates.aggregate(pipeline):
+    print("{bornCountry}: {prizes}".format(**doc))
+```
+
+<p class="">Terrific translation! Note that the specification(s) of a '$project' stage must be in the form of a dictionary, whereas they can be passed as a list to <code>&lt;collection&gt;.find</code>.</p>
+
+#### Passing the aggregation baton to Python {.unnumbered}
+
+
+<div class>
+<p>Construct an aggregation pipeline to collect, in reverse chronological order (i.e., descending year), prize documents for all original categories (that is, <code>$in</code> categories awarded in 1901). Project only the prize year and category (including document _id is fine).</p>
+<p>The aggregation cursor will be fed to Python's <code>itertools.groupby</code> function to group prizes by year. For each year that at least one of the original prize categories was missing, a line with all missing categories for that year will be printed.</p>
+</div>
+
+
+<li>Save to <code>pipeline</code> an aggregation pipeline to collect prize documents as detailed above. Use Python's <code>collections.OrderedDict</code> to specify any sorting.</li>
+```{python}
+from collections import OrderedDict
+from itertools import groupby
+from operator import itemgetter
+original_categories = set(db.prizes.distinct("category", {"year": "1901"}))
+# Save an pipeline to collect original-category prizes
+pipeline = [
+    {"$match": {"category": {"$in": list(original_categories)}}},
+    {"$project": {"category": 1, "year": 1}},
+    {"$sort": OrderedDict([("year", -1)])}
+]
+cursor = db.prizes.aggregate(pipeline)
+for key, group in groupby(cursor, key=itemgetter("year")):
+    missing = original_categories - {doc["category"] for doc in group}
+    if missing:
+        print("{year}: {missing}".format(year=key, missing=", ".join(sorted(missing))))
+```
+
+<p class="">Perfect pipelining! We will learn in the next lesson how Mongo can do grouping for us in a $group stage.</p>
+
+### Aggregation Operators and Grouping {.unnumbered}
+
+
+
+#### Field Paths and Sets {.unnumbered}
+
+
+<div class>
+<p>Previously, we confirmed -- via a Python loop -- that for each prize, either all laureates have a 1/3 share, or none do. Now, let's do this via an aggregation (result should be an empty list):</p>
+<pre><code>list(db.prizes.aggregate([
+    {"$project": {"allThree": {"$setEquals": [____, ____]},
+                  "noneThree": {"$not": {"$setIsSubset": [____, ____]}}}},
+    {"$match": {"$nor": [{"allThree": True}, {"noneThree": True}]}}]))
+</code></pre>
+<p>Which values fill the blanks?</p>
+</div>
+
+- [x] <code>"$laureates.share", ["3"], ["3"], "$laureates.share"</code>
+- [ ] <code>"laureates.share", ["3"], ["3"], "laureates.share"</code>
+- [ ] <code>"laureates.share", {"3"}, {"3"}, "laureates.share"</code>
+- [ ] <code>"$laureates.share", {"3"}, {"3"}, "$laureates.share"</code>
+
+<p class="">Correct! Field paths in operator expressions are prepended by "$" to distinguish them from literal string values, and JSON/MongoDB "sets" are delimited by square brackets, just like lists.</p>
+
+#### Organizing prizes {.unnumbered}
+
+
+<div class><p>In the slides at the beginning of this lesson, we saw a two-stage aggregation pipeline to determine the number of prizes awarded in total. How many prizes were awarded (at least partly) to organizations?</p></div>
+
+
+<li>Fill out <code>pipeline</code> to determine the number of prizes awarded (at least partly) to organizations. To do this, you'll first need to <code>$match</code> on the "gender" that designates organizations.</li>
+<li>Then, use a field path to project the number of prizes for each organization as the <code>"$size"</code> of the <code>"prizes"</code> array. Recall that to specify the value of a field <code>"&lt;my_field&gt;"</code>, you use the field path <code>"$&lt;my_field&gt;"</code>.</li>
+<li>Finally, use a single group <code>{"_id": None}</code> to sum over the <em>values</em> of all organizations' prize counts.</li>
+```{python}
+# Count prizes awarded (at least partly) to organizations as a sum over sizes of "prizes" arrays.
+pipeline = [
+    {"$match": {"gender": "org"}},
+    {"$project": {"n_prizes": {"$size": "$prizes"}}},
+    {"$group": {"_id": None, "n_prizes_total": {"$sum": "$n_prizes"}}}
+]
+print(list(db.laureates.aggregate(pipeline)))
+```
+
+<p class="">Well done! I hope you can envision iteratively building and rebuilding an aggregation pipeline to drill down into and ask related questions about MongoDB data collections.</p>
+
+#### Gap years, aggregated {.unnumbered}
+
+
+<div class>
+<p>In a previous exercise, you collected instances of prize categories not being awarded in particular years. You implemented this using a for loop in Python. You will now implement this as an aggregation pipeline that:</p>
+<ol>
+<li>Filters for original prize categories (i.e. sans economics),</li>
+<li>Projects category and year,</li>
+<li>Groups distinct prize categories awarded by year,</li>
+<li>Projects prize categories <em>not awarded</em> by year,</li>
+<li>Filters for years with missing prize categories, and</li>
+<li>Returns a cursor of documents in reverse chronological order, one per year, each with a list of missing prize categories for that year.</li>
+</ol>
+<p>Remember to use <em>field paths</em> (precede field names with <code>"$"</code>) to extract field values in expressions.</p>
+</div>
+
+
+<li>Make the <code>$group</code> stage output a document for each prize year (set <code>"_id"</code> to the <em>field path</em> for year) with the set of categories awarded that year.</li>
+<li>Given your intermediate collection of year-keyed documents, <code>$project</code> a field named <code>"missing"</code> with the (original) categories <em>not</em> awarded that year. Again, mind your <em>field path</em>s!</li>
+<li>Use a <code>$match</code> stage to only pass through documents with at least one missing prize category.</li>
+<li>Finally, add sort documents in descending order.</li>
+```{python}
+from collections import OrderedDict
+original_categories = sorted(set(db.prizes.distinct("category", {"year": "1901"})))
+pipeline = [
+    {"$match": {"category": {"$in": original_categories}}},
+    {"$project": {"category": 1, "year": 1}},
+    
+    # Collect the set of category values for each prize year.
+    {"$group": {"_id": "$year", "categories": {"$addToSet": "$category"}}},
+    
+    # Project categories *not* awarded (i.e., that are missing this year).
+    {"$project": {"missing": {"$setDifference": [original_categories, "$categories"]}}},
+    
+    # Only include years with at least one missing category
+    {"$match": {"missing.0": {"$exists": True}}},
+    
+    # Sort in reverse chronological order. Note that "_id" is a distinct year at this stage.
+    {"$sort": OrderedDict([("_id", -1)])},
+]
+for doc in db.prizes.aggregate(pipeline):
+    print("{year}: {missing}".format(year=doc["_id"],missing=", ".join(sorted(doc["missing"]))))
+```
+
+<p class="">Beautiful! MongoDB has a rich library of aggregation operators, so it is possible to refactor a variety of client-side analyses into server-side aggregations depending on your performance requirements.</p>
+
+### Zoom into Array Fields {.unnumbered}
+
+
+
+#### Embedding aggregation expressions {.unnumbered}
+
+
+<div class>
+<p>The <code>$expr</code> operator allows embedding of aggregation expressions in a normal query (or in a <code>$match</code> stage). Which of the following expressions counts the number of laureate documents with string-valued bornCountries when passed to <code>db.laureates.count_documents</code>?</p>
+<p>You can assume (and check!) that the following is true:</p>
+<pre><code>assert all(isinstance(v, str) for v in db.laureates.distinct("bornCountry"))
+</code></pre>
+</div>
+
+- [ ] <div class="dc-input-radio__text">{"bornCountry": {"$in": db.laureates.distinct("bornCountry")}}</div>
+- [ ] <div class="dc-input-radio__text">{"$expr": {"$in": ["$bornCountry", db.laureates.distinct("bornCountry")]}}</div>
+- [ ] <div class="dc-input-radio__text">{"$expr": {"$eq": [{"$type": "$bornCountry"}, "string"]}}</div>
+- [ ] <div class="dc-input-radio__text">{"bornCountry": {"$type": "string"}}</div>
+- [x] <div class="dc-input-radio__text">All of the above</div>
+
+<p class="">Correct! Though aggregation expressions different in syntax, they often correspond to familiar query expressions.</p>
+
+#### Here and elsewhere {.unnumbered}
+
+
+<div class><p>What proportion of laureates won a prize while affiliated with an institution in their country of birth? Build an aggregation pipeline to get the count of laureates who either did or did not win a prize with an affiliation country that is a substring of their country of birth -- for example, the prize affiliation country "Germany" should match the country of birth "Prussia (now Germany)".</p></div>
+
+
+<li>Use <code>$unwind</code> stages to ensure a single prize affiliation country per pipeline document.</li>
+<li>Filter out prize-affiliation-country values that are "empty" (null, not present, etc.) -- ensure values are "$in" the list of known values.</li>
+<li>Produce a count of documents for each value of "affilCountrySameAsBorn" (a field we've projected for you using the <code>$indexOfBytes</code> operator) by adding 1 to the running sum.</li>
+```{python}
+key_ac = "prizes.affiliations.country"
+key_bc = "bornCountry"
+pipeline = [
+    {"$project": {key_bc: 1, key_ac: 1}},
+    # Ensure a single prize affiliation country per pipeline document
+    {"$unwind": "$prizes"},
+    {"$unwind": "$prizes.affiliations"},
+    # Ensure values in the list of distinct values (so not empty)
+    {"$match": {key_ac: {"$in": db.laureates.distinct(key_ac)}}},
+    # {"$project": {"affilCountrySameAsBorn": { # edited/added
+    #     "$gte": [{"$indexOfBytes": ["$"+key_ac, "$"+key_bc]}, 0]}}}, # edited/added
+    # Count by "$affilCountrySameAsBorn" value (True or False)
+    {"$group": {"_id": "$affilCountrySameAsBorn",
+                "count": {"$sum": 1}}},
+]
+for doc in db.laureates.aggregate(pipeline):
+  print(doc)
+```
+
+<p class="">Cool! Over a third of leaureates have no detected affiliation in their recorded country of birth.</p>
+
+#### Countries of birth by prize category {.unnumbered}
+
+
+<div class><p>Some prize categories have laureates hailing from a greater number of countries than do other categories. You will build an aggregation pipeline for the prizes collection to collect these numbers, using a $lookup stage to obtain laureate countries of birth.</p></div>
+
+
+<li>
+<code>$unwind</code> the laureates array field to output one pipeline document for each array element.</li>
+<li>After pulling in laureate bios with a $lookup stage, unwind the new laureate_bios array field (each laureate has only a single biography document).</li>
+<li>Collect the set of bornCountries associated with each prize category.</li>
+<li>Project out the size of each category's set of bornCountries.</li>
+```{python}
+pipeline = [
+    # Unwind the laureates array
+    {"$unwind": "$laureates"},
+    {"$lookup": {
+        "from": "laureates", "foreignField": "id",
+        "localField": "laureates.id", "as": "laureate_bios"}},
+    # Unwind the new laureate_bios array
+    {"$unwind": "$laureate_bios"},
+    {"$project": {"category": 1,
+                  "bornCountry": "$laureate_bios.bornCountry"}},
+    # Collect bornCountry values associated with each prize category
+    {"$group": {"_id": "$category",
+                "bornCountries": {"$addToSet": "$bornCountry"}}},
+    # Project out the size of each category's (set of) bornCountries
+    {"$project": {"category": 1,
+                  "nBornCountries": {"$size": "$bornCountries"}}},
+    {"$sort": {"nBornCountries": -1}},
+]
+for doc in db.prizes.aggregate(pipeline): print(doc)
+```
+
+<p class="">Excellent! It seems that economics laureates hail from the smallest number of countries than any other category, and literature laureates hail from the largest.</p>
+
+### Something Extra: $addFields to Aid Analysis {.unnumbered}
+
+
+
+#### &quot;...it's the life in your years&quot; {.unnumbered}
+
+<div class=""><p>For the pipeline we developed in the last slide deck, I want you to replace the last (<code>$bucket</code>) stage with one such that, given the documents <code>docs</code> collected, we can get the following output:</p>
+<pre><code>from operator import itemgetter
+
+print(max(docs, key=itemgetter("years")))
+print(min(docs, key=itemgetter("years")))
+</code></pre>
+<pre><code>{'firstname': 'Rita', 'surname': 'Levi-Montalcini', 'years': 103.0}
+{'firstname': 'Martin Luther', 'surname': 'King Jr.', 'years': 39.0}
+</code></pre>
+<p>You may assume that any earlier <code>$project</code> stage has been replaced by an equivalent <code>$addFields</code> stage.</p></div>
+
+- [x] <code>{"$project": {"years": 1, "firstname": 1, "surname": 1, "_id": 0}}</code>
+- [ ] <code>{"$addFields": {"firstname": 1, "surname": 1}}</code>
+- [ ] <code>{"$project": {"firstname": 1, "surname": 1}}</code>
+- [ ] <code>{"$project": {"firstname": 1, "surname": 1, "_id": 0}}</code>
+
+<p class="dc-completion-pane__message dc-u-maxw-100pc">Solid! You projected the three needed fields are explicitly excluded the _id field. Poor Martin.</p>
+
+#### How many prizes were awarded to immigrants? {.unnumbered}
+
+
+<div class><p>How many prizes were awarded to people who had no affiliation in their country of birth at the time of the award?</p></div>
+
+
+<li>In your aggregation pipeline <code>pipeline</code>, use the "gender" field to limit results to people (that is, not organizations).</li>
+<li>Count prizes for which the laureate's "bornCountry" is not also the "country" of any of their affiliations for the prize. Be sure to use field paths (precede a field name with <code>"$"</code>) when appropriate.</li>
+```{python}
+pipeline = [
+    # Limit results to people; project needed fields; unwind prizes
+    {"$match": {"gender": {"$ne": "org"}}},
+    {"$project": {"bornCountry": 1, "prizes.affiliations.country": 1}},
+    {"$unwind": "$prizes"},
+  
+    # Count prizes with no country-of-birth affiliation
+    {"$addFields": {"bornCountryInAffiliations": {"$in": ["$bornCountry", "$prizes.affiliations.country"]}}},
+    {"$match": {"bornCountryInAffiliations": False}},
+    {"$count": "awardedElsewhere"},
+]
+print(list(db.laureates.aggregate(pipeline)))
+```
+
+<p class="">Fine work! Note that because we ended up using only the "bornCountryInAffiliations" field after the $addFields stage, we could refactor that stage to be a $project stage instead.</p>
+
+#### Refinement: filter out &quot;unaffiliated&quot; people {.unnumbered}
+
+
+<div class><p>In the previous exercise, we counted prizes awarded to people without an affiliation in their "bornCountry". However, hundreds of prizes were awarded to people without recorded affiliations; sure, their "bornCountry" is technically not the "country" of any of their affiliations, but there are no "country" values to compare against!</p></div>
+
+
+<li>Construct a stage <code>added_stage</code> that filters for laureate "prizes.affiliations.country" values that are non-empty, that is, are <code>$in</code> a list of the distinct values that the field takes in the collection.</li>
+<li>Insert this stage into the pipeline so that it filters out single prizes (not arrays) and precedes any test for membership in an array of countries. Recall that the first parameter to <code>&lt;list&gt;.insert</code> is the (zero-based) index for insertion.</li>
+```{python}
+pipeline = [
+    {"$match": {"gender": {"$ne": "org"}}},
+    {"$project": {"bornCountry": 1, "prizes.affiliations.country": 1}},
+    {"$unwind": "$prizes"},
+    {"$addFields": {"bornCountryInAffiliations": {"$in": ["$bornCountry", "$prizes.affiliations.country"]}}},
+    {"$match": {"bornCountryInAffiliations": False}},
+    {"$count": "awardedElsewhere"},
+]
+# Construct the additional filter stage
+added_stage = {"$match": {"prizes.affiliations.country": {"$in": db.laureates.distinct("prizes.affiliations.country")}}}
+# Insert this stage into the pipeline
+pipeline.insert(3, added_stage)
+print(list(db.laureates.aggregate(pipeline)))
+```
+
+<p class="">Superb! Note that further refinements are possible. For example, substring matching could mark certain countries as equivalent. When it comes to assumptions, explicit is better than implicit (<code>import this</code>).</p>
+
+### Wrap-Up {.unnumbered}
+
+
+#### Wrap-Up {.unnumbered}
+
+Congratulations on completing this course!
+
+#### You know know how to... {.unnumbered}
+
+You now know how to work with MongoDB databases and collections. You've created and composed query filters with operators. You've used dot notation to query substructure. You've fetched distinct values, queried arrays, and used regular expressions. You've projected, sorted, and ensured performant queries with indexes. And finally, you've constructed aggregation pipelines for flexible and powerful analyses. You now have the vocabulary and experience you need to resolve issues you encounter in the wild. The official MongoDB documentation is a great resource. The pymongo driver also has great documentation. And of course, search engines are your friend.
+
+#### Thanks! {.unnumbered}
+
+I hope you've had as much fun taking this course as I had making it. Thank you for your time.

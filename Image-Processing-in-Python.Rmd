@@ -1,0 +1,1854 @@
+# Image Processing {.unnumbered}
+
+## Image Processing {.unnumbered}
+
+<h3 class="course__description-title">Rebeca Gonzalez</h3>
+<p class="course__instructor-description display-none-mobile-course-page-experiment">
+    Rebeca is a data scientist and an entrepreneurial spirit.  She has worked in companies like Ayesa and is now co-founder of Alio.li and APTIC, a startup that focuses on helping visually impaired people to see through Artificial Vision.
+Besides this, she loves animals, brainstorming sessions, and meeting new people.
+You can follow or contact her on <a href="https://twitter.com/rebecasarai_">Twitter</a> and <a href="https://www.linkedin.com/in/rebeca-sarai/">LinkedIn</a>.
+  </p>
+
+**Course Description**
+
+<p class="course__description">Images are everywhere! We live in a time where images contain lots of information, which is sometimes difficult to obtain. This is why image pre-processing has become a highly valuable skill, applicable in many use cases. In this course, you will learn to process, transform, and manipulate images at your will, even when they come in thousands. You will also learn to restore damaged images, perform noise reduction, smart-resize images, count the number of dots on a dice, apply facial detection, and much more, using scikit-image. After completing this course, you will be able to apply your knowledge to different domains such as machine learning and artificial intelligence, machine and robotic vision, space and medical image analysis, retailing, and many more. Take the step and dive into the wonderful world that is computer vision!</p>
+
+### scikit-image {.unnumbered}
+
+<p class="chapter__description">
+    Jump into digital image structures and learn to process them! Extract data, transform and analyze images using NumPy and Scikit-image. 
+
+With just a few lines of code, you will convert RGB images to grayscale,  get data from them, obtain histograms containing very useful information, and separate objects from the background!
+  </p>
+
+#### Make images come alive with scikit-image {.unnumbered}
+
+
+
+##### Is this gray or full of color? {.unnumbered}
+
+
+<div class>
+<p>Whats the main difference between the images shown below?</p>
+<p></p>
+<center>
+    <img src="https://assets.datacamp.com/production/repositories/4470/datasets/8c9d750b28a2b9614d48da2fd0116643fd4ddf19/coffeandcoins.png" width="70%" alt="Image of coffee next to coins image">
+</center>
+<p>These images have been preloaded as <code>coffee_image</code> and <code>coins_image</code> from the scikit-image <code>data</code> module using:</p>
+<pre><code>coffee_image = data.coffee()
+coins_image = data.coins()
+</code></pre>
+<p>Choose the right answer that best describes the main difference related to color and dimensional structure.</p>
+<p>In the console, use the function <code>shape()</code> from NumPy, to obtain the image shape (Height, Width, Dimensions) and find out.
+NumPy is already imported as <code>np</code>.</p>
+</div>
+
+```{python}
+# edited/added
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+import PIL
+import urllib
+from skimage.io import imread
+def show_image(image, title='Image restored'):
+    plt.imshow(image)
+    plt.title(title)
+    plt.axis('off')
+    plt.show()
+    plt.close()
+def plot_comparison(img_original, img_filtered, img_title_filtered):
+    fig, (ax1, ax2) = plt.subplots(ncols=2, figsize=(10, 8), sharex=True, sharey=True)
+    ax1.imshow(img_original, cmap=plt.cm.gray)
+    ax1.set_title('Original')
+    ax1.axis('off')
+    ax2.imshow(img_filtered, cmap=plt.cm.gray)
+    ax2.set_title(img_title_filtered)
+    ax2.axis('off')
+    plt.show()
+    plt.close()
+from skimage import data
+coffee_image = data.coffee()
+coins_image = data.coins()
+coffee_image.shape
+coins_image.shape
+```
+
+- [ ] Both have 3 channels for RGB-3 color representation.
+- [ ] <code>coffee_image</code> has a shape of (303, 384), grayscale. And <code>coins_image</code> (400, 600, 3), RGB-3.
+- [x] <code>coins_image</code> has a shape of (303, 384), grayscale. And <code>coffee_image</code> (400, 600, 3), RGB-3.
+- [ ] Both are grayscale, with single color dimension.
+
+<p class="">Yes! The coffee image is RGB-3 colored, that's why it has a 3 at the end, when displaying the shape (H, W, D) of it. While the coins image is grayscale and has a single color channel.</p>
+
+##### RGB to grayscale {.unnumbered}
+
+
+<div class>
+<p>In this exercise you will load an image from scikit-image module <code>data</code> and make it grayscale, then compare both of them in the output.</p>
+<p>We have preloaded a function <code>show_image(image, title='Image')</code> that displays the image using Matplotlib. You can check more about its parameters using <code>?show_image()</code> or <code>help(show_image)</code> in the console.</p>
+<p></p>
+<center>
+<img src="https://assets.datacamp.com/production/repositories/4470/datasets/2363d344b1d6dc36812842144efa657358175e7f/rocket.png" alt="Rocket" width="60%"><br>
+</center>
+</div>
+<div class="exercise--instructions__content">
+<li>Import the <code>data</code> and <code>color</code> modules from Scikit image. The first module provides example images, and the second, color transformation functions.</li>
+
+<li>Load the <code>rocket</code> image.</li>
+
+<li>Convert the RGB-3 rocket image to grayscale.</li>
+```{python}
+# Import the modules from skimage
+from skimage import data, color
+from skimage.color import rgb2gray
+
+# Load the rocket image
+rocket = data.rocket()
+
+# Convert the image to grayscale
+gray_scaled_rocket = rgb2gray(rocket) 
+
+# Show the original image & Show the grayscale image
+plot_comparison(rocket, gray_scaled_rocket, 'Grayscale image')
+```
+</div>
+
+<p class="">Great! You converted an image to grayscale. For many applications of image processing, color information doesn't help us identify important edges or other features. Something that we will cover later in the course.</p>
+
+#### NumPy for images {.unnumbered}
+
+
+
+##### Flipping out {.unnumbered}
+
+
+<div class>
+<p>As a prank, someone has turned an image from a photo album of a trip to Seville upside-down and back-to-front! Now, we need to straighten the image, by flipping it.
+</p>
+<center>
+<img src="https://assets.datacamp.com/production/repositories/4470/datasets/915096a8c431745a13227259e81103d90e038ec0/sevilleup(2).jpg" alt="City of Seville upside-down" width="70%"><br><em>Image loaded as <code>flipped_seville</code>.</em>
+</center>
+Using the NumPy methods learned in the course, flip the image horizontally and vertically. Then display the corrected image using the <code>show_image()</code> function.
+<p>NumPy is already imported as <code>np</code>.</p>
+</div>
+<div class="exercise--instructions__content">
+
+
+
+<li>Flip the image vertically.</li>
+
+<li>Now, flip the vertically-flipped image horizontally.</li>
+
+<li>Show the, now fixed, image.</li>
+```{python}
+# edited/added
+flipped_seville = imread('archive/Image-Processing-in-Python/datasets/sevilleup.jpg')
+
+# Flip the image vertically
+seville_vertical_flip = np.flipud(flipped_seville)
+
+# Flip the previous image horizontally
+seville_horizontal_flip = np.fliplr(seville_vertical_flip)
+
+# Show the resulting image
+plot_comparison(flipped_seville, seville_horizontal_flip, 'fixed') # edited/added
+```
+</div>
+
+<p class="">Great work!</p>
+
+##### Histograms {.unnumbered}
+
+
+<div class>
+<p>In this exercise, you will analyze the amount of red in the image. To do this, the histogram of the red channel will be computed for the image shown below:</p>
+<p></p>
+<center>
+<img src="https://assets.datacamp.com/production/repositories/4470/datasets/4ce875b1fceea382361da4fb4177ec2f16a8c016/4.1.01.jpg" alt="Woman smiling" width="60%"><br><em>Image loaded as <code>image</code>.</em>
+</center>
+<p>Extracting information from images is a fundamental part of image enhancement. This way you can balance the red and blue to make the image look colder or warmer.</p>
+<p>You will use <code>hist()</code> to display the 256 different intensities of the red color. And <code>ravel()</code> to make these color values an array of one flat dimension.</p>
+<p>Matplotlib is preloaded as <code>plt</code> and Numpy as <code>np</code>. </p>
+<p>Remember that if we want to obtain the green color of an image we would do the following:</p>
+<pre><code>green = image[:, :, 1]
+</code></pre>
+</div>
+<div class="exercise--instructions__content">
+
+
+
+<li>Obtain the red channel using slicing.</li>
+
+<li>Plot the histogram and bins in a range of 256. Don't forget <code>.ravel()</code> for the color channel.</li>
+```{python}
+# edited/added
+image = imread('archive/Image-Processing-in-Python/datasets/portrait.png')
+
+# Obtain the red channel
+red_channel = image[:, :, 0]
+
+# Plot the red histogram with bins in a range of 256
+plt.hist(red_channel.ravel(), bins=256)
+
+# Set title and show
+plt.title('Red Histogram')
+plt.show()
+plt.close() # edited/added
+```
+</div>
+
+<p class="">Good! With this histogram we see that the image is quite reddish, meaning it has a sensation of warmness. This is because it has a wide and large distribution of bright red pixels, from 0 to around 150.</p>
+
+#### Getting started with thresholding {.unnumbered}
+
+
+
+##### Apply global thresholding {.unnumbered}
+
+
+<div class>
+<p>In this exercise, you'll transform a photograph to binary so you can separate the foreground from the background.</p>
+<p>To do so, you need to import the required modules, load the image, obtain the optimal thresh value using <code>threshold_otsu()</code> and apply it to the image.</p>
+<p>You'll see the resulting binarized image when using the <code>show_image()</code> function, previously explained.</p>
+<p></p>
+<center>
+<img src="https://assets.datacamp.com/production/repositories/4470/datasets/a3e2534b613b0083fd4b39aedbcf6dea8fd13947/bw.jpg" alt="Chess pieces" width="50%"><br><strong><em>Image loaded as <code>chess_pieces_image</code>.</em></strong>
+</center>
+<p>Remember we have to turn colored images to grayscale. For that we will use the <code>rgb2gray()</code> function learned in previous video. Which has already been imported for you.</p>
+</div>
+<div class="exercise--instructions__content">
+
+
+
+<li>Import the otsu threshold function.</li>
+
+<li>Turn the image to grayscale.</li>
+
+<li>Obtain the optimal threshold value of the image.</li>
+
+<li>Apply thresholding to the image.</li>
+```{python}
+# edited/added
+from skimage.io import imread
+from skimage.color import rgb2gray
+chess_pieces_image = imread('archive/Image-Processing-in-Python/datasets/bw.jpg')
+def plot_comparison(img_original, img_filtered, img_title_filtered):
+    fig, (ax1, ax2) = plt.subplots(ncols=2, figsize=(10, 8), sharex=True, sharey=True)
+    ax1.imshow(img_original, cmap=plt.cm.gray)
+    ax1.set_title('Original')
+    ax1.axis('off')
+    ax2.imshow(img_filtered, cmap=plt.cm.gray)
+    ax2.set_title(img_title_filtered)
+    ax2.axis('off')
+    plt.show()
+    plt.close()
+    
+# Import the otsu threshold function
+from skimage.filters import threshold_otsu
+
+# Make the image grayscale using rgb2gray
+chess_pieces_image_gray = rgb2gray(chess_pieces_image)
+
+# Obtain the optimal threshold value with otsu
+thresh = threshold_otsu(chess_pieces_image_gray)
+
+# Apply thresholding to the image
+binary = chess_pieces_image_gray > thresh
+
+# Show the image
+plot_comparison(chess_pieces_image, binary, 'Binary image') # edited/added
+```
+</div>
+
+<p class="">Awesome! You just converted the image to binary and we can separate the foreground from the background.</p>
+
+##### When the background isn't that obvious {.unnumbered}
+
+
+<div class>
+<p>Sometimes, it isn't that obvious to identify the background. If the image background is relatively uniform, then you can use a global threshold value as we practiced before, using <code>threshold_otsu()</code>. However, if there's uneven background illumination, adaptive thresholding <code>threshold_local()</code> (a.k.a. local thresholding) may produce better results. </p>
+<p>In this exercise, you will compare both types of thresholding methods (global and local), to find the optimal way to obtain the binary image we need.</p>
+<p></p>
+<center>
+<img src="https://assets.datacamp.com/production/repositories/4470/datasets/38d74b953a34e69f793c5a419fc7ba903a17063b/text_page_original.png" alt="Page with text"><br><strong><em>Image loaded as <code>page_image</code>.</em></strong>
+</center>
+</div>
+
+
+
+<div class="exercise--instructions__content"><p>Import the otsu threshold function, obtain the optimal global thresh value of the image, and apply global thresholding.</p></div>
+```{python}
+# edited/added
+from skimage.color import rgba2rgb
+page_image = imread('archive/Image-Processing-in-Python/datasets/text_page.png')
+
+# Make the image grayscale using rgb2gray
+page_image = rgb2gray(rgba2rgb(page_image))
+
+# Import the otsu threshold function
+from skimage.filters import threshold_otsu
+
+# Obtain the optimal otsu global thresh value
+global_thresh = threshold_otsu(page_image)
+
+# Obtain the binary image by applying global thresholding
+binary_global = page_image > global_thresh
+
+# Show the binary image obtained
+plot_comparison(imread('archive/Image-Processing-in-Python/datasets/text_page.png'), binary_global, "Global thresholding") # edited/added
+```
+
+<div class="exercise--instructions__content"><p>Import the local threshold function, set block size to 35, obtain the local thresh value, and apply local thresholding.</p></div>
+```{python}
+# Import the local threshold function
+from skimage.filters import threshold_local
+
+# Set the block size to 35
+block_size = 35
+
+# Obtain the optimal local thresholding
+local_thresh = threshold_local(page_image, block_size, offset=.1) # edited/added
+
+# Obtain the binary image by applying local thresholding
+binary_local = page_image > local_thresh
+
+# Show the binary image
+plot_comparison(imread('archive/Image-Processing-in-Python/datasets/text_page.png'), binary_local, "Global thresholding") # edited/added
+```
+
+<p class="">Great job! Now you know that you should use local thresholding instead of global if the image has a wide variation of background intensity.</p>
+
+##### Trying other methods {.unnumbered}
+
+
+<div class>
+<p>As we saw in the video, not being sure about what thresholding method to use isn't a problem. In fact, scikit-image provides us with a function to check multiple methods and see for ourselves what the best option is. It returns a figure comparing the outputs of different <strong>global</strong> thresholding methods.</p>
+<p></p>
+<center>
+<img src="https://assets.datacamp.com/production/repositories/4470/datasets/1683f923022eadec156f155e80782274b95078ad/fruits-2.jpg" alt="Forest fruits" width="50%"><br><em>Image loaded as <code>fruits_image</code>.</em>
+</center>
+<p>You will apply this function to this image, <code>matplotlib.pyplot</code> has been loaded as <code>plt</code>. Remember that you can use <code>try_all_threshold()</code> to try multiple global algorithms.</p>
+</div>
+<div class="exercise--instructions__content">
+
+
+
+<li>Import the try all function.</li>
+
+<li>Import the rgb to gray convertor function.</li>
+
+<li>Turn the fruits image to grayscale.</li>
+
+<li>Use the try all method on the resulting grayscale image.</li>
+```{python}
+# edited/added
+fruits_image = imread('archive/Image-Processing-in-Python/datasets/fruits-2.jpg')
+
+# Import the try all function
+from skimage.filters import try_all_threshold
+
+# Import the rgb to gray convertor function 
+from skimage.color import rgb2gray
+
+# Turn the fruits_image to grayscale
+grayscale = rgb2gray(fruits_image)
+
+# Use the try all method on the resulting grayscale image
+fig, ax = try_all_threshold(grayscale, verbose=False)
+
+# Show the resulting plots
+plt.show()
+plt.close() # edited/added
+```
+</div>
+
+<p class="">Nice! As you see, this image works good with some global thresholding methods (like the "Yen" and "Mean") and not so well in others, (like the "Minimum").</p>
+
+##### Apply thresholding {.unnumbered}
+
+
+<div class>
+<p>In this exercise, you will decide what type of thresholding is best used to binarize an image of knitting and craft tools. In doing so, you will be able to see the shapes of the objects, from paper hearts to scissors more clearly.</p>
+<p></p>
+<center>
+<img src="https://assets.datacamp.com/production/repositories/4470/datasets/06b99c764a8d81145e33a9ac3ace8dade55fced2/shapes52.jpg" alt="Several tools for handcraft art" width="50%"><br><em>Image loaded as <code>tools_image</code>.</em>
+</center>
+<p>What type of thresholding would you use judging by the characteristics of the image? Is the background illumination and intensity even or uneven?</p>
+</div>
+<div class="exercise--instructions__content">
+
+
+
+<li>Import the appropriate thresholding and <code>rgb2gray()</code> functions.</li>
+
+<li>Turn the image to grayscale.</li>
+
+<li>Obtain the optimal thresh.</li>
+
+<li>Obtain the binary image by applying thresholding.</li>
+```{python}
+# edited/added
+tools_image = imread('archive/Image-Processing-in-Python/datasets/shapes52.jpg')
+
+# Import threshold and gray convertor functions
+from skimage.filters import threshold_otsu
+from skimage.color import rgb2gray
+
+# Turn the image grayscale
+gray_tools_image = rgb2gray(tools_image)
+
+# Obtain the optimal thresh
+thresh = threshold_otsu(gray_tools_image)
+
+# Obtain the binary image by applying thresholding
+binary_image = gray_tools_image > thresh
+
+# Show the resulting binary image
+show_image(binary_image, 'Binarized image')
+```
+</div>
+
+<p class="">Awesome! By using a global thresholding method, you obtained the precise binarized image. If you would have used local instead nothing would have been segmented. <br>  <br>  Try it yourself and see it! In the next chapters, we'll get into image restoration, face detection, and much more. Stay tuned!</p>
+
+### Filters, Contrast, Transformation and Morphology {.unnumbered}
+
+<p class="chapter__description">
+    You will learn to <strong>detect object shapes</strong> using edge detection filters, <strong>improve medical images</strong> with contrast enhancement <strong>and even enlarge pictures to five times its original size! </strong>
+
+You will also apply morphology to make thresholding more accurate when segmenting images and go to the next level of processing images with Python.
+  </p>
+
+#### Jump into filtering {.unnumbered}
+
+
+
+##### Edge detection {.unnumbered}
+
+
+<div class>
+<p>In this exercise, you'll detect edges in an image by applying the Sobel filter.
+</p>
+<center>
+    <img src="https://assets.datacamp.com/production/repositories/4470/datasets/e40f9d1aec6b6394f636d3e96e5bc46a123f2545/soaps.jpg" width="70%" alt="Soap pills of heart and rectangle shapes in blue background">
+</center>
+<center>Image preloaded as <code>soaps_image</code>.</center>
+<p>The<code>show_image()</code> function has been already loaded for you.</p>
+<p>Let's see if it spots all the figures in the image.</p>
+</div>
+<div class="exercise--instructions__content">
+
+
+
+<li>Import the <code>color</code> module so you can convert the image to grayscale.</li>
+
+<li>Import the <code>sobel()</code> function from <code>filters</code> module.</li>
+
+<li>Make <code>soaps_image</code> grayscale using the appropriate method from the <code>color</code> module.</li>
+
+<li>Apply the sobel edge detection filter on the obtained grayscale image <code>soaps_image_gray</code>.</li>
+```{python}
+# edited/added
+soaps_image = imread('archive/Image-Processing-in-Python/datasets/soap_image.jpg')
+
+# Import the color module
+from skimage import color
+
+# Import the filters module and sobel function
+from skimage.filters import sobel
+
+# Make the image grayscale
+soaps_image_gray = rgb2gray(soaps_image)
+
+# Apply edge detection filter
+edge_sobel = sobel(soaps_image_gray)
+
+# Show original and resulting image to compare
+plot_comparison(soaps_image, edge_sobel, "Edges with Sobel")
+```
+</div>
+
+<p class="">Great job! You succesfully detected the edges in the image. <br> As you can see, the edges of all the figures in the scene are highlighted.</p>
+
+##### Blurring to reduce noise {.unnumbered}
+
+
+<div class>
+<p>In this exercise you will reduce the sharpness of an image of a building taken during a London trip, through filtering.</p>
+<p></p>
+<center>
+  <img src="https://assets.datacamp.com/production/repositories/4470/datasets/0782692803666712f80e62b7ca83e803861b6ed6/toa-sharp-def-3.jpg" alt="Building in Lodon" width="40%">
+</center>
+<center>
+    Image loaded as <code>building_image</code>.
+</center>
+</div>
+<div class="exercise--instructions__content">
+
+
+
+<li>Import the Gaussian filter. </li>
+
+<li>Apply the filter to the <code>building_image</code>, set the multichannel parameter to the correct value.</li>
+
+<li>Show the original <code>building_image</code> and resulting <code>gaussian_image</code>.</li>
+```{python}
+# edited/added
+building_image = imread('archive/Image-Processing-in-Python/datasets/building_image.jpg')
+
+# Import Gaussian filter 
+from skimage.filters import gaussian
+
+# Apply filter
+gaussian_image = gaussian(building_image, multichannel=True)
+
+# Show original and resulting image to compare
+plot_comparison(building_image, gaussian_image, "Reduced sharpness Gaussian")
+```
+</div>
+
+<p class="">Awesome! You have removed the excessive sharpness in the image.</p>
+
+#### Contrast enhancement {.unnumbered}
+
+
+
+##### What's the contrast of this image? {.unnumbered}
+
+
+<div class>
+<p><img src="https://assets.datacamp.com/production/repositories/4470/datasets/84ceaf200a4d3e30b738ae4770ef1a98f7980db9/clock_image.png" width="45%" alt="Black and white clock hanging and moving"><img src="https://assets.datacamp.com/production/repositories/4470/datasets/8cebe2e3f43ee61bd7f39825cb285c58c0302523/contrast_histogram_1.png" width="50%" alt="Histogram of the clock's image"></p>
+<p>The histogram tell us.</p>
+<p>Just as we saw previously, you can calculate the contrast by calculating the <strong>range</strong> of the pixel intensities i.e. by subtracting the minimum pixel intensity value from the <strong>histogram</strong> to the maximum one.</p>
+<p>You can obtain the maximum pixel intensity of the image by using the <code>np.max()</code> method from NumPy and the minimum with <code>np.min()</code> <strong>in the console</strong>.</p>
+<p>The image has already been loaded as <code>clock_image</code>, NumPy as <code>np</code> and the <code>show_image()</code> function.</p>
+</div>
+
+- [ ] The contrast is 255 (high contrast).
+- [x] The contrast is 148.
+- [ ] The contrast is 189.
+- [ ] The contrast is 49 (low contrast).
+
+<p class="">Perfect! You calculated the range of the pixels intensities in the histogram, and so, the contrast of the image!</p>
+
+##### Medical images {.unnumbered}
+
+
+<div class>
+<p>You are trying to improve the tools of a hospital by pre-processing the X-ray images so that doctors have a higher chance of spotting relevant details. You'll test our code on a chest X-ray image from the <a href="https://www.kaggle.com/nih-chest-xrays/data">National Institutes of Health Chest X-Ray Dataset</a>
+<br></p>
+<center><img src="https://assets.datacamp.com/production/repositories/4470/datasets/a0abe7fb876883411f306561c000e6cdecfe4e91/contrast_00000109_005.png" alt="X-ray chest image" width="45%/"></center>
+<br><center><em>Image loaded as <code>chest_xray_image</code>.</em></center>
+<p>First, you'll check the histogram of the image and then apply standard histogram equalization to improve the contrast. Remember we obtain the histogram by using the <code>hist()</code> function from Matplotlib, which has been already imported as <code>plt</code>.</p>
+</div>
+<div class="exercise--instructions__content">
+
+
+
+<li>Import the required Scikit-image module for contrast.</li>
+
+<li>Show the histogram from the original x-ray image <code>chest_xray_image</code>, using  the <code>hist()</code> function.</li>
+
+<li>Use histogram equalization on <code>chest_xray_image</code> to obtain the improved image and load it as <code>xray_image_eq</code>.</li>
+
+<li>Show the resulting improved image <code>xray_image_eq</code>.</li>
+```{python}
+# edited/added
+chest_xray_image = imread('archive/Image-Processing-in-Python/datasets/chest_xray_image.png')
+
+# Import the required module
+from skimage import exposure
+
+# Show original x-ray image and its histogram
+show_image(chest_xray_image, 'Original x-ray')
+
+plt.title('Histogram of image')
+plt.hist(chest_xray_image.ravel(), bins=256)
+plt.show()
+plt.close() # edited/added
+
+# Use histogram equalization to improve the contrast
+xray_image_eq =  exposure.equalize_hist(chest_xray_image)
+
+# Show the resulting image
+show_image(xray_image_eq, 'Resulted image')
+```
+
+</div>
+
+<p class="">Great job! Now you can apply this code and knowledge to other similar images.</p>
+
+##### Aerial image {.unnumbered}
+
+
+<div class>
+<p>In this exercise, we will improve the quality of an aerial image of a city. The image has low contrast and therefore we can not distinguish all the elements in it.
+</p>
+<center>
+<img src="https://assets.datacamp.com/production/repositories/4470/datasets/bcdab87fe0975f4451869ead252972396da2d83b/5.2.09.png" alt="Aerial image, airport taken from the air" width="30%"><br><em>Image loaded as <code>image_aerial</code>.</em>
+</center>
+<p>For this we will use the normal or standard technique of Histogram Equalization.</p>
+</div>
+<div class="exercise--instructions__content">
+
+
+
+<li>Import the required module from scikit-image.</li>
+
+<li>Use the histogram equalization function from the module previously imported.</li>
+
+<li>Show the resulting image.</li>
+```{python}
+# edited/added
+image_aerial = imread('archive/Image-Processing-in-Python/datasets/image_aerial.png')
+
+# Import the required module
+from skimage import exposure
+
+# Use histogram equalization to improve the contrast
+image_eq =  exposure.equalize_hist(image_aerial)
+
+# Show the original and resulting image
+plot_comparison(image_aerial, image_eq, 'Resulting image')
+```
+</div>
+
+<p class="">Awesome work! Now we can see more details of the objects in the image.</p>
+
+##### Let's add some impact and contrast {.unnumbered}
+
+
+<div class>
+<p>Have you ever wanted to enhance the contrast of your photos so that they appear more dramatic?</p>
+<p>In this exercise, you'll increase the contrast of a cup of coffee.
+Something you could share with your friends on social media. Don't forget to use <strong>#ImageProcessingDatacamp</strong> as hashtag!</p>
+<p>Even though this is not our Sunday morning coffee cup, you can still apply the same methods to any of our photos.</p>
+<p></p>
+<center>
+<img src="https://assets.datacamp.com/production/repositories/4470/datasets/e9e004e21c5b5c3b6e4ff06fa4cc576f0106ca11/coffee_original.png" alt="Cup of coffee">
+</center>
+<p>A function called <code>show_image()</code>, that displays an image using Matplotlib, has already been defined. It has the arguments <code>image</code> and <code>title</code>, with <code>title</code> being <code>'Original'</code> by default.</p>
+</div>
+<div class="exercise--instructions__content">
+<li>Import the module that includes the Contrast Limited Adaptive Histogram Equalization (CLAHE) function.</li>
+
+<li>Obtain the image you'll work on, with a cup of coffee in it, from the module that holds all the images for testing purposes.</li>
+
+<li>From the previously imported module, call the function to apply the adaptive equalization method on the original image and set the clip limit to 0.03.</li>
+```{python}
+# Import the necessary modules
+from skimage import data, exposure
+
+# Load the image
+original_image = data.coffee()
+
+# Apply the adaptive equalization on the original image
+adapthist_eq_image = exposure.equalize_adapthist(original_image, clip_limit=0.03)
+
+# Compare the original image to the equalized
+plot_comparison(original_image, adapthist_eq_image, '#ImageProcessingDatacamp')
+```
+</div>
+
+<p class="">Amazing! You have increased the contrast of the image using an algorithm for local contrast enhancement, that uses histograms computed over different tile regions of the image. Local details can therefore be enhanced even in regions that are darker or lighter than the rest of the image.</p>
+
+#### Transformations {.unnumbered}
+
+
+
+##### Aliasing, rotating and rescaling {.unnumbered}
+
+
+<div class>
+<p>Let's look at the impact of aliasing on images. </p>
+<p>Remember that aliasing is an effect that causes different signals, in this case pixels, to become indistinguishable or distorted.</p>
+<p>You'll make this cat image upright by rotating it 90 degrees and then rescaling it two times. Once with the anti aliasing filter applied before rescaling and a second time without it, so you can compare them.</p>
+<p></p>
+<center>
+<img src="https://assets.datacamp.com/production/repositories/4470/datasets/98ae7ee183329b00b10f2e0bcc4e25943e03aebd/kitty2.jpg" width="50%" alt="Little cute cat"><br><em>Image preloaded as <code>image_cat</code>.</em>
+</center>
+</div>
+<div class="exercise--instructions__content">
+
+
+
+<li>Import the module and the rotating and rescaling functions.</li>
+
+<li>Rotate the image 90 degrees clockwise.</li>
+
+<li>Rescale the <code>cat_image</code> to be 4 times smaller and apply the anti aliasing filter. Set whether or not the image should be treated as multichannel (colored).</li>
+
+<li>Rescale the <code>rotated_cat_image</code> to be 4 times smaller without applying an anti aliasing filter.</li>
+```{python}
+# edited/added
+image_cat = imread('archive/Image-Processing-in-Python/datasets/image_cat.jpg')
+
+# Import the module and the rotate and rescale functions
+from skimage.transform import rotate, rescale
+
+# Rotate the image 90 degrees clockwise 
+rotated_cat_image = rotate(image_cat, -90)
+
+# Rescale with anti aliasing
+rescaled_with_aa = rescale(rotated_cat_image, 1/4, anti_aliasing=True, multichannel=True)
+
+# Rescale without anti aliasing
+rescaled_without_aa = rescale(rotated_cat_image, 1/4, anti_aliasing=False, multichannel=True)
+
+# Show the resulting images
+show_image(rescaled_with_aa, "Transformed with anti aliasing")
+show_image(rescaled_without_aa, "Transformed without anti aliasing")
+```
+
+</div>
+
+<p class="">Great job! You rotated and rescaled the image. <br> Seems like the anti aliasing filter prevents the poor pixelation effect to happen, making it look better but also less sharp.</p>
+
+##### Enlarging images {.unnumbered}
+
+
+<div class>
+<p>Have you ever tried resizing an image to make it larger? This usually results in loss of quality, with the enlarged image looking blurry. </p>
+<p>The good news is that the algorithm used by scikit-image works very well for enlarging images up to a certain point. </p>
+<p>In this exercise you'll enlarge an image <strong>three times</strong>!! </p>
+<p>You'll do this by rescaling the image of a rocket, that will be loaded from the <code>data</code> module.</p>
+<p></p>
+<center>
+<img src="https://assets.datacamp.com/production/repositories/4470/datasets/2363d344b1d6dc36812842144efa657358175e7f/rocket.png" alt="Rocket">
+</center>
+</div>
+<div class="exercise--instructions__content">
+<li>Import the module and function needed to enlarge images, you'll do this by rescaling.</li>
+
+<li>Import the <code>data</code> module.</li>
+
+<li>Load the <code>rocket()</code> image from <code>data</code>.</li>
+
+<li>Enlarge the <code>rocket_image</code> so it is 3 times bigger, with the anti aliasing filter applied. <em>Make sure to set <code>multichannel</code> to <code>True</code> or you risk your session timing out!</em>
+</li>
+```{python}
+# Import the module and function to enlarge images
+from skimage.transform import rescale
+
+# Import the data module
+from skimage import data
+
+# Load the image from data
+rocket_image = data.rocket()
+
+# Enlarge the image so it is 3 times bigger
+enlarged_rocket_image = rescale(rocket_image, 3, anti_aliasing=True, multichannel=True)
+
+# Show original and resulting image
+plot_comparison(rocket_image, enlarged_rocket_image, "3 times enlarged image")
+```
+</div>
+
+<p class="">Wow!<br>The image went from being 600 pixels wide to over 1700 and it still does not look poorly pixelated. Nice work!</p>
+
+##### Proportionally resizing {.unnumbered}
+
+
+<div class>
+<p>We want to downscale the images of a veterinary blog website so all of them have the same compressed size.</p>
+<p>It's important that you do this proportionally, meaning that these are not distorted.</p>
+<p>First, you'll try it out for one image so you know what code to test later in the rest of the pictures.</p>
+<p></p>
+<center>
+<img src="https://assets.datacamp.com/production/repositories/4470/datasets/736b12a3d210b0ac3f6bca28174cfd6522a0ad06/dogs4.jpg" width="50%"><br><em>The image preloaded as <code>dogs_banner</code>.</em>
+</center>
+<p>Remember that by looking at the shape of the image, you can know its width and height.</p>
+</div>
+<div class="exercise--instructions__content">
+
+
+
+<li>Import the module and function to resize.</li>
+
+<li>Set the proportional height and width so it is half the image's height size.</li>
+
+<li>Resize using the calculated proportional height and width.</li>
+```{python}
+# edited/added
+dogs_banner = imread('archive/Image-Processing-in-Python/datasets/dogs_banner.jpg')
+
+# Import the module and function
+from skimage.transform import resize
+
+# Set proportional height and width so it is half its size
+height = int(dogs_banner.shape[0] / 2.0)
+width = int(dogs_banner.shape[1] / 2.0)
+
+# Resize using the calculated proportional height and width
+image_resized = resize(dogs_banner, (height, width),
+                       anti_aliasing=True)
+
+# Show the original and resized image
+plot_comparison(dogs_banner, image_resized, 'Resized image')
+```
+</div>
+
+<p class="">Excellent! The image is now compressed and ready. We can use this code for future images that are uploaded to the website.</p>
+
+#### Morphology {.unnumbered}
+
+
+
+##### Handwritten letters {.unnumbered}
+
+
+<div class>
+<p>A very interesting use of computer vision in real-life solutions is performing Optical Character Recognition (<strong>OCR</strong>) to distinguish printed or handwritten text characters inside digital images of physical documents.</p>
+<p>Let's try to improve the definition of this handwritten letter so that it's easier to classify.</p>
+<p></p>
+<center>
+<img src="https://assets.datacamp.com/production/repositories/4470/datasets/2c10093e2b260a87d83dc48a724b68dc9bb8e092/r5.png" width="40%/">
+</center>
+<p>As we can see it's the letter <em>R</em>, already binary, with some noise in it. It's already loaded as <code>upper_r_image</code>.</p>
+<p>Apply the morphological operation that will discard the pixels near the letter boundaries.</p>
+</div>
+<div class="exercise--instructions__content">
+
+
+
+<li>Import the module from scikit-image.</li>
+
+<li>Apply the morphological operation for eroding away the boundaries of regions of foreground pixels.</li>
+```{python}
+# edited/added
+upper_r_image = imread('archive/Image-Processing-in-Python/datasets/r5.png')
+upper_r_image = rgb2gray(upper_r_image)
+
+# Import the morphology module
+from skimage import morphology
+
+# Obtain the eroded shape 
+eroded_image_shape = morphology.binary_erosion(upper_r_image) 
+
+# See results
+plot_comparison(upper_r_image, eroded_image_shape, 'Eroded image') # edited/added
+```
+</div>
+
+<p class="">Awesome work! As you can see, erosion is useful for removing minor white noise.</p>
+
+##### Improving thresholded image {.unnumbered}
+
+
+<div class>
+<p>In this exercise, we'll try to reduce the noise of a thresholded image using the dilation morphological operation.</p>
+<p></p>
+<center>
+  <img src="https://assets.datacamp.com/production/repositories/4470/datasets/4cb480ae93ab7dd7b8b17e4b88e8acb20a0d7d6a/world_image_binary.jpg" width="80%" alt="World map"><br><em>Image already loaded as <code>world_image</code>.</em>
+</center>
+<p>This operation, in a way, <em>expands</em> the objects in the image.</p>
+</div>
+<div class="exercise--instructions__content">
+
+
+
+<li>Import the module.</li>
+
+<li>Obtain the binarized and dilated image, from the original image <code>world_image</code>.</li>
+```{python}
+# edited/added
+world_image = imread('archive/Image-Processing-in-Python/datasets/world_image_binary.jpg')
+
+# Import the module
+from skimage import morphology
+
+# Obtain the dilated image 
+dilated_image = morphology.binary_dilation(world_image)
+
+# See results
+plot_comparison(world_image, dilated_image, 'Dilated image') # edited/added
+```
+</div>
+
+<p class="">Great! You removed the noise of the segmented image and now it's more uniform.</p>
+
+### Image restoration, Noise, Segmentation and Contours {.unnumbered}
+
+<p class="chapter__description">
+    So far, you have done some very cool things with your image processing skills!
+ 
+In this chapter, you will apply <strong>image restoration to remove objects, logos, text, or damaged areas</strong> in pictures! 
+You will also learn how to apply noise, use segmentation to speed up processing, and find elements in images by their contours. 
+  </p>
+  
+#### Image restoration {.unnumbered}
+
+
+
+##### Let's restore a damaged image {.unnumbered}
+
+
+<div class>
+<p>In this exercise, we'll restore an image that has missing parts in it, using the <code>inpaint_biharmonic()</code> function. </p>
+<p></p>
+<center>
+  <img src="https://assets.datacamp.com/production/repositories/4470/datasets/7bb38f37b41f40b9ef2e59b81f326a5e038d69b8/damaged_astronaut.png" alt="Small cute puppy" width="40%">
+</center>
+<center>Loaded as <code>defect_image</code>.</center>
+<p>We'll work on an image from the <code>data</code> module, obtained by <code>data.astronaut()</code>. Some of the pixels have been replaced with 0s using a binary mask, on purpose, to simulate a damaged image. Replacing pixels with 0s turns them totally black. The defective image is saved as an array called <code>defect_image</code>.</p>
+<p>The mask is a black and white image with patches that have the position of the image bits that have been corrupted. We can apply the restoration function on these areas. This mask is preloaded as <code>mask</code>.</p>
+<p>Remember that inpainting is the process of reconstructing lost or deteriorated parts of images and videos.</p>
+</div>
+<div class="exercise--instructions__content">
+
+
+
+<li>Import the <code>inpaint</code> function in the <code>restoration</code> module in scikit-image (<code>skimage</code>).</li>
+
+<li>Show the defective image using <code>show_image()</code>.</li>
+
+<li>Call the correct function from <code>inpaint</code>. Use the corrupted image as the first parameter, then the mask and multichannel boolean.</li>
+```{python}
+# edited/added
+from skimage.restoration import inpaint
+from skimage.transform import resize
+from skimage import color
+defect_image = imread('archive/Image-Processing-in-Python/datasets/damaged_astronaut.png')
+defect_image = resize(defect_image, (512, 512))
+defect_image = rgba2rgb(defect_image)
+mask = pd.read_csv('archive/Image-Processing-in-Python/datasets/astronaut_mask.csv').to_numpy()
+
+# Import the module from restoration
+from skimage.restoration import inpaint
+
+# Show the defective image
+show_image(defect_image, 'Image to restore')
+
+# Apply the restoration function to the image using the mask
+restored_image = inpaint.inpaint_biharmonic(defect_image, mask, multichannel=True)
+
+# edited/added
+plot_comparison(defect_image, restored_image, 'Restored image') # edited/added
+```
+
+</div>
+
+<p class="">Hurray! You restored the image successfully. The image looks a lot better now. You can handle colored images that have several missing areas.</p>
+
+##### Removing logos {.unnumbered}
+
+
+<div class>
+<p>As we saw in the video, another use of image restoration is removing objects from an scene. In this exercise, we'll remove the Datacamp logo from an image.</p>
+<p></p>
+<center>
+<img src="https://assets.datacamp.com/production/repositories/4470/datasets/c4ea35693d35f1fa5bc6371c564187a5fcf03e8f/4.2.06-with-new-logo.png" alt="Landscape with small datacamp logo"><br><em>Image loaded as <code>image_with_logo</code>.</em>
+</center>
+<p>You will create and set the mask to be able to erase the logo by inpainting this area. </p>
+<p>Remember that when you want to remove an object from an image you can either manually delineate that object or run some image analysis algorithm to find it.</p>
+</div>
+<div class="exercise--instructions__content">
+
+
+
+<li>Initialize a mask with the same shape as the image, using <code>np.zeros()</code>.</li>
+
+<li>In the mask, set the region that will be inpainted to 1 .</li>
+
+<li>Apply inpainting to <code>image_with_logo</code> using the <code>mask</code>.</li>
+```{python}
+# edited/added
+image_with_logo = imread('archive/Image-Processing-in-Python/datasets/4.2.06_w_logo_2_2.png')
+
+# Initialize the mask
+mask = np.zeros(image_with_logo.shape[:-1])
+
+# Set the pixels where the logo is to 1
+mask[210:290, 360:425] = 1
+
+# Apply inpainting to remove the logo
+image_logo_removed = inpaint.inpaint_biharmonic(image_with_logo, 
+                                                mask, 
+                                                multichannel=True)
+
+# Show the original and logo removed images
+plot_comparison(image_with_logo, image_logo_removed, 'Image with logo removed')
+```
+</div>
+
+<p class="">Excellent! Now you know how you can remove objects or logos from images. Be wise in how you use your new acquired knowledge, magician.</p>
+
+#### Noise {.unnumbered}
+
+
+
+##### Let's make some noise! {.unnumbered}
+
+
+<div class>
+<p>In this exercise, we'll practice adding noise to a fruit image.</p>
+<p></p>
+<center>
+    <img src="https://assets.datacamp.com/production/repositories/4470/datasets/b21f1547950fbfdde7c48643a706db0d158aac3b/fruits_square.jpg" alt="Various fruits" width="50%">
+</center>
+<center>
+  Image preloaded as <code>fruit_image</code>.
+</center>
+</div>
+<div class="exercise--instructions__content">
+
+
+
+<li>Import the <code>util</code> module and the random noise function.</li>
+
+<li>Add noise to the image.</li>
+
+<li>Show the original and resulting image.</li>
+```{python}
+# edited/added
+fruit_image = imread('archive/Image-Processing-in-Python/datasets/fruits_square.jpg')
+
+# Import the module and function
+from skimage.util import random_noise
+
+# Add noise to the image
+noisy_image = random_noise(fruit_image)
+
+# Show original and resulting image
+plot_comparison(fruit_image, noisy_image, 'Noisy image')
+```
+</div>
+
+<p class="">Yes! Now you can add noise to any image you work with. <br> You can always read more about the functions in the scikit-image documentation.</p>
+
+##### Reducing noise {.unnumbered}
+
+
+<div class>
+<p>We have a noisy image that we want to improve by removing the noise in it. </p>
+<p></p>
+<center>
+  <img src="https://assets.datacamp.com/production/repositories/4470/datasets/856da76937ad35d3bb407d4f2e8ad7c26e40edac/miny.jpeg" alt="Small cute puppy" width="50%">
+</center>
+<center>Preloaded as <code>noisy_image</code>.</center>
+<p>Use total variation filter denoising to accomplish this.</p>
+</div>
+<div class="exercise--instructions__content">
+
+
+<li>Import the <code>denoise_tv_chambolle</code> function from its module.</li>
+
+<li>Apply total variation filter denoising.</li>
+
+<li>Show the original noisy and the resulting denoised image.</li>
+```{python}
+# edited/added
+noisy_image = imread('archive/Image-Processing-in-Python/datasets/miny.jpeg')
+
+# Import the module and function
+from skimage.restoration import denoise_tv_chambolle
+
+# Apply total variation filter denoising
+denoised_image = denoise_tv_chambolle(noisy_image, multichannel=True)
+                                      
+# Show the noisy and denoised images
+plot_comparison(noisy_image, denoised_image, 'Denoised image')
+```
+</div>
+
+<p class="">Awesome! You fixed the image by applying the TV denoising function with the parameter default values. Feel free to read more about them in the scikit-image documentation.</p>
+
+##### Reducing noise while preserving edges {.unnumbered}
+
+
+<div class>
+<p>In this exercise, you will reduce the noise in this landscape picture.</p>
+<p></p>
+<center>
+  <img src="https://assets.datacamp.com/production/repositories/4470/datasets/68eed92ae8b528be511a7b0b7734e04b5c0f2da8/noise-noisy-nature.jpg" alt="Landscape of a river" width="75%">
+</center>
+<center>Preloaded as <code>landscape_image</code>.</center>
+<p>Since we prefer to preserve the edges in the image, we'll use the bilateral denoising filter.</p>
+</div>
+<div class="exercise--instructions__content">
+
+
+
+<li>Import the <code>denoise_bilateral</code> function from its module.</li>
+
+<li>Apply bilateral filter denoising.</li>
+
+<li>Show the original noisy and the resulting denoised image.</li>
+```{python}
+# edited/added
+landscape_image = imread('archive/Image-Processing-in-Python/datasets/noise-noisy-nature.jpg')
+
+# Import bilateral denoising function
+from skimage.restoration import denoise_bilateral
+
+# Apply bilateral filter denoising
+denoised_image = denoise_bilateral(landscape_image, multichannel=True)
+
+# Show original and resulting images
+plot_comparison(landscape_image, denoised_image, 'Denoised image')
+```
+</div>
+
+<p class="">Great! You denoised the image without losing sharpness. <br> In this case <code>denoise_bilateral()</code> worked well with the default optional parameters.</p>
+
+#### Superpixels &amp; segmentation {.unnumbered}
+
+
+
+##### Number of pixels {.unnumbered}
+
+
+<div class>
+<p>Let's calculate the total number of pixels in this image.</p>
+<p></p>
+<center>
+<img src="https://assets.datacamp.com/production/repositories/4470/datasets/75e40e05b19b2fdde5784eafced8125c8dccb674/chinese.jpg" alt="Young woman">
+</center>
+<center>Image preloaded as <code>face_image</code>
+</center>
+<p>The total amount of pixel is its resolution. Given by \(Height \times Width\).</p>
+<p>Use <code>.shape</code> from NumPy which is preloaded as <code>np</code>, in the console to check the width and height of the image.</p>
+</div>
+
+```{python}
+# edited/added
+face_image_original = imread('archive/Image-Processing-in-Python/datasets/chinese.jpg')
+face_image_original.shape
+```
+
+- [ ] <code>face_image</code> is 191 * 191 = 36,481 pixels
+- [x] <code>face_image</code> is 265 * 191 = 50,615 pixels
+- [ ] <code>face_image</code> is 1265 * 1191 = 1,506,615 pixels
+- [ ] <code>face_image</code> is 2265 * 2191 = 4,962,615 pixels
+
+<p class="">Yes! The image is 50,615 pixels in total.</p>
+
+##### Superpixel segmentation {.unnumbered}
+
+
+<div class>
+<p>In this exercise, you will apply unsupervised segmentation to the same image, before it's passed to a face detection machine learning model. </p>
+<p>So you will reduce this image from \(265 \times 191 = 50,615\) pixels down to \(400\) regions.</p>
+<p></p>
+<center>
+<img src="https://assets.datacamp.com/production/repositories/4470/datasets/75e40e05b19b2fdde5784eafced8125c8dccb674/chinese.jpg" alt="Young woman">
+</center>
+<center>Already preloaded as <code>face_image</code>.</center>
+<p>The <code>show_image()</code> function has been preloaded for you as well.</p>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Import the <code>slic()</code> function from the <code>segmentation</code> module.</li>
+
+<li>Import the <code>label2rgb()</code> function from the <code>color</code> module.</li>
+
+<li>Obtain the segmentation with 400 regions using <code>slic()</code>.</li>
+
+<li>Put segments on top of original image to compare with <code>label2rgb()</code>.</li>
+```{python}
+# edited/added
+import matplotlib.pyplot as plt
+from skimage.io import imread
+face_image_original = imread('archive/Image-Processing-in-Python/datasets/chinese.jpg')
+def plot_comparison(img_original, img_filtered, img_title_filtered):
+    fig, (ax1, ax2) = plt.subplots(ncols=2, figsize=(10, 8), sharex=True, sharey=True)
+    ax1.imshow(img_original, cmap=plt.cm.gray)
+    ax1.set_title('Original')
+    ax1.axis('off')
+    ax2.imshow(img_filtered, cmap=plt.cm.gray)
+    ax2.set_title(img_title_filtered)
+    ax2.axis('off')
+    plt.show()
+    plt.close()
+
+# Import the slic function from segmentation module
+from skimage.segmentation import slic
+
+# Import the label2rgb function from color module
+from skimage.color import label2rgb
+
+# Obtain the segmentation with 400 regions
+segments = slic(face_image_original, n_segments= 400)
+
+# Put segments on top of original image to compare
+segmented_image = label2rgb(segments, face_image_original, kind='avg')
+
+# Show the segmented image
+plot_comparison(face_image_original, segmented_image, "Segmented image, 400 superpixels") # edited/added
+```
+</div>
+
+<p class="">Awesome work! <br> You reduced the image from 50,615 pixels to 400 regions! Much more computationally efficient for, for example, face detection machine learning models.</p>
+
+#### Finding contours {.unnumbered}
+
+
+
+##### Contouring shapes {.unnumbered}
+
+
+<div class>
+<p>In this exercise we'll find the contour of a horse. </p>
+<p>For that we will make use of a <strong>binarized</strong> image provided by scikit-image in its <code>data</code> module. Binarized images are easier to process when finding contours with this algorithm. Remember that contour finding only supports 2D image arrays.</p>
+<p>Once the contour is detected, we will display it together with the original image. That way we can check if our analysis was correct!</p>
+<p><code>show_image_contour(image, contours)</code> is a preloaded function that displays the image with all contours found using Matplotlib.</p>
+<p></p>
+<center>
+<img src="https://assets.datacamp.com/production/repositories/4470/datasets/bf29f676bb5dfd3e6d7d44774046213ba82f6092/horse.png" alt="Shape of a horse in black and white">
+</center>
+<p>Remember you can use the <code>find_contours()</code> function from the measure module, by passing the thresholded image and a constant value.</p>
+</div>
+<div class="exercise--instructions__content">
+
+
+
+<li>Import the data and the module needed for contouring detection.</li>
+
+<li>Obtain the horse image shown in the context area.</li>
+
+<li>Find the contours of the horse image using a constant level value of 0.8.</li>
+```{python}
+# edited/added
+def show_image_contour(image, contours):
+    plt.figure()
+    for n, contour in enumerate(contours):
+        plt.plot(contour[:, 1], contour[:, 0], linewidth=3)
+    plt.imshow(image, interpolation='nearest', cmap='gray_r')
+    plt.title('Contours')
+    plt.axis('off')
+    plt.show()
+    plt.close()
+    
+# Import the modules
+from skimage import measure, data
+
+# Obtain the horse image
+horse_image = data.horse()
+
+# Find the contours with a constant level value of 0.8
+contours = measure.find_contours(horse_image, 0.8)
+
+# Shows the image with contours found
+show_image_contour(horse_image, contours)
+```
+</div>
+
+<p class="">Awesome job! You were able to find the horse contours! In the next exercise you will do some image preparation first and binarize the image yourself before finding the contours.</p>
+
+##### Find contours of an image that is not binary {.unnumbered}
+
+
+<div class>
+<p>Let's work a bit more on how to prepare an image to be able to find its contours and extract information from it.</p>
+<p>We'll process an image of two purple dice loaded as <code>image_dice</code> and determine what number was rolled for each dice.</p>
+<p></p>
+<center>
+<img src="https://assets.datacamp.com/production/repositories/4470/datasets/b9bcf87a160d32d41517c9dc9429cc6b7ec10ac5/dices.png" alt="Purple dice">
+</center>
+<p>In this case, the image is not grayscale or binary yet. This means we need to perform some image pre-processing steps before looking for the contours. First, we'll transform the image to a 2D array grayscale image and next apply thresholding. Finally, the contours are displayed together with the original image.</p>
+<p><code>color</code>, <code>measure</code> and <code>filters</code> modules are already imported so you can use the functions to find contours and apply thresholding.</p>
+<p>We also import the <code>io</code> module to load the <code>image_dice</code> from local memory, using <code>imread</code>. <a href="https://scikit-image.org/docs/dev/api/skimage.io.html">Read more here.</a></p>
+</div>
+<div class="exercise--instructions__content">
+
+
+
+<li>Transform the image to grayscale using <code>rgb2gray()</code>.</li>
+
+<li>Obtain the optimal threshold value for the image and set it as <code>thresh</code>.</li>
+
+<li>Apply thresholding to the image once you have the optimal threshold value <code>thresh</code>, using the corresponding operator.</li>
+
+<li>Apply the corresponding function to obtain the contours and use a value level of 0.8.</li>
+```{python}
+# edited/added
+from skimage import filters
+image_dice = imread('archive/Image-Processing-in-Python/datasets/dices.png')
+
+# Make the image grayscale
+image_dice = rgb2gray(image_dice[:,:,:3])
+
+# Obtain the optimal thresh value
+thresh = filters.threshold_otsu(image_dice)
+
+# Apply thresholding
+binary = image_dice > thresh
+
+# Find contours at a constant value of 0.8
+contours = measure.find_contours(binary, 0.8)
+
+# Show the image
+show_image_contour(image_dice, contours)
+```
+
+</div>
+
+<p class="">Great work! You made the image a 2D array by slicing, applied thresholding and succesfully found the contour. Now you can apply it to any image you work on in the future.</p>
+
+##### Count the dots in a dice's image {.unnumbered}
+
+
+<div class>
+<p>Now we have found the contours, we can extract information from it.</p>
+<p>In the previous exercise, we prepared a purple dices image to find its contours:</p>
+<p><img src="https://assets.datacamp.com/production/repositories/4470/datasets/df705f14053818899a6f483c8e53fb3d9035a118/steps_contours.png" alt="3 images showing the steps to find contours"></p>
+<p>This time we'll determine what number was rolled for the dice, by counting the dots in the image.</p>
+<p>The contours found in the previous exercise are preloaded as <code>contours</code>.</p>
+<p>Create a list with all contour's shapes as <code>shape_contours</code>. You can see all the contours shapes by calling <code>shape_contours</code> in the console, once you have created it.</p>
+<p>Check that most of the contours aren't bigger in size than 50. If you count them, they are the exact number of dots in the image.</p>
+<p><code>show_image_contour(image, contours)</code> is a preloaded function that displays the image with all contours found using Matplotlib.</p>
+</div>
+<div class="exercise--instructions__content">
+<li>Make <code>shape_contours</code> be a list with all contour shapes of <code>contours</code>.</li>
+
+<li>Set <code>max_dots_shape</code> to 50.</li>
+
+<li>Set the shape condition of the contours to be the maximum shape size of the dots <code>max_dots_shape</code>.</li>
+
+<li>Print the dice's number.</li>
+```{python}
+# Create list with the shape of each contour 
+shape_contours = [cnt.shape[0] for cnt in contours]
+
+# Set 50 as the maximum size of the dots shape
+max_dots_shape = 50
+
+# Count dots in contours excluding bigger than dots size
+dots_contours = [cnt for cnt in contours if np.shape(cnt)[0] < max_dots_shape]
+
+# Shows all contours found 
+show_image_contour(binary, contours)
+
+# Print the dice's number
+print("Dice's dots number: {}. ".format(len(dots_contours)))
+```
+</div>
+
+<p class="">Great work! You calculated the dice's number in the image by classifing its contours.</p>
+
+### Advanced Operations, Detecting Faces and Features {.unnumbered}
+
+<p class="chapter__description">
+    After completing this chapter, you will have a deeper knowledge of image processing as you will be able to <strong>detect edges, corners, and even faces! </strong> You will learn how to detect not just front faces but also face profiles, cat, or dogs. You will apply your skills to more complex <strong>real-world applications.</strong>
+Learn to master several widely used image processing techniques with very few lines of code! 
+  </p>
+  
+#### Finding the edges with Canny {.unnumbered}
+
+
+
+##### Edges {.unnumbered}
+
+
+<div class>
+<p>In this exercise you will identify the shapes in a grapefruit image by detecting the edges, using the Canny algorithm.</p>
+<p></p>
+<center>
+    <img src="https://assets.datacamp.com/production/repositories/4470/datasets/c043d452dc01e6b6ce647e5f31afb20283879f22/toronjas.jpg" width="40%" alt="Grapefruits">
+</center>
+<center>Image preloaded as <code>grapefruit</code>.</center>
+<p>The <code>color</code> module has already been preloaded for you.</p>
+</div>
+<div class="exercise--instructions__content">
+
+
+
+<li>Import the canny edge detector from the feature module.</li>
+
+<li>Convert the image to grayscale, using the method from the color module used in previous chapters.</li>
+
+<li>Apply the canny edge detector to the <code>grapefruit</code> image.</li>
+```{python}
+# edited/added
+import matplotlib.pyplot as plt
+from skimage.io import imread
+from skimage.color import rgb2gray
+grapefruit_original = imread('archive/Image-Processing-in-Python/datasets/toronjas.jpg')
+def plot_comparison(img_original, img_filtered, img_title_filtered):
+    fig, (ax1, ax2) = plt.subplots(ncols=2, figsize=(10, 8), sharex=True, sharey=True)
+    ax1.imshow(img_original, cmap=plt.cm.gray)
+    ax1.set_title('Original')
+    ax1.axis('off')
+    ax2.imshow(img_filtered, cmap=plt.cm.gray)
+    ax2.set_title(img_title_filtered)
+    ax2.axis('off')
+    plt.show()
+    plt.close()
+    
+# Import the canny edge detector 
+from skimage.feature import canny
+
+# Convert image to grayscale
+grapefruit = rgb2gray(grapefruit_original)
+
+# Apply canny edge detector
+canny_edges = canny(grapefruit)
+
+# Show resulting image
+plot_comparison(grapefruit_original, canny_edges, "Edges with Canny") # edited/added
+```
+</div>
+
+<p class="">Great work! <br> You can see the shapes and details of the grapefruits of the original image being highlighted.</p>
+
+##### Less edgy {.unnumbered}
+
+
+<div class>
+<p>Let's now try to spot just the outer shape of the grapefruits, the circles. You can do this by applying a more intense Gaussian filter to first make the image smoother. This can be achieved by specifying a bigger sigma in the canny function.</p>
+<p>In this exercise, you'll experiment with sigma values of the <code>canny()</code> function.
+</p>
+<center>
+    <img src="https://assets.datacamp.com/production/repositories/4470/datasets/c043d452dc01e6b6ce647e5f31afb20283879f22/toronjas.jpg" width="40%" alt="Grapefruits">
+</center>
+<center>Image preloaded as <code>grapefruit</code>.</center>
+<p>The <code>show_image</code> has already been preloaded.</p>
+</div>
+<div class="exercise--instructions__content"><p>Apply the canny edge detector to the <code>grapefruit</code> image with a sigma of <code>1.8</code>.</p></div>
+
+
+<div class="exercise--instructions__content"><p>Apply the canny edge detector to the <code>grapefruit</code> image with a sigma of <code>2.2</code>.</p></div>
+
+
+<div class="exercise--instructions__content"><p>Show the resulting images.</p></div>
+```{python}
+# Apply canny edge detector with a sigma of 1.8
+edges_1_8 = canny(grapefruit, sigma=1.8)
+
+# Apply canny edge detector with a sigma of 2.2
+edges_2_2 = canny(grapefruit, sigma=2.2)
+
+# Show resulting images
+plot_comparison(edges_1_8, edges_2_2, "Sigma of 2.2") # edited/added
+```
+
+<p class="">Great work! <br> The bigger the sigma value, the less edges are detected because of the gaussian filter pre applied.</p>
+
+#### Right around the corner {.unnumbered}
+
+
+
+##### Perspective {.unnumbered}
+
+
+<div class>
+<p>In this exercise, you will detect the corners of a building using the Harris corner detector. The <code>threshold_rel</code> parameter will specify the minimum intensity of peaks.</p>
+<p></p>
+<center>
+    <img src="https://assets.datacamp.com/production/repositories/4470/datasets/4e1b6a178fd6d36488339a440959b4639cf54623/corners_building_top.jpg" width="40%" alt="Building from a bottom perspective">
+</center>
+<center>Image preloaded as <code>building_image</code>.</center>
+<p>The functions <code>show_image()</code> and <code>show_image_with_corners()</code> have already been preloaded for you. As well as the <code>color</code> module for converting images to grayscale.</p>
+</div>
+<div class="exercise--instructions__content">
+
+
+
+<li>Import the <code>corner_harris()</code> function from the feature module.</li>
+
+<li>Convert the <code>building_image</code> to grayscale.</li>
+
+<li>Apply the harris detector to obtain the measure response image with the possible corners.</li>
+
+<li>Find the peaks of the corners.</li>
+```{python}
+# edited/added
+import matplotlib.pyplot as plt
+from skimage.io import imread
+from skimage.color import rgb2gray
+def show_image(image, title='Image restored'):
+    plt.imshow(image)
+    plt.title(title)
+    plt.axis('off')
+    plt.show()
+    plt.close()
+def show_image_with_corners(image, coords, title="Corners detected"):
+    plt.imshow(image, interpolation='nearest', cmap='gray')
+    plt.title(title)
+    plt.plot(coords[:, 1], coords[:, 0], '+r', markersize=15)
+    plt.axis('off')
+    plt.show()
+    plt.close()
+building_image = imread('archive/Image-Processing-in-Python/datasets/corners_building_top.jpg')
+
+# Import the corner detector related functions and module
+from skimage.feature import corner_harris, corner_peaks
+
+# Convert image from RGB-3 to grayscale
+building_image_gray = rgb2gray(building_image)
+
+# Apply the detector  to measure the possible corners
+measure_image = corner_harris(building_image_gray)
+
+# Find the peaks of the corners
+coords = corner_peaks(measure_image, min_distance=20, threshold_rel=0.02)
+
+# Show original and resulting image with corners detected
+show_image(building_image, "Original")
+show_image_with_corners(building_image, coords)
+```
+</div>
+
+<p class="">Great! You made the Harris algorithm work fine.</p>
+
+##### Less corners {.unnumbered}
+
+
+<div class>
+<p>In this exercise, you will test what happens when you set the minimum distance between corner peaks to be a higher number. Remember you do this with the <code>min_distance</code> attribute parameter of the <code>corner_peaks()</code> function. The <code>threshold_rel</code> parameter will specify the minimum intensity of peaks.</p>
+<p></p>
+<center>
+    <img src="https://assets.datacamp.com/production/repositories/4470/datasets/4e1b6a178fd6d36488339a440959b4639cf54623/corners_building_top.jpg" width="40%" alt="Building from a bottom perspective">
+</center>
+<center>Image preloaded as <code>building_image</code>.</center>
+<p>The functions <code>show_image()</code>, <code>show_image_with_corners()</code> and required packages have already been preloaded for you. As well as all the previous code for finding the corners. The Harris measure response image obtained with <code>corner_harris()</code> is preloaded as <code>measure_image</code>.</p>
+</div>
+<div class="exercise--instructions__content"><p>Find the peaks of the corners with a minimum distance of 10 pixels.</p></div>
+
+<div class="exercise--instructions__content"><p>Find the peaks of the corners with a minimum distance of 60 pixels.</p></div>
+
+
+<div class="exercise--instructions__content"><p>Show original and resulting image with corners detected.</p></div>
+```{python}
+# Find the peaks with a min distance of 10 pixels
+coords_w_min_10 = corner_peaks(measure_image, min_distance=10, threshold_rel=0.02)
+print("With a min_distance set to 10, we detect a total", len(coords_w_min_10), "corners in the image.")
+
+# Find the peaks with a min distance of 60 pixels
+coords_w_min_60 = corner_peaks(measure_image, min_distance=60, threshold_rel=0.02)
+print("With a min_distance set to 60, we detect a total", len(coords_w_min_60), "corners in the image.")
+
+show_image_with_corners(building_image, coords_w_min_10, "Corners detected with 10 px of min_distance")
+show_image_with_corners(building_image, coords_w_min_60, "Corners detected with 60 px of min_distance")
+```
+
+<p class="">Well done! With a 60-pixel distance between the corners there are a lot less corners than with 10 pixels.</p>
+
+#### Face detection {.unnumbered}
+
+
+
+##### Is someone there? {.unnumbered}
+
+
+<div class>
+<p>In this exercise, you will check whether or not there is a person present in an image taken at night. </p>
+<p></p>
+<center>
+    <img src="https://assets.datacamp.com/production/repositories/4470/datasets/5a23aa7fc1c16805a714b3e25f1b1fea5e55e324/face_det3.jpg" width="30%" alt="LAndscape of starry night with a young man in the left bottom corner">
+</center>
+<center>Image preloaded as <code>night_image</code>.</center>
+<p>The <code>Cascade</code> of classifiers class from <code>feature</code> module has been already imported. The same is true for the <code>show_detected_face()</code> function, that is used to display the face marked in the image and crop so it can be shown separately.</p>
+</div>
+<div class="exercise--instructions__content">
+
+
+
+<li>Load the trained file from the <code>data</code> module.</li>
+
+<li>Initialize the detector cascade with the trained file.</li>
+
+<li>Detect the faces in the image, setting the minimum size of the searching window to 10 pixels and 200 pixels for the maximum.</li>
+```{python}
+# edited/added
+from skimage import data
+from skimage.feature import Cascade
+import matplotlib.patches as patches
+def crop_face(result, detected, title="Face detected"):
+  for d in detected:
+    print(d)
+    rostro= result[d['r']:d['r']+d['width'], d['c']:d['c']+d['height']]
+    plt.figure(figsize=(8, 6))
+    plt.imshow(rostro)    
+    plt.title(title)
+    plt.axis('off')
+    plt.show()
+    plt.close() # edited/added
+def show_detected_face(result, detected, title="Face image"):
+  plt.figure()
+  plt.imshow(result)
+  img_desc = plt.gca()
+  plt.set_cmap('gray')
+  plt.title(title)
+  plt.axis('off')
+  for patch in detected:
+    img_desc.add_patch(
+        patches.Rectangle(
+            (patch['c'], patch['r']),
+            patch['width'],
+            patch['height'],
+            fill=False,
+            color='r',
+            linewidth=2)
+    )
+  plt.show()
+  plt.close() # edited/added
+  crop_face(result, detected)
+night_image = imread('archive/Image-Processing-in-Python/datasets/face_det3.jpg')
+
+# Load the trained file from data
+trained_file = data.lbp_frontal_face_cascade_filename()
+
+# Initialize the detector cascade
+detector = Cascade(trained_file)
+
+# Detect faces with min and max size of searching window
+detected = detector.detect_multi_scale(img = night_image,
+                                       scale_factor=1.2,
+                                       step_ratio=1,
+                                       min_size=(10, 10),
+                                       max_size=(200, 200))
+
+# Show the detected faces
+show_detected_face(night_image, detected)
+```
+</div>
+
+<p class="">Great work! <br>The detector found the face even when it's very small and pixelated. Note though that you would ideally want a well-illuminated image for detecting faces.</p>
+
+##### Multiple faces {.unnumbered}
+
+
+<div class>
+<p>In this exercise, you will detect multiple faces in an image and show them individually. Think of this as a way to create a dataset of your own friends' faces!</p>
+<p></p>
+<center>
+    <img src="https://assets.datacamp.com/production/repositories/4470/datasets/de03c1148c09ffbeff54464d0846311cf1dd4da0/face_det_friends22.jpg" width="40%" alt="A group of 7 friends">
+</center>
+<center>Image preloaded as <code>friends_image</code>.</center>
+<p>The <code>Cascade</code> of classifiers class from <code>feature</code> module has already been imported, as well as the <code>show_detected_face()</code> function which is used to display the face marked in the image and crop it so it can be shown separately.</p>
+</div>
+<div class="exercise--instructions__content">
+
+
+
+<li>Load the trained file <code>.lbp_frontal_face_cascade_filename()</code>. from the <code>data</code> module.</li>
+
+<li>Initialize the detector cascade with trained file.</li>
+
+<li>Detect the faces in the image, setting a <code>scale_factor</code> of 1.2 and <code>step_ratio</code> of 1.</li>
+```{python}
+# edited/added
+friends_image = imread('archive/Image-Processing-in-Python/datasets/face_det_friends22.jpg')
+
+# Load the trained file from data
+trained_file = data.lbp_frontal_face_cascade_filename()
+
+# Initialize the detector cascade
+detector = Cascade(trained_file)
+
+# Detect faces with scale factor to 1.2 and step ratio to 1
+detected = detector.detect_multi_scale(img=friends_image,
+                                       scale_factor=1.2,
+                                       step_ratio=1,
+                                       min_size=(10, 10),
+                                       max_size=(200, 200))
+# Show the detected faces
+show_detected_face(friends_image, detected)
+```
+</div>
+
+<p class="">Wow! <br> The detector gave you a list with all the detected faces. <br> Can you think about what you can use this for?</p>
+
+##### Segmentation and face detection {.unnumbered}
+
+
+<div class>
+<p>Previously, you learned how to make processes more computationally efficient with unsupervised superpixel segmentation. In this exercise, you'll do just that!</p>
+<p>Using the <code>slic()</code> function for segmentation, pre-process the image before passing it to the face detector.
+</p>
+<center>
+    <img src="https://assets.datacamp.com/production/repositories/4470/datasets/dfd1efd8ce38ebd4b7a3d176c6d51c58df2609f6/face_det9.jpg" width="30%" alt="Young woman selfie">
+</center> 
+<center>Image preloaded as <code>profile_image</code>.</center>
+<p>The <code>Cascade</code> class, the <code>slic()</code> function from <code>segmentation</code> module, and the <code>show_detected_face()</code> function for visualization have already been imported. The detector is already initialized and ready to use as <code>detector</code>.</p>
+</div>
+<div class="exercise--instructions__content">
+
+
+
+<li>Apply superpixel segmentation and obtain the segments a.k.a. <em>labels</em> using <code>slic()</code>.</li>
+
+<li>Obtain the segmented image using <code>label2rgb()</code>, passing the <code>segments</code> and <code>profile_image</code>.</li>
+
+<li>Detect the faces, using the detector with multi scale method.</li>
+```{python}
+# edited/added
+from skimage.segmentation import slic
+from skimage.color import label2rgb
+profile_image = imread('archive/Image-Processing-in-Python/datasets/face_det9.jpg')
+
+# Obtain the segmentation with default 100 regions
+segments = slic(profile_image)
+
+# Obtain segmented image using label2rgb
+segmented_image = label2rgb(segments, profile_image, kind='avg')
+
+# Detect the faces with multi scale method
+detected = detector.detect_multi_scale(img=segmented_image, 
+                                       scale_factor=1.2, 
+                                       step_ratio=1, 
+                                       min_size=(10, 10), max_size=(1000, 1000))
+
+# Show the detected faces
+show_detected_face(segmented_image, detected)
+```
+</div>
+
+<p class="">Hurray! <br> You applied segementation to the image before passing it to the face detector and it's finding the face even when the image is relatively large. <br> This time you used 1000 by 1000 pixels as the maximum size of the searching window because the face in this case was indeed rather larger in comparison to the image.</p>
+
+#### Real-world applications {.unnumbered}
+
+
+
+##### Privacy protection {.unnumbered}
+
+
+<div class>
+<p>Let's look at a real-world application of what you have learned in the course. </p>
+<p>In this exercise, you will detect <strong>human</strong> faces in the image and for the sake of privacy, you will anonymize data by blurring people's faces in the image automatically. </p>
+<p></p>
+<center>
+    <img src="https://assets.datacamp.com/production/repositories/4470/datasets/f531207e00d10992a3a02f87c7e488baba043209/face_det25.jpg" width="80%" alt="Group band walking">
+</center> 
+<center>Image preloaded as <code>group_image</code>.</center>
+<p>You can use the gaussian filter for the blurriness.</p>
+<p>The face detector is ready to use as <code>detector</code> and all packages needed have been imported.</p>
+</div>
+<div class="exercise--instructions__content">
+
+
+
+<li>Detect the faces in the image using the <code>detector</code>, set the minimum size of the searching window to 10 by 10 pixels.</li>
+
+<li>Go through each detected face with a for loop.</li>
+
+<li>Apply a gaussian filter to detect and blur faces, using a sigma of 8.</li>
+```{python}
+# edited/added
+def getFaceRectangle(image, d):
+    ''' Extracts the face from the image using the coordinates of the detected image '''
+    # X and Y starting points of the face rectangle
+    x, y  = d['r'], d['c']
+    # The width and height of the face rectangle
+    width, height = d['r'] + d['width'],  d['c'] + d['height']
+    # Extract the detected face
+    face= image[ x:width, y:height]
+    return face
+def mergeBlurryFace(original, gaussian_image):
+     # X and Y starting points of the face rectangle
+    x, y  = d['r'], d['c']
+    # The width and height of the face rectangle
+    width, height = d['r'] + d['width'],  d['c'] + d['height']
+    original[ x:width, y:height] =  gaussian_image
+    return original
+from skimage.filters import gaussian
+group_image = imread('archive/Image-Processing-in-Python/datasets/face_det25.jpg')
+group_image_o = group_image.copy()
+
+# Detect the faces
+detected = detector.detect_multi_scale(img=group_image, 
+                                       scale_factor=1.2, step_ratio=1, 
+                                       min_size=(10, 10), max_size=(100, 100))
+                                       
+# For each detected face
+for d in detected:
+    # Obtain the face rectangle from detected coordinates
+    face = getFaceRectangle(group_image, d)
+    
+    # Apply gaussian filter to extracted face
+    blurred_face = gaussian(face, multichannel=True, sigma= 8, preserve_range=True)
+    
+    # Merge this blurry face to our final image and show it
+    resulting_image = mergeBlurryFace(group_image, blurred_face)
+    
+plot_comparison(group_image_o, resulting_image, 'Blurred faces')
+```
+</div>
+
+<p class="">Awesome work! <br>You solved this important issue by applying what you have learned in the course.</p>
+
+##### Help Sally restore her graduation photo {.unnumbered}
+
+
+<div class>
+<p>You are going to combine all the knowledge you acquired throughout the course to complete a final challenge: reconstructing a very damaged photo.</p>
+<p>Help Sally restore her favorite portrait which was damaged by noise, distortion, and missing information due to a breach in her laptop.
+</p>
+<center>
+    <img src="https://assets.datacamp.com/production/repositories/4470/datasets/bb7a75247648a4aa81159eec6f3c35be28629a35/sally_damaged_image.jpg" width="30%" alt="Sally damaged picture">
+</center> 
+<center>Sally's damaged portrait is already loaded as <code>damaged_image</code>.</center>
+<p>You will be fixing the problems of this image by:</p>
+
+<li>Rotating it to be uprightusing <code>rotate()</code>
+</li>
+
+<li>Applying noise reduction with <code>denoise_tv_chambolle()</code>
+</li>
+
+<li>Reconstructing the damaged parts with <code>inpaint_biharmonic()</code> from the <code>inpaint</code> module.</li>
+
+
+<p><code>show_image()</code> is already preloaded.</p>
+</div>
+<div class="exercise--instructions__content">
+
+
+
+<li>Import the necessary module to apply restoration on the image.</li>
+
+<li>Rotate the image by calling the function <code>rotate()</code>.</li>
+
+<li>Use the <em>chambolle</em> algorithm to remove the noise from the image.</li>
+
+<li>With the mask provided, use the <em>biharmonic</em> method to restore the missing parts of the image and obtain the final image.</li>
+```{python}
+# edited/added
+def get_mask(image):
+    # Create mask with three defect regions: left, middle, right respectively
+    mask_for_solution = np.zeros(image.shape[:-1])
+    mask_for_solution[450:475, 470:495] = 1
+    mask_for_solution[320:355, 140:175] = 1
+    mask_for_solution[130:155, 345:370] = 1
+    return mask_for_solution
+damaged_image = imread('archive/Image-Processing-in-Python/datasets/sally_damaged_image.jpg')
+
+# Import the necessary modules
+from skimage.restoration import denoise_tv_chambolle, inpaint
+from skimage.transform import rotate
+
+# Transform the image so it's not rotated
+upright_img = rotate(damaged_image, 20)
+
+# Remove noise from the image, using the chambolle method
+upright_img_without_noise = denoise_tv_chambolle(upright_img,weight=0.1, multichannel=True)
+
+# Reconstruct the image missing parts
+mask = get_mask(upright_img)
+result = inpaint.inpaint_biharmonic(upright_img_without_noise, mask, multichannel=True)
+
+show_image(result)
+```
+</div>
+
+<p class="">Great work! <br> You have learned a lot about image processing methods and algorithms: You performed rotation, removed annoying noise, and fixed the missing pixels of the damaged image. <br> Sally is happy and proud of you!</p>
+
+#### Amazing work! {.unnumbered}
+
+##### Amazing work! {.unnumbered}
+
+Amazing work! You have reached the final video. During the course you have learned many concepts and practiced a lot along the way, solving real-world problems.
+
+##### Recap: What you have learned {.unnumbered}
+
+From improving images' contrast to restoring damaged ones with very few lines! You also applied filters, rotated, flipped and resized images, segmented using supervised and unsupervised methods, and improved this segmentation using morphological operators! You created and reduced noise, detected edges, corners and faces, and mixed them up to solve difficult challenges! You will now be able to apply these techniques to many other use cases and keep extending your computer vision knowledge!
+
+##### What's next? {.unnumbered}
+
+So you have learned many useful methods that will let you process images with scikit-image or other image processing libraries. Like Open CV. We focused on many fundamental concepts so you can continue your progress from a practical experienced point. Some things that we didn't cover are tinting gray scale images, matching or approximation. Since it's a very large field, there are many more techniques for you to play around with!
+
+##### Congrats! {.unnumbered}
+
+Finally, thank you for completing the course! It's been a pleasure being with you along the way and I wish you the best of luck in your journey!
+

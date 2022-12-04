@@ -1,0 +1,1372 @@
+# Text Processing {.unnumbered}
+
+## Introduction {.unnumbered}
+
+<h3 class="course__description-title">Katharine Jarmul</h3>
+<p class="course__instructor-description display-none-mobile-course-page-experiment">
+    Katharine Jarmul runs a data analysis company called kjamistan that specializes in helping companies analyze data and training others on data analysis best practices, particularly with Python. She has been using Python for 8 years for a variety of data work -- including telling stories at major national newspapers, building large scale aggregation software, making decisions based on customer analytics, and marketing spend and advising new ventures on the competitive landscape.
+  </p>
+
+**Course Description**
+
+<p class="course__description">In this course, you'll learn natural language processing (NLP) basics, such as how to identify and separate words, how to extract topics in a text, and how to build your own fake news classifier. You'll also learn how to use basic libraries such as NLTK, alongside libraries which utilize deep learning to solve common NLP problems. This course will give you the foundation to process and parse text as you move forward in your Python learning.</p>
+
+### Regular expressions & word tokenization {.unnumbered}
+
+<p class="chapter__description">
+    This chapter will introduce some basic NLP concepts, such as word tokenization and regular expressions to help parse text. You'll also learn how to handle non-English text and more difficult tokenization you might find.
+  </p>
+
+#### Regular expressions {.unnumbered}
+
+
+
+##### Which pattern? {.unnumbered}
+
+
+<div class>
+<p>Which of the following Regex patterns results in the following text? </p>
+<pre><code>&gt;&gt;&gt; my_string = "Let's write RegEx!"
+&gt;&gt;&gt; re.findall(PATTERN, my_string)
+['Let', 's', 'write', 'RegEx']
+</code></pre>
+<p>In the IPython Shell, try replacing <code>PATTERN</code> with one of the below options and observe the resulting output. The <code>re</code> module has been pre-imported for you and <code>my_string</code> is available in your namespace.</p>
+</div>
+
+```{python}
+# edited/added
+import re
+from pprint import pprint
+my_string = "Let's write RegEx!"
+PATTERN = r"\w+"
+re.findall(PATTERN, my_string)
+```
+
+- [ ] PATTERN = r"\s+"
+- [x] PATTERN = r"\w+"
+- [ ] PATTERN = r"[a-z]"
+- [ ] PATTERN = r"\w"
+
+<p class="">Well done!</p>
+
+##### Practicing regular expressions: re.split() and re.findall() {.unnumbered}
+
+
+<div class>
+<p>Now you'll get a chance to write some regular expressions to match digits, strings and non-alphanumeric characters. Take a look at <code>my_string</code> first by printing it in the IPython Shell, to determine how you might best match the different steps.</p>
+<p>Note: It's important to prefix your regex patterns with <code>r</code> to ensure that your patterns are interpreted in the way you want them to. Else, you may encounter problems to do with escape sequences in strings. For example, <code>"\n"</code> in Python is used to indicate a new line, but if you use the <code>r</code> prefix, it will be interpreted as the raw string <code>"\n"</code> - that is, the character <code>"\"</code> followed by the character <code>"n"</code> - and not as a new line.</p>
+<p>The regular expression module <code>re</code> has already been imported for you.</p>
+<p><em>Remember from the video that the syntax for the regex library is to always to pass the <strong>pattern first</strong>, and then the <strong>string second</strong>.</em></p>
+</div>
+
+
+<li>Split <code>my_string</code> on each sentence ending. To do this:
+<li>Write a pattern called <code>sentence_endings</code> to match sentence endings (<code>.?!</code>).</li>
+<li>Use <code>re.split()</code> to split <code>my_string</code> on the pattern and print the result.</li>
+
+</li>
+<li>Find and print all capitalized words in <code>my_string</code> by writing a pattern called <code>capitalized_words</code> and using <code>re.findall()</code>. <li>Remember the <code>[a-z]</code> pattern shown in the video to match lowercase groups? Modify that pattern appropriately in order to match uppercase groups.</li>
+</li>
+<li>Write a pattern called <code>spaces</code> to match one or more spaces (<code>"\s+"</code>) and then use <code>re.split()</code> to split <code>my_string</code> on this pattern, keeping all punctuation intact. Print the result.</li>
+<li>Find all digits in <code>my_string</code> by writing a pattern called <code>digits</code> (<code>"\d+"</code>) and using <code>re.findall()</code>. Print the result.</li>
+```{python}
+# edited/added
+import re
+my_string = "Let's write RegEx!  Won't that be fun?  I sure think so.  Can you find 4 sentences?  Or perhaps, all 19 words?"
+
+# Write a pattern to match sentence endings: sentence_endings
+sentence_endings = r"[.?!]"
+
+# Split my_string on sentence endings and print the result
+print(re.split(sentence_endings, my_string))
+
+# Find all capitalized words in my_string and print the result
+capitalized_words = r"[A-Z]\w+"
+print(re.findall(capitalized_words, my_string))
+
+# Split my_string on spaces and print the result
+spaces = r"\s+"
+print(re.split(spaces, my_string))
+
+# Find all digits in my_string and print the result
+digits = r"\d+"
+print(re.findall(digits, my_string))
+```
+
+<p class="">Nicely done! Practice is the key to mastering RegEx.</p>
+
+#### Tokenization {.unnumbered}
+
+
+
+##### Word tokenization with NLTK {.unnumbered}
+
+
+<div class>
+<p>Here, you'll be using the first scene of Monty Python's Holy Grail, which has been pre-loaded as <code>scene_one</code>. Feel free to check it out in the IPython Shell!</p>
+<p>Your job in this exercise is to utilize <code>word_tokenize</code> and <code>sent_tokenize</code> from <code>nltk.tokenize</code> to tokenize both words and sentences from Python strings - in this case, the first scene of Monty Python's Holy Grail.</p>
+</div>
+
+
+<li>Import the <code>sent_tokenize</code> and <code>word_tokenize</code> functions from <code>nltk.tokenize</code>.</li>
+<li>Tokenize all the sentences in <code>scene_one</code> using the <code>sent_tokenize()</code> function.</li>
+<li>Tokenize the fourth sentence in <code>sentences</code>, which you can access as <code>sentences[3]</code>, using the <code>word_tokenize()</code> function. </li>
+<li>Find the unique tokens in the entire scene by using <code>word_tokenize()</code> on <code>scene_one</code> and then converting it into a set using <code>set()</code>.</li>
+<li>Print the unique tokens found. This has been done for you, so hit 'Submit Answer' to see the results!</li>
+```{python}
+# edited/added
+with open('archive/Introduction-to-Natural-Language-Processing-in-Python/datasets/grail.txt', 'r') as file:
+    holy_grail = file.read()
+    scene_one = re.split('SCENE 2:', holy_grail)[0]
+    
+# Import necessary modules
+import nltk
+from nltk.tokenize import sent_tokenize
+from nltk.tokenize import word_tokenize
+nltk.download('punkt')
+
+# Split scene_one into sentences: sentences
+sentences = sent_tokenize(scene_one)
+
+# Use word_tokenize to tokenize the fourth sentence: tokenized_sent
+tokenized_sent = word_tokenize(sentences[3])
+
+# Make a set of unique tokens in the entire scene: unique_tokens
+unique_tokens = set(word_tokenize(scene_one))
+
+# Print the unique tokens result
+print(unique_tokens)
+```
+
+<p class="">Excellent! Tokenization is fundamental to NLP, and you'll end up using it a lot in text mining and information retrieval projects.</p>
+
+##### More regex with re.search() {.unnumbered}
+
+
+<div class>
+<p>In this exercise, you'll utilize <code>re.search()</code> and <code>re.match()</code> to find specific tokens. Both <code>search</code> and <code>match</code> expect regex patterns, similar to those you defined in an earlier exercise. You'll apply these regex library methods to the same Monty Python text from the <code>nltk</code> corpora.</p>
+<p>You have both <code>scene_one</code> and <code>sentences</code> available from the last exercise; now you can use them with <code>re.search()</code> and <code>re.match()</code> to extract and match more text.</p>
+</div>
+
+
+<li>Use <code>re.search()</code> to search for the first occurrence of the word <code>"coconuts"</code> in <code>scene_one</code>. Store the result in <code>match</code>.</li>
+<li>Print the start and end indexes of <code>match</code> using its <code>.start()</code> and <code>.end()</code> methods, respectively.</li>
+
+
+
+<li>Write a regular expression called <code>pattern1</code> to find anything in square brackets.</li>
+<li>Use <code>re.search()</code> with the pattern to find the first text in <code>scene_one</code> in square brackets in the scene. Print the result.</li>
+
+
+
+<li>Create a pattern to match the script notation (e.g. <code>Character:</code>), assigning the result to <code>pattern2</code>. <em>Remember that you will want to match any words or spaces that precede the <code>:</code> (such as the space within <code>SOLDIER #1:</code>).</em></li>
+<li>Use <code>re.match()</code> with your new pattern to find and print the script notation in the <strong>fourth</strong> line. The tokenized sentences are available in your namespace as <code>sentences</code>.</li>
+```{python}
+# Search for the first occurrence of "coconuts" in scene_one: match
+match = re.search("coconuts", scene_one)
+
+# Print the start and end indexes of match
+print(match.start(), match.end())
+
+# Write a regular expression to search for anything in square brackets: pattern1
+pattern1 = r"\[.*\]"
+
+# Use re.search to find the first text in square brackets
+print(re.search(pattern1, scene_one))
+
+# Find the script notation at the beginning of the fourth sentence and print it
+pattern2 = r"[\w\s]+:"
+print(re.match(pattern2, sentences[3]))
+```
+
+<p class="">Fantastic work! Now that you're familiar with the basics of tokenization and regular expressions, it's time to learn about more advanced tokenization.</p>
+
+#### Advanced tokenization {.unnumbered}
+
+
+
+##### Choosing a tokenizer {.unnumbered}
+
+
+<div class>
+<p>Given the following string, which of the below patterns is the best tokenizer? If possible, you want to retain sentence punctuation as separate tokens, but have <code>'#1'</code> remain a single token.</p>
+<pre><code>my_string = "SOLDIER #1: Found them? In Mercea? The coconut's tropical!"
+</code></pre>
+<p>The string is available in your workspace as <code>my_string</code>, and the patterns have been pre-loaded as <code>pattern1</code>, <code>pattern2</code>, <code>pattern3</code>, and <code>pattern4</code>, respectively. </p>
+<p>Additionally, <code>regexp_tokenize</code> has been imported from <code>nltk.tokenize</code>. You can use <code>regexp_tokenize(string, pattern)</code> with <code>my_string</code> and one of the patterns as arguments to experiment for yourself and see which is the best tokenizer.</p>
+</div>
+
+```{python}
+# edited/added
+from pprint import pprint
+from nltk.tokenize import regexp_tokenize
+my_string = "SOLDIER #1: Found them? In Mercea? The coconut's tropical!"
+pattern1 = r'(\\w+|\\?|!)'
+pattern2 = r"(\w+|#\d|\?|!)"
+pattern3 = r'(#\\d\\w+\\?!)'
+pattern4 = r'\\s+'
+pprint(regexp_tokenize(my_string, pattern2))
+```
+
+- [ ] r"(\w+|\?|!)"
+- [x] r"(\w+|#\d|\?|!)"
+- [ ] r"(#\d\w+\?!)"
+- [ ] r"\s+"
+
+<p class="">Well done!</p>
+
+##### Regex with NLTK tokenization {.unnumbered}
+
+
+<div class>
+<p>Twitter is a frequently used source for NLP text and tasks. In this exercise, you'll build a more complex tokenizer for tweets with hashtags and mentions using <code>nltk</code> and regex. The <code>nltk.tokenize.TweetTokenizer</code> class gives you some extra methods and attributes for parsing tweets. </p>
+<p>Here, you're given some example tweets to parse using both <code>TweetTokenizer</code> and <code>regexp_tokenize</code> from the <code>nltk.tokenize</code> module. These example tweets have been pre-loaded into the variable <code>tweets</code>. Feel free to explore it in the IPython Shell!</p>
+<p><em>Unlike the syntax for the regex library, with <code>nltk_tokenize()</code> you pass the pattern as the <strong>second</strong> argument.</em></p>
+</div>
+
+
+<li>From <code>nltk.tokenize</code>, import <code>regexp_tokenize</code> and <code>TweetTokenizer</code>.</li>
+
+
+
+<li>A regex pattern to define hashtags called <code>pattern1</code> has been defined for you. Call <code>regexp_tokenize()</code> with this hashtag pattern on the <strong>first</strong> tweet in <code>tweets</code> and assign the result to <code>hashtags</code>.</li>
+<li>Print <code>hashtags</code> (this has already been done for you).</li>
+
+
+<div class="exercise--instructions__content"><ul>
+<li><p>Write a new pattern called <code>pattern2</code> to match mentions and hashtags. A mention is something like <code>@DataCamp</code>. </p></li>
+<li><p>Then, call <code>regexp_tokenize()</code> with your new hashtag pattern on the <strong>last</strong> tweet in <code>tweets</code> and assign the result to <code>mentions_hashtags</code>.</p>
+<ul>
+<li>You can access the last element of a list using <code>-1</code> as the index, for example, <code>tweets[-1]</code>.</li></ul></li>
+<li><p>Print <code>mentions_hashtags</code> (this has been done for you).</p></li>
+</ul></div>
+
+
+<div class="exercise--instructions__content"><ul>
+<li>Create an instance of <code>TweetTokenizer</code> called <code>tknzr</code> and use it inside a list comprehension to tokenize each tweet into a new list called <code>all_tokens</code>. <ul>
+<li>To do this, use the <code>.tokenize()</code> method of <code>tknzr</code>, with <code>t</code> as your iterator variable.</li></ul></li>
+<li>Print <code>all_tokens</code>.</li>
+</ul></div>
+```{python}
+# edited/added
+tweets = ['This is the best #nlp exercise ive found online! #python',
+ '#NLP is super fun! <3 #learning',
+ 'Thanks @datacamp :) #nlp #python']
+ 
+# Import the necessary modules
+from nltk.tokenize import regexp_tokenize
+from nltk.tokenize import TweetTokenizer
+
+# Import the necessary modules
+from nltk.tokenize import regexp_tokenize
+from nltk.tokenize import TweetTokenizer
+# Define a regex pattern to find hashtags: pattern1
+pattern1 = r"#\w+"
+# Use the pattern on the first tweet in the tweets list
+hashtags = regexp_tokenize(tweets[0], pattern1)
+print(hashtags)
+
+# Import the necessary modules
+from nltk.tokenize import regexp_tokenize
+from nltk.tokenize import TweetTokenizer
+# Write a pattern that matches both mentions (@) and hashtags
+pattern2 = r"([@#]\w+)"
+# Use the pattern on the last tweet in the tweets list
+mentions_hashtags = regexp_tokenize(tweets[-1], pattern2)
+print(mentions_hashtags)
+
+# Import the necessary modules
+from nltk.tokenize import regexp_tokenize
+from nltk.tokenize import TweetTokenizer
+# Use the TweetTokenizer to tokenize all tweets into one list
+tknzr = TweetTokenizer()
+all_tokens = [tknzr.tokenize(t) for t in tweets]
+print(all_tokens)
+```
+
+<p class="">Well done! Isn't NLP fun?</p>
+
+##### Non-ascii tokenization {.unnumbered}
+
+
+<div class>
+<p>In this exercise, you'll practice advanced tokenization by tokenizing some non-ascii based text. You'll be using German with emoji!</p>
+<p>Here, you have access to a string called <code>german_text</code>, which has been printed for you in the Shell. Notice the emoji and the German characters!</p>
+<p>The following modules have been pre-imported from <code>nltk.tokenize</code>: <code>regexp_tokenize</code> and <code>word_tokenize</code>. </p>
+<p>Unicode ranges for emoji are:</p>
+<p><code>('\U0001F300'-'\U0001F5FF')</code>, <code>('\U0001F600-\U0001F64F')</code>, <code>('\U0001F680-\U0001F6FF')</code>, and <code>('\u2600'-\u26FF-\u2700-\u27BF')</code>.</p>
+</div>
+
+
+<li>Tokenize all the words in <code>german_text</code> using <code>word_tokenize()</code>, and print the result.</li>
+<li>Tokenize only the capital words in <code>german_text</code>. 
+<li>First, write a pattern called <code>capital_words</code> to match only capital words. Make sure to check for the German <code>Ü</code>! To use this character in the exercise, copy and paste it from these instructions.</li>
+<li>Then, tokenize it using <code>regexp_tokenize()</code>. </li>
+
+</li>
+<li>Tokenize only the emoji in <code>german_text</code>. The pattern using the unicode ranges for emoji given in the assignment text has been written for you. Your job is to use <code>regexp_tokenize()</code> to tokenize the emoji.</li>
+```{python}
+# edited/added
+from nltk.tokenize import word_tokenize
+german_text = 'Wann gehen wir Pizza essen? 🍕 Und fährst du mit Über? 🚕'
+
+# Tokenize and print all words in german_text
+all_words = word_tokenize(german_text)
+print(all_words)
+
+# Tokenize and print only capital words
+capital_words = r"[A-ZÜ]\w+"
+print(regexp_tokenize(german_text, capital_words))
+
+# Tokenize and print only emoji
+emoji = "['\U0001F300-\U0001F5FF'|'\U0001F600-\U0001F64F'|'\U0001F680-\U0001F6FF'|'\u2600-\u26FF\u2700-\u27BF']"
+print(regexp_tokenize(german_text, emoji))
+```
+
+<p class="">Wonderful!</p>
+
+#### Charting word length {.unnumbered}
+
+
+
+##### Charting practice {.unnumbered}
+
+
+<div class>
+<p>Try using your new skills to find and chart the number of words per line in the script using <code>matplotlib</code>. The Holy Grail script is loaded for you, and you need to use regex to find the words per line. </p>
+<p>Using list comprehensions here will speed up your computations. For example: <code>my_lines = [tokenize(l) for l in lines]</code> will call a function <code>tokenize</code> on each line in the list <code>lines</code>. The new transformed list will be saved in the <code>my_lines</code> variable.</p>
+<p>You have access to the entire script in the variable <code>holy_grail</code>. Go for it!</p>
+</div>
+
+
+<li>Split the script <code>holy_grail</code> into lines using the newline (<code>'\n'</code>) character.</li>
+<li>Use <code>re.sub()</code> inside a list comprehension to replace the prompts such as <code>ARTHUR:</code> and <code>SOLDIER #1</code>. The pattern has been written for you. </li>
+<li>Use a list comprehension to tokenize <code>lines</code> with <code>regexp_tokenize()</code>, keeping <strong>only words</strong>. Recall that the pattern for words is <code>"\w+"</code>.</li>
+<li>Use a list comprehension to create a list of line lengths called <code>line_num_words</code>.<li>Use <code>t_line</code> as your iterator variable to iterate over <code>tokenized_lines</code>, and then <code>len()</code> function to compute line lengths.</li>
+</li>
+<li>Plot a histogram of <code>line_num_words</code> using <code>plt.hist()</code>. Don't forgot to use <code>plt.show()</code> as well to display the plot.</li>
+```{python}
+# edited/added
+import matplotlib.pyplot as plt
+
+# Split the script into lines: lines
+lines = holy_grail.split('\n')
+
+# Replace all script lines for speaker
+pattern = "[A-Z]{2,}(\s)?(#\d)?([A-Z]{2,})?:"
+lines = [re.sub(pattern, '', l) for l in lines]
+
+# Tokenize each line: tokenized_lines
+tokenized_lines = [regexp_tokenize(s, "\w+") for s in lines]
+
+# Make a frequency list of lengths: line_num_words
+line_num_words = [len(t_line) for t_line in tokenized_lines]
+
+# Plot a histogram of the line lengths
+plt.hist(line_num_words)
+
+# Show the plot
+plt.show()
+```
+
+<p class="">Well done, and congratulations on finishing Chapter 1! See you in Chapter 2, where you'll begin learning about topic identification!</p>
+
+### Topic identification {.unnumbered}
+
+<p class="chapter__description">
+    This chapter will introduce you to topic identification, which you can apply to any text you encounter in the wild. Using basic NLP models, you will identify topics from texts based on term frequencies. You'll experiment and compare two simple methods: bag-of-words and Tf-idf using NLTK, and a new library Gensim.
+  </p>
+
+#### Bag-of-words {.unnumbered}
+
+
+
+##### Bag-of-words picker {.unnumbered}
+
+
+<div class>
+<p>It's time for a quick check on your understanding of bag-of-words. Which of the below options, with basic <code>nltk</code> tokenization, map the bag-of-words for the following text?</p>
+<p>"The cat is in the box. The cat box."</p>
+</div>
+
+```{python}
+# edited/added
+my_string = "The cat is in the box. The cat box."
+
+from nltk.tokenize import word_tokenize
+from collections import Counter
+
+Counter(word_tokenize(my_string)).most_common(len(word_tokenize(my_string)))
+```
+
+- [ ] ('the', 3), ('box.', 2), ('cat', 2), ('is', 1)
+- [ ] ('The', 3), ('box', 2), ('cat', 2), ('is', 1), ('in', 1), ('.', 1)
+- [ ] ('the', 3), ('cat box', 1), ('cat', 1), ('box', 1), ('is', 1), ('in', 1)
+- [x] ('The', 2), ('box', 2), ('.', 2), ('cat', 2), ('is', 1), ('in', 1), ('the', 1)
+
+<p class="">Well done!</p>
+
+##### Building a Counter with bag-of-words {.unnumbered}
+
+
+<div class>
+<p>In this exercise, you'll build your first (in this course) bag-of-words counter using a Wikipedia article, which has been pre-loaded as <code>article</code>. Try doing the bag-of-words without looking at the full article text, and guessing what the topic is! If you'd like to peek at the title at the end, we've included it as <code>article_title</code>. Note that this article text has had very little preprocessing from the raw Wikipedia database entry.</p>
+<p><code>word_tokenize</code> has been imported for you.</p>
+</div>
+
+
+<li>Import <code>Counter</code> from <code>collections</code>.</li>
+<li>Use <code>word_tokenize()</code> to split the article into tokens.</li>
+<li>Use a list comprehension with <code>t</code> as the iterator variable to convert all the tokens into lowercase. The <code>.lower()</code> method converts text into lowercase.</li>
+<li>Create a bag-of-words counter called <code>bow_simple</code> by using <code>Counter()</code> with <code>lower_tokens</code> as the argument.</li>
+<li>Use the <code>.most_common()</code> method of <code>bow_simple</code> to print the 10 most common tokens.</li>
+```{python}
+# edited/added
+import re
+from nltk.tokenize import word_tokenize
+
+with open('archive/Introduction-to-Natural-Language-Processing-in-Python/datasets/wikipedia_articles/wiki_text_debugging.txt', 'r') as file:
+    article = file.read()
+    article_title = word_tokenize(article)[2]
+    
+# Import Counter
+from collections import Counter
+
+# Tokenize the article: tokens
+tokens = word_tokenize(article)
+
+# Convert the tokens into lowercase: lower_tokens
+lower_tokens = [t.lower() for t in tokens]
+
+# Create a Counter with the lowercase tokens: bow_simple
+bow_simple = Counter(lower_tokens)
+
+# Print the 10 most common tokens
+print(bow_simple.most_common(10))
+```
+
+<p class="">Great work!</p>
+
+#### Text preprocessing {.unnumbered}
+
+<div class=""><p>Which of the following are useful text preprocessing steps?</p></div>
+
+- [ ] Stems, spelling corrections, lowercase.
+- [x] Lemmatization, lowercasing, removing unwanted tokens.
+- [ ] Removing stop words, leaving in capital words.
+- [ ] Strip stop words, word endings and digits.
+
+<p class="dc-completion-pane__message dc-u-maxw-100pc">Well done!</p>
+
+##### Text preprocessing steps {.unnumbered}
+
+
+
+##### Text preprocessing practice {.unnumbered}
+
+
+<div class>
+<p>Now, it's your turn to apply the techniques you've learned to help clean up text for better NLP results. You'll need to remove stop words and non-alphabetic characters, lemmatize, and perform a new bag-of-words on your cleaned text.</p>
+<p>You start with the same tokens you created in the last exercise: <code>lower_tokens</code>. You also have the <code>Counter</code> class imported.</p>
+</div>
+
+
+<li>Import the <code>WordNetLemmatizer</code> class from <code>nltk.stem</code>. </li>
+<li>Create a list <code>alpha_only</code> that contains <strong>only</strong> alphabetical characters. You can use the <code>.isalpha()</code> method to check for this.</li>
+<li>Create another list called <code>no_stops</code> consisting of words from <code>alpha_only</code> that <strong>are not</strong> contained in <code>english_stops</code>.</li>
+<li>Initialize a <code>WordNetLemmatizer</code> object called <code>wordnet_lemmatizer</code> and use its <code>.lemmatize()</code> method on the tokens in <code>no_stops</code> to create a new list called <code>lemmatized</code>.</li>
+<li>Create a new <code>Counter</code> called <code>bow</code> with the lemmatized words.</li>
+<li>Lastly, print the 10 most common tokens.</li>
+```{python}
+# edited/added
+import nltk
+nltk.download('wordnet')
+
+with open('archive/Introduction-to-Natural-Language-Processing-in-Python/datasets/english_stopwords.txt', 'r') as file:
+    english_stops = file.read()
+    
+# Import WordNetLemmatizer
+from nltk.stem import WordNetLemmatizer
+nltk.download('omw-1.4')
+
+# Retain alphabetic words: alpha_only
+alpha_only = [t for t in lower_tokens if t.isalpha()]
+
+# Remove all stop words: no_stops
+no_stops = [t for t in alpha_only if t not in english_stops]
+
+# Instantiate the WordNetLemmatizer
+wordnet_lemmatizer = WordNetLemmatizer()
+
+# Lemmatize all tokens into a new list: lemmatized
+lemmatized = [wordnet_lemmatizer.lemmatize(t) for t in no_stops]
+
+# Create the bag-of-words: bow
+bow = Counter(lemmatized)
+
+# Print the 10 most common tokens
+print(bow.most_common(10))
+```
+
+<p class="">Great work!</p>
+
+#### Gensim {.unnumbered}
+
+
+
+##### What are word vectors? {.unnumbered}
+
+<div class=""><p>What are word vectors and how do they help with NLP?</p></div>
+
+- [ ] They are similar to bags of words, just with numbers. You use them to count how many tokens there are.
+- [ ] Word vectors are sparse arrays representing bigrams in the corpora. You can use them to compare two sets of words to one another.
+- [x] Word vectors are multi-dimensional mathematical representations of words created using deep learning methods. They give us insight into relationships between words in a corpus.
+- [ ] Word vectors don't actually help NLP and are just hype.
+
+<p class="dc-completion-pane__message dc-u-maxw-100pc">Well done! Keep working to use some word vectors yourself!</p>
+
+##### Creating and querying a corpus with gensim {.unnumbered}
+
+
+<div class>
+<p>It's time to apply the methods you learned in the previous video to create your first <code>gensim</code> dictionary and corpus! </p>
+<p>You'll use these data structures to investigate word trends and potential interesting topics in your document set. To get started, we have imported a few additional messy articles from Wikipedia, which were preprocessed by lowercasing all words, tokenizing them, and removing stop words and punctuation. These were then stored in a list of document tokens called <code>articles</code>. You'll need to do some light preprocessing and then generate the <code>gensim</code> dictionary and corpus.</p>
+</div>
+
+
+<li>Import <code>Dictionary</code> from <code>gensim.corpora.dictionary</code>.</li>
+<li>Initialize a <code>gensim</code> <code>Dictionary</code> with the tokens in <code>articles</code>.</li>
+<li>Obtain the id for <code>"computer"</code> from <code>dictionary</code>. To do this, use its <code>.token2id</code> method which returns ids from text, and then chain <code>.get()</code> which returns tokens from ids. Pass in <code>"computer"</code> as an argument to <code>.get()</code>.</li>
+<li>Use a list comprehension in which you iterate over <code>articles</code> to create a <code>gensim</code> <code>MmCorpus</code> from <code>dictionary</code>.<li>In the output expression, use the <code>.doc2bow()</code> method on <code>dictionary</code> with <code>article</code> as the argument.</li>
+</li>
+<li>Print the first 10 word ids with their frequency counts from the fifth document. This has been done for you, so hit 'Submit Answer' to see the results!</li>
+```{python}
+# edited/added
+import glob
+from nltk.tokenize import word_tokenize
+path_list = glob.glob('archive/Introduction-to-Natural-Language-Processing-in-Python/datasets//wikipedia_articles/*.txt')
+articles = []
+with open('archive/Introduction-to-Natural-Language-Processing-in-Python/datasets/english_stopwords.txt', 'r') as file:
+    english_stops = file.read()
+    
+for article_path in path_list:
+    article = []
+    with open(article_path, 'r') as file:
+        a = file.read()
+    tokens = word_tokenize(a)
+    lower_tokens = [t.lower() for t in tokens]
+    
+    # Retain alphabetic words: alpha_only
+    alpha_only = [t for t in lower_tokens if t.isalpha()]
+
+    # Remove all stop words: no_stops
+    no_stops = [t for t in alpha_only if t not in english_stops]
+    articles.append(no_stops)
+    
+# Import Dictionary
+from gensim.corpora.dictionary import Dictionary
+
+# Create a Dictionary from the articles: dictionary
+dictionary = Dictionary(articles)
+
+# Select the id for "computer": computer_id
+computer_id = dictionary.token2id.get("computer")
+
+# Use computer_id with the dictionary to print the word
+print(dictionary.get(computer_id))
+
+# Create a MmCorpus: corpus
+corpus = [dictionary.doc2bow(article) for article in articles]
+
+# Print the first 10 word ids with their frequency counts from the fifth document
+print(corpus[4][:10])
+```
+
+<p class="">Great work!</p>
+
+##### Gensim bag-of-words {.unnumbered}
+
+
+<div class>
+<p>Now, you'll use your new <code>gensim</code> corpus and dictionary to see the most common terms per document and across all documents. You can use your dictionary to look up the terms. Take a guess at what the topics are and feel free to explore more documents in the IPython Shell! </p>
+<p>You have access to the <code>dictionary</code> and <code>corpus</code> objects you created in the previous exercise, as well as the Python <code>defaultdict</code> and <code>itertools</code> to help with the creation of intermediate data structures for analysis. </p>
+
+<li><p><code>defaultdict</code> allows us to initialize a dictionary that will assign a default value to non-existent keys. By supplying the argument <code>int</code>, we are able to ensure that any non-existent keys are automatically assigned a default value of <code>0</code>. This makes it ideal for storing the counts of words in this exercise.</p></li>
+<li><p><code>itertools.chain.from_iterable()</code> allows us to iterate through a set of sequences as if they were one continuous sequence. Using this function, we can easily iterate through our <code>corpus</code> object (which is a list of lists).</p></li>
+
+<p>The fifth document from <code>corpus</code> is stored in the variable <code>doc</code>, which has been sorted in descending order.</p>
+</div>
+
+
+<li>
+<p>Using the first <code>for</code> loop, print the top five words of <code>bow_doc</code> using each <code>word_id</code> with the <code>dictionary</code> alongside <code>word_count</code>. </p>
+<li>The <code>word_id</code> can be accessed using the <code>.get()</code> method of <code>dictionary</code>.</li>
+</li>
+<li>
+<p>Create a <code>defaultdict</code> called <code>total_word_count</code> in which the keys are all the token ids (<code>word_id</code>) and the values are the sum of their occurrence across all documents (<code>word_count</code>). </p>
+<li>Remember to specify <code>int</code> when creating the <code>defaultdict</code>, and inside the second <code>for</code> loop, increment each <code>word_id</code> of <code>total_word_count</code> by <code>word_count</code>.</li>
+</li>
+
+
+
+<li>Create a sorted list from the <code>defaultdict</code>, using words across the entire corpus. To achieve this, use the <code>.items()</code> method on <code>total_word_count</code> inside <code>sorted()</code>.</li>
+<li>Similar to how you printed the top five words of <code>bow_doc</code> earlier, print the top five words of <code>sorted_word_count</code> as well as the number of occurrences of each word across all the documents.</li>
+```{python}
+# edited/added
+from collections import defaultdict
+import itertools
+
+# Save the fifth document: doc
+doc = corpus[4]
+
+# Sort the doc for frequency: bow_doc
+bow_doc = sorted(doc, key=lambda w: w[1], reverse=True)
+
+# Print the top 5 words of the document alongside the count
+for word_id, word_count in bow_doc[:5]:
+    print(dictionary.get(word_id), word_count)
+    
+# Create the defaultdict: total_word_count
+total_word_count = defaultdict(int)
+for word_id, word_count in itertools.chain.from_iterable(corpus):
+    total_word_count[word_id] += word_count
+    
+# Save the fifth document: doc
+doc = corpus[4]
+
+# Sort the doc for frequency: bow_doc
+bow_doc = sorted(doc, key=lambda w: w[1], reverse=True)
+
+# Print the top 5 words of the document alongside the count
+for word_id, word_count in bow_doc[:5]:
+    print(dictionary.get(word_id), word_count)
+    
+# Create the defaultdict: total_word_count
+total_word_count = defaultdict(int)
+for word_id, word_count in itertools.chain.from_iterable(corpus):
+    total_word_count[word_id] += word_count
+
+# Create a sorted list from the defaultdict: sorted_word_count 
+sorted_word_count = sorted(total_word_count.items(), key=lambda w: w[1], reverse=True) 
+
+# Print the top 5 words across all documents alongside the count
+for word_id, word_count in sorted_word_count[:5]:
+    print(dictionary.get(word_id), word_count)
+```
+
+<p class="">Good work!</p>
+
+#### Tf-idf {.unnumbered}
+
+
+
+##### What is tf-idf? {.unnumbered}
+
+
+<div class>
+<p>You want to calculate the tf-idf weight for the word <code>"computer"</code>, which appears five times in a document containing 100 words. Given a corpus containing 200 documents, with 20 documents mentioning the word <code>"computer"</code>, tf-idf can be calculated by multiplying term frequency with inverse document frequency.</p>
+<p>Term frequency = percentage share of the word compared to all tokens in the document
+Inverse document frequency = logarithm of the total number of documents in a corpora divided by the number of documents containing the term</p>
+<p>Which of the below options is correct?</p>
+</div>
+
+- [x] (5 / 100) * log(200 / 20)
+- [ ] (5 * 100) / log(200 * 20)
+- [ ] (20 / 5) * log(200 / 20)
+- [ ] (200 * 5) * log(400 / 5)
+
+<p class="">Great job!</p>
+
+##### Tf-idf with Wikipedia {.unnumbered}
+
+
+<div class>
+<p>Now it's your turn to determine new significant terms for your corpus by applying <code>gensim</code>'s tf-idf. You will again have access to the same corpus and dictionary objects you created in the previous exercises - <code>dictionary</code>, <code>corpus</code>, and <code>doc</code>. Will tf-idf make for more interesting results on the document level?</p>
+<p><code>TfidfModel</code> has been imported for you from <code>gensim.models.tfidfmodel</code>.</p>
+</div>
+
+
+<li>Initialize a new <code>TfidfModel</code> called <code>tfidf</code> using <code>corpus</code>.</li>
+<li>Use <code>doc</code> to calculate the weights. You can do this by passing <code>[doc]</code> to <code>tfidf</code>.</li>
+<li>Print the first five term ids with weights.</li>
+
+
+
+<li>Sort the term ids and weights in a new list from highest to lowest weight. <em>This has been done for you.</em> </li>
+<li>Using your pre-existing <code>dictionary</code>, print the top five weighted words (<code>term_id</code>) from <code>sorted_tfidf_weights</code>, along with their weighted score (<code>weight</code>).</li>
+```{python}
+# edited/added
+from gensim.models.tfidfmodel import TfidfModel
+
+# Create a new TfidfModel using the corpus: tfidf
+tfidf = TfidfModel(corpus)
+
+# Calculate the tfidf weights of doc: tfidf_weights
+tfidf_weights = tfidf[doc]
+
+# Print the first five weights
+print(tfidf_weights[:5])
+
+# Create a new TfidfModel using the corpus: tfidf
+tfidf = TfidfModel(corpus)
+
+# Calculate the tfidf weights of doc: tfidf_weights
+tfidf_weights = tfidf[doc]
+
+# Print the first five weights
+print(tfidf_weights[:5])
+
+# Sort the weights from highest to lowest: sorted_tfidf_weights
+sorted_tfidf_weights = sorted(tfidf_weights, key=lambda w: w[1], reverse=True)
+
+# Print the top 5 weighted words
+for term_id, weight in sorted_tfidf_weights[:5]:
+    print(dictionary.get(term_id), weight)
+```
+
+<p class="">Great work!</p>
+
+### Named-entity recognition {.unnumbered}
+
+<p class="chapter__description">
+    This chapter will introduce a slightly more advanced topic: named-entity recognition. You'll learn how to identify the who, what, and where of your texts using pre-trained models on English and non-English text. You'll also learn how to use some new libraries, polyglot and spaCy, to add to your NLP toolbox.
+  </p>
+
+#### Named Entity Recognition {.unnumbered}
+
+
+
+##### NER with NLTK {.unnumbered}
+
+
+<div class>
+<p>You're now going to have some fun with named-entity recognition! A scraped news article has been pre-loaded into your workspace. Your task is to use <code>nltk</code> to find the named entities in this article. </p>
+<p>What might the article be about, given the names you found?</p>
+<p>Along with <code>nltk</code>, <code>sent_tokenize</code> and <code>word_tokenize</code> from <code>nltk.tokenize</code> have been pre-imported.</p>
+</div>
+
+
+<li>Tokenize <code>article</code> into sentences.</li>
+<li>Tokenize each sentence in <code>sentences</code> into words using a list comprehension.</li>
+<li>Inside a list comprehension, tag each tokenized sentence into parts of speech using <code>nltk.pos_tag()</code>.</li>
+<li>Chunk each tagged sentence into named-entity chunks using <code>nltk.ne_chunk_sents()</code>. Along with <code>pos_sentences</code>, specify the additional keyword argument <code>binary=True</code>.</li>
+<li>Loop over each sentence and each chunk, and test whether it is a named-entity chunk by testing if it has the attribute <code>label</code>, and if the <code>chunk.label()</code> is equal to <code>"NE"</code>. If so, print that chunk.</li>
+```{python}
+# edited/added
+import nltk
+nltk.download('averaged_perceptron_tagger')
+nltk.download('maxent_ne_chunker')
+nltk.download('words')
+
+with open('archive/Introduction-to-Natural-Language-Processing-in-Python/datasets/news_articles/uber_apple.txt', 'r') as file:
+    article = file.read()
+    
+# Tokenize the article into sentences: sentences
+sentences = nltk.sent_tokenize(article)
+
+# Tokenize each sentence into words: token_sentences
+token_sentences = [nltk.word_tokenize(sent) for sent in sentences]
+
+# Tag each tokenized sentence into parts of speech: pos_sentences
+pos_sentences = [nltk.pos_tag(sent) for sent in token_sentences] 
+
+# Create the named entity chunks: chunked_sentences
+chunked_sentences = nltk.ne_chunk_sents(pos_sentences, binary=True)
+
+# Test for stems of the tree with 'NE' tags
+for sent in chunked_sentences:
+    for chunk in sent:
+        if hasattr(chunk, "label") and chunk.label() == "NE":
+            print(chunk)
+```
+
+<p class="">Great work!</p>
+
+##### Charting practice {.unnumbered}
+
+
+<div class>
+<p>In this exercise, you'll use some extracted named entities and their groupings from a series of newspaper articles to chart the diversity of named entity types in the articles.</p>
+<p>You'll use a <code>defaultdict</code> called <code>ner_categories</code>, with keys representing every named entity group type, and values to count the number of each different named entity type. You have a chunked sentence list called <code>chunked_sentences</code> similar to the last exercise, but this time with non-binary category names.</p>
+<p>You can use <code>hasattr()</code> to determine if each chunk has a <code>'label'</code> and then simply use the chunk's <code>.label()</code> method as the dictionary key.</p>
+</div>
+
+
+<li>Create a <code>defaultdict</code> called <code>ner_categories</code>, with the default type set to <code>int</code>.</li>
+
+
+<div class="exercise--instructions__content"><ul>
+<li>Fill up the dictionary with values for each of the keys. Remember, the keys will represent the <code>label()</code>.<ul>
+<li>In the outer <code>for</code> loop, iterate over <code>chunked_sentences</code>, using <code>sent</code> as your iterator variable.</li>
+<li>In the inner <code>for</code> loop, iterate over <code>sent</code>. If the condition is true, increment the value of each key by 1. </li>
+<li><em>Remember to use the chunk's <code>.label()</code> method as the key!</em></li></ul></li>
+<li>For the pie chart labels, create a list called <code>labels</code> from the keys of <code>ner_categories</code>, which can be accessed using <code>.keys()</code>.</li>
+</ul></div>
+
+
+<div class="exercise--instructions__content"><ul>
+<li>Use a list comprehension to create a list called <code>values</code>, using the <code>.get()</code> method on <code>ner_categories</code> to compute the values of each label <code>v</code>.</li>
+<li>Use <code>plt.pie()</code> to create a pie chart for each of the NER categories. Along with <code>values</code> and <code>labels=labels</code>, pass the extra keyword arguments <code>autopct='%1.1f%%'</code> and <code>startangle=140</code> to add percentages to the chart and rotate the initial start angle. <ul>
+<li><em>This step has been done for you.</em></li></ul></li>
+<li>Display your pie chart. Was the distribution what you expected?</li>
+</ul></div>
+```{python}
+# edited/added
+from collections import defaultdict
+import  matplotlib.pyplot as plt
+import nltk
+with open('archive/Introduction-to-Natural-Language-Processing-in-Python/datasets/news_articles/uber_apple.txt', 'r') as file:
+    article = file.read()
+sentences = nltk.sent_tokenize(article)
+token_sentences = [nltk.word_tokenize(sent) for sent in sentences]
+pos_sentences = [nltk.pos_tag(sent) for sent in token_sentences] 
+chunked_sentences = nltk.ne_chunk_sents(pos_sentences, binary=False)
+
+# Create the defaultdict: ner_categories
+ner_categories = defaultdict(int)
+
+# Create the defaultdict: ner_categories
+ner_categories = defaultdict(int)
+
+# Create the nested for loop
+for sent in chunked_sentences:
+    for chunk in sent:
+        if hasattr(chunk, 'label'):
+            ner_categories[chunk.label()] += 1
+            
+# Create a list from the dictionary keys for the chart labels: labels
+labels = list(ner_categories.keys())
+
+# Create a list of the values: values
+values = [ner_categories.get(v) for v in labels]
+
+# Create the pie chart
+plt.pie(values, labels=labels, autopct='%1.1f%%', startangle=140)
+
+# Display the chart
+plt.show()
+```
+
+<p class="">Well done!</p>
+
+##### Stanford library with NLTK {.unnumbered}
+
+<div class=""><p>When using the Stanford library with NLTK, what is needed to get started?</p></div>
+
+- [ ] A normal installation of NLTK.
+- [ ] An installation of the Stanford Java Library.
+- [ ] Both NLTK and an installation of the Stanford Java Library.
+- [x] NLTK, the Stanford Java Libraries and some environment variables to help with integration.
+
+<p class="dc-completion-pane__message dc-u-maxw-100pc">Well done!</p>
+
+#### SpaCy {.unnumbered}
+
+
+
+##### Comparing NLTK with spaCy NER {.unnumbered}
+
+
+<div class>
+<p>Using the same text you used in the first exercise of this chapter, you'll now see the results using spaCy's NER annotator. How will they compare?</p>
+<p>The article has been pre-loaded as <code>article</code>. To minimize execution times, you'll be asked to specify the keyword argument <code>disable=['tagger', 'parser', 'matcher']</code> when loading the spaCy model, because you only care about the <code>entity</code> in this exercise.</p>
+</div>
+
+
+<li>Import <code>spacy</code>.</li>
+<li>Load the <code>'en_core_web_sm'</code> model using <code>spacy.load()</code>. Specify the additional keyword arguments <code>disable=['tagger', 'parser', 'matcher']</code>.</li>
+<li>Create a <code>spacy</code> document object by passing <code>article</code> into <code>nlp()</code>.</li>
+<li>Using <code>ent</code> as your iterator variable, iterate over the entities of <code>doc</code> and print out the labels (<code>ent.label_</code>) and text (<code>ent.text</code>).</li>
+```{python}
+# Import spacy
+import spacy
+
+# Instantiate the English model: nlp
+nlp = spacy.load('en_core_web_sm', disable=['tagger', 'parser', 'matcher'])
+
+# Create a new document: doc
+doc = nlp(article)
+
+# Print all of the found entities and their labels
+for ent in doc.ents:
+    print(ent.label_, ent.text)
+```
+
+<p class="">Great work!</p>
+
+##### spaCy NER Categories {.unnumbered}
+
+
+<div class><p>Which are the <em>extra</em> categories that <code>spacy</code> uses compared to <code>nltk</code> in its named-entity recognition?</p></div>
+
+- [ ] GPE, PERSON, MONEY
+- [ ] ORGANIZATION, WORKOFART
+- [x] NORP, CARDINAL, MONEY, WORKOFART, LANGUAGE, EVENT
+- [ ] EVENT_LOCATION, FIGURE
+
+<p class="">Well done!</p>
+
+#### Multilingual with polyglot {.unnumbered}
+
+
+
+##### French NER with polyglot I {.unnumbered}
+
+
+<div class>
+<p>In this exercise and the next, you'll use the <code>polyglot</code> library to identify French entities. The library functions slightly differently than <code>spacy</code>, so you'll use a few of the new things you learned in the last video to display the named entity text and category.</p>
+<p>You have access to the full article string in <code>article</code>. Additionally, the <code>Text</code> class of <code>polyglot</code> has been imported from <code>polyglot.text</code>.</p>
+</div>
+
+
+<li>Using the article string in <code>article</code>, create a new <code>Text</code> object called <code>txt</code>.</li>
+<li>Iterate over <code>txt.entities</code> and print each entity, <code>ent</code>.</li>
+<li>Print the <code>type()</code> of <code>ent</code>.</li>
+```{python}
+# edited/added
+from polyglot.text import Text
+with open('archive/Introduction-to-Natural-Language-Processing-in-Python/datasets/news_articles/french.txt', 'r') as file:
+    article = file.read()
+    
+# Create a new text object using Polyglot's Text class: txt
+txt = Text(article)
+
+# Print each of the entities found
+for ent in txt.entities:
+    print(ent)
+    
+# Print the type of ent
+print(type(ent))
+```
+
+<p class="">Great work!</p>
+
+##### French NER with polyglot II {.unnumbered}
+
+
+<div class>
+<p>Here, you'll complete the work you began in the previous exercise.</p>
+<p>Your task is to use a list comprehension to create a list of tuples, in which the first element is the entity tag, and the second element is the full string of the entity text.</p>
+</div>
+
+
+<li>Use a list comprehension to create a list of tuples called <code>entities</code>. </li>
+<li>The output expression of your list comprehension should be a tuple.
+<li>The first element of each tuple is the entity tag, which you can access using its <code>.tag</code> attribute.</li>
+<li>The second element is the full string of the entity text, which you can access using <code>.join(ent)</code>.</li>
+
+</li>
+<li>Your iterator variable should be <code>ent</code>, and you should iterate over all of the entities of the <code>polyglot</code> <code>Text</code> object, <code>txt</code>.</li>
+<li>Print <code>entities</code> to see what you've created.</li>
+```{python}
+# Create the list of tuples: entities
+entities = [(ent.tag, ' '.join(ent)) for ent in txt.entities]
+
+# Print entities
+print(entities)
+```
+
+<p class="">Great work! Let's see how <code>polyglot</code> can handle Spanish now!</p>
+
+##### Spanish NER with polyglot {.unnumbered}
+
+
+<div class>
+<p>You'll continue your exploration of <code>polyglot</code> now with some Spanish annotation. This article is not written by a newspaper, so it is your first example of a more blog-like text. How do you think that might compare when finding entities?</p>
+<p>The <code>Text</code> object has been created as <code>txt</code>, and each entity has been printed, as you can see in the IPython Shell. </p>
+<p>Your specific task is to determine how many of the entities contain the words <code>"Márquez"</code> or <code>"Gabo"</code> - these refer to the same person in different ways!</p>
+</div>
+
+
+<li>Iterate over all of the entities of <code>txt</code>, using <code>ent</code> as your iterator variable.</li>
+<li>Check whether the entity contains <code>"Márquez"</code> or <code>"Gabo"</code>. If it does, increment <code>count</code>. <em>Don't forget to include the accented <code>á</code> in <code>"Márquez"</code>!</em>
+</li>
+<li>Hit 'Submit Answer' to see what percentage of entities refer to Gabriel García Márquez (aka Gabo).</li>
+```{python}
+# edited/added
+with open('archive/Introduction-to-Natural-Language-Processing-in-Python/datasets/news_articles/spanish.txt', 'r') as file:
+    article = file.read()
+txt = Text(article)
+
+# Initialize the count variable: count
+count = 0
+
+# Iterate over all the entities
+for ent in txt.entities:
+    # Check whether the entity contains 'Márquez' or 'Gabo'
+    if "Márquez" in ent or "Gabo" in ent:
+        # Increment count
+        count += 1
+
+# Print count
+print(count)
+
+# Calculate the percentage of entities that refer to "Gabo": percentage
+percentage = count / len(txt.entities)
+print(percentage)
+```
+
+<p class="">Great work!</p>
+
+### Fake news classifier {.unnumbered}
+
+<p class="chapter__description">
+    You'll apply the basics of what you've learned along with some supervised machine learning to build a "fake news" detector. You'll begin by learning the basics of supervised machine learning, and then move forward by choosing a few important features and testing ideas to identify and classify fake news articles.
+  </p>
+
+#### Classifying fake news {.unnumbered}
+
+
+
+##### Which possible features? {.unnumbered}
+
+<div class=""><p>Which of the following are possible features for a text classification problem?</p></div>
+
+- [ ] Number of words in a document.
+- [ ] Specific named entities.
+- [ ] Language.
+- [x] All of the above.
+
+<p class="dc-completion-pane__message dc-u-maxw-100pc">Well done!</p>
+
+##### Training and testing {.unnumbered}
+
+<div class=""><p>What datasets are needed for supervised learning?</p></div>
+
+- [ ] Training data.
+- [ ] Testing data.
+- [x] Both training and testing data.
+- [ ] A label or outcome.
+
+<p class="dc-completion-pane__message dc-u-maxw-100pc">Indeed! Great job.</p>
+
+#### Word count vectors {.unnumbered}
+
+
+
+##### CountVectorizer for text classification {.unnumbered}
+
+
+<div class>
+<p>It's time to begin building your text classifier! The <a href="https://s3.amazonaws.com/assets.datacamp.com/production/course_3629/fake_or_real_news.csv">data</a> has been loaded into a DataFrame called <code>df</code>. Explore it in the IPython Shell to investigate what columns you can use. The <code>.head()</code> method is particularly informative.</p>
+<p>In this exercise, you'll use <code>pandas</code> alongside scikit-learn to create a sparse text vectorizer you can use to train and test a simple supervised model. To begin, you'll set up a <code>CountVectorizer</code> and investigate some of its features.</p>
+</div>
+
+
+
+<li>Import <code>CountVectorizer</code> from <code>sklearn.feature_extraction.text</code> and <code>train_test_split</code> from <code>sklearn.model_selection</code>.</li>
+<li>Create a Series <code>y</code> to use for the labels by assigning the <code>.label</code> attribute of <code>df</code> to <code>y</code>.</li>
+<li>Using <code>df["text"]</code> (features) and <code>y</code> (labels), create training and test sets using <code>train_test_split()</code>. Use a <code>test_size</code> of <code>0.33</code> and a <code>random_state</code> of <code>53</code>.</li>
+<li>Create a <code>CountVectorizer</code> object called <code>count_vectorizer</code>. Ensure you specify the keyword argument <code>stop_words="english"</code> so that stop words are removed.</li>
+<li>Fit and transform the training data <code>X_train</code> using the <code>.fit_transform()</code> method of your <code>CountVectorizer</code> object. Do the same with the test data <code>X_test</code>, except using the <code>.transform()</code> method.</li>
+<li>Print the first 10 features of the <code>count_vectorizer</code> using its <code>.get_feature_names()</code> method.</li>
+```{python}
+# edited/added
+import pandas as pd
+df = pd.read_csv('archive/Introduction-to-Natural-Language-Processing-in-Python/datasets/fake_or_real_news.csv')
+
+# Import the necessary modules
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.model_selection import train_test_split
+
+# Print the head of df
+print(df.head())
+
+# Create a series to store the labels: y
+y = df.label
+
+# Create training and test sets
+X_train, X_test, y_train, y_test = train_test_split(df['text'], y, test_size=0.33, random_state=53)
+
+# Initialize a CountVectorizer object: count_vectorizer
+count_vectorizer = CountVectorizer(stop_words='english')
+
+# Transform the training data using only the 'text' column values: count_train 
+count_train = count_vectorizer.fit_transform(X_train)
+
+# Transform the test data using only the 'text' column values: count_test 
+count_test = count_vectorizer.transform(X_test)
+
+# Print the first 10 features of the count_vectorizer
+print(count_vectorizer.get_feature_names()[:10])
+```
+
+<p class="">Great work!</p>
+
+##### TfidfVectorizer for text classification {.unnumbered}
+
+
+<div class>
+<p>Similar to the sparse <code>CountVectorizer</code> created in the previous exercise, you'll work on creating tf-idf vectors for your documents. You'll set up a <code>TfidfVectorizer</code> and investigate some of its features.</p>
+<p>In this exercise, you'll use <code>pandas</code> and <code>sklearn</code> along with the same <code>X_train</code>, <code>y_train</code> and <code>X_test</code>, <code>y_test</code> DataFrames and Series you created in the last exercise.</p>
+</div>
+
+
+<li>Import <code>TfidfVectorizer</code> from <code>sklearn.feature_extraction.text</code>.</li>
+<li>Create a <code>TfidfVectorizer</code> object called <code>tfidf_vectorizer</code>. When doing so, specify the keyword arguments <code>stop_words="english"</code> and <code>max_df=0.7</code>.</li>
+<li>Fit and transform the training data. </li>
+<li>Transform the test data.</li>
+<li>Print the first 10 features of <code>tfidf_vectorizer</code>.</li>
+<li>Print the first 5 vectors of the tfidf training data using slicing on the <code>.A</code> (or array) <strong><em>attribute</em></strong> of <code>tfidf_train</code>.</li>
+```{python}
+# Import TfidfVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+# Initialize a TfidfVectorizer object: tfidf_vectorizer
+tfidf_vectorizer = TfidfVectorizer(stop_words='english', max_df=0.7)
+
+# Transform the training data: tfidf_train 
+tfidf_train = tfidf_vectorizer.fit_transform(X_train)
+
+# Transform the test data: tfidf_test 
+tfidf_test = tfidf_vectorizer.transform(X_test)
+
+# Print the first 10 features
+print(tfidf_vectorizer.get_feature_names()[:10])
+
+# Print the first 5 vectors of the tfidf training data
+print(tfidf_train.A[:5])
+```
+
+<p class="">Great work!</p>
+
+##### Inspecting the vectors {.unnumbered}
+
+
+<div class>
+<p>To get a better idea of how the vectors work, you'll investigate them by converting them into <code>pandas</code> DataFrames.</p>
+<p>Here, you'll use the same data structures you created in the previous two exercises (<code>count_train</code>, <code>count_vectorizer</code>, <code>tfidf_train</code>, <code>tfidf_vectorizer</code>) as well as <code>pandas</code>, which is imported as <code>pd</code>.</p>
+</div>
+
+
+<li>Create the DataFrames <code>count_df</code> and <code>tfidf_df</code> by using <code>pd.DataFrame()</code> and specifying the values as the first argument and the columns (or features) as the second argument.
+<li>The values can be accessed by using the <code>.A</code> attribute of, respectively, <code>count_train</code> and <code>tfidf_train</code>.</li>
+<li>The columns can be accessed using the <code>.get_feature_names()</code> methods of <code>count_vectorizer</code> and <code>tfidf_vectorizer</code>.</li>
+
+</li>
+<li>Print the head of each DataFrame to investigate their structure. <em>This has been done for you.</em>
+</li>
+<li>Test if the column names are the same for each DataFrame by creating a new object called <code>difference</code> to see the difference between the columns that <code>count_df</code> has from <code>tfidf_df</code>. Columns can be accessed using the <code>.columns</code> attribute of a DataFrame. Subtract the set of <code>tfidf_df.columns</code> from the set of <code>count_df.columns</code>.</li>
+<li>Test if the two DataFrames are equivalent by using the <code>.equals()</code> method on <code>count_df</code> with <code>tfidf_df</code> as the argument.</li>
+```{python}
+# Create the CountVectorizer DataFrame: count_df
+count_df = pd.DataFrame(count_train.A, columns=count_vectorizer.get_feature_names())
+
+# Create the TfidfVectorizer DataFrame: tfidf_df
+tfidf_df = pd.DataFrame(tfidf_train.A, columns=tfidf_vectorizer.get_feature_names())
+
+# Print the head of count_df
+print(count_df.head())
+
+# Print the head of tfidf_df
+print(tfidf_df.head())
+
+# Calculate the difference in columns: difference
+difference = set(count_df.columns) - set(tfidf_df.columns)
+print(difference)
+
+# Check whether the DataFrames are equal
+print(count_df.equals(tfidf_df))
+```
+
+<p class="">Great work!</p>
+
+#### Classification models {.unnumbered}
+
+
+
+##### Text classification models {.unnumbered}
+
+<div class=""><p>Which of the below is the most reasonable model to use when training a new supervised model using text vector data?</p></div>
+
+- [ ] Random Forests
+- [ ] Naive Bayes
+- [ ] Linear Regression
+- [ ] Deep Learning
+
+<p class="dc-completion-pane__message dc-u-maxw-100pc">Great job!</p>
+
+##### Training and testing the &quot;fake news&quot; model with CountVectorizer {.unnumbered}
+
+
+<div class>
+<p>Now it's your turn to train the "fake news" model using the features you identified and extracted. In this first exercise you'll train and test a Naive Bayes model using the <code>CountVectorizer</code> data.</p>
+<p>The training and test sets have been created, and <code>count_vectorizer</code>, <code>count_train</code>, and <code>count_test</code> have been computed.</p>
+</div>
+
+
+<li>Import the <code>metrics</code> module from <code>sklearn</code> and <code>MultinomialNB</code> from <code>sklearn.naive_bayes</code>.</li>
+<li>Instantiate a <code>MultinomialNB</code> classifier called <code>nb_classifier</code>.</li>
+<li>Fit the classifier to the training data.</li>
+<li>Compute the predicted tags for the test data.</li>
+<li>Calculate and print the accuracy score of the classifier.</li>
+<li>Compute the confusion matrix. To make it easier to read, specify the keyword argument <code>labels=['FAKE', 'REAL']</code>.</li>
+```{python}
+# Import the necessary modules
+from sklearn.naive_bayes import MultinomialNB
+from sklearn import metrics
+
+# Instantiate a Multinomial Naive Bayes classifier: nb_classifier
+nb_classifier = MultinomialNB()
+
+# Fit the classifier to the training data
+nb_classifier.fit(count_train, y_train)
+
+# Create the predicted tags: pred
+pred = nb_classifier.predict(count_test)
+
+# Calculate the accuracy score: score
+score = metrics.accuracy_score(y_test, pred)
+print(score)
+
+# Calculate the confusion matrix: cm
+cm = metrics.confusion_matrix(y_test, pred, labels=['FAKE', 'REAL'])
+print(cm)
+```
+
+<p class="">Great work!</p>
+
+##### Training and testing the &quot;fake news&quot; model with TfidfVectorizer {.unnumbered}
+
+
+<div class>
+<p>Now that you have evaluated the model using the <code>CountVectorizer</code>, you'll do the same using the <code>TfidfVectorizer</code> with a Naive Bayes model.</p>
+<p>The training and test sets have been created, and <code>tfidf_vectorizer</code>, <code>tfidf_train</code>, and <code>tfidf_test</code> have been computed. Additionally, <code>MultinomialNB</code> and <code>metrics</code> have been imported from, respectively, <code>sklearn.naive_bayes</code> and <code>sklearn</code>.</p>
+</div>
+
+
+<li>Instantiate a <code>MultinomialNB</code> classifier called <code>nb_classifier</code>.</li>
+<li>Fit the classifier to the training data.</li>
+<li>Compute the predicted tags for the test data.</li>
+<li>Calculate and print the accuracy score of the classifier.</li>
+<li>Compute the confusion matrix. As in the previous exercise, specify the keyword argument <code>labels=['FAKE', 'REAL']</code> so that the resulting confusion matrix is easier to read.</li>
+```{python}
+# Create a Multinomial Naive Bayes classifier: nb_classifier
+nb_classifier = MultinomialNB()
+
+# Fit the classifier to the training data
+nb_classifier.fit(tfidf_train, y_train)
+
+# Create the predicted tags: pred
+pred = nb_classifier.predict(tfidf_test)
+
+# Calculate the accuracy score: score
+score = metrics.accuracy_score(y_test, pred)
+print(score)
+
+# Calculate the confusion matrix: cm
+cm = metrics.confusion_matrix(y_test, pred, labels=['FAKE', 'REAL'])
+print(cm)
+```
+
+<p class="">Great work!</p>
+
+#### Complex problems {.unnumbered}
+
+
+
+##### Improving the model {.unnumbered}
+
+<div class=""><p>What are possible next steps you could take to improve the model?</p></div>
+
+- [ ] Tweaking alpha levels.
+- [ ] Trying a new classification model.
+- [ ] Training on a larger dataset.
+- [ ] Improving text preprocessing.
+- [x] All of the above.
+
+<p class="dc-completion-pane__message dc-u-maxw-100pc">Indeed!</p>
+
+##### Improving your model {.unnumbered}
+
+
+<div class>
+<p>Your job in this exercise is to test a few different alpha levels using the <code>Tfidf</code> vectors to determine if there is a better performing combination.</p>
+<p>The training and test sets have been created, and <code>tfidf_vectorizer</code>, <code>tfidf_train</code>, and <code>tfidf_test</code> have been computed.</p>
+</div>
+
+
+
+<li>Create a list of alphas to try using <code>np.arange()</code>. Values should range from <code>0</code> to <code>1</code> with steps of <code>0.1</code>.</li>
+<li>Create a function <code>train_and_predict()</code> that takes in one argument: <code>alpha</code>. The function should:
+<li>Instantiate a <code>MultinomialNB</code> classifier with <code>alpha=alpha</code>.</li>
+<li>Fit it to the training data.</li>
+<li>Compute predictions on the test data.</li>
+<li>Compute and return the accuracy score.</li>
+
+</li>
+<li>Using a <code>for</code> loop, print the <code>alpha</code>, <code>score</code> and a newline in between. Use your <code>train_and_predict()</code> function to compute the <code>score</code>. Does the score change along with the alpha? What is the best alpha?</li>
+```{python}
+# edited/added
+import numpy as np
+
+# Create the list of alphas: alphas
+alphas = np.arange(0, 1, .1)
+
+# Define train_and_predict()
+def train_and_predict(alpha):
+    # Instantiate the classifier: nb_classifier
+    nb_classifier = MultinomialNB(alpha=alpha)
+    # Fit to the training data
+    nb_classifier.fit(tfidf_train, y_train)
+    # Predict the labels: pred
+    pred = nb_classifier.predict(tfidf_test)
+    # Compute accuracy: score
+    score = metrics.accuracy_score(y_test, pred)
+    return score
+
+# Iterate over the alphas and print the corresponding score
+for alpha in alphas:
+    print('Alpha: ', alpha)
+    print('Score: ', train_and_predict(alpha))
+    print()
+```
+
+<p class="">Modelistic!</p>
+
+##### Inspecting your model {.unnumbered}
+
+
+<div class>
+<p>Now that you have built a "fake news" classifier, you'll investigate what it has learned. You can map the important vector weights back to actual words using some simple inspection techniques.</p>
+<p>You have your well performing tfidf Naive Bayes classifier available as <code>nb_classifier</code>, and the vectors as <code>tfidf_vectorizer</code>.</p>
+</div>
+
+
+
+<li>Save the class labels as <code>class_labels</code> by accessing the <code>.classes_</code> attribute of <code>nb_classifier</code>.</li>
+<li>Extract the features using the <code>.get_feature_names()</code> method of <code>tfidf_vectorizer</code>.</li>
+<li>Create a zipped array of the classifier coefficients with the feature names and sort them by the coefficients. To do this, first use <code>zip()</code> with the arguments <code>nb_classifier.coef_[0]</code> and <code>feature_names</code>. Then, use <code>sorted()</code> on this.</li>
+<li>Print the <em>top</em> 20 weighted features for the first label of <code>class_labels</code> and print the bottom 20 weighted features for the second label of <code>class_labels</code>. <em>This has been done for you.</em>
+</li>
+```{python}
+# edited/added
+from sklearn.naive_bayes import MultinomialNB
+import pandas as pd
+df = pd.read_csv('archive/Introduction-to-Natural-Language-Processing-in-Python/datasets/fake_or_real_news.csv')
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(df['text'], df.label, test_size=0.33, random_state=53)
+from sklearn.feature_extraction.text import TfidfVectorizer
+tfidf_vectorizer = TfidfVectorizer(stop_words='english', max_df=0.7)
+tfidf_train = tfidf_vectorizer.fit_transform(X_train)
+nb_classifier = MultinomialNB(alpha=0.1).fit(tfidf_train, y_train)
+
+# Get the class labels: class_labels
+class_labels = nb_classifier.classes_
+
+# Extract the features: feature_names
+feature_names = tfidf_vectorizer.get_feature_names()
+
+# Zip the feature names together with the coefficient array and sort by weights: feat_with_weights
+feat_with_weights = sorted(zip(nb_classifier.coef_[0], feature_names))
+
+# Print the first class label and the top 20 feat_with_weights entries
+print(class_labels[0], feat_with_weights[:20])
+
+# Print the second class label and the bottom 20 feat_with_weights entries
+print(class_labels[1], feat_with_weights[-20:])
+```
+
+
+
+<p class="">Great work!</p>

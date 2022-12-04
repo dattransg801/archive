@@ -1,0 +1,1666 @@
+## Intermediate SQL  {.unnumbered}
+
+<h3 class="course__description-title">Mona Khalil</h3>
+<p class="course__instructor-description display-none-mobile-course-page-experiment">
+    As a senior data scientist at Greenhouse, Mona answers questions related to how the hiring process can be improved to find better candidates quicker and reduce bias in the hiring process. They previously worked in education, marketing, and local government. They also co-host <a href="https://anchor.fm/badmethods">Bad Methods</a>, a podcast that brings a fun and interesting lens to critically evaluating science. You can find them on twitter at <a href="https://twitter.com/mona_kay_">mona_kay_</a>.
+  </p>
+
+**Course Description**
+
+<p class="course__description">So you've learned how to aggregate and join data from tables in your database—now what? How do you manipulate, transform, and make the most sense of your data? This intermediate-level course will teach you several key functions necessary to wrangle, filter, and categorize information in a relational database, expand your SQL toolkit, and answer complex questions. You will learn the robust use of CASE statements, subqueries, and window functions—all while discovering some interesting facts about soccer using the European Soccer Database.</p>
+
+```{r setup, warning=F,message = FALSE, echo=F, result='hide'}
+library(dplyr)
+library(dbplyr)
+library(RSQLite)
+library(sqldf)
+library(tidyverse)
+
+country = read.csv("archive/SQL-Databases/soccer/country.csv") 
+
+leagues = read.csv("archive/SQL-Databases/soccer/league.csv")
+
+league = read.csv("archive/SQL-Databases/soccer/league.csv")
+
+matches = read.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vSaYeql8ZTUI_kNMRQcrS1lgWDHMTx1-YQkO7EITCUqUB112BStYH4omWhIIg20RUyGeM89PLhElTpf/pub?gid=2104115013&single=true&output=csv") %>% 
+  mutate(date = as.character(as.Date(substring(date,0,unlist(gregexpr(' ', date))),format="%m/%d"))) %>% rename(hometeam_id = home_team_api_id, awayteam_id = away_team_api_id, home_goal = home_team_goal, away_goal = away_team_goal)
+
+match = read.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vSaYeql8ZTUI_kNMRQcrS1lgWDHMTx1-YQkO7EITCUqUB112BStYH4omWhIIg20RUyGeM89PLhElTpf/pub?gid=2104115013&single=true&output=csv") %>% 
+  mutate(date = as.character(as.Date(substring(date,0,unlist(gregexpr(' ', date))),format="%m/%d"))) %>% rename(hometeam_id = home_team_api_id, awayteam_id = away_team_api_id, home_goal = home_team_goal, away_goal = away_team_goal)
+
+teams = read.csv("archive/SQL-Databases/soccer/team.csv")
+
+team = read.csv("archive/SQL-Databases/soccer/team.csv")
+
+conn <- src_memdb()        # create a SQLite database in memory
+con <- conn$con            # needed for SQL chunk
+copy_to(conn, country, overwrite = TRUE)
+copy_to(conn, leagues, overwrite = TRUE)
+copy_to(conn, league, overwrite = TRUE)
+copy_to(conn, matches, overwrite = TRUE)
+copy_to(conn, match, overwrite = TRUE)
+copy_to(conn, teams, overwrite = TRUE)
+copy_to(conn, team, overwrite = TRUE)
+```
+
+
+### We'll take the CASE {.unnumbered}
+
+<p class="chapter__description">
+    In this chapter, you will learn how to use the CASE WHEN statement to create categorical variables, aggregate data into a single column with multiple filtering conditions, and calculate counts and percentages.
+  </p>
+
+#### We'll take the CASE {.unnumbered}
+
+
+
+##### Basic CASE statements {.unnumbered}
+
+
+<div class>
+<p>What is your favorite team?</p>
+<p>The <em>European Soccer Database</em> contains data about 12,800 matches from 11 countries played between 2011-2015! Throughout this course, you will be shown filtered versions of the tables in this database in order to better explore their contents. </p>
+<p>In this exercise, you will identify matches played between <em>FC Schalke 04</em> and <em>FC Bayern Munich</em>. There are 2 teams identified in each match in the <code>hometeam_id</code> and <code>awayteam_id</code> columns, available to you in the filtered <code>matches</code> table. ID can join to the <code>team_api_id</code> column in the <code>teams</code> table, but you cannot perform a join on both at the same time.  </p>
+<p>However, you can perform this operation using a <code>CASE</code> statement once you've identified the <code>team_api_id</code> associated with each team!</p>
+</div>
+
+
+<li>Select the team's long name and API id from the <code>teams</code> table.</li>
+<li>Filter the query for <em>FC Schalke 04</em> and <em>FC Bayern Munich</em> using <code>IN</code>, giving you the <code>team_api_IDs</code> needed for the next step.</li>
+```{sql connection=con}
+SELECT
+	-- Select the team long name and team API id
+	team_long_name,
+	team_api_id
+FROM teams
+-- Only include FC Schalke 04 and FC Bayern Munich
+WHERE team_long_name IN ('FC Schalke 04', 'FC Bayern Munich');
+```
+
+
+<li>Create a <code>CASE</code> statement that identifies whether a match in Germany included <code>FC Bayern Munich</code>, <code>FC Schalke 04</code>, or neither as the home team.</li>
+<li>Group the query by the <code>CASE</code> statement alias, <code>home_team</code>.</li>
+```{sql connection=con}
+-- Identify the home team as Bayern Munich, Schalke 04, or neither
+SELECT 
+    CASE WHEN hometeam_id = 10189 THEN 'FC Schalke 04'
+         WHEN hometeam_id = 9823 THEN 'FC Bayern Munich'
+         ELSE 'Other' END AS home_team,
+	COUNT(id) AS total_matches
+FROM matches
+-- Group by the CASE statement alias
+GROUP BY home_team;
+```
+
+
+<p class="">Great job! You were able to identify two teams using <code>CASE</code> statement instead of a join, which could only identify one at a time. Let's learn some more about key teams in Europe!</p>
+
+##### CASE statements comparing column values {.unnumbered}
+
+
+<div class>
+<p>Barcelona is considered one of the strongest teams in Spain's soccer league.</p>
+<p>In this exercise, you will be creating a list of matches in the 2011/2012 season where Barcelona was the <em>home team</em>. You will do this using a <code>CASE</code> statement that compares the values of two columns to create a new group -- wins, losses, and ties. </p>
+<p>In 3 steps, you will build a query that identifies a match's winner, identifies the identity of the opponent, and finally filters for Barcelona as the home team. Completing a query in this order will allow you to watch your results take shape with each new piece of information.</p>
+<p>The <code>matches</code> table currently contains Barcelona's matches from the 2011/2012 season, and has two key columns, <code>hometeam_id</code> and <code>awayteam_id</code>, that can be joined with the <code>teams</code> table. However, you can only join <code>teams</code> to one column at a time.</p>
+</div>
+
+<li>Select the <code>date</code> of the match and create a <code>CASE</code> statement to identify matches as home wins, home losses, or ties.</li>
+```{sql connection=con}
+SELECT 
+	-- Select the date of the match
+	date,
+	-- Identify home wins, losses, or ties
+	CASE WHEN home_goal > away_goal THEN 'Home win!'
+         WHEN home_goal < away_goal THEN 'Home loss :(' 
+         ELSE 'Tie' END AS outcome
+FROM matches;
+```
+
+
+<li>Left join the <code>teams</code> table <code>team_api_id</code> column to the <code>matches</code> table <code>awayteam_id</code>. This allows us to retrieve the <em>away</em> team's identity.</li>
+<li>Select <code>team_long_name</code> from <code>teams</code> as <code>opponent</code> and complete the <code>CASE</code> statement from Step 1.</li>
+```{sql connection=con}
+SELECT 
+	m.date,
+	--Select the team long name column and call it 'opponent'
+	t.team_long_name AS opponent, 
+	-- Complete the CASE statement with an alias
+	CASE WHEN m.home_goal > m.away_goal THEN 'Home win!'
+         WHEN m.home_goal < m.away_goal THEN 'Home loss :('
+         ELSE 'Tie' END AS outcome
+FROM matches AS m
+-- Left join teams onto matches
+LEFT JOIN teams AS t
+ON m.awayteam_id = t.team_api_id;
+```
+
+
+<li>Complete the same <code>CASE</code> statement as the previous steps.</li>
+<li>Filter for matches where the home team is <em>FC Barcelona</em> (id = <code>8634</code>).</li>
+```{sql connection=con}
+SELECT 
+	m.date,
+	t.team_long_name AS opponent,
+	-- Complete the CASE statement with an alias
+	CASE WHEN m.home_goal > m.away_goal THEN 'Barcelona win!'
+         WHEN m.home_goal < m.away_goal THEN 'Barcelona loss :(' 
+         ELSE 'Tie' END AS outcome 
+FROM matches AS m
+LEFT JOIN teams AS t 
+ON m.awayteam_id = t.team_api_id
+-- Filter for Barcelona as the home team
+WHERE m.hometeam_id = 8634; 
+```
+
+<p class="">Great job! Did you notice how often Barcelona tends to win matches?</p>
+
+##### CASE statements comparing two column values part 2 {.unnumbered}
+
+
+<div class>
+<p>Similar to the previous exercise, you will construct a query to determine the outcome of Barcelona's matches where they played as the <em><strong>away team</strong></em>. You will learn how to combine these two queries in chapters 2 and 3.</p>
+<p>Did their performance differ from the matches where they were the home team?</p>
+</div>
+
+<li>Complete the <code>CASE</code> statement to identify Barcelona's away team games (<code>id = 8634</code>) as wins, losses, or ties.</li>
+<li>Left join the <code>teams</code> table <code>team_api_id</code> column on the <code>matches</code> table <code>hometeam_id</code> column. This retrieves the identity of the <em>home team</em> opponent.</li>
+<li>Filter the query to only include matches where Barcelona was the <em>away</em> team.</li>
+```{sql connection=con}
+-- Select matches where Barcelona was the away team
+SELECT
+	m.date,
+	t.team_long_name AS opponent,
+	CASE WHEN m.home_goal < m.away_goal THEN 'Barcelona win!'
+         WHEN m.home_goal > m.away_goal THEN 'Barcelona loss :('
+         ELSE 'Tie' END AS outcome
+FROM matches AS m
+-- Join teams to matches
+LEFT JOIN teams AS t
+ON m.hometeam_id = t.team_api_id
+WHERE m.awayteam_id = 8634;
+```
+
+<p class="">Fantastic! Barcelona's performance seems to be worse when they are the away team. We'll explore this further in the next lesson.</p>
+
+#### More complex CASE WHEN {.unnumbered}
+
+
+
+##### In CASE of rivalry {.unnumbered}
+
+
+<div class>
+<p>Barcelona and Real Madrid have been rival teams for more than 80 years. Matches between these two teams are given the name <em>El Clásico</em> (The Classic). In this exercise, you will query a list of matches played between these two rivals.</p>
+<p>You will notice in Step 2 that when you have multiple logical conditions in a <code>CASE</code> statement, you may quickly end up with a large number of <code>WHEN</code> clauses to logically test every outcome you are interested in. It's important to make sure you don't accidentally exclude key information in your <code>ELSE</code> clause.</p>
+<p>In this exercise, you will retrieve information about matches played between <strong>Barcelona</strong> (id = <code>8634</code>) and <strong>Real Madrid</strong> (id = <code>8633</code>). Note that the query you are provided with already identifies the <em>Clásico</em> matches using a filter in the <code>WHERE</code> clause.</p>
+</div>
+
+<li>Complete the first <code>CASE</code> statement, identifying Barcelona or Real Madrid as the home team using the <code>hometeam_id</code> column. </li>
+<li>Complete the second <code>CASE</code> statement in the same way, using <code>awayteam_id</code>.</li>
+```{sql connection=con}
+SELECT 
+	date,
+	-- Identify the home team as Barcelona or Real Madrid
+	CASE WHEN hometeam_id = 8634 THEN 'FC Barcelona' 
+         ELSE 'Real Madrid CF' END AS home,
+    -- Identify the away team as Barcelona or Real Madrid
+	CASE WHEN awayteam_id = 8634 THEN 'FC Barcelona' 
+         ELSE 'Real Madrid CF' END AS away
+FROM matches
+WHERE (awayteam_id = 8634 OR hometeam_id = 8634)
+      AND (awayteam_id = 8633 OR hometeam_id = 8633);
+```
+
+
+<li>Construct the final <code>CASE</code> statement identifying who won each match. Note there are 3 possible outcomes, but 5 conditions that you need to identify.</li>
+<li>Fill in the logical operators to identify Barcelona or Real Madrid as the winner.</li>
+```{sql connection=con}
+SELECT 
+	date,
+	CASE WHEN hometeam_id = 8634 THEN 'FC Barcelona' 
+         ELSE 'Real Madrid CF' END as home,
+	CASE WHEN awayteam_id = 8634 THEN 'FC Barcelona' 
+         ELSE 'Real Madrid CF' END as away,
+	-- Identify all possible match outcomes
+	CASE WHEN home_goal > away_goal AND hometeam_id = 8634 THEN 'Barcelona win!'
+        WHEN home_goal > away_goal AND hometeam_id = 8633 THEN 'Real Madrid win!'
+        WHEN home_goal < away_goal AND awayteam_id = 8634 THEN 'Barcelona win!'
+        WHEN home_goal < away_goal AND awayteam_id = 8633 THEN 'Real Madrid win!'
+        ELSE 'Tie!' END as outcome
+FROM matches
+WHERE (awayteam_id = 8634 OR hometeam_id = 8634)
+      AND (awayteam_id = 8633 OR hometeam_id = 8633);
+```
+
+<p class="">Fantastic! These two teams are fairly evenly matched!</p>
+
+##### Filtering your CASE statement {.unnumbered}
+
+
+<div class>
+<p>Let's generate a list of matches won by Italy's <em>Bologna</em> team! There are quite a few additional teams in the two tables, so a key part of generating a usable query will be using your <code>CASE</code> statement as a filter in the <code>WHERE</code> clause.</p>
+<p><code>CASE</code> statements allow you to categorize data that you're interested in -- and exclude data you're not interested in. In order to do this, you can use a <code>CASE</code> statement as a filter in the <code>WHERE</code> statement to remove output you don't want to see.</p>
+<p>Here is how you might set that up:</p>
+<pre><code>SELECT *
+FROM table
+WHERE 
+    CASE WHEN a &gt; 5 THEN 'Keep'
+         WHEN a &lt;= 5 THEN 'Exclude' END = 'Keep';
+</code></pre>
+<p>In essence, you can use the <code>CASE</code> statement as a filtering column like any other column in your database. The only difference is that you <em>don't</em> alias the statement in <code>WHERE</code>.</p>
+</div>
+
+<li>Identify <code>Bologna</code>'s team ID listed in the <code>teams</code> table by selecting the <code>team_long_name</code> and <code>team_api_id</code>.</li>
+```{sql connection=con}
+-- Select team_long_name and team_api_id from team
+SELECT
+	team_long_name,
+	team_api_id
+FROM teams
+-- Filter for team long name
+WHERE team_long_name = 'Bologna';
+```
+
+
+<li>Select the <code>season</code> and <code>date</code> that a match was played.</li>
+<li>Complete the <code>CASE</code> statement so that only Bologna's home and away wins are identified.</li>
+```{sql connection=con}
+-- Select the season and date columns
+SELECT 
+	season,
+	date,
+    -- Identify when Bologna won a match
+	CASE WHEN hometeam_id = 9857 
+          AND home_goal > away_goal 
+         THEN 'Bologna Win'
+         WHEN awayteam_id = 9857 
+          AND away_goal > home_goal 
+         THEN 'Bologna Win' 
+          END AS outcome
+FROM matches;
+```
+
+
+<li>Select the <code>home_goal</code> and <code>away_goal</code> for each match.</li>
+<li>Use the <code>CASE</code> statement in the <code>WHERE</code> clause to filter all <code>NULL</code> values generated by the statement in the previous step.</li>
+```{sql connection=con}
+-- Select the season, date, home_goal, and away_goal columns
+SELECT 
+	season,
+	date,
+	home_goal,
+	away_goal
+FROM matches
+WHERE
+-- Exclude games not won by Bologna
+	CASE WHEN hometeam_id = 9857 AND home_goal > away_goal THEN 'Bologna Win'
+         WHEN awayteam_id = 9857 AND away_goal > home_goal THEN 'Bologna Win' 
+         END IS NOT NULL;
+```
+
+<p class="">Good work! You now have details on every match in this database where Bologna won. We will work on adding more useful information to your queries later in this course.</p>
+
+#### Aggregate CASE WHEN {.unnumbered}
+
+
+
+##### COUNT using CASE WHEN {.unnumbered}
+
+
+<div class>
+<p>Do the number of soccer matches played in a given European country differ across seasons? We will use the European Soccer Database to answer this question.</p>
+<p>You will examine the number of matches played in 3 seasons within each country listed in the database. This is much easier to explore with each season's matches in separate columns. Using the <code>country</code> and unfiltered <code>match</code> table, you will count the number of matches played in each country during the 2012/2013, 2013/2014, and 2014/2015  match seasons.</p>
+</div>
+
+<li>Create a <code>CASE</code> statement that identifies the <code>id</code> of matches played in the 2012/2013 season. Specify that you want <code>ELSE</code> values to be <code>NULL</code>.</li>
+<li>Wrap the <code>CASE</code> statement in a <code>COUNT</code> function and group the query by the <code>country</code> alias.</li>
+```{sql connection=con}
+SELECT 
+	c.name AS country,
+    -- Count games from the 2012/2013 season
+	COUNT(CASE WHEN m.season = '2012/2013' 
+          	   THEN m.id ELSE NULL END) AS matches
+FROM country AS c
+LEFT JOIN match AS m
+ON c.id = m.country_id
+-- Group by country name alias
+GROUP BY country;
+```
+
+
+<li>Create 3 <code>CASE WHEN</code> statements counting the matches played in each country across the 3 seasons.</li>
+<li><code>END</code> your <code>CASE</code> statement without an <code>ELSE</code> clause.</li>
+```{sql connection=con}
+SELECT 
+	c.name AS country,
+    -- Count matches in each of the 3 seasons
+	COUNT(CASE WHEN m.season = '2012/2013' THEN m.id END) AS matches,
+	COUNT(CASE WHEN m.season = '2013/2014' THEN m.id END) AS matches,
+	COUNT(CASE WHEN m.season = '2014/2015' THEN m.id END) AS matches
+FROM country AS c
+LEFT JOIN match AS m
+ON c.id = m.country_id
+-- Group by country name alias
+GROUP BY country;
+```
+
+<p class="">Fantastic! The number of matches played in each season seems relatively consistent across countries. Where do you see the largest difference?</p>
+
+##### COUNT and CASE WHEN with multiple conditions {.unnumbered}
+
+
+<div class>
+<p>In R or Python, you have the ability to calculate a <code>SUM</code> of logical values (i.e., <code>TRUE</code>/<code>FALSE</code>) directly. In SQL, you have to convert these values into 1 and 0 before calculating a sum. This can be done using a <code>CASE</code> statement.</p>
+<p>There's one key difference when using <code>SUM</code> to aggregate logical values compared to using <code>COUNT</code> in the previous exercise -- </p>
+<p>Your goal here is to use the <code>country</code> and <code>match</code> table to determine the <em>total number of matches won by the home team</em> in each country during the 2012/2013, 2013/2014, and 2014/2015 seasons.</p>
+</div>
+
+<li>Create 3 <code>CASE</code> statements to "count" matches in the <code>'2012/2013'</code>, <code>'2013/2014'</code>, and <code>'2014/2015'</code> seasons, respectively.</li>
+<li>Have each <code>CASE</code> statement return a <code>1</code> for every match you want to include, and a <code>0</code> for every match to exclude.</li>
+<li>Wrap the <code>CASE</code> statement in a <code>SUM</code> to return the total matches played in each season.</li>
+<li>Group the query by the country name alias.</li>
+```{sql connection=con}
+SELECT 
+	c.name AS country,
+    -- Sum the total records in each season where the home team won
+	SUM(CASE WHEN m.season = '2012/2013' AND m.home_goal > m.away_goal 
+        THEN 1 ELSE 0 END) AS matches,
+	SUM(CASE WHEN m.season = '2013/2014' AND m.home_goal > m.away_goal 
+        THEN 1 ELSE 0 END) AS matches,
+	SUM(CASE WHEN m.season = '2014/2015' AND m.home_goal > m.away_goal 
+        THEN 1 ELSE 0 END) AS matches
+FROM country AS c
+LEFT JOIN match AS m
+ON c.id = m.country_id
+-- Group by country name alias
+GROUP BY country;
+```
+
+<p class="">Good job! You now have a second way of calculating the results from the previous exercise.</p>
+
+##### Calculating percent with CASE and AVG {.unnumbered}
+
+
+<div class>
+<p><code>CASE</code> statements will return any value you specify in your <code>THEN</code> clause. This is an incredibly powerful tool for robust calculations and data manipulation when used in conjunction with an aggregate statement. One key task you can perform is using <code>CASE</code> inside an <code>AVG</code> function to calculate a percentage of information in your database. </p>
+<p>Here's an example of how you set that up:</p>
+<pre><code>AVG(CASE WHEN condition_is_met THEN 1
+         WHEN condition_is_not_met THEN 0 END)
+</code></pre>
+<p>With this approach, it's important to accurately specify which records count as <code>0</code>, otherwise your calculations may not be correct!</p>
+<p>Your task is to examine the number of wins, losses, and ties in each country. The <code>matches</code> table is filtered to include all matches from the 2013/2014 and 2014/2015 seasons.</p>
+</div>
+
+<li>Create 3 <code>CASE</code> statements to <code>COUNT</code> the total number of home team wins, away team wins, and ties, which will allow you to examine the total number of records.</li>
+```{sql connection=con}
+SELECT 
+	c.name AS country,
+    -- Sum the home wins, away wins, and ties in each country
+    COUNT(CASE WHEN m.home_goal > m.away_goal THEN m.id          
+        END) AS home_wins,
+    COUNT(CASE WHEN m.home_goal < m.away_goal THEN m.id 
+        END) AS away_wins,
+    COUNT(CASE WHEN m.home_goal = m.away_goal THEN m.id 
+        END) AS ties
+FROM country AS c
+LEFT JOIN matches AS m
+ON c.id = m.country_id
+GROUP BY country;
+```
+
+
+<li>Calculate the percentage of matches tied using a <code>CASE</code> statement inside <code>AVG</code>. </li>
+<li>Fill in the logical operators for each statement. Alias your columns as <code>ties_2013_2014</code> and <code>ties_2014_2015</code>, respectively.</li>
+```{sql connection=con}
+SELECT 
+	c.name AS country,
+    -- Calculate the percentage of tied games in each season
+	AVG(CASE WHEN m.season= '2013/2014' AND m.home_goal = m.away_goal THEN 1
+			 WHEN m.season= '2013/2014' AND m.home_goal != m.away_goal THEN 0
+			 END) AS ties_2013_2014,
+	AVG(CASE WHEN m.season= '2014/2015' AND m.home_goal = m.away_goal THEN 1
+			 WHEN m.season= '2014/2015' AND m.home_goal != m.away_goal THEN 0
+			 END) AS ties_2014_2015
+FROM country AS c
+LEFT JOIN matches AS m
+ON c.id = m.country_id
+GROUP BY country;
+```
+
+<li>The previous "ties" columns returned values with 14 decimal points, which is not easy to interpret. Use the <code>ROUND</code> function to round to 2 decimal points.</li>
+```{sql connection=con}
+SELECT 
+	c.name AS country,
+    -- Round the percentage of tied games to 2 decimal points
+	ROUND(AVG(CASE WHEN m.season='2013/2014' AND m.home_goal = m.away_goal THEN 1
+			 WHEN m.season='2013/2014' AND m.home_goal != m.away_goal THEN 0
+			 END),2) AS pct_ties_2013_2014,
+	ROUND(AVG(CASE WHEN m.season='2014/2015' AND m.home_goal = m.away_goal THEN 1
+			 WHEN m.season='2014/2015' AND m.home_goal != m.away_goal THEN 0
+			 END),2) AS pct_ties_2014_2015
+FROM country AS c
+LEFT JOIN matches AS m
+ON c.id = m.country_id
+GROUP BY country;
+```
+
+<p class="">Fantastic! That's much easier to read. What patterns/differences are you seeing in the results? Who tends to score ties more often?</p>
+
+### Short and Simple Subqueries {.unnumbered}
+
+<p class="">In this chapter, you will learn about subqueries in the SELECT, FROM, and WHERE clauses. You will gain an understanding of when subqueries are necessary to construct your dataset and where to best include them in your queries.</p>
+
+#### WHERE are the Subqueries? {.unnumbered}
+
+
+
+##### Filtering using scalar subqueries {.unnumbered}
+
+
+<div class>
+<p>Subqueries are incredibly powerful for performing complex filters and transformations. You can filter data based on single, <em>scalar</em> values using a subquery in ways you cannot by using <code>WHERE</code> statements or joins. Subqueries can also be used for more advanced manipulation of your data set. You will likely encounter subqueries in any real-world setting that uses relational databases. </p>
+<p>In this exercise, you will generate a list of matches where the total goals scored (for both teams in total) is more than <em>3 times</em> the average for games in the <code>matches</code> table, which includes all games played in the 2013/2014 season.</p>
+</div>
+
+<li>Calculate <em>triple</em> the average home + away goals scored across all matches. This will become your subquery in the next step. Note that this column does not have an alias, so it will be called <code>?column?</code> in your results.</li>
+```{sql connection=con}
+-- Select the average of home + away goals, multiplied by 3
+SELECT 
+	3 * avg(home_goal + away_goal)
+FROM matches;
+```
+
+
+<li>Select the date, home goals, and away goals in the main query.</li>
+<li>Filter the main query for matches where the total goals scored exceed the value in the subquery.</li>
+```{sql connection=con}
+SELECT 
+	-- Select the date, home goals, and away goals scored
+    date,
+	home_goal,
+	away_goal
+FROM  matches
+-- Filter for matches where total goals exceeds 3x the average
+WHERE (home_goal + away_goal) > 
+       (SELECT 3 * AVG(home_goal + away_goal)
+        FROM matches); 
+```
+
+<p class="">Look at those scores! This calculation would have been much more difficult without a subquery.</p>
+
+##### Filtering using a subquery with a list {.unnumbered}
+
+
+<div class>
+<p>Your goal in this exercise is to generate a list of teams that never played a game in their home city. Using a subquery, you will generate a list of unique <code>hometeam_ID</code> values from the unfiltered <code>match</code> table to <em>exclude</em> in the <code>team</code> table's <code>team_api_ID</code> column.</p>
+<p>In addition to filtering using a single-value (scalar) subquery, you can create a list of values in a subquery to filter data based on a complex set of conditions. This type of subquery generates a <em>one column reference list</em> for the main query. As long as the values in your list match a column in your main query's table, you don't need to use a join -- even if the list is from a separate table.</p>
+</div>
+
+<li>Create a subquery in the <code>WHERE</code> clause that retrieves all unique <code>hometeam_ID</code> values from the <code>match</code> table. </li>
+<li>Select the <code>team_long_name</code> and <code>team_short_name</code> from the <code>team</code> table. Exclude all values from the subquery in the main query.</li>
+```{sql connection=con}
+SELECT 
+	-- Select the team long and short names
+	team_long_name,
+	team_short_name
+FROM team
+-- Exclude all values from the subquery
+WHERE team_api_id NOT IN
+     (SELECT DISTINCT hometeam_id FROM match);
+```
+
+
+<p class="">Great job! There are 52 teams without any home games recorded in this database. Why do you think that is?</p>
+
+##### Filtering with more complex subquery conditions {.unnumbered}
+
+
+<div class>
+<p>In the previous exercise, you generated a list of teams that have no home matches listed in the soccer database using a subquery in <code>WHERE</code>. Let's do some further exploration in this database by creating a list of teams that <em>scored 8 or more goals in a home match</em>.</p>
+<p>In order to do this, you will construct a subquery in the <code>WHERE</code> statement with its own filtering condition.</p>
+</div>
+
+<li>Create a subquery in <code>WHERE</code> clause that retrieves all <code>hometeam_ID</code> values from <code>match</code> with a <code>home_goal</code> score greater than or equal to <em>8</em>. </li>
+<li>Select the <code>team_long_name</code> and <code>team_short_name</code> from the <code>team</code> table. <em>Include</em> all values from the subquery in the main query.</li>
+```{sql connection=con}
+SELECT
+	-- Select the team long and short names
+	team_long_name,
+	team_short_name
+FROM team
+-- Filter for teams with 8 or more home goals
+WHERE team_api_id IN
+	  (SELECT hometeam_id 
+       FROM match
+       WHERE home_goal >= 8);
+```
+
+<p class="">Excellent job! This is an interesting list of teams!</p>
+
+#### Subqueries in FROM {.unnumbered}
+
+
+
+##### Joining Subqueries in FROM {.unnumbered}
+
+
+<div class>
+<p>The <code>match</code> table in the European Soccer Database does not contain country or team names. You can get this information by joining it to the <code>country</code> table, and use this to aggregate information, such as the number of matches played in each country.</p>
+<p>If you're interested in filtering data from one of these tables, you can also create a subquery from one of the tables, and then join it to an existing table in the database. A subquery in <code>FROM</code> is an effective way of answering detailed questions that requires filtering or transforming data before including it in your final results.</p>
+<p>Your goal in this exercise is to generate a subquery using the <code>match</code> table, and then join that subquery to the <code>country</code> table to calculate information about matches with 10 or more goals in total!</p>
+</div>
+
+<li>Create the subquery to be used in the next step, which selects the country ID and match ID (<code>id</code>) from the <code>match</code> table.</li>
+<li>Filter the query for matches with greater than or equal to 10 goals.</li>
+```{sql connection=con}
+SELECT 
+	-- Select the country ID and match ID
+	country_id, 
+    id 
+FROM match
+-- Filter for matches with 10 or more goals in total
+WHERE (home_goal + away_goal) >= 10;
+```
+
+
+<li>Construct a subquery that selects only matches with 10 or more total goals.</li>
+<li>Inner join the subquery onto <code>country</code> in the main query.</li>
+<li>Select <code>name</code> from <code>country</code> and count the <code>id</code> column from <code>match</code>.</li>
+```{sql connection=con}
+SELECT
+	-- Select country name and the count match IDs
+    c.name AS country_name,
+    COUNT(sub.id) AS matches
+FROM country AS c
+-- Inner join the subquery onto country
+-- Select the country id and match id columns
+INNER JOIN (SELECT country_id, id 
+            FROM match
+            -- Filter the subquery by matches with 10+ goals
+            WHERE (home_goal + away_goal) >= 10) AS sub
+ON c.id = sub.country_id
+GROUP BY country_name;
+```
+
+<p class="">Good job! You generated a count of matches in each country where the total goals was higher than 10. That's a lot of goals!</p>
+
+##### Building on Subqueries in FROM {.unnumbered}
+
+
+<div class>
+<p>In the previous exercise, you found that England, Netherlands, Germany and Spain were the only countries that had matches in the database where 10 or more goals were scored overall. Let's find out some more details about those matches -- when they were played, during which seasons, and how many of the goals were home versus away goals.</p>
+<p>You'll notice that in this exercise, the table alias is excluded for every column selected in the main query. This is because the <em>main query</em> is extracting data from the <em>subquery</em>, which is treated as a <em>single table</em>.</p>
+</div>
+
+<li>Complete the subquery inside the <code>FROM</code> clause. Select the country name from the country table, along with the date, the home goal, the away goal, and the total goals columns from the match table.</li>
+<li>Create a column in the subquery that adds home and away goals, called <code>total_goals</code>. This will be used to filter the main query.</li>
+<li>Select the country, date, home goals, and away goals in the main query.</li>
+<li>Filter the main query for games with 10 or more total goals.</li>
+```{sql connection=con}
+SELECT
+	-- Select country, date, home, and away goals from the subquery
+    country,
+    date,
+    home_goal,
+    away_goal
+FROM
+	-- Select country name, date, home_goal, away_goal, and total goals in the subquery
+	(SELECT c.name AS country, 
+     	    m.date, 
+     		m.home_goal, 
+     		m.away_goal,
+           (m.home_goal + m.away_goal) AS total_goals
+    FROM match AS m
+    LEFT JOIN country AS c
+    ON m.country_id = c.id) AS subquery
+-- Filter by total goals scored in the main query
+WHERE total_goals >= 10;
+```
+
+<p class="">Great job! You can manipulate the information you extract by placing joins in or using a subquery. These must have been exciting matches!</p>
+
+#### Subqueries in SELECT {.unnumbered}
+
+
+
+##### Add a subquery to the SELECT clause {.unnumbered}
+
+
+<div class>
+<p>Subqueries in <code>SELECT</code> statements generate a single value that allow you to pass an aggregate value down a data frame. This is useful for performing calculations on data within your database.</p>
+<p>In the following exercise, you will construct a query that calculates the average number of goals per match in each country's league.</p>
+</div>
+
+<li>In the subquery, select the average total goals by adding <code>home_goal</code> and <code>away_goal</code>.</li>
+<li>Filter the results so that only the average of goals in the 2013/2014 season is calculated.</li>
+<li>In the main query, select the average total goals by adding <code>home_goal</code> and <code>away_goal</code>. This calculates the average goals for each league.</li>
+<li>Filter the results in the main query the same way you filtered the subquery. Group the query by the league name.</li>
+```{sql connection=con}
+SELECT 
+	l.name AS league,
+    -- Select and round the league's total goals
+    ROUND(AVG(m.home_goal + m.away_goal),2) AS avg_goals,
+    -- Select and round the average total goals
+    (SELECT ROUND(AVG(home_goal + away_goal),2) 
+     FROM match
+     WHERE season = '2013/2014') AS overall_avg
+FROM league AS l
+LEFT JOIN match AS m
+ON l.country_id = m.country_id
+-- Filter for the 2013/2014 season
+WHERE m.season = '2013/2014'
+GROUP BY l.name;
+```
+
+<p class="">Good job! With a subquery in select, you can compare each league's average to the overall average. Which leagues tend to score higher than average?</p>
+
+##### Subqueries in Select for Calculations {.unnumbered}
+
+
+<div class>
+<p>Subqueries in <code>SELECT</code> are a useful way to create calculated columns in a query. A subquery in <code>SELECT</code> can be treated as a single numeric value to use in your calculations. When writing queries in <code>SELECT</code>, it's important to remember that filtering the main query does not filter the subquery -- and vice versa. </p>
+<p>In the previous exercise, you created a column to compare each league's average total goals to the overall average goals in the 2013/2014 season. In this exercise, you will add a column that directly compares these values by subtracting the overall average from the subquery.</p>
+</div>
+
+<li>Select the average goals scored in a match for each league in the main query.</li>
+<li>Select the average goals scored in a match overall for the 2013/2014 season in the subquery.</li>
+<li>Subtract the subquery from the average number of goals calculated for each league.</li>
+<li>Filter the main query so that only games from the 2013/2014 season are included.</li>
+```{sql connection=con}
+SELECT 
+	-- Select the league name and average goals scored
+	l.name AS league,
+	ROUND(AVG(m.home_goal + m.away_goal),2) AS avg_goals,
+    -- Subtract the overall average from the league average
+	ROUND(AVG(m.home_goal + m.away_goal) - 
+          (SELECT AVG(home_goal + away_goal)
+           FROM match 
+           WHERE season = '2013/2014'),2) AS diff
+FROM league AS l
+LEFT JOIN match AS m
+ON l.country_id = m.country_id
+-- Only include 2013/2014 results
+WHERE m.season = '2013/2014'
+GROUP BY l.name;
+```
+
+<p class="">Good job! Games in the Netherlands tend to score the highest number of goals on average in this season. Why do you think that is?</p>
+
+#### Subqueries best practices {.unnumbered}
+
+
+
+##### ALL the subqueries EVERYWHERE {.unnumbered}
+
+
+<div class>
+<p>In soccer leagues, games are played at different <em>stages</em>. Winning teams progress from one stage to the next, until they reach the final stage. In each stage, the stakes become higher than the previous one. The <code>match</code> table includes data about  the different stages that each match took place in.  </p>
+<p>In this lesson, you will build a final query across 3 exercises that will contain three subqueries -- one in the <code>SELECT</code> clause, one in the <code>FROM</code> clause, and one in the <code>WHERE</code> clause. In the final exercise, your query will extract data examining the average goals scored in each stage of a match. Does the average number of goals scored change as the stakes get higher from one stage to the next?</p>
+</div>
+
+<li>Extract the average number of home and away team goals in two <code>SELECT</code> subqueries. </li>
+<li>Calculate the average home and away goals for the specific stage in the main query.</li>
+<li>Filter both subqueries and the main query so that only data from the 2012/2013 season is included.</li>
+<li>Group the query by the <code>m.stage</code> column.</li>
+```{sql connection=con}
+SELECT 
+	-- Select the stage and average goals for each stage
+	m.stage,
+	ROUND(AVG(m.home_goal + m.away_goal),2) AS avg_goals,
+    -- Select the average overall goals for the 2012/2013 season
+	ROUND((SELECT AVG(home_goal + away_goal) 
+           FROM match 
+           WHERE season = '2012/2013'),2) AS overall
+FROM match AS m
+-- Filter for the 2012/2013 season
+WHERE m.season = '2012/2013'
+-- Group by stage
+GROUP BY m.stage;
+```
+
+<p class="">Excellent job! You will continue building on this data set in the next exercises.</p>
+
+##### Add a subquery in FROM {.unnumbered}
+
+
+<div class>
+<p>In the previous exercise, you created a data set listing the average home and away goals in each match stage of the 2012/2013 match season. </p>
+<p>In this next step, you will turn the main query into a <em>subquery</em> to extract a list of stages where the average home goals in a stage is higher than the <em>overall</em> average for home goals in a match.</p>
+</div>
+
+<li>Calculate the average home goals and average away goals from the match table for each stage in the <code>FROM</code> clause subquery. </li>
+<li>Add a subquery to the <code>WHERE</code> clause that calculates the overall average home goals.</li>
+<li>Filter the main query for stages where the average home goals is higher than the overall average.</li>
+<li>Select the <code>stage</code> and <code>avg_goals</code> columns from the <code>s</code> subquery into the main query.</li>
+```{sql connection=con}
+SELECT 
+	-- Select the stage and average goals from the subquery
+	s.stage,
+    ROUND(s.avg_goals,2) AS avg_goals
+FROM 
+	-- Select the stage and average goals in 2012/2013
+	(SELECT
+         stage,
+         AVG(home_goal + away_goal) AS avg_goals
+     FROM match
+     WHERE season = '2012/2013'
+     GROUP BY stage) AS s
+WHERE 
+	-- Filter the main query using the subquery
+	s.avg_goals > (SELECT AVG(home_goal + away_goal) 
+                   FROM match WHERE season = '2012/2013');
+```
+
+<p class="">Excellent job! Quite a few stages were eliminated with this filter. Do you notice anything interesting?</p>
+
+##### Add a subquery in SELECT {.unnumbered}
+
+
+<div class><p>In the previous exercise, you added a subquery to the <code>FROM</code> statement and selected the stages where the number of average goals in a stage exceeded the overall average number of goals in the 2012/2013 match season. In this final step, you will add a subquery in <code>SELECT</code> to compare the average number of goals scored in each stage to the total.</p></div>
+
+<li>Create a subquery in <code>SELECT</code> that yields the average goals scored in the 2012/2013 season. Name the new column <code>overall_avg</code>.</li>
+<li>Create a subquery in <code>FROM</code> that calculates the average goals scored in each stage during the 2012/2013 season.</li>
+<li>Filter the main query for stages where the average goals exceeds the overall average in 2012/2013.</li>
+```{sql connection=con}
+SELECT 
+	-- Select the stage and average goals from s
+	s.stage,
+	ROUND(s.avg_goals,2) AS avg_goal,
+    -- Select the overall average for 2012/2013
+	(SELECT AVG(home_goal + away_goal) FROM match WHERE season = '2012/2013') AS overall_avg
+FROM 
+	-- Select the stage and average goals in 2012/2013 from match
+	(SELECT
+         stage,
+         AVG(home_goal + away_goal) AS avg_goals
+     FROM match
+     WHERE season = '2012/2013'
+     GROUP BY stage) AS s
+WHERE 
+	-- Filter the main query using the subquery
+	s.avg_goals > (SELECT AVG(home_goal + away_goal) 
+                   FROM match WHERE season = '2012/2013');
+```
+
+<p class="">Amazing job! You used 3 subqueries to generate a list of stages that have higher than average goals scored in matches.</p>
+
+### Correlated Queries, Nested Queries, and Common Table Expressions {.unnumbered}
+
+<p class="">In this chapter, you will learn how to use nested and correlated subqueries to extract more complex data from a relational database. You will also learn about common table expressions and how to best construct queries using multiple common table expressions.</p>
+
+#### Correlated subqueries {.unnumbered}
+
+
+
+##### Basic Correlated Subqueries {.unnumbered}
+
+
+<div class>
+<p>Correlated subqueries are subqueries that reference one or more columns in the main query. Correlated subqueries depend on information in the main query to run, and thus, cannot be executed on their own.</p>
+<p>Correlated subqueries are evaluated in SQL once per row of data retrieved -- a process that takes a lot more computing power and time than a simple subquery.</p>
+<p>In this exercise, you will practice using correlated subqueries to examine matches with scores that are extreme outliers for each country -- above 3 times the average score!</p>
+</div>
+
+<li>Select the <code>country_id</code>, <code>date</code>, <code>home_goal</code>, and <code>away_goal</code> columns in the main query.</li>
+<li>Complete the <code>AVG</code> value in the subquery.</li>
+<li>Complete the subquery column references, so that <code>country_id</code> is matched in the main and subquery.</li>
+```{sql connection=con}
+SELECT 
+	-- Select country ID, date, home, and away goals from match
+	main.country_id,
+    main.date,
+    main.home_goal,
+    main.away_goal
+FROM match AS main
+WHERE 
+	-- Filter the main query by the subquery
+	(home_goal + away_goal) > 
+        (SELECT AVG((sub.home_goal + sub.away_goal) * 3)
+         FROM match AS sub
+         -- Join the main query to the subquery in WHERE
+         WHERE main.country_id = sub.country_id);
+```
+
+<p class="">Great job! Correlated subqueries take longer to produce results, but they often prevent you from having to create multiple subqueries.</p>
+
+##### Correlated subquery with multiple conditions {.unnumbered}
+
+
+<div class>
+<p>Correlated subqueries are useful for matching data across multiple columns. In the previous exercise, you generated a list of matches with extremely high scores for each country. In this exercise, you're going to add an additional column for matching to answer the question -- what was the highest scoring match for each country, in each season?</p>
+<p><strong>*Note: this query may take a while to load.</strong></p>
+</div>
+
+<li>Select the <code>country_id</code>, <code>date</code>, <code>home_goal</code>, and <code>away_goal</code> columns in the main query.</li>
+<li>Complete the subquery: Select the matches with the highest number of total goals.</li>
+<li>Match the subquery to the main query using <code>country_id</code> and <code>season</code>.</li>
+<li>Fill in the correct logical operator so that total goals equals the max goals recorded in the subquery.</li>
+```{sql connection=con}
+SELECT 
+	-- Select country ID, date, home, and away goals from match
+	main.country_id,
+    main.date,
+    main.home_goal,
+    main.away_goal
+FROM match AS main
+WHERE 
+	-- Filter for matches with the highest number of goals scored
+	(home_goal + away_goal) =
+        (SELECT MAX(sub.home_goal + sub.away_goal)
+         FROM match AS sub
+         WHERE main.country_id = sub.country_id
+               AND main.season = sub.season);
+```
+
+<p class="">Great job! Subqueries can be very useful for selecting data broken into multiple categories -- though you may have to wait for the data to load!</p>
+
+#### Nested subqueries {.unnumbered}
+
+
+
+##### Nested simple subqueries {.unnumbered}
+
+
+<div class>
+<p>Nested subqueries can be either simple or correlated. </p>
+<p>Just like an unnested subquery, a nested subquery's components can be executed independently of the outer query, while a correlated subquery requires both the outer and inner subquery to run and produce results.</p>
+<p>In this exercise, you will practice creating a nested subquery to examine the highest total number of goals in each season, overall, and during July across all seasons.</p>
+</div>
+
+<li>Complete the main query to select the season and the max total goals in a match for each season. Name this <code>max_goals</code>.</li>
+<li>Complete the first simple subquery to select the max total goals in a match across all seasons. Name this <code>overall_max_goals</code>.</li>
+<li>Complete the nested subquery to select the maximum total goals in a match played in July across all seasons.</li>
+<li>Select the maximum total goals in the outer subquery. Name this entire subquery <code>july_max_goals</code>.</li>
+
+```{sql connection=con}
+SELECT 
+	-- Select the season and max goals scored in a match
+	season,
+    MAX(home_goal + away_goal) AS max_goals,
+    -- Select the overall max goals scored in a match
+   (SELECT MAX(home_goal + away_goal) FROM match) AS overall_max_goals,
+    -- Select the max number of goals scored in any match in July
+   (SELECT MAX(home_goal + away_goal) 
+        FROM match
+        WHERE id IN (
+              SELECT id FROM match WHERE cast(strftime('%m', date) as int) = 07)) AS july_max_goals
+FROM match
+GROUP BY season;
+```
+
+
+
+
+<p class="">Good job! You just set up a nested subquery inside your main query to get some interesting data.</p>
+
+##### Nest a subquery in FROM {.unnumbered}
+
+
+<div class>
+<p>What's the average number of matches per season where a team scored 5 or more goals? How does this differ by country?</p>
+<p>Let's use a nested, correlated subquery to perform this operation. In the real world, you will probably find that nesting multiple subqueries is a task you don't have to perform often. In some cases, however, you may find yourself struggling to properly group by the column you want, or to calculate information requiring multiple mathematical transformations (i.e., an <code>AVG</code> of a <code>COUNT</code>). </p>
+<p>Nesting subqueries and performing your transformations one step at a time, adding it to a subquery, and then performing the next set of transformations is often the easiest way to yield accurate information about your data. Let's get to it!</p>
+</div>
+
+<li>Generate a list of matches where <strong><em>at least one team</em></strong> scored <strong><em>5 or more goals</em></strong>.</li>
+```{sql connection=con}
+-- Select matches where a team scored 5+ goals
+SELECT
+	country_id,
+    season,
+	id
+FROM match
+WHERE home_goal >= 5 OR away_goal >= 5;
+```
+
+
+<li>Turn the query from the previous step into a <em>subquery</em> in the <code>FROM</code> statement.</li>
+<li><code>COUNT</code> the match <code>id</code>s generated in the previous step, and group the query by <code>country_id</code> and <code>season</code>.</li>
+```{sql connection=con}
+-- Count match ids
+SELECT
+    country_id,
+    season,
+    COUNT(id) AS matches
+-- Set up and alias the subquery
+FROM (
+	SELECT
+    	country_id,
+    	season,
+    	id
+	FROM match
+	WHERE home_goal >= 5 OR away_goal >= 5) 
+    AS subquery
+-- Group by country_id and season
+GROUP BY country_id, season;
+```
+
+
+<li>Finally, declare the same query from step 2 as a subquery in <code>FROM</code> with the alias <code>outer_s</code>. </li>
+<li>Left join it to the <code>country</code> table using the outer query's <code>country_id</code> column.</li>
+<li>Calculate an <code>AVG</code> of high scoring <code>matches</code> per country in the main query.</li>
+```{sql connection=con}
+SELECT
+	c.name AS country,
+    -- Calculate the average matches per season
+    AVG(outer_s.matches) AS avg_seasonal_high_scores
+FROM country AS c
+-- Left join outer_s to country
+LEFT JOIN (
+  SELECT country_id, season,
+         COUNT(id) AS matches
+  FROM (
+    SELECT country_id, season, id
+	FROM match
+	WHERE home_goal >= 5 OR away_goal >= 5) AS inner_s
+  -- Close parentheses and alias the subquery
+  GROUP BY country_id, season) AS outer_s
+ON c.id = outer_s.country_id
+GROUP BY country;
+```
+
+<p class="">Great job!! This required quite a few steps, but you've got the hang of steps necessary to nest subqueries in <code>FROM</code> that you can apply to other parts of your query as well!</p>
+
+#### Common Table Expressions {.unnumbered}
+
+
+
+##### Clean up with CTEs {.unnumbered}
+
+
+<div class>
+<p>In chapter 2, you generated a list of countries and the number of matches in each country with more than 10 total goals. The query in that exercise utilized a subquery in the <code>FROM</code> statement in order to filter the matches <em>before</em> counting them in the main query. Below is the query you created:</p>
+<pre><code>SELECT
+  c.name AS country,
+  COUNT(sub.id) AS matches
+FROM country AS c
+INNER JOIN (
+  SELECT country_id, id 
+  FROM match
+  WHERE (home_goal + away_goal) &gt;= 10) AS sub
+ON c.id = sub.country_id
+GROUP BY country;
+</code></pre>
+<p>You can list one (or more) subqueries as <strong>common table expressions</strong> (CTEs) by <em>declaring</em> them ahead of your main query, which is an excellent tool for organizing  information and placing it in a logical order.</p>
+<p>In this exercise, let's rewrite a similar query using a CTE.</p>
+</div>
+
+<li>Complete the syntax to declare your CTE.</li>
+<li>Select the <code>country_id</code> and match <code>id</code> from the <code>match</code> table in your CTE.</li>
+<li>Left join the CTE to the league table using <code>country_id</code>.</li>
+```{sql connection=con}
+-- Set up your CTE
+WITH match_list AS (
+    SELECT 
+  		country_id, 
+  		id
+    FROM match
+    WHERE (home_goal + away_goal) >= 10)
+-- Select league and count of matches from the CTE
+SELECT
+    l.name AS league,
+    COUNT(match_list.id) AS matches
+FROM league AS l
+-- Join the CTE to the league table
+LEFT JOIN match_list 
+ON l.id = match_list.country_id
+GROUP BY l.name;
+```
+
+<p class="">Nice job! You just rearranged a query to produce similar results to a subquery in <code>FROM</code>! Isn't this much easier to read?</p>
+
+##### Organizing with CTEs {.unnumbered}
+
+
+<div class>
+<p>Previously, you modified a query based on a statement you completed in chapter 2 using common table expressions. </p>
+<p>This time, let's expand on the exercise by looking at details about matches with very high scores using CTEs. Just like a subquery in <code>FROM</code>, you can join tables <em>inside</em> a CTE.</p>
+</div>
+
+<li>Declare your CTE, where you create a list of all matches with the league name.</li>
+<li>Select the league, date, home, and away goals from the CTE.</li>
+<li>Filter the main query for matches with 10 or more goals.</li>
+```{sql connection=con}
+-- Set up your CTE
+WITH match_list AS (
+  -- Select the league, date, home, and away goals
+    SELECT 
+  		l.name AS league, 
+     	m.date, 
+  		m.home_goal, 
+  		m.away_goal,
+       (m.home_goal + m.away_goal) AS total_goals
+    FROM match AS m
+    LEFT JOIN league as l ON m.country_id = l.id)
+-- Select the league, date, home, and away goals from the CTE
+SELECT league, date, home_goal, away_goal
+FROM match_list
+-- Filter by total goals
+WHERE total_goals >= 10;
+```
+
+<p class="">Nice job! CTEs are much easier to read than multiple subqueries!</p>
+
+##### CTEs with nested subqueries {.unnumbered}
+
+
+<div class>
+<p>If you find yourself listing multiple subqueries in the <code>FROM</code> clause with nested statement, your query will likely become long, complex, and difficult to read. </p>
+<p>Since many queries are written with the intention of being saved and re-run in the future, proper organization is key to a seamless workflow. Arranging subqueries as CTEs will save you time, space, and confusion in the long run!</p>
+</div>
+
+<li>Declare a CTE that calculates the total goals from matches in August of the 2013/2014 season.</li>
+<li>Left join the CTE onto the league table using <code>country_id</code> from the <code>match_list</code> CTE.</li>
+<li>Filter the list on the inner subquery to only select matches in August of the 2013/2014 season.</li>
+
+```{sql connection=con}
+SELECT 
+  		country_id, 
+  	   (home_goal + away_goal) AS goals
+    FROM match
+    -- Create a list of match IDs to filter data in the CTE
+    WHERE id IN (
+       SELECT id
+       FROM match
+       WHERE season = '2013/2014' AND cast(cast(strftime('%m', date) as int) as int) = 08)
+```
+
+```{sql connection=con}
+-- Set up your CTE
+WITH match_list AS (
+    SELECT 
+  		country_id, 
+  	   (home_goal + away_goal) AS goals
+    FROM match
+    -- Create a list of match IDs to filter data in the CTE
+    WHERE id IN (
+       SELECT id
+       FROM match
+       WHERE season = '2013/2014' AND cast(cast(strftime('%m', date) as int) as int) = 08))
+-- Select the league name and average of goals in the CTE
+SELECT
+	l.name,
+    AVG(match_list.goals)
+FROM league AS l
+-- Join the CTE onto the league table
+LEFT JOIN match_list ON l.id = match_list.country_id
+GROUP BY l.name;
+```
+
+<p class="">Fantastic work! Your CTE with a nested subquery is easy to read -- and produces an interesting set of data!</p>
+
+#### Deciding on techniques to use {.unnumbered}
+
+
+
+##### Get team names with a subquery {.unnumbered}
+
+
+<div class>
+<p>Let's solve a problem we've encountered a few times in this course so far -- <em>How do you get both the home and away team names into one final query result?</em></p>
+<p>Out of the 4 techniques we just discussed, this can be performed using subqueries, correlated subqueries, and CTEs. Let's practice creating similar result sets using each of these 3 methods over the next 3 exercises, starting with subqueries in <code>FROM</code>.</p>
+</div>
+
+<li>Create a query that left joins <code>team</code> to <code>match</code> in order to get the identity of the home team. This becomes the subquery in the next step.</li>
+```{sql connection=con}
+SELECT 
+	m.id, 
+    t.team_long_name AS hometeam
+-- Left join team to match
+FROM match AS m
+LEFT JOIN team as t
+ON m.hometeam_id = team_api_id;
+```
+
+<ul>
+<li>Add a second subquery to the <code>FROM</code> statement to get the away team name, changing only the <code>hometeam_id</code>. Left join both subqueries to the <code>match</code> table on the <code>id</code> column.</li>
+</ul>
+<p><em><strong>Warning:</strong> if your code is timing out, you have probably made a mistake in the <code>JOIN</code> and tried to join on the wrong fields which caused the table to be too big! Read the provided code and comments carefully, and check your <code>ON</code> conditions!</em></p>
+```{sql connection=con}
+SELECT
+	m.date,
+    -- Get the home and away team names
+    hometeam,
+    awayteam,
+    m.home_goal,
+    m.away_goal
+FROM match AS m
+
+-- Join the home subquery to the match table
+LEFT JOIN (
+  SELECT match.id, team.team_long_name AS hometeam
+  FROM match
+  LEFT JOIN team
+  ON match.hometeam_id = team.team_api_id) AS home
+ON home.id = m.id
+
+-- Join the away subquery to the match table
+LEFT JOIN (
+  SELECT match.id, team.team_long_name AS awayteam
+  FROM match
+  LEFT JOIN team
+  -- Get the away team ID in the subquery
+  ON match.awayteam_id = team.team_api_id) AS away
+ON away.id = m.id;
+```
+
+<p class="">Great job!! This is one clear way to generate a list of team names who played in a match. This is much easier to read than team ID numbers!</p>
+
+##### Get team names with correlated subqueries {.unnumbered}
+
+
+<div class>
+<p>Let's solve the same problem using correlated subqueries -- <em>How do you get both the home and away team names into one final query result?</em></p>
+<p>This can easily be performed using correlated subqueries. But how might that impact the performance of your query? Complete the following steps and let's find out! </p>
+<p><strong>Please note that your query will run more slowly than the previous exercise!</strong></p>
+</div>
+
+<li>Using a correlated subquery in the <code>SELECT</code> statement, match the <code>team_api_id</code> column from <code>team</code> to the <code>hometeam_id</code> from <code>match</code>.</li>
+```{sql connection=con}
+SELECT
+    m.date,
+   (SELECT team_long_name
+    FROM team AS t
+    -- Connect the team to the match table
+    WHERE t.team_api_id = m.hometeam_id) AS hometeam
+FROM match AS m;
+```
+
+
+<li>Create a second correlated subquery in <code>SELECT</code>, yielding the away team's name.</li>
+<li>Select the home and away goal columns from <code>match</code> in the main query.</li>
+```{sql connection=con}
+SELECT
+    m.date,
+   (SELECT team_long_name
+    FROM team AS t
+    WHERE t.team_api_id = m.hometeam_id) AS hometeam,
+    -- Connect the team to the match table
+   (SELECT team_long_name
+    FROM team AS t
+    WHERE t.team_api_id = m.awayteam_id) AS awayteam,
+   -- Select home and away goals
+    m.home_goal,
+    m.away_goal
+FROM match AS m;
+```
+
+<p class="">Fantastic work! The syntax here is much simpler, but if you're working with a large dataset your query may take a while to run!</p>
+
+##### Get team names with CTEs {.unnumbered}
+
+
+<div class>
+<p>You've now explored two methods for answering the question, <em>How do you get both the home and away team names into one final query result?</em></p>
+<p>Let's explore the final method - common table expressions. Common table expressions are similar to the subquery method for generating results, mainly differing in syntax and the order in which information is processed.</p>
+</div>
+
+<li>Select <code>id</code> from <code>match</code> and <code>team_long_name</code> from <code>team</code>. Join these two tables together on <code>hometeam_id</code> in <code>match</code> and <code>team_api_id</code> in <code>team</code>.</li>
+```{sql connection=con}
+SELECT 
+	-- Select match id and team long name
+    m.id, 
+    t.team_long_name AS hometeam
+FROM match AS m
+-- Join team to match using team_api_id and hometeam_id
+LEFT JOIN team AS t 
+ON m.hometeam_id = t.team_api_id;
+```
+
+
+<li>Declare the query from the previous step as a common table expression. <code>SELECT</code> everything from the CTE into the main query. <strong>Your results will not change at this step!</strong></li>
+```{sql connection=con}
+-- Declare the home CTE
+WITH home AS (
+  SELECT m.id, t.team_long_name AS hometeam
+  FROM match AS m
+  LEFT JOIN team AS t 
+  ON m.hometeam_id = t.team_api_id)
+-- Select everything from home
+SELECT *
+FROM home;
+```
+
+
+<li>Let's declare the second CTE, <code>away</code>. Join it to the first CTE on the <code>id</code> column.</li>
+<li>The <code>date</code>, <code>home_goal</code>, and <code>away_goal</code> columns have been added to the CTEs. <code>SELECT</code> them into the main query.</li>
+```{sql connection=con}
+WITH home AS (
+  SELECT m.id, m.date, 
+  		 t.team_long_name AS hometeam, m.home_goal
+  FROM match AS m
+  LEFT JOIN team AS t 
+  ON m.hometeam_id = t.team_api_id),
+-- Declare and set up the away CTE
+away AS (
+  SELECT m.id, m.date, 
+  		 t.team_long_name AS awayteam, m.away_goal
+  FROM match AS m
+  LEFT JOIN team AS t 
+  ON m.awayteam_id = t.team_api_id)
+-- Select date, home_goal, and away_goal
+SELECT 
+	home.date,
+    home.hometeam,
+    away.awayteam,
+    home.home_goal,
+    away.away_goal
+-- Join away and home on the id column
+FROM home
+INNER JOIN away
+ON home.id = away.id;
+```
+
+<p class="">And you're done!! You now know three separate ways to manipulate and transform data to produce a complex query result! This is a great set of skills to have when working with complex relational databases!</p>
+
+##### Which technique to use? {.unnumbered}
+
+<div class=""><p>The previous three exercises demonstrated that, in many cases, you can use multiple techniques in SQL to answer the same question. </p>
+<p>Based on what you learned, which of the following statements is <strong>false</strong> regarding differences in the use and performance of multiple/nested subqueries, correlated subqueries, and common table expressions?</p></div>
+
+<li>Correlated subqueries can allow you to circumvent multiple, complex joins.</li>
+<li>Common table expressions are declared first, improving query run time.</li>
+<strong><li>Correlated subqueries can reduce the length of your query, which improves query run time.</li></strong>
+<li>Multiple or nested subqueries are processed first, before your main query.</li>
+
+<p class="dc-completion-pane__message dc-u-maxw-100pc">"Correct! Although correlated subqueries can reduce the length of your query, they also significantly <em>increase</em> query run time."</p>
+
+### Window Functions {.unnumbered}
+
+<p class="">You will learn about window functions and how to pass aggregate functions along a dataset. You will also learn how to calculate running totals and partitioned averages.</p>
+
+#### It's OVER {.unnumbered}
+
+
+
+##### The match is OVER {.unnumbered}
+
+
+<div class>
+<p>The <code>OVER()</code> clause allows you to pass an aggregate function down a data set, similar to subqueries in <code>SELECT</code>. The <code>OVER()</code> clause offers significant benefits over subqueries in select -- namely, your queries will run faster, and the <code>OVER()</code> clause has a wide range of additional functions and clauses you can include with it that we will cover later on in this chapter.</p>
+<p>In this exercise, you will revise some queries from previous chapters using the <code>OVER()</code> clause.</p>
+</div>
+
+<li>Select the match ID, country name, season, home, and away goals from the <code>match</code> and <code>country</code> tables.</li>
+<li>Complete the query that calculates the average number of goals scored overall and then includes the aggregate value in each row using a window function.</li>
+```{sql connection=con}
+SELECT 
+	-- Select the id, country name, season, home, and away goals
+	m.id,
+	c.name AS country,
+	m.season,
+	m.home_goal,
+	m.away_goal,
+    -- Use a window to include the aggregate average in each row
+	AVG(m.home_goal + m.away_goal) OVER() AS overall_avg
+FROM match AS m
+LEFT JOIN country AS c ON m.country_id = c.id;
+```
+
+<p class="">Good job! The basic window function with an <code>OVER</code> clause functions just like a subquery in <code>SELECT</code>.</p>
+
+##### What's OVER here? {.unnumbered}
+
+
+<div class>
+<p>Window functions allow you to create a <code>RANK</code> of information according to any variable you want to use to sort your data. When setting this up, you will need to specify what column/calculation you want to use to calculate your rank. This is done by including an <code>ORDER BY</code> clause inside the <code>OVER()</code> clause. Below is an example:</p>
+<pre><code>SELECT 
+    id,
+    RANK() OVER(ORDER BY home_goal) AS rank
+FROM match;
+</code></pre>
+<p>In this exercise, you will create a data set of ranked matches according to which leagues, on average, score the most goals in a match.</p>
+</div>
+
+<li>Select the league name and average total goals scored from <code>league</code> and <code>match</code>. </li>
+<li>Complete the window function so it calculates the rank of average goals scored across all leagues in the database.</li>
+<li>Order the rank by the average total of home and away goals scored.</li>
+```{sql connection=con}
+SELECT 
+	-- Select the league name and average goals scored
+	l.name AS league,
+    AVG(m.home_goal + m.away_goal) AS avg_goals,
+    -- Rank each league according to the average goals
+    RANK() OVER(ORDER BY AVG(m.home_goal + m.away_goal)) AS league_rank
+FROM league AS l
+LEFT JOIN match AS m 
+ON l.id = m.country_id
+WHERE m.season = '2011/2012'
+GROUP BY l.name
+-- Order the query by the rank you created
+ORDER BY league_rank;
+```
+
+<p class="">Good job! You'll notice that the default order is from smallest to largest value -- in this case, the Polish league tends to have the fewest goals scored on average.</p>
+
+##### Flip OVER your results {.unnumbered}
+
+
+<div class>
+<p>In the last exercise, the rank generated in your query was organized from smallest to largest. By adding <code>DESC</code> to your window function, you can create a rank sorted from largest to smallest.</p>
+<pre><code>SELECT 
+    id,
+    RANK() OVER(ORDER BY home_goal DESC) AS rank
+FROM match;
+</code></pre>
+</div>
+
+<li>Complete the same parts of the query as the previous exercise.</li>
+<li>Complete the window function to rank each league from highest to lowest average goals scored.</li>
+<li>Order the main query by the rank you just created.</li>
+```{sql connection=con}
+SELECT 
+	-- Select the league name and average goals scored
+	l.name AS league,
+    AVG(m.home_goal + m.away_goal) AS avg_goals,
+    -- Rank leagues in descending order by average goals
+    RANK() OVER(ORDER BY AVG(m.home_goal + m.away_goal) DESC) AS league_rank
+FROM league AS l
+LEFT JOIN match AS m 
+ON l.id = m.country_id
+WHERE m.season = '2011/2012'
+GROUP BY l.name
+-- Order the query by the rank you created
+ORDER BY league_rank;
+```
+
+<p class="">Great job! Unlike a subquery in SELECT, your window function will apply the filter that you include in your <code>WHERE</code> clause.</p>
+
+#### OVER with a PARTITION {.unnumbered}
+
+
+
+##### PARTITION BY a column {.unnumbered}
+
+
+<div class>
+<p>The <code>PARTITION BY</code> clause allows you to calculate separate "windows" based on columns you want to divide your results. For example, you can create a single column that calculates an overall average of goals scored for each season. </p>
+<p>In this exercise, you will be creating a data set of games played by <em>Legia Warszawa</em> (Warsaw League), the top ranked team in Poland, and comparing their individual game performance to the overall average for that season. </p>
+<p>Where do you see more outliers? Are they <em>Legia Warszawa</em>'s home or away games?</p>
+</div>
+
+<li>Complete the two window functions that calculate the home and away goal averages. Partition the window functions by season to calculate separate averages for each season.</li>
+<li>Filter the query to only include matches played by <em>Legia Warszawa</em>, <code>id = 8673</code>.</li>
+```{sql connection=con}
+SELECT 
+	date,
+	season,
+    home_goal,
+    away_goal,
+    CASE WHEN hometeam_id = 8673 THEN 'home' 
+         ELSE 'away' END AS warsaw_location,
+    -- Calculate the average goals scored partitioned by season
+    AVG(home_goal) OVER(PARTITION BY season) AS season_homeavg,
+    AVG(away_goal) OVER(PARTITION BY season) AS season_awayavg
+FROM match
+-- Filter the data set for Legia Warszawa matches only
+WHERE 
+	hometeam_id = 8673 
+    OR awayteam_id = 8673
+ORDER BY (home_goal + away_goal) DESC;
+```
+
+<p class="">Good job! You've generated an ordered data set with window functions to compare each game's score to averages for that season.</p>
+
+##### PARTITION BY multiple columns {.unnumbered}
+
+
+<div class>
+<p>The <code>PARTITION BY</code> clause can be used to break out window averages by multiple data points (columns). You can even calculate the information you want to use to partition your data! For example, you can calculate average goals scored by season and by country, or by the calendar year (taken from the date column).</p>
+<p>In this exercise, you will calculate the average number home and away goals scored <em>Legia Warszawa</em>, and their opponents, partitioned by the month in each season.</p>
+</div>
+
+<li>Construct two window functions partitioning the average of home and away goals by season and month.</li>
+<li>Filter the dataset by <em>Legia Warszawa</em>'s team ID (<code>8673</code>) so that the window calculation only includes matches involving them.</li>
+```{sql connection=con}
+SELECT 
+	date,
+    season,
+    home_goal,
+    away_goal,
+    CASE WHEN hometeam_id = 8673 THEN 'home' 
+         ELSE 'away' END AS warsaw_location,
+    -- Calculate average goals partitioned by season and month
+    AVG(home_goal) OVER(PARTITION BY season, 
+         	cast(strftime('%m', date) as int)) AS season_mo_home,
+    AVG(away_goal) OVER(PARTITION BY season, 
+            cast(strftime('%m', date) as int)) AS season_mo_away
+FROM match
+WHERE 
+	hometeam_id = 8673 
+    OR awayteam_id = 8673
+ORDER BY (home_goal + away_goal) DESC;
+```
+
+<p class="">Excellent! You successfully partitioned your averages by each month in the season. In the next lesson, we'll expand on the usefulness of information generated with window functions.</p>
+
+#### Sliding windows {.unnumbered}
+
+
+
+##### Slide to the left {.unnumbered}
+
+
+<div class>
+<p>Sliding windows allow you to create running calculations between any two points in a window using functions such as <code>PRECEDING</code>, <code>FOLLOWING</code>, and <code>CURRENT ROW</code>. You can calculate running counts, sums, averages, and other aggregate functions between any two points you specify in the data set.</p>
+<p>In this exercise, you will expand on the examples discussed in the video, calculating the running total of goals scored by the <em>FC Utrecht</em> when they were the home team during the 2011/2012 season. Do they score more goals at the end of the season as the home or away team?</p>
+</div>
+
+<li>Complete the window function by:<ul>
+<li>Assessing the running <em>total</em> of home goals scored by <em>FC Utrecht</em>.</li>
+<li>Assessing the running <em>average</em> of home goals scored.</li>
+<li>Ordering both the running average and running total by <code>date</code>.</li>
+</ul>
+</li>
+```{sql connection=con}
+SELECT 
+	date,
+	home_goal,
+	away_goal,
+    -- Create a running total and running average of home goals
+	SUM(home_goal) OVER(ORDER BY date 
+        ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS running_total,
+    AVG(home_goal) OVER(ORDER BY date 
+        ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS running_avg
+FROM match
+WHERE 
+	hometeam_id = 9908 
+    AND season = '2011/2012';
+```
+
+<p class="">Good job! Sliding windows allow for a wide variety of calculations with your database.</p>
+
+##### Slide to the right {.unnumbered}
+
+
+<div class>
+<p>Now let's see how <em>FC Utrecht</em> performs when they're the away team. You'll notice that the total for the season is at the bottom of the data set you queried. Depending on your results, this could be pretty long, and scrolling down is not very helpful.</p>
+<p>In this exercise, you will slightly modify the query from the previous exercise by sorting the data set in reverse order and calculating a backward running total <strong>from the</strong> <code>CURRENT ROW</code> <strong>to the end of the data set</strong> (earliest record).</p>
+</div>
+
+<li>Complete the window function by:<ul>
+<li>Assessing the running <em>total</em> of home goals scored by <em>FC Utrecht</em>.</li>
+<li>Assessing the running <em>average</em> of home goals scored.</li>
+<li>Ordering both the running average and running total by <code>date</code>, <em>descending</em>.</li>
+</ul>
+</li>
+```{sql connection=con}
+SELECT 
+	-- Select the date, home goal, and away goals
+	date,
+	home_goal,
+	away_goal,
+    -- Create a running total and running average of home goals
+    SUM(home_goal) OVER(ORDER BY date DESC
+        ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING) AS running_total,
+    AVG(home_goal) OVER(ORDER BY date DESC
+        ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING) AS running_avg
+FROM match
+WHERE 
+	awayteam_id = 9908 
+    AND season = '2011/2012';
+```
+
+<p class="">Good job! You can reverse your calculations with your window functions to best suit your needs in an analysis.</p>
+
+#### Bringing it all together {.unnumbered}
+
+
+
+##### Setting up the home team CTE {.unnumbered}
+
+
+<div class>
+<p>In this course, we've covered ways in which you can use <code>CASE</code> statements, subqueries, common table expressions, and window functions in your queries to structure a data set that best meets your needs. For this exercise, you will be using all of these concepts to generate a list of matches in which Manchester United was defeated during the 2014/2015 English Premier League season.</p>
+<p>Your first task is to create the first query that filters for matches where Manchester United played as the home team. This will become a common table expression in a later exercise.</p>
+</div>
+
+<li>Create a <code>CASE</code> statement that identifies each match as a win, lose, or tie for Manchester United.</li>
+<li>Fill out the logical operators for each <code>WHEN</code> clause in the <code>CASE</code> statement (equals, greater than, less than).</li>
+<li>Join the tables on home team ID from <code>match</code>, and <code>team_api_id</code> from <code>team</code>.</li>
+<li>Filter the query to only include games from the 2014/2015 season where Manchester United was the home team.</li>
+```{sql connection=con}
+SELECT 
+    m.id, 
+	t.team_long_name,
+    -- Identify matches as home/away wins or ties
+	CASE WHEN m.home_goal > m.away_goal THEN 'MU Win'
+		 WHEN m.home_goal < m.away_goal THEN 'MU Loss' 
+         ELSE 'Tie' END AS outcome
+FROM match AS m
+-- Left join team on the home team ID and team API id
+LEFT JOIN team AS t 
+ON m.hometeam_id = t.team_api_id
+WHERE 
+	-- Filter for 2014/2015 and Manchester United as the home team
+	m.season = '2014/2015'
+	AND t.team_long_name = 'Manchester United';
+```
+
+<p class="">Good job! This query you wrote will become the first common table expression.</p>
+
+##### Setting up the away team CTE {.unnumbered}
+
+
+<div class>
+<p>Great job! Now that you have a query identifying the home team in a match, you will perform a similar set of steps to identify the <em>away</em> team. Just like the previous step, you will join the <code>match</code> and <code>team</code> tables. Each of these two queries will be declared as a <em>Common Table Expression</em> in the following step.</p>
+<p>The primary difference in this query is that you will be joining the tables on <code>awayteam_id</code>, and reversing the match outcomes in the <code>CASE</code> statement. </p>
+<p>When altering <code>CASE</code> statement logic in your own work, you can reverse either the logical condition (i.e., <code>home_goal &gt; away_goal</code>) or the outcome in <code>THEN</code> -- just make sure you only reverse one of the two!</p>
+</div>
+
+<li>Complete the <code>CASE</code> statement syntax.</li>
+<li>Fill out the logical operators identifying each match as a win, loss, or tie for Manchester United.</li>
+<li>Join the table on <code>awayteam_id</code>, and <code>team_api_id</code>.</li>
+```{sql connection=con}
+SELECT 
+    m.id, 
+	t.team_long_name,
+    -- Identify matches as home/away wins or ties
+	CASE WHEN m.home_goal > m.away_goal THEN 'MU Loss'
+		 WHEN m.home_goal < m.away_goal THEN 'MU Win' 
+         ELSE 'Tie' END AS outcome
+-- Join team table to the match table
+FROM match AS m
+LEFT JOIN team AS t 
+ON m.awayteam_id = t.team_api_id
+WHERE 
+	-- Filter for 2014/2015 and Manchester United as the away team
+	m.season = '2014/2015'
+	AND t.team_long_name = 'Manchester United';
+```
+
+<p class="">Great job! You correctly constructed a <code>CASE</code> statement to accurately identify matches as a win or loss for Manchester United. This will become your second common table expression.</p>
+
+##### Putting the CTEs together {.unnumbered}
+
+
+<div class>
+<p>Now that you've created the two subqueries identifying the home and away team opponents, it's time to rearrange your query with the <code>home</code> and <code>away</code> subqueries as <em>Common Table Expressions</em> (CTEs). You'll notice that the main query includes the phrase, <code>SELECT DISTINCT</code>. Without identifying only <code>DISTINCT</code> matches, you will return a duplicate record for each game played.</p>
+<p>Continue building the query to extract all matches played by Manchester United in the 2014/2015 season.</p>
+</div>
+
+<li>Declare the <code>home</code> and <code>away</code> CTEs before your main query.</li>
+<li>Join your CTEs to the match table using a <code>LEFT JOIN</code>.</li>
+<li>Select the relevant data from the CTEs into the main query. </li>
+<li>Select the date from <code>match</code>, team names from the CTEs, and home/ away goals from <code>match</code> in the main query.</li>
+```{sql connection=con}
+-- Set up the home team CTE
+WITH home AS (
+  SELECT m.id, t.team_long_name,
+	  CASE WHEN m.home_goal > m.away_goal THEN 'MU Win'
+		   WHEN m.home_goal < m.away_goal THEN 'MU Loss' 
+  		   ELSE 'Tie' END AS outcome
+  FROM match AS m
+  LEFT JOIN team AS t ON m.hometeam_id = t.team_api_id),
+-- Set up the away team CTE
+away AS (
+  SELECT m.id, t.team_long_name,
+	  CASE WHEN m.home_goal > m.away_goal THEN 'MU Loss'
+		   WHEN m.home_goal < m.away_goal THEN 'MU Win' 
+  		   ELSE 'Tie' END AS outcome
+  FROM match AS m
+  LEFT JOIN team AS t ON m.awayteam_id = t.team_api_id)
+-- Select team names, the date and goals
+SELECT DISTINCT
+    m.date,
+    home.team_long_name AS home_team,
+    away.team_long_name AS away_team,
+    m.home_goal, m.away_goal
+-- Join the CTEs onto the match table
+FROM match AS m
+LEFT JOIN home ON m.id = home.id
+LEFT JOIN away ON m.id = away.id
+WHERE m.season = '2014/2015'
+      AND (home.team_long_name = 'Manchester United' 
+           OR away.team_long_name = 'Manchester United');
+```
+
+<p class="">Fantastic! You wrote a query that extracted data from two common table expressions. You can scale up the number of CTEs as necessary, depending on your data.</p>
+
+##### Add a window function {.unnumbered}
+
+
+<div class>
+<p>Fantastic! You now have a result set that retrieves the match date, home team, away team, and the goals scored by each team. You have one final component of the question left -- <em>how badly did Manchester United lose in each match?</em></p>
+<p>In order to determine this, let's add a window function to the main query that ranks matches by the <em>absolute value</em> of the difference between <code>home_goal</code> and <code>away_goal</code>. This allows us to directly compare the difference in scores without having to consider whether Manchester United played as the home or away team!</p>
+<p>The equation is complete for you -- all you need to do is properly complete the window function!</p>
+</div>
+
+<li>Set up the CTEs so that the home and away teams each have a name, ID, and score associated with them.</li>
+<li>Select the date, home team name, away team name, home goal, and away goals scored in the main query.</li>
+<li>Rank the matches and order by the difference in scores in <em>descending</em> order.</li>
+```{sql connection=con}
+-- Set up the home team CTE
+WITH home AS (
+  SELECT m.id, t.team_long_name,
+	  CASE WHEN m.home_goal > m.away_goal THEN 'MU Win'
+		   WHEN m.home_goal < m.away_goal THEN 'MU Loss' 
+  		   ELSE 'Tie' END AS outcome
+  FROM match AS m
+  LEFT JOIN team AS t ON m.hometeam_id = t.team_api_id),
+-- Set up the away team CTE
+away AS (
+  SELECT m.id, t.team_long_name,
+	  CASE WHEN m.home_goal > m.away_goal THEN 'MU Loss'
+		   WHEN m.home_goal < m.away_goal THEN 'MU Win' 
+  		   ELSE 'Tie' END AS outcome
+  FROM match AS m
+  LEFT JOIN team AS t ON m.awayteam_id = t.team_api_id)
+-- Select columns and and rank the matches by goal difference
+SELECT DISTINCT
+    m.date,
+    home.team_long_name AS home_team,
+    away.team_long_name AS away_team,
+    m.home_goal, m.away_goal,
+    RANK() OVER(ORDER BY ABS(home_goal - away_goal) DESC) as match_rank
+-- Join the CTEs onto the match table
+FROM match AS m
+LEFT JOIN home ON m.id = home.id
+LEFT JOIN AWAY ON m.id = away.id
+WHERE m.season = '2014/2015'
+	  AND ((home.team_long_name = 'Manchester United' AND home.outcome = 'MU Loss')
+	  OR (away.team_long_name = 'Manchester United' AND away.outcome = 'MU Loss'));
+```
+
+<p class="">Awesome! This is an interesting list of matches. You can easily modify this query for any team of your choice. Finally, if you liked this course, let your instructor know by tweeting them at <a href="https://twitter.com/mona_kay_" target="_blank" rel="noopener noreferrer">@mona <em>kay</em> </a>!</p>

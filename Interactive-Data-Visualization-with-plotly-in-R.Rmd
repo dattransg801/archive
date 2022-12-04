@@ -1,0 +1,1394 @@
+## Introduction to Plotly {.unnumbered}
+
+<h3 class="course__description-title">Adam Loy</h3>
+<p class="course__instructor-description display-none-mobile-course-page-experiment">
+    Adam is an assistant professor of statistics at Carleton College where he teaches courses in statistics in data science. His research interests lie in statistical graphics and computing, R development, and statistics/data science education. Find out more on Adam's <a href="https://aloy.rbind.io/">webpage</a>.
+  </p>
+  
+**Course Description**
+
+<p class="course__description">Interactive graphics allow you to manipulate plotted data to gain further insight. As an example, an interactive graphic would allow you to zoom in on a subset of your data without the need to create a new plot. In this course, you will learn how to create and customize interactive graphics in plotly using the R programming language. Along the way, you will review data visualization best practices and be introduced to new plot types such as scatterplot matrices and binned scatterplots.</p>
+
+### Introduction to plotly {.unnumbered}
+
+<p class="chapter__description">
+    In this chapter, you will receive an introduction to basic graphics with plotly. You will create your first interactive graphics, displaying both univariate and bivariate distributions. Additionally, you will discover how to easily convert ggplot2 graphics to interactive plotly graphics. 
+  </p>
+
+#### What is plotly? {.unnumbered}
+
+
+
+##### A follow-up on the course intro {.unnumbered}
+
+<div class=""><p>When you are designing graphics, you need to carefully consider what type of graphic best suits your needs: a static graphic or an interactive graphic.</p>
+<p>Four example graphics are described below, identify the interactive graphic.</p></div>
+
+- [ ] A scatterplot of the average broadband speed against average cost by country, faceted by year.
+- [x] A scatterplot of the average broadband speed against average cost by country with a dropdown menu to select the year displayed.
+- [ ] A scatterplot of the average broadband speed against average cost by country that automatically cycles through the years.
+- [ ] A scatterplot of the average broadband speed against average cost by country that is automatically updated when new data become available.
+
+<p class="dc-completion-pane__message dc-u-maxw-100pc">Correct! This graphic responds to the year selected by the user, making it an interactive graphic.</p>
+
+##### Converting a ggplot2 scatterplot {.unnumbered}
+
+
+<div class>
+<p>The <code>ggplotly()</code> command makes it easy to create interactive versions of most static plots created using the <code>ggplot2</code> package. In this exercise, your task is to create an interactive version of the below scatterplot, exploring the relationship between video game sales in North America (<code>NA_sales</code>) and aggregate critic score (<code>Critic_Score</code>) in 2016.</p>
+<p>After creating the interactive graphic, be sure to explore what interactions are possible.</p>
+<p>Note: loading <code>plotly</code> also loads <code>ggplot2</code> and <code>dplyr</code>.</p>
+</div>
+<div class="exercise--instructions__content">
+```{r}
+# edited/added
+vgsales = read.csv("https://assets.datacamp.com/production/repositories/1792/datasets/2396f3f587e31ea726911e5d8974c5f98db5eee1/vgsales.csv")
+```
+<li>Load <code>plotly</code>.</li>
+```{r}
+# Load the plotly package
+library(plotly)
+
+
+```
+<li>Create a scatterplot with <code>NA_Sales</code> on the x-axis and <code>Critic_Score</code> on the y-axis for video games found in the <code>vgsales</code> dataset from 2016. Store this plot in the <code>scatter</code> object.</li>
+```{r}
+# Store the scatterplot of Critic_Score vs. NA_Sales sales in 2016
+scatter <- vgsales %>%
+  filter(Year == 2016) %>%
+  ggplot(aes(x = NA_Sales, y = Critic_Score)) +
+  geom_point(alpha = 0.3)
+
+
+```
+<li>Use the <code>ggplotly()</code> command to convert <code>scatter</code> to a <code>plotly</code> interactive graphic.</li>
+```{r}
+# Convert the scatterplot to a plotly graphic
+ggplotly(scatter)
+```
+</div>
+
+<p class="">Good work! By default, <code>plotly</code> adds some very useful interactive tools: hover information including the values of the x and y-coordinates, the ability to pan and zoom, and the box and lasso selection tools.
+</p>
+
+#### Univariate graphics {.unnumbered}
+
+
+
+##### Histograms {.unnumbered}
+
+
+<div class>
+<p>In this exercise, you'll use <code>plotly</code> to create a histogram from scratch in order to explore the distribution of the critic scores of video games sold between 1980 and 2016. The data are contained in the <code>Critic_Score</code> variable in the <code>vgsales</code> data frame.</p>
+<p>As you complete this exercise, think about how the bins influence what you see in the distribution of critic scores.</p>
+<p>Note that <code>plotly</code> has already been loaded for you.</p>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Create a histogram of the critic score (<code>Critic_Score</code>) using the default number of bins.</li>
+```{r}
+# Create a histogram of Critic_Score
+vgsales %>%
+	plot_ly(x = ~Critic_Score) %>%
+	add_histogram()
+```
+</div>
+
+<li>Create a histogram of the critic score (<code>Critic_Score</code>) setting the maximum number of bins to 25.</li>
+```{r}
+# Create a histogram of Critic_Score with at most 25 bins
+vgsales %>%
+    plot_ly(x = ~Critic_Score) %>%
+    add_histogram(nbinsx = 25)
+```
+
+<li>Create a histogram of the critic score (<code>Critic_Score</code>) setting the bin width to 10, starting at 0 and ending at 100.</li>
+```{r}
+# Create a histogram with bins of width 10 between 0 and 100
+vgsales %>%
+  plot_ly(x = ~Critic_Score) %>%
+  add_histogram(xbins = list(start = 0, end = 100, size = 10))
+```
+
+<p class="">Well done! As you can see, changing the binwidth changes the detail the you can see. Using bins that are too large can lead you to overlook key aspects of the data. Using bins that are too small can result in an uninterpretable plot.
+</p>
+
+##### Bar charts {.unnumbered}
+
+
+<div class>
+<p>In this exercise, you'll use <code>plotly</code> to create a bar chart from scratch in order to explore the distribution of the video game genres represented in games sold between 1980 and 2016.</p>
+<p>The data for this bar chart is contained in the <code>Genre</code> column of the <code>vgsales</code> data frame.</p>
+<p>Note that <code>plotly</code> has already been loaded for you.</p>
+</div>
+<div class="exercise--instructions__content">
+```{r}
+# edited/added
+library(tidyverse)
+```
+<li>Use <code>count()</code> to create a frequency table of <code>Genre</code>.</li>
+```{r}
+# Create a frequency for Genre
+genre_table <- vgsales %>%
+	count(Genre) 
+```
+</div>
+
+<li>Use <code>genre_table</code> to create a bar chart of <code>Genre</code></li>
+```{r}
+# Create a bar chart of Genre
+genre_table %>%
+	plot_ly(x = ~Genre, y = ~n) %>%
+	add_bars()
+
+
+```
+
+<li>Reorder the bar chart in <strong>descending</strong> (tallest to shortest bar) to improve the readability.</li>
+```{r}
+# Reorder the bars for Genre by n
+genre_table %>%
+	mutate(Genre = fct_reorder(Genre, n, .desc = TRUE)) %>%
+	plot_ly(x = ~Genre, y = ~n) %>% 
+	add_bars()                      
+```
+
+<p class="">Great! Notice that while it was easy to see that action and sports video games are the two largest categories from the unordered bar chart, comparing other categories-such as adventure and racing-were difficult because they are far apart. Reordering the bars is a great way to improve readability in bar charts, so don't hesitate to put your factor in a meaningful order before plotting!
+</p>
+
+#### Bivariate graphics {.unnumbered}
+
+
+
+##### A first scatterplot {.unnumbered}
+
+
+<div class>
+<p>Do video game players and critics rate games similarly? In this exercise, you will create a scatterplot in <code>plotly</code> to explore the relationship between the average player score (<code>User_Score</code>) and the average critic score (<code>Critic_Score</code>). </p>
+<p>If you see anything unusual, be sure to utilize the interactive tools, such as hover info, to investigate.</p>
+<p>Note that the dataset, <code>vgsales</code>, and <code>plotly</code> have already been loaded for you.</p>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Create a scatter plot with critic score (<code>Critic_Score</code>) on the x-axis and user score (<code>User_Score</code>) on the y-axis.</li>
+```{r}
+# Create a scatter plot of User_Score against Critic_Score
+vgsales %>%
+  plot_ly(x = ~Critic_Score, y = ~User_Score) %>%
+  add_markers()
+```
+</div>
+
+<p class="">Excellent! The horizontal band of points above a user score of 9.5 is an unusual feature. If you hove your mouse above these points, it reveals that these are games where the user score is <em>to be determined</em>(<code>tbd</code>). Notice how easily that was determined with an interactive scatterplot!
+</p>
+
+##### A first stacked bar chart {.unnumbered}
+
+
+<div class>
+<p>In this exercise, your task is to create a stacked bar chart to investigate whether there is an association between the <code>Genre</code> and <code>Rating</code> of video games. </p>
+<p>Be sure to investigate what happens when you click on the color swatches in the legend.</p>
+<p>Note that <code>plotly</code> has already been loaded for you.</p>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Create a stacked bar chart of counts with <code>Genre</code> on the x-axis and <code>Rating</code> used to color in the bars.</li>
+```{r}
+# Filter out the 2016 video games
+vg2016 <- vgsales %>%
+	filter(Year == 2016)
+
+# Create a stacked bar chart of Rating by Genre
+vg2016 %>%
+	count(Genre, Rating) %>%
+	plot_ly(x = ~Genre, y = ~n, color = ~Rating) %>%
+  	add_bars() %>%
+  	layout(barmode = "stack")
+```
+</div>
+
+<p class="">Terrific! Remember that stacked bar charts using counts can be difficult to interpret. Here, it's easier to see the distribution of genre than the relative relationships within the bars.
+</p>
+
+##### Boxplots {.unnumbered}
+
+
+<div class>
+<p>In this exercise, your task is to create a boxplot of global video game sales (the number of units sold) for each genre. Does genre appear to be related to sales?</p>
+<p>Be sure to explore what hover information is given by default.</p>
+<p>Note that <code>plotly</code> has already been loaded for you.</p>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Create side-by-side boxplots with <code>Global_Sales</code> on the x-axis and <code>Genre</code> on the y-axis.</li>
+```{r}
+# Filter out the 2016 video games
+vg2016 <- vgsales %>%
+	filter(Year == 2016)
+
+# Create boxplots of Global_Sales by Genre for above data
+vg2016 %>%
+  plot_ly(x = ~Global_Sales, y = ~Genre) %>%
+  add_boxplot()
+```
+</div>
+
+<p class="">Wonderful! Now that you've completed this chapter you know the basics of plotly. In the next chapter, you'll learn how to style and customize your interactive graphics so that they are ready to share with the world.
+</p>
+
+### Styling and customizing {.unnumbered}
+
+<p class="chapter__description">
+    In this chapter, you will learn how to customize the appearance of your graphics and use opacity, symbol, and color to clarify your message. You will also learn how to transform axes, label your axes, and customize the hover information of your graphs.
+  </p>
+
+#### Customize your traces {.unnumbered}
+
+
+
+##### Color and opacity {.unnumbered}
+
+
+<div class>
+<p>Increasing the transparency (i.e. decreasing the opacity) of a trace can help improve its readability. For example, if there are bars of similar heights in bar charts or histograms, increasing the transparency enables one to see the horizontal grid lines behind the bars, making judgement of relative heights easier. Of course, the hover info can clarify this, but why not make it as easy as possible for your reader?</p>
+<p>In this exercise, you will adapt <code>plotly</code> code to change the color of a histogram and increase its transparency.</p>
+<p><code>plotly</code> has already been loaded for you.</p>
+</div>
+<div class="exercise--instructions__content">
+```{r}
+# edited/added
+vgsales2016 = vgsales %>% filter(Year == 2016)
+```
+<li>Adapt the code so that the bars of the histogram are <code>"navy"</code> and are 50% transparent.</li>
+```{r}
+# Create a histogram of Critic_Score with navy bars that are 50% transparent
+vgsales2016 %>%
+  plot_ly(x = ~Critic_Score) %>%
+  add_histogram(color = I("navy"), opacity = 0.5)
+```
+</div>
+
+<p class="">Well done! With more transparent bars on the histogram the background grid is can now be seen behind the histogram. This can help with comprehension.
+</p>
+
+##### Alternative color formats {.unnumbered}
+
+
+<div class>
+<p>R has a large number of <a href="https://www.stat.columbia.edu/~tzheng/files/Rcolor.pdf">named colors</a>, but sometimes you need a color that isn't named. For example, what if your organization's specific shade of blue is somewhere between <code>"navy"</code> and <code>"dodgerblue4"</code>? Luckily, <code>plotly</code> allows you to specify colors using other formats, including RGB, RGBA, HEX, HCL, HSL, and HSV.</p>
+<p>In this exercise, you will change the histogram's color to using HEX and RGB formats.</p>
+<p>Note that <code>plotly</code> has already been loaded for you.</p>
+</div>
+<div class="exercise--instructions__content"><p>Use the as is function to set the <code>color</code> of the histogram to <code>#111e6c</code>.</p></div>
+```{r}
+# Change the color of the histogram using a hex code
+vgsales2016 %>%
+  plot_ly(x = ~Critic_Score) %>%
+  add_histogram(color = I("#111e6c"))
+```
+
+<div class="exercise--instructions__content"><p>Set the histogram <code>color</code> to <code>"rgb(17, 30, 108)"</code> via the <code>marker</code> argument.</p></div>
+```{r}
+# Change the color of the histogram using rgb()
+vgsales2016 %>%
+  plot_ly(x = ~Critic_Score) %>%
+  add_histogram(marker = list(color = "rgb(17, 30, 108)"))
+```
+
+<p class="">Great! You can also specify colors via <code>rgba()</code>. Here, the fourth argument (alpha) controls the opacity, so if you want to return to 50% transparent bars, specify <code>rgba(17, 30, 108, 0.5)</code>.
+</p>
+
+##### Size and symbol {.unnumbered}
+
+
+<div class><p>To change the default size and shape of points on a scatterplot or boxplot, we pass the <code>marker</code> argument a list with the <code>size</code> and <code>symbol</code> arguments. As you have seen, changing the plotting symbol can make charts easier to read by addressing issues such as overplotting. Decreasing the size of points can also help overcome minor overplotting issues—just don't make the points hard to see!</p></div>
+<div class="exercise--instructions__content">
+
+<li>Change the plotting symbol to a diamond and decrease its size to 4.</li>
+```{r}
+# Set the plotting symbol to diamond and the size to 4
+plot_ly(data = vg2016, x = ~User_Score, y = ~Critic_Score) %>% 
+	add_markers(marker = list(symbol = "diamond", size = 4))
+```
+</div>
+
+<p class="">Nice work! The default marker size is 6 pixels in <code>plotly</code>. Here, descreasing the size reduced the amount of overlap in some of the points. If you plan to resize your graphics, then manually adjusting the marker size may help maintain readability.
+</p>
+
+#### Thoughtful use of color {.unnumbered}
+
+
+
+##### Adding a third variable {.unnumbered}
+
+
+<div class>
+<p>In this exercise, you'll add color to a scatterplot based on a third variable in an effort to explore the relationship between the user score and critic scores of video games in 2016.</p>
+<p><code>plotly</code> has already been loaded for you.</p>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Change the marker color and symbol in the scatterplot of user score (<code>User_Score</code>) against critic score (<code>Critic_Score</code>) to represent <code>Genre</code>.</li>
+
+<li>Use <code>Dark2</code> instead of the default color palette.</li>
+```{r}
+# Use color to add Genre as a third variable
+vgsales2016 %>%
+  plot_ly(x = ~Critic_Score, y = ~User_Score, color = ~Genre) %>%
+  add_markers(colors = "Dark2")
+```
+</div>
+
+<p class="">Nicely done! While you have successfully added color, it may seem <strong>harder</strong> to interpret than before! This is due to the fact that there are a large number of genres in 2016 (11 to be precise). In such cases, it's hard to represent the third variable using aesthetics alone. In chapter 3, you'll learn how to utilize subplots (i.e. Small multiples), which can help in this situation.
+</p>
+
+##### Beyond color: Symbols {.unnumbered}
+
+
+<div class>
+<p>Using both color and shape to encode a categorical variable can be a useful strategy to reveal relationships more effectively. This double-encoding strategy uses two pre-attentive visual cues to more-quickly communicate information to the reader. This idea is implemented by default in <code>plotly</code>; if you map a variable to the symbol, <code>plotly</code> automatically maps the variable to the color.</p>
+<p>To map a variable to the plotting shape, add a <code>symbol</code> argument to the <code>plot_ly()</code> command.</p>
+<p>Caution: It is poor practice to use color and shape to communicate <em>different</em> variables, since the two features have been shown to interfere with each other, making it more difficult to distinguish either variable.</p>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Create a scatterplot with <code>Critic_Score</code> on the x-axis and <code>User_Score</code> on the y-axis where the plotting symbol represents a game's <code>Rating</code>.</li>
+```{r}
+# Create a scatterplot of User_Score against Critic_Score coded by Rating
+vgsales2016 %>%
+   plot_ly(x = ~Critic_Score, y = ~User_Score, symbol = ~Rating)  %>%
+   add_markers()
+```
+</div>
+
+<p class="">Fantastic! To see the power of double-encoding, only map <code>Rating</code> to color. You'll find that it is harder to perceive the different groups on the scatterplot.
+</p>
+
+##### Transforming a color scale {.unnumbered}
+
+
+<div class>
+<p>When mapping a numeric variable to color, sometimes it is necessary to transform the variable. This is especially true if the variable values differ by an order of magnitude or more. </p>
+<p>In this exercise, you will explore how the number of users helps explain the relationship between user and critic scores for video games in 2016. Additionally, you will explore how applying the natural log can help make a color scale more interpretable.</p>
+<p><code>plotly</code> has already been loaded for you and the data are stored in the <code>vgsales2016</code> object.</p>
+</div>
+<div class="exercise--instructions__content"><p>Create a scatterplot of <code>User_Score</code> against <code>Critic_Score</code>, where color represents <code>User_Count</code>.</p></div>
+```{r}
+# Create a scatterplot of User_Score vs. Critic_Score colored by User_Count
+vgsales2016 %>%
+  plot_ly(x = ~Critic_Score, y = ~User_Score, color = ~User_Count) %>%
+  add_markers()
+```
+
+<div class="exercise--instructions__content"><p>Recreate the scatterplot of user score against critic score, but have color represent the natural log of user count.</p></div>
+```{r}
+# Create a scatterplot of User_Score vs. Critic_Score colored by log User_Count
+vgsales2016 %>%
+  plot_ly(x = ~Critic_Score, y = ~User_Score, color = ~log(User_Count)) %>%
+  add_markers()
+```
+
+<p class="">Wonderful! Notice that on the raw (untransformed) scale, it is very hard to see what information <code>User_Count</code> is adding. This is due to the fact that there are a small number of highly reviewed games. Once you log-transform <code>User_Count</code>, you  can see that critically acclaimed games tend to be more highly reviewed by users.
+</p>
+
+#### Hover info {.unnumbered}
+
+
+
+##### Removing a piece of hover info {.unnumbered}
+
+
+<div class>
+<p>For some chart types, you may not want all of the hover info that is displayed by default. Bar charts are a prime example. You can easily read the grouping values from a bar chart, so only displaying the height of the bar seems reasonable.</p>
+<p>In this exercise, your task is to remove the platform labels from the hover info for the bar chart displaying the number of games released for each platform in 2016.</p>
+<p>Note that <code>plotly</code> and <code>dplyr</code> have already been loaded for you.</p>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Create a bar chart displaying how games are distributed across the platforms in the <code>vgsales2016</code> dataset.</li>
+
+<li>Use the <code>hoverinfo</code> argument to display only the height of each bar.</li>
+```{r}
+# Create a bar chart of Platform with hoverinfo only for the bar heights
+vgsales2016 %>%
+	count(Platform) %>%
+	plot_ly(x = ~Platform, y = ~n, hoverinfo = "y") %>%
+ 	add_bars()
+```
+</div>
+
+<p class="">Nice work! While the bars are not ordered, the hover info makes it easy to read the bar chart. Additionally, removing the x-coordinate (i.e. The group label) makes it 'obvious' what information is being communicated at the top of each bar.
+</p>
+
+##### Adding to hoverinfo {.unnumbered}
+
+
+<div class>
+<p>During the video lesson, you learned how to fully customize the hover info displayed by <code>plotly</code>. This is a great approach, but what if you only want to quickly add an identifying column rather than polish your chart for publication on the web? This is possible by adding the <code>text</code> argument to the <code>plot_ly()</code> command <strong>without</strong> specifying <code>hoverinfo = "text"</code>.</p>
+<p><code>plotly</code> has already been loaded for you.</p>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Create a scatterplot of user score against critic score for video games sold in 2016.</li>
+
+<li>Map the name of a video game to the text argument in the <code>plot_ly()</code> layer to add it to the hover info.</li>
+```{r}
+# Create a scatterplot of User_Score vs. Critic score
+vgsales2016 %>%
+	# Add video game Name to the hover info text
+	plot_ly(x = ~Critic_Score, y = ~User_Score, text = ~Name) %>% 
+	add_markers()
+```
+</div>
+
+<p class="">Great! Notice that the video game name was simply added under the (x,y) coordinates. While this may not be as pretty as a fully-customized hover message, it's very quick to implement. You may find this a valuable tool in quickly identifying outliers.
+</p>
+
+##### Custom hoverinfo {.unnumbered}
+
+
+<div class>
+<p>In this exercise your task is to customize the hover info to help explore the relationship between North American video game sales and European video game sales in 2016.</p>
+<p>Once you have created the chart and the custom hover info, try to identify the video games with the greatest discrepancy between the North American and European sales.</p>
+<p>Note that <code>plotly</code> has already been loaded for you.</p>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Customize the hover info <code>text</code> to include the name and value for each of the following variables (in the specified order): <code>NA_Sales</code>, <code>EU_Sales</code>, and <code>Name</code>.</li>
+
+<li>Separate the name and the value with a colon. For example, the first line should be of the form: <code>NA_Sales: 41.4</code>.</li>
+```{r}
+# Format the hover info for NA_Sales, EU_Sales, and Name
+vgsales2016 %>%
+  plot_ly(x = ~NA_Sales, y = ~EU_Sales,
+          hoverinfo = "text",
+          text = ~paste("NA_Sales:", NA_Sales, "<br>",
+                        "EU_Sales:", EU_Sales, "<br>",
+                        "Name:", Name)
+  ) %>%
+  add_markers()
+```
+</div>
+
+<p class="">Well done! Fully-polished hover info makes it easy to see that Pokemon Sun/Moon sales in North America outpaced European sales, while FIFA 17 sold far more copies in Europe than North America.
+</p>
+
+#### Customizing your layout {.unnumbered}
+
+
+
+##### Polishing a scatterplot {.unnumbered}
+
+
+<div class>
+<p>Are best-selling video games generally well received by critics? To investigate this question, you'll create a scatterplot of critic score against global sales.</p>
+<p>As you have seen, global sales differ by an order of magnitude across the distribution. In such cases, exploring the data on a transformed scale is wise. In this exercise, display global sales on the log scale.</p>
+<p>As always, don't forget to use informative axis labels!</p>
+<p>Note that <code>plotly</code> has been loaded for you.</p>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Apply a log transformation to the x-axis within the <code>layout()</code> command.</li>
+
+<li>Label the x-axis <code>"Global sales (millions of units)"</code> and the y-axis <code>"Critic score"</code>.</li>
+```{r}
+# Polish the scatterplot by transforming the x-axis and labeling both axes
+vgsales2016 %>%
+  plot_ly(x = ~Global_Sales, y = ~Critic_Score) %>%
+  add_markers(marker = list(opacity = 0.5)) %>%
+  layout(xaxis = list(title = "Global sales (millions of units)", type = "log"),
+         yaxis = list(title = "Critic score"))
+```
+</div>
+
+<p class="">Super! On the log scale, we can actually see some positive association between global sales and critic score, unlike on the original scale.
+</p>
+
+
+##### Matching a theme {.unnumbered}
+
+
+<div class>
+<p>You may already have a theme for your plots that you would like to replicate in <code>plotly</code>. For example, you may prefer your time series plots to have:</p>
+
+
+<li>Only horizontal grid lines</li>
+
+<li>A light gray background (<code>#ebebeb</code>) around your plot</li>
+
+
+<p>In this exercise, your task is to adapt the time series plot of global video game sales from 1980 to 2016 so that it meets these requirements.</p>
+<p>Note that <code>plotly</code> has been loaded for you.</p>
+</div>
+<div class="exercise--instructions__content">
+```{r}
+# edited/added
+annual_vgsales = vgsales %>% group_by(Year) %>% summarise(Global_Sales = sum(Global_Sales)) %>% filter(Year <= 2016)
+```
+<li>Remove the vertical grid lines by changing the <code>xaxis</code> options.</li>
+
+<li>Set the background color to <code>"#ebebeb"</code>.</li>
+```{r}
+# Set the background color to #ebebeb and remove the vertical grid
+annual_vgsales %>%
+  plot_ly(x = ~Year, y = ~Global_Sales) %>%
+  add_lines() %>%
+  layout(paper_bgcolor = "#ebebeb", xaxis = list(showgrid = FALSE))
+```
+</div>
+
+<p class="">Excellent! Now that you know how to create and customize <code>plotly</code> charts, it's time to learn about a new set of chart types in Chapter 3!
+</p>
+
+### Advanced charts {.unnumbered}
+
+<p class="chapter__description">
+    In this chapter, you move past basic plotly charts to explore more-complex relationships and larger datasets. You will learn how to layer traces, create faceted charts and scatterplot matrices, and create binned scatterplots.
+  </p>
+
+#### Layering traces {.unnumbered}
+
+
+
+##### Adding a linear smoother {.unnumbered}
+
+
+<div class>
+<p>You've seen how to add LOESS smoothers to a scatterplot by using both the <code>add_markers()</code> and <code>add_lines()</code> traces. Adding a linear smoother uses the same approach, but you use <code>lm()</code> command to fit the linear model.</p>
+<p>In this exercise, your task is to add a linear smoother to a scatterplot of user score against critic score for video games in 2016. </p>
+<p>When you add smoothers, missing values (<code>NA</code>s) can be problematic because many modeling functions automatically delete missing observations. To avoid this conflict, use <code>select()</code> and <code>na.omit()</code> to delete observations before plotting.</p>
+<p>Note that <code>plotly</code> and the <code>vgsales2016</code> data has already been loaded for you.</p>
+</div>
+<div class="exercise--instructions__content">
+```{r}
+# edited/added
+vgsales2016 %>% filter(Critic_Score == "tbd")
+```
+<li>Fit a linear regression model using <code>Critic_Score</code> as the predictor variable and <code>User_Score</code> as the response variable. Store this model in the object <code>m</code>.</li>
+
+<li>Create a scatterplot showing <code>Critic_Score</code> on the x-axis and <code>User_Score</code> on the y-axis.</li>
+```{r}
+vgsales2016 = vgsales %>% filter(Year == 2016, User_Score != "tbd")
+```
+<li>Add a linear smoother to your scatterplot representing the fitted values.</li>
+```{r}
+# Fit the regression model of User_Score on Critic_Score
+m <- lm(User_Score ~ Critic_Score, data = vgsales2016)
+
+# Create the scatterplot with smoother
+vgsales2016 %>%
+   select(User_Score, Critic_Score) %>%
+   na.omit() %>%
+   plot_ly(x = ~Critic_Score, y = ~User_Score) %>%
+   add_markers(showlegend = FALSE) %>%
+   add_lines(y = ~fitted(m))
+```
+</div>
+
+<p class="">Well done! The linear smoother helps emphasize the positive association we see between the user and critic scores.
+</p>
+
+##### Overlayed density plots {.unnumbered}
+
+
+<div class>
+<p>In this exercise, you will learn how to create density plots and overlay them to compare the distribution of critic scores for three video game publishers: Activision, Electronic Arts, and Nintendo.</p>
+<p>To create a density plot for <code>Global_Sales</code>, store the results of the <code>density()</code> command, and then pass the <code>x</code> and <code>y</code> coordinates to <code>add_lines()</code>:</p>
+<pre><code>d &lt;- density(vgsales2016$Critic_Score, na.rm = TRUE)
+plot_ly() %&gt;%
+  add_lines(x = ~d$x, y = ~d$y, fill = 'tozeroy') %&gt;%
+  layout(xaxis = list(title = 'Critic score'),
+         yaxis = list(title = 'Density'))
+</code></pre>
+<p>Notice how you can create new plot types easily using familiar code! The <code>fill = 'tozeroy'</code> argument fills the area under the curve.</p>
+<p>Data frames <code>activision</code>,<code>ea</code>, and <code>nintendo</code> are loaded, as is <code>plotly</code>.</p>
+</div>
+<div class="exercise--instructions__content">
+```{r}
+# edited/added
+activision = vgsales2016 %>% filter(Publisher == "Activision")
+ea = vgsales2016 %>% filter(Publisher == "Electronic Arts")
+nintendo = vgsales2016 %>% filter(Publisher == "Nintendo")
+```
+<li>Compute density curves for Activision, EA, and Nintendo, storing them in the <code>d.a</code>, <code>d.e</code>, and <code>d.n</code> objects, respectively.</li>
+
+<li>Create overlayed density plots of <code>Critic_Score</code> for <code>activision</code>, <code>ea</code>, and <code>nintendo</code> (in that order).</li>
+```{r}
+# Compute density curves
+d.a <- density(activision$Critic_Score, na.rm = TRUE)
+d.e <- density(ea$Critic_Score, na.rm = TRUE)
+d.n <- density(nintendo$Critic_Score, na.rm = TRUE)
+
+# Overlay density plots
+plot_ly() %>%
+  add_lines(x = ~d.a$x, y = ~d.a$y, name = "Activision", fill = 'tozeroy') %>%
+  add_lines(x = ~d.e$x, y = ~d.e$y, name = "Electronic Arts", fill = 'tozeroy') %>%
+  add_lines(x = ~d.n$x, y = ~d.n$y, name = "Nintendo", fill = 'tozeroy') %>%
+  layout(xaxis = list(title = 'Critic Score'),
+         yaxis = list(title = 'Density'))
+```
+</div>
+
+<p class="">Keep it up! The overlayed density plots make it easy to see the similarities and difference between the distributions. For example, you can see that activision seems to have two 'tier' of games: higher and lower rated games.
+</p>
+
+#### Subplots {.unnumbered}
+
+
+
+##### Manual faceting {.unnumbered}
+
+
+<div class>
+<p>Recall that the <code>subplot()</code> command allows you to combine charts to create facets (i.e. subplots or small multiples). This is a great way to explore distributions and relationships across factors. In this exercise, you will explore how the relationship between critic score and user score changes (or stays the same) across platform.</p>
+<p>Note that <code>plotly</code> and <code>dplyr</code> have already been loaded for you.</p>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Create a scatterplot showing <code>Critic_Score</code> on the x-axis and <code>User_Score</code> on the y-axis for PS4 games. Name the trace for the platform and store this plot as <code>p1</code>.</li>
+```{r}
+# Create a scatterplot of User_Score against Critic_Score for PS4 games
+p1 <- vgsales2016 %>%
+   filter(Platform == "PS4") %>%
+   plot_ly(x = ~Critic_Score, y = ~User_Score) %>% 
+   add_markers(name = "PS4")
+```
+</div>
+
+<li>Create a scatterplot showing <code>Critic_Score</code> on the x-axis and <code>User_Score</code> on the y-axis for XOne video games. Name the trace for the platform and store this plot as <code>p2</code>.</li>
+```{r}
+# Create a scatterplot of User_Score against Critic_Score for XOne games
+p2 <- vgsales2016 %>%
+   filter(Platform == "XOne") %>%
+   plot_ly(x = ~Critic_Score, y = ~User_Score) %>% 
+   add_markers(name = "XOne")
+```
+
+<li>Use <code>subplot()</code> to create a faceted scatterplot containing <code>p1</code> and <code>p2</code> with two rows.</li>
+```{r}
+# Create a facted scatterplot containing p1 and p2
+subplot(p1, p2, nrows = 2)
+```
+
+<p class="">Nice work! Notice to specify a grid of plots using <code>subplot()</code> you specify the number of rows in the desired grid of plots. Next, let's practice using <code>dplyr</code> tools to 'automate' the creation of subplots.
+</p>
+
+##### Automated faceting {.unnumbered}
+
+
+<div class>
+<p>In the previous exercise, you manually create a faceted scatterplot. This was not very tedious because you were only focused on two groups. However, there are 9 platforms in the <code>vgsales2016</code> dataset, and it would be very tedious to manually code 9 scatterplots. </p>
+<p>In this exercise, you will practice using the <code>group_by()</code> and <code>do()</code> commands to automate the process of creating a faceted scatterplot with 12 facets. Remember that the entire plotting command is embedded within <code>do()</code>, as shown in the template below:</p>
+<pre><code>data %&gt;%
+  group_by(factor) %&gt;%
+  do(
+    plot = plot_ly(data = ., x = ~x, y = ~y) %&gt;%
+      add_markers(name = ~factor)
+  ) %&gt;%
+  subplot(nrows = R, shareY = TRUE, shareX = TRUE)
+</code></pre>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Use <code>group_by()</code>, <code>do()</code>, and <code>subplot()</code> to create a faceted scatterplot showing <code>Critic_Score</code> on the x-axis and <code>User_Score</code> on the y-axis, where the facets are defined by <code>Platform</code>.</li>
+
+<li>Arrange the facets in a grid with 3 rows.</li>
+```{r}
+# Create a faceted scatterplot of User_Score vs. Critic_Score with 3 rows
+vgsales2016 %>%
+  group_by(Platform) %>%
+  do(
+    plot = plot_ly(data = ., x = ~Critic_Score, y = ~User_Score) %>%
+      add_markers(name = ~Platform)
+  ) %>%
+  subplot(nrows = 3, shareY = TRUE, shareX = TRUE)
+```
+</div>
+
+<p class="">Terrific! It's important to automatic repetitive tasks to avoid making errors in your code. Now that you have seen the <code>do()</code> command, you may want to think about what other tasks it could help automate.
+</p>
+
+##### Plot and axis titles {.unnumbered}
+
+
+<div class>
+<p>In the previous two exercises, you saw a set of subplots that lack any axis labels and a set of subplots that used the column names as axis labels. Why are they different? By default, the <code>subplot()</code> command sets <code>titleX = shareX</code> and <code>titleY = shareY</code>; thus, axis labels are only displayed if <code>shareX</code> and/or <code>shareY</code> are <code>TRUE</code>. You can add <code>titleX = TRUE</code> and/or <code>titleY = TRUE</code> to override this behavior.</p>
+<p>In this example, your task is to add titles to subplots. Note that <code>plotly</code> has already been loaded for you.</p>
+<p><em>Note: When you run your solution, you will see two warning messages about ignoring observations. These messages simply indicate that <code>plotly</code> is ignoring missing values.</em></p>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Adapt the <code>subplot()</code> code to allow the x- and y-axis titles to be shared. </li>
+
+<li>Add the title <code>"User score vs. critic score by platform, 2016"</code> to the plot.</li>
+```{r}
+# Add x-axis and y-axis labels, and a title
+subplot(p1, p2, nrows = 2, shareX = TRUE, shareY = TRUE) %>%
+   layout(title = "User score vs. critic score by platform, 2016")
+```
+</div>
+
+<p class="">Great work! Now that you know how to add titles to the plot and it's axes, you'll explore how to customize the axis titles.
+</p>
+
+##### Polishing axis titles {.unnumbered}
+
+
+<div class>
+<p>The axes in a subplot can be renamed using the <code>layout()</code> command, just like in a single plot; however, there are multiple x-axes to rename. For example, a 2 x 2 grid of plots requires four x-axis labels:</p>
+<pre><code>p %&gt;% # subplot
+   layout(
+     xaxis = list(title = "title 1"), 
+     xaxis2 = list(title = "title 2"),
+     xaxis3 = list(title = "title 3"), 
+     xaxis4 = list(title = "title 4")
+   )
+</code></pre>
+<p>A similar strategy holds for the y-axis labels.</p>
+<p>In this example, your task is to polish the axis titles on a subplot. Note that <code>plotly</code> has already been loaded for you.</p>
+</div>
+<div class="exercise--instructions__content">
+```{r}
+# edited/added
+sp2 = subplot(vgsales %>% 
+  filter(Publisher %in% c("Nintendo", "Electronic Arts", "Activision", "Sony Computer Entertainment", "Ubisoft")) %>% 
+  group_by(Publisher) %>% 
+  summarise(total_sales = sum(Global_Sales)) %>% 
+  plot_ly(x = ~fct_reorder(Publisher, total_sales, .desc = TRUE), 
+          y = ~total_sales, 
+          color = ~fct_reorder(Publisher, total_sales, .desc = TRUE)) %>%
+	add_bars() %>% 
+    layout(xaxis = list(tickangle = 45)), 
+  vgsales %>% 
+  group_by(Year, Publisher) %>% 
+  summarise(total_sales = sum(Global_Sales)) %>%
+  ungroup() %>%
+  filter(Publisher %in% c("Nintendo", "Electronic Arts", "Activision", "Sony Computer Entertainment", "Ubisoft")) %>% 
+  plot_ly(x = ~Year, y = ~total_sales, color = ~Publisher) %>% add_lines())
+```
+<li>For the first plot in <code>sp2</code>, use <code>"Global Sales (M units)"</code> for the y-axis label, and leave the x-axis label blank.</li>
+
+<li>For the second plot in <code>sp2</code>, label the x-axis <code>"Year"</code> and the y-axis <code>"Global Sales (M units)"</code>.</li>
+```{r}
+# Add x-axis and y-axis labels
+sp2 %>%
+   layout(
+     xaxis = list(title = ""), 
+     xaxis2 = list(title = "Year"),
+     yaxis = list(title = "Global Sales (M units)"), 
+     yaxis2 = list(title = "Global Sales (M units)")
+   )
+```
+</div>
+
+<p class="">Excellent! Clear axis labels are essential when sharing your work. If the y-axis on the left starts to creep into the other plot, consider adding a larger margin around the plots such as <code>margin = 0.2</code>.
+</p>
+
+#### Scatterplot matrices {.unnumbered}
+
+
+
+##### Your first SPLOM {.unnumbered}
+
+
+<div class>
+<p>How closely related are North American and European video game sales? How do sales in Japan compare to North America and Europe? In this exercise you will create a scatterplot matrix (abbreviated as SPLOM) to explore these questions based on the <code>vgsales2016</code> dataset.</p>
+<p>Note that <code>plotly</code> has already been loaded for you.</p>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Create a scatterplot matrix including <code>NA_Sales</code>, <code>EU_Sales</code>, and <code>JP_Sales</code> (in that order).</li>
+
+<li>Label the panels <code>N. America</code>, <code>Europe</code>, and <code>Japan</code>, respectively.</li>
+```{r}
+# Create a SPLOM of NA_Sales, EU_Sales, and JP_Sales
+vgsales2016 %>%
+  plot_ly() %>%
+  add_trace(
+    type = 'splom',
+    dimensions = list(
+      list(label = 'N. America', values = ~NA_Sales),
+      list(label = 'Europe', values = ~EU_Sales),
+      list(label = 'Japan', values = ~JP_Sales)
+    )
+  )
+```
+</div>
+
+<p class="">Nicely done! It appears that sales in European and North American markets are similar, as seen by the positive association apparent in the scatterplot matrix.
+</p>
+
+##### Customizing color {.unnumbered}
+
+
+<div class>
+<p>Just like with a single scatterplot, it can be useful to add color to represent an additional variable in a scatterplot matrix. In this exercise, you will add color to represent whether the game was produced by Nintendo or not.</p>
+<p>In the code provided, an indicator (i.e. dummy) variable(<code>nintendo</code>) has been created to indicate whether a game was published by Nintendo or some other publisher.</p>
+<p>Note that <code>plotly</code> has already been loaded for you.</p>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Recreate the SPLOM of <code>NA_Sales</code>, <code>EU_Sales</code>, and <code>JP_Sales</code> (in that order). Remember to label the panels <code>N. America</code>, <code>Europe</code>, and <code>Japan</code>, respectively.</li>
+
+<li>Use color to represent the values in <code>nintendo</code>.</li>
+```{r}
+# Color the SPLOM of NA_Sales, EU_Sales, and JP_Sales by nintendo
+vgsales2016 %>%
+  mutate(nintendo = ifelse(Publisher == "Nintendo", "Nintendo", "Other")) %>%
+  plot_ly(color = ~nintendo) %>% 
+  add_trace(
+    type = 'splom',                                   
+    dimensions = list(
+      list(label = 'N. America', values = ~NA_Sales),
+      list(label = 'Europe', values = ~EU_Sales),     
+      list(label = 'Japan', values = ~JP_Sales)       
+    )
+  )
+```
+</div>
+
+<p class="">Fantastic! Remember that we add color to scatterplots in an attempt to explain apparent associations.
+</p>
+
+##### Tweaking the appearance {.unnumbered}
+
+
+<div class>
+<p>So far, you have used the default settings for your SPLOMs. Now, we will introduce two common customizations to explore:</p>
+
+```{r}
+# edited/added
+splom = vgsales2016 %>%
+  mutate(nintendo = ifelse(Publisher == "Nintendo", "Nintendo", "Other")) %>%
+  plot_ly(color = ~nintendo) %>% 
+  add_trace(
+    type = 'splom',                                   
+    dimensions = list(
+      list(label = 'N. America', values = ~NA_Sales),
+      list(label = 'Europe', values = ~EU_Sales),     
+      list(label = 'Japan', values = ~JP_Sales)       
+    )
+  )
+```
+<li>Deleting the diagonal panels.</li>
+
+<li>Displaying only the upper or lower triangle of plots.</li>
+
+
+<p>Both customizations are implemented by adding a <code>style()</code> layer.</p>
+<p>Your task is to style your SPLOM from the previous exercise to explore how these customizations work. </p>
+<p>Your plot from the previous exercise is stored in the <code>splom</code> object, and <code>plotly</code> has been loaded for you.</p>
+</div>
+<div class="exercise--instructions__content"><p>Delete the plots along the diagonal by setting the <code>diagonal</code> argument to a list that sets <code>visible</code> to <code>FALSE</code>.</p></div>
+```{r}
+# Delete the diagonal plots in splom
+splom %>%
+   style(diagonal = list(visible = FALSE))
+```
+<div class="exercise--instructions__content"><p>Delete the plots in the upper half of the matrix by setting the <code>showupperhalf</code> argument to <code>FALSE</code>.</p></div>
+```{r}
+# Delete the plots in the upper half of splom
+splom %>%
+   style(showupperhalf = FALSE)
+```
+
+<div class="exercise--instructions__content"><p>Delete the plots in the lower half of the matrix by setting the <code>showlowerhalf</code> argument to <code>FALSE</code>.</p></div>
+```{r}
+# Delete the plots in the lower half of splom
+splom %>%
+   style(showlowerhalf = FALSE)
+```
+
+<p class="">Well done! If you want a clear and concise scattterplot matrix, consider plotting only the lower triangle. That reduces redundant information while keeping the axis labels and tick marks in a useful location on the chart.
+</p>
+
+#### Binned scatterplots {.unnumbered}
+
+
+
+##### Binning a scatterplot {.unnumbered}
+
+
+<div class>
+<p>The dataset <code>vgsales</code> contains 16450 cases (rows), which is large enough that binned scatterplots help avoid overplotting. In this exercise, your task is to create a binned scatterplot of <code>User_Score</code> against <code>Critic_Score</code> to display the entire dataset. (Recall up to now that you have only been displaying pieces of this dataset as scatterplots.)</p>
+<p>Once you have created the plot, be sure to explore the interactivity. Specifically, note that the "z" entry in the hover info corresponds to the number of observations in the chosen bin.</p>
+<p><code>plotly</code> has already been loaded for you.</p>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Create a binned scatterplot with <code>Critic_Score</code> on the x-axis and <code>User_Score</code> on the y-axis.</li>
+
+<li>Set the number of bins on the x- and y-axes to 50.</li>
+```{r}
+# Create a binned scatterplot of User_Score vs. Critic_Score
+vgsales %>%
+  plot_ly(x = ~Critic_Score, y = ~User_Score) %>%
+  add_histogram2d(nbinsx = 50, nbinsy = 50)
+```
+</div>
+
+<p class="">Well done! Throughout this chapter you have been adding key tools to your visual toolkit. Now that you have solid set of basic and statistical charts, it's time add maps to your toolkit.
+</p>
+
+### Case Study {.unnumbered}
+
+<p class="chapter__description">
+    In the final chapter, you use your plotly toolkit to explore the results of the 2018 United States midterm elections, learning how to create maps in plotly along the way.
+  </p>
+
+#### The 2018 election data {.unnumbered}
+
+
+
+##### Did voters turn out? {.unnumbered}
+
+
+<div class>
+<p>In the United States, midterm elections typically see lower voter turnout than presidential elections. However, with so much buzz surrounding the 2018 midterm elections, turnout was expected to be higher than for previous midterm elections. Was this the case?</p>
+<p>Your task is to create a scatterplot comparing the voter turnout (i.e. the proportion of eligible voters that cast votes) in each state between the 2014 and 2018 midterm elections.</p>
+<p>Note that <code>plotly</code> has already been loaded for you.</p>
+</div>
+<div class="exercise--instructions__content">
+```{r}
+# edited/added
+library(tidyverse)
+turnout = read.csv("archive/TurnoutRates.csv")
+```
+<li>Create a scatterplot displaying turnout in 2014 on the x-axis and turnout in 2018 on the y-axis.</li>
+
+<li>Title the x-axis <code>"2014 voter turnout"</code> and the y-axis <code>"2018 voter turnout"</code>.</li>
+```{r}
+# Create a scatterplot of turnout2018 against turnout2014
+turnout %>%
+  plot_ly(x = ~turnout2014, y = ~turnout2018) %>%
+  add_markers() %>%
+  layout(xaxis = list(title = "2014 voter turnout"),
+         yaxis = list(title = "2018 voter turnout"))
+```
+</div>
+
+<p class="">Well done! If you look closely at the scatterplot you can see that nearly all of the y-coordinates are larger than the x-coordinates, showing that voter turnout was higher in 2018 than 2014; but that took a lot of effort to discover. In the next exercise you will add a reference line to faciliate this comparison.
+</p>
+
+##### Adding a reference line {.unnumbered}
+
+
+<div class>
+<p>While it was not difficult to determine that higher proportions of eligible voters turned out in nearly every state from your last plot, it probably took you a little time to see this. Hover info certainly makes this task easier, but interactivity alone isn't enough to make this task "easy."</p>
+<p>So how can you help readers digest your chart more quickly? By adding the reference line \(y=x\). Observations that fall above this reference line will correspond to states with higher voter turnout in 2018. In <code>plotly</code>, you can add a line by connecting two points using <code>add_lines(x = c(x1, x2), y = (y1, y2))</code>.</p>
+<p>Your task is to add the \(y=x\) reference line to your previous plot. </p>
+<p>Note that your plot from the last exercise is stored in the object <code>p</code>.</p>
+</div>
+<div class="exercise--instructions__content">
+```{r}
+# edited/added
+p = turnout %>%
+  plot_ly(x = ~turnout2014, y = ~turnout2018) %>%
+  add_markers() %>%
+  layout(xaxis = list(title = "2014 voter turnout"),
+         yaxis = list(title = "2018 voter turnout"))
+```
+<li>Use <code>add_lines()</code> to add a reference line passing through the points (0.25, 0.25) and (0.6, 0.6).</li>
+
+<li>Hide the legend that's added to the chart by default.</li>
+```{r}
+# Add the line y = x to the scatterplot
+p %>%
+  add_lines(x = c(.25, .6), y = c(.25, .6)) %>%
+  layout(showlegend = FALSE)
+```
+</div>
+
+<p class="">Great! Notice how much easier it is to see the increase in voter turnout! Hoverinfo is a great interactive tool, but sometimes static annotations are still necessary.
+</p>
+
+##### Which state had the highest turnout? {.unnumbered}
+
+
+<div class>
+<p>The hover information on the previous scatterplot allows you to determine which state had the highest turnout, but it takes considerable time to compare the turnout between states. In this exercise, your task is to create a scatterplot displaying state on the y-axis and voter turnout on the x-axis. Scatterplots displaying one categorical and one quantitative variable are often called <em>dotplots</em>, and allow for quicker comparisons between groups.</p>
+<p>The <code>turnout</code> dataset contains information on the proportion of eligible voters (<code>turnout</code>) that voted in the 2018 midterm election in each <code>state</code>.</p>
+<p>In the sample code, <code>turnout %&gt;% top_n(15, wt = turnout)</code> extracts the 15 states with the highest turnout rates.</p>
+<p>Note that <code>plotly</code>, <code>dplyr</code>, and <code>forcats</code> have already been loaded for you.</p>
+</div>
+<div class="exercise--instructions__content">
+
+<li>For the top 15 states, create a dotplot (i.e. scatterplot) displaying <code>turnout2018</code> on the x-axis and <code>state</code> on the y-axis, where <code>state</code> has been reordered by <code>turnout2018</code>.</li>
+
+<li>Title the x-axis <code>"Eligible voter turnout"</code>.</li>
+
+<li>Title the y-axis <code>"State"</code> and set its <code>type</code> to <code>category</code>.</li>
+```{r}
+# Create a dotplot of voter turnout in 2018 by state ordered by turnout
+turnout %>%
+  top_n(15, wt = turnout2018) %>%
+  plot_ly(x = ~turnout2018, y = ~fct_reorder(state, turnout2018)) %>%
+  add_markers() %>%
+  layout(xaxis = list(title = "Eligible voter turnout"),
+         yaxis = list(title = "State", type = "category"))
+```
+</div>
+
+<p class="">Fantastic! The dotplot makes it easy to see that Minnesota had a substantially higher turnout than other states. Furhter, it allows us to see clusters emerge, such as Colorado, Oregon, Wisconsin, and Montana.
+</p>
+
+##### How much was spent on Senate races? {.unnumbered}
+
+
+<div class>
+<p>Control of the Senate was up for grabs in the 2018 midterm elections, and along with it President Trump's ability to shape the judicial branch of government.  Both parties fought hard to control this chamber of Congress, so how did this translate to fundraising? A first step at understanding this issue is to visualize the distribution of funds received by Senate candidates.</p>
+<p>Your task is to create a histogram of displaying the distribution of funds received by Senate candidates during the 2018 election cycle. When you're done, try to identify the race with the highest level of fundraising.</p>
+<p><code>plotly</code> has already been loaded for you.</p>
+</div>
+<div class="exercise--instructions__content">
+```{r}
+# edited/added
+fundraising = read.csv("archive/fec_candidate_summary_2018.csv")
+```
+<li>Filter to extract only the Senate office races (designated by <code>"S"</code>).</li>
+
+<li>Create a histogram of <code>receipts</code>.</li>
+
+<li>Add the title <code>"Fundraising for 2018 Senate races"</code> and title the x-axis <code>"Total contributions received"</code>.</li>
+```{r}
+# Create a histogram of receipts for the senate races
+fundraising %>%
+  filter(office == "S") %>%
+  plot_ly(x = ~receipts) %>%
+  add_histogram() %>%
+  layout(title = "Fundraising for 2018 Senate races",
+         xaxis = list(title = "Total contributions received"))
+```
+</div>
+
+<p class="">Keep up the good work! From the histogram it's clear that fundraising is heavily skewed to the right with some severe outliers above $40 million; however, it's impossible to identify the outlying Senate races from the histogram because data are naturally aggregated into bins. A dotplot is a great follow-up graphic in this type situation.
+</p>
+
+##### Which candidate spent the most? {.unnumbered}
+
+
+<div class>
+<p>As you saw, most Senate campaigns raised under $1M and the vast majority raised under $20M, so what races raised these astronomical amounts? Histograms bin observations, obscuring easy identification of individual candidates, so a different chart is needed to explore this question.</p>
+<p>Your task is to create a dotplot of the 15 Senate campaigns that raised the most money during the 2018 election cycle. You will also need to customize the hover info to facilitate easy identification of the candidates.</p>
+<p>Focus first on creating the plot, but be sure to review how the hover info was customized!</p>
+<p>Note that <code>plotly</code> has already been loaded for you.</p>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Use <code>top_n()</code> to extract the cases corresponding to the 15 Senate campaigns that raised the most money.</li>
+
+<li>For the top 15 campaigns, create a dotplot (i.e. scatterplot) displaying <code>receipts</code> on the x-axis and <code>state</code> on the y-axis, where <code>state</code> has been reordered by <code>receipts</code>.</li>
+
+<li>Change the colors so that blue represents Democrats (<code>DEM</code>) and red represents Republicans (<code>REP</code>)</li>
+```{r}
+# Create a dotplot of the top 15 Senate campaigns
+fundraising %>%
+  filter(office == "S") %>%
+  top_n(15, wt = receipts) %>%
+  plot_ly(x = ~receipts, y = ~fct_reorder(state, receipts),
+          color = ~fct_drop(party),
+          hoverinfo = "text",
+          text = ~paste("Candidate:", name, "<br>",
+                        "Party:", party, "<br>",
+                        "Receipts:", receipts, "<br>",
+                        "Disbursements:", disbursement)) %>%
+  add_markers(colors = c("blue", "red")) 
+```
+</div>
+
+<p class="">You've got it! The dotplot makes it clear that the Senate races in Texas and Florida were the most severe outliers on the histogram, with the challengers outraising the incumbents by a huge margin. Now that you've done some exploratory work using familiar tools, it's time to map the results!
+</p>
+
+#### Choropleth maps {.unnumbered}
+
+
+
+##### Mapping change in voter turnout {.unnumbered}
+
+
+<div class>
+<p>You already saw that voter turnout increased in nearly every state in the 2018 midterm elections compared to the 2014 midterms. In this exercise, your task is to map the change in voter turnout between these two midterm elections.</p>
+<p>The <code>turnout</code> data frame, <code>dplyr</code>, and <code>plotly</code> have already been loaded for you.</p>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Use <code>mutate()</code> to add a <code>change</code> column to <code>turnout</code>, which is calculated by as the difference between the turnout in 2018 (<code>turnout2018</code>) and 2014 (<code>turnout2014</code>).</li>
+
+<li>Use <code>plot_geo()</code> and <code>add_trace()</code> to create a choropleth map of the change in voter turnout by state, mapping <code>change</code> to <code>z</code> and <code>state.abbr</code> to <code>locations</code>.</li>
+
+<li>Restrict the scope of the map to the <code>'usa'</code> using <code>layout()</code>.</li>
+```{r}
+# Create a choropleth map of the change in voter turnout from 2014 to 2018
+turnout %>%
+  mutate(change = turnout2018 - turnout2014) %>%
+  plot_geo(locationmode = 'USA-states') %>%
+  add_trace(z = ~change, locations = ~state.abbr) %>%
+  layout(geo = list(scope = 'usa'))
+```
+</div>
+
+<p class="">Magnificent mapping! While Minnesota had the highest voter turnout it didn't have the largest increase in turnout, that honor went to Missouri. Notice that the default hoverinfo gives the <code>z</code> and <code>locations</code> value—don't hestiate to polish the hoverinfo if the default isn't sufficient!
+</p>
+
+##### Mapping Senate winners {.unnumbered}
+
+
+<div class>
+<p>There were 33 Senate seats on the ballot in the 2018 midterms (plus two special elections that we'll ignore in this exercise). Your task is to create a choropleth map using the winning candidate's political party to color in the state.</p>
+<p>This task requires you to map a factor to the fill color. However, the <code>z</code> aesthetic expects a numeric variable. An easy work around is to convert <code>party</code> to a numeric variable via <code>as.numeric(party)</code> and then manually specify the desired colors in <code>add_trace()</code>. Additionally, the colorbar is no longer very useful, and can be removed by adding the layer <code>hide_colorbar()</code>.</p>
+<p>The <code>senate_winners</code> data frame and <code>plotly</code> have already been loaded for you.</p>
+</div>
+<div class="exercise--instructions__content">
+```{r}
+# edited/added
+senate_winners = read.csv("archive/senate_winners.csv")
+```
+<li>Create a choropleth map of the where the color of the state represents the winning party.</li>
+
+<li>In <code>add_trace()</code>, manually specify the colors <code>"dodgerblue"</code>, <code>"mediumseagreen"</code>, and <code>"tomato"</code> (in that order).</li>
+
+<li>Complete the hover info text with the appropriate column names.</li>
+```{r}
+# Create a choropleth map displaying the Senate results
+senate_winners %>%
+  plot_geo(locationmode = 'USA-states') %>%
+  add_trace(z = ~as.numeric(party), locations = ~state,
+    colors = c("dodgerblue", "mediumseagreen", "tomato"),
+    hoverinfo = "text",
+    text = ~paste("Candidate:", name, "<br>",
+                  "Party:", party, "<br>",
+                  "% vote:", round(pct.vote, 1))
+  ) %>%
+  layout(geo = list(scope = 'usa')) %>% 
+  hide_colorbar()
+```
+</div>
+
+<p class="">Phenomenal! Now that you have mastered choropleth maps, it's time to see how points can be added to maps by layering.
+</p>
+
+##### Adding points to a map {.unnumbered}
+
+
+<div class>
+<p>The maps created using <code>plot_geo()</code> are still plotly objects, so you can add additional layers as before. In this exercise, you will add points to a United States map representing the locations where President Trump held rallies for the 2018 midterm election. The dataset <code>rallies2018</code> contains the date, city, state, latitude, longitude, and number of number of people who spoke.</p>
+<p>Note that <code>plotly</code> has already been loaded for you.</p>
+</div>
+<div class="exercise--instructions__content">
+```{r}
+# edited/added
+rallies2018 = read.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vTUtDNjkBa09VrjjOIC8BV0HvMtr8MIpLsnyeERInXaEGbq6J1WmiNHIhtOavekWWQ0Kckw6nOgDPg7/pub?gid=0&single=true&output=csv")
+```
+<li>Use <code>add_markers()</code> to add points representing the rallies to the U.S. map. Be sure to map <code>long</code> to the x-axis, <code>lat</code> to the y-axis, and <code>no.speakers</code> to the size of the points.</li>
+
+<li>Add the title <code>"2018 Trump Rallies"</code>.</li>
+
+<li>Restrict the scope of the map to the <code>'usa'</code>.</li>
+```{r}
+# Map President Trump's rallies in 2018
+rallies2018 %>%
+  plot_geo(locationmode = 'USA-states') %>%
+  add_markers(
+    x = ~long, y = ~lat, size = ~no.speakers, 
+    hoverinfo = "text", text = ~paste(city, state, sep = ",")
+  ) %>%
+  layout(title = "2018 Trump Rallies", 
+         geo = list(scope = 'usa'))
+```
+</div>
+
+<p class="">Terrific! When you encounter a new <code>plotly</code> chart type, remember that it will still be a plotly object, so you can still add layers or customizations the same way.
+</p>
+
+##### Geo layout {.unnumbered}
+
+
+<div class>
+<p>In the previous exercise you saw the default settings for the geo layout in <code>plotly</code>, but this it is quite easy to customize by specifying additional arguments in the list passed to <code>geo</code> in <code>layout()</code>. </p>
+<p>In this exercise you will explore a few useful options outlined below:</p>
+
+
+<li>To change the color of the landmass, add the arguments <code>showland = TRUE</code> and set a <code>landcolor</code>.</li>
+
+<li>To make lakes distinct from landmasses, add the arguments <code>showlakes = TRUE</code> and set a <code>lakecolor</code>.</li>
+
+<li>To display states/provinces, set <code>showsubunit = TRUE</code>, and the set <code>subunitcolor</code>.</li>
+
+<li>To display countries, set <code>showcountries = TRUE</code>, and the set <code>countrycolor</code>.</li>
+
+
+<p>Note that you must use the <code>toRGB()</code> function in order to pass R colors to the geo layout.</p>
+<p><code>plotly</code> has already been loaded for you.</p>
+</div>
+<div class="exercise--instructions__content">
+
+<li>Customize the appearance of your map from the previous exercise by defining the list <code>g</code> and passing it to the <code>geo</code> layout:
+
+<li>Set the landmass color with <code>"gray90"</code>.</li>
+
+<li>Set the lake color with <code>"white"</code>.</li>
+
+<li>Set the state (subunit) color with <code>"white"</code>.</li>
+
+
+</li>
+```{r}
+# Customize the geo layout
+g <- list(scope = 'usa', 
+          showland = TRUE, landcolor = toRGB("gray90"),
+          showlakes = TRUE, lakecolor = toRGB("white"),
+          showsubunit = TRUE, subunitcolor = toRGB("white"))
+
+# Apply the geo layout to the map
+rallies2018 %>%
+  plot_geo(locationmode = 'USA-states') %>%
+  add_markers(
+    x = ~long, y = ~lat, size = ~no.speakers, 
+    hoverinfo = "text", text = ~paste(city, state, sep = ",")
+  ) %>%
+  layout(title = "2018 Trump Rallies", geo = g)
+```
+</div>
+
+<p class="">Masterfully done! There are too many geo layout options to discuss them all; checkout <a href="https://plot.ly/r/reference/#layout-geo" target="_blank" rel="noopener noreferrer">https://plot.ly/r/reference/#layout-geo</a> for the full reference. Now, it's time to learn how to create choropleth maps for custom boundaries.
+</p>
+
+#### From polygons to maps {.unnumbered}
+
+
+
+##### Mapping Senate winners, redux {.unnumbered}
+
+
+<div class>
+<p>In the last lesson you created a choropleth map for the Senate results using <code>plot_geo()</code> with a few workarounds. In this exercise, your task is to recreate that map from polygons. That is, create a U.S. map from polygons and fill in states based on the winner of the Senate race.</p>
+<p>The <code>senate_map</code> data frame and <code>plotly</code> have already been loaded for you. <code>senate_map</code> contains the information you have seen previously, along with the boundary information needed to draw state polygons.</p>
+</div>
+<div class="exercise--instructions__content">
+```{r}
+# edited/added
+senate_map = read.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vSvMl6CfshQn6C-3KknFdKx1eUvwtbVu2dp0-noOvnUDWUSiDKOIQ8WAEZoIUNJCMfYOWu26Ib0AoNj/pub?gid=0&single=true&output=csv")
+
+```
+<li>Create a state-level choropleth map where <code>party</code> is mapped to <code>color</code> and <code>region</code> is mapped to <code>split</code>. </li>
+
+<li>Specify that boundary lines should have <code>width = 0.4</code> and that the legend should not be shown.</li>
+```{r}
+# Create a choropleth map displaying the Senate winners
+senate_map %>%
+  group_by(group) %>%
+  plot_ly(x = ~long, y = ~lat, color = ~party, split = ~region) %>%
+  add_polygons(line = list(width = 0.4), showlegend = FALSE)
+```
+</div>
+
+
+<li>Set the polygon colors to <code>"dodgerblue"</code>, <code>"mediumseagreen"</code>, and <code>"tomato"</code> in the <code>plot_ly()</code> layer.</li>
+<li>To draw the boundaries for states with <code>NA</code>s for <code>party</code> (i.e. a state without a Senate race), change the color of the lines with <code>toRGB("gray60")</code>.</li>
+```{r}
+# Adjust the polygon colors and boundaries
+senate_map %>%
+  group_by(group) %>%
+  plot_ly(x = ~long, y = ~lat, color = ~party, split = ~region,
+          colors = c("dodgerblue", "mediumseagreen", "tomato")) %>%
+  add_polygons(line = list(width = 0.4, color = toRGB("gray60")), showlegend = FALSE)
+```
+
+<li>To simplify your code, define the layout options to remove the axis titles, grid, zero lines, and tick marks as the list <code>map_axes</code>, and then pass this list to <code>xaxis</code> and <code>yaxis</code>. Complete the code to do this.</li>
+```{r}
+# Define the layout settings to polish the axes
+map_axes <- list(title = "", showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE)
+
+# Apply the layout to both axes
+senate_map %>%
+  group_by(group) %>%
+  plot_ly(x = ~long, y = ~lat, color = ~party, split = ~region,
+          colors = c("dodgerblue", "mediumseagreen", "tomato")) %>%
+  add_polygons(line = list(width = 0.4, color = toRGB("gray60")), showlegend = FALSE) %>%
+  layout(xaxis = map_axes, yaxis = map_axes)
+```
+
+<p class="">Capital cartography! Now that you've practice creating a map from polygons, let's practice the data wrangling necessary to combine datasets.
+</p>
+
+##### A county-level choropleth map {.unnumbered}
+
+
+<div class>
+<p>The 2018 Senate race in Florida was extremely contentious, and was not resolved on election night. The race was too close to call, and the recount process was as controversial as the race, with accusations of poorly designed ballots reminiscent of the infamous butterfly ballot in the 2000 presidential election, and a slew of legal challenges. </p>
+<p>In this exercise, your task is to create a county-level choropleth map of the percentage of the two-party vote that the Republican candidate, Rick Scott (the ultimate winner of the race), received according to the first set of results (pre-recount).</p>
+<p>The results are in <code>fl_results</code> and the county boundaries are in <code>fl_boundaries</code>. <code>plotly</code> has already been loaded for you.</p>
+</div>
+<div class="exercise--instructions__content">
+```{r}
+# edited/added
+fl_boundaries = read.csv("archive/fl_boundaries.csv")
+fl_results = read.csv("archive/fl_results.csv")
+```
+<li>Join the <code>fl_boundaries</code> and <code>fl_results</code> data frames (in that order). <code>fl_boundaries</code> and <code>fl_results</code> have different column names for the counties so you will need to map <code>subregion</code> to <code>CountyName</code>.</li>
+```{r}
+# Join the fl_boundaries and fl_results data frames
+senate_vote <- left_join(fl_boundaries, fl_results, by = c("subregion" = "CountyName"))
+```
+</div>
+
+
+<li>Create a county-level choropleth map where counties are colored by the percentage of voters who voted for Rick Scott.</li>
+<li>Specify that the boundary lines should have a width of 0.4 and that the legend should not be shown.</li>
+```{r}
+# Create a county-level choropleth map of Pctvote
+senate_vote %>%
+  group_by(group) %>%
+  plot_ly(x = ~long, y = ~lat, 
+          color = ~Pctvote,
+          split = ~subregion) %>%
+  add_polygons(line = list(width = 0.4), showlegend = FALSE, colors = c("blue", "red"))
+```
+
+<li>Define the axis layout settings in <code>map_axes</code> to remove the titles, grid lines, zero lines, and tick marks, and pass this list to the <code>xaxis</code> and <code>yaxis</code> layouts.</li>
+```{r}
+# Specify the axis settings to polish the map
+map_axes <- list(title = "", showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE)
+
+# Create a polished county-level choropleth map of Pctvote
+senate_vote %>%
+  group_by(group) %>%
+  plot_ly(x = ~long, y = ~lat, 
+          color = ~Pctvote,
+          split = ~subregion) %>%
+  add_polygons(line = list(width = 0.4), showlegend = FALSE, colors = c("blue", "red")) %>%
+  layout(xaxis = map_axes, yaxis = map_axes)
+```
+
+<p class="">Fantastic! You've mastered the basics of mapping in plotly! Let's review how far you've come.
+</p>
+
+#### Wrap-up {.unnumbered}
+
+##### Congratulations! {.unnumbered}
+
+Congratulations - you've finished the course! Now that you've reached the end, you understand how to create a variety of plotly charts, polish them, and combine traces to create new charts.
+
+##### Chapter 1: Displaying distributions {.unnumbered}
+
+In chapter 1 you learned the basics of plotly, including what the plot.ly javascript library is, how to convert static ggplot2 graphics to interactive plotly graphics, and how to create basic univariate and bivariate charts entirely in plotly. Bar charts, histograms, boxplots, and scatterplots are powerful, so don't forget about them as you create more advanced charts.
+
+##### Chapter 2: Customizing your charts {.unnumbered}
+
+In chapter 2, you learned how to customize plotly charts. To reduce the impact of overplotting, you saw how to make points more transparent, and how to change the plotting symbol. You explored how to thoughtfully use color to represent a third variable on a scatterplot, that not all color palettes are created equal, and know how to manually define color palettes, in case no built-in palette suits your needs. You learned that there are often times where additional hover information or formatting greatly improves the insight provided by a chart, and hopefully won't hesitate to customize your hover info. Finally, you saw how to customize the layout of a plotly chart. Before you share your chart with the world, be sure to include all necessary labels, add or remove gridlines, and transform axes as appropriate.
+
+##### Chapter 3: Advanced charts {.unnumbered}
+
+In chapter 3, you learned how to create more complex charts. You began by layering traces to compare models. Then you explored how to facet plotly charts to provide insight across groups. You also explored the use of scatterplot matrices to explore pairwise associations. Both subplots and scatterplot matrices introduced you to the concept of linking, a powerful idea that I encourage you can to explore further. Finally, you explored how binned scatterplots can provide insight about the association between variables in large datasets with a great deal of overplotting.
+
+##### Chapter 4: Exploring the 2018 U.S. election {.unnumbered}
+
+In chapter 4, you reviewed the concepts from the first three chapters while exploring results from the 2018 midterm elections in the United States. Along the way, you learned how to create maps in plotly. You learned two ways to create choropleth maps: using the native choropleth trace, and building them up from polygons. Building your own maps takes more thought on the data-wrangling side, but is a far more powerful and general tool. Finally, you learned how to customize the appearance of your maps.
+
+##### Going further {.unnumbered}
+
+Throughout this course, you have expanded your understanding of plotly and interactive graphics by leaps and bounds. If you're eager to learn more, there are many great resources. One starting point is Plotly for R. It's written by Carson Sievert, the author of the plotly R package. There are also more-general books on interactive graphics if you're interested in the underlying principles. As you explore the functionality of plotly, don't hesitate to open the full documentation online or consult the cheatsheet. You can also post questions on the plotly community forum. The large user community is one of the key strengths of plotly. Before forging ahead, be sure to review how to put your charts online, so you can share your work with the world. Finally, if you're looking to super-charge your interactive graphics, then consider exploring linked views or combining shiny and plotly to create interactive dashboards.
+
+##### Thank you! {.unnumbered}
+
+Thanks for taking this course with me, I hope that you've had as much fun as I have. Now go forth and make interactive graphics!

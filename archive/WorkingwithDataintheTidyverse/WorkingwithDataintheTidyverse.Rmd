@@ -1,0 +1,1625 @@
+---
+title: "Working with Data in the Tidyverse"
+subtitle: "Alison Hill - DataCamp"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+author:
+  - name: "Tran Thanh Dat - International University"
+output:
+  rmdformats::robobook:
+    thumbnails: true
+    lightbox: true
+    gallery: true
+    highlight: tango
+    use_bookdown: true
+---
+
+***
+
+<style>
+
+h1,h2,h3,h4,h5,h6,h {
+  font-family: Futura;
+}
+
+body {
+  font-family: "Georgia";
+  text-align: justify;
+}
+
+p {
+  font-family: "Georgia";
+  text-indent: 30px;
+  color: black;
+  font-style: normal;
+}
+</style>
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(qrmdata)
+```
+
+**Course Description**
+
+<p class="course__description">In this course, you'll learn to work with data using tools from the tidyverse in R. By data, we mean your own data, other people's data, messy data, big data, small data - any data with rows and columns that comes your way! By work, we mean doing most of the things that sound hard to do with R, and that need to happen before you can analyze or visualize your data. But work doesn't mean that it is not fun - you will see why so many people love working in the tidyverse as you learn how to explore, tame, tidy, and transform your data. Throughout this course, you'll work with data from a popular television baking competition called "The Great British Bake Off."</p>
+
+# Explore your data
+
+<p class="chapter__description">
+    You will start this course by learning how to read data into R. We'll begin with the readr package, and use it to read in data files organized in rows and columns. In the rest of the chapter, you'll learn how to explore your data using tools to help you view, summarize, and count values effectively. You'll see how each of these steps gives you more insights into your data. 
+  </p>
+  
+## Import your data
+
+
+
+### Read a CSV file
+
+
+<div class>
+<p>In this exercise, you'll use <code>read_csv()</code> twice. The first time you will only specify the filename, but you'll notice a problem with the imported data. The second time you'll use a new argument called <code>skip</code> to fix the problem. Remember to use <code>?read_csv</code> to read more about arguments like <code>skip</code> and how to use them.</p>
+<p>The data you'll work with is from "The Great British Bake-Off." The file <code>"bakeoff.csv"</code> contains data for each episode of the show, organized by series and baker.</p>
+<p><em>This course touches on a lot of concepts you may have forgotten, so if you ever need a quick refresher, download the <a href="https://datacamp-community-prod.s3.amazonaws.com/e63a8f6b-2aa3-4006-89e0-badc294b179c">Tidyverse Cheat Sheet</a> and keep it handy!</em></p>
+</div>
+<div class="exercise--instructions__content"><p>Load the <code>readr</code> package.</p></div>
+```{r}
+# Load readr
+library(readr)
+```
+
+<div class="exercise--instructions__content"><ul>
+<li>Use <code>read_csv()</code> to read in <code>"bakeoff.csv"</code>, and assign it to a new dataset <code>bakeoff</code> using the assignment operator (<code>&lt;-</code>).</li>
+</ul></div>
+```{r}
+# Create bakeoff from "bakeoff.csv"
+bakeoff <- read_csv("https://assets.datacamp.com/production/repositories/1613/datasets/53cf6583aa659942b787897319a1ac053cbcfa5a/bakeoff.csv")
+```
+
+<div class="exercise--instructions__content"><ul>
+<li>Print <code>bakeoff</code> to view it. Look at the variable names and the first row of values. Do you notice any problems?</li>
+</ul></div>
+```{r}
+# Print bakeoff
+bakeoff
+```
+
+<div class="exercise--instructions__content"><ul>
+<li>Adapt your code to read in <code>"bakeoff.csv"</code> again, but this time, use the <code>skip</code> argument to skip the first line before reading the data. Print again to view it. Remember you can use <code>?read_csv</code>.</li>
+</ul></div>
+```{r}
+# Create bakeoff but skip first row
+bakeoff <- read_csv("https://assets.datacamp.com/production/repositories/1613/datasets/53cf6583aa659942b787897319a1ac053cbcfa5a/bakeoff.csv")
+
+# Print bakeoff
+bakeoff
+```
+
+<p class="">Great job! Our original import had 3 problems: we had 1 extra observation, our first row stored the true variable names, and all column types were characters. Adding <code>skip = 1</code> worked because the default argument for <code>col_names</code> is <code>TRUE</code>.
+</p>
+
+### Assign missing values
+
+
+<div class>
+<p>The <code>read_csv()</code> function also has an <code>na</code> argument, which allows you to specify value(s) that represent missing values in your data. The default values for the <code>na</code> argument are <code>c("", "NA")</code>, so both are recoded as missing (<code>NA</code>) in R. When you read in data, you can add additional values like the string <strong>"UNKNOWN"</strong> to a vector of missing values using the <a href="https://www.rdocumentation.org/packages/base/versions/3.5.0/topics/c"><code>c()</code></a> function to combine multiple values into a single vector.</p>
+<p>The <a href="https://www.rdocumentation.org/packages/base/versions/3.5.1/topics/NA"><code>is.na()</code></a> function is also helpful for identifying rows with missing values for a variable.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Load the <code>dplyr</code> package.</li>
+</ul></div>
+```{r}
+# Load dplyr
+library(dplyr)
+```
+
+<div class="exercise--instructions__content"><ul>
+<li>Add a <code>filter()</code> line after the pipe (<code>%&gt;%</code>) to show only the rows in the <code>showstopper</code> variable coded as <strong>"UNKNOWN"</strong>.</li>
+</ul></div>
+```{r}
+colnames(bakeoff)
+# Filter rows where showstopper is UNKNOWN
+bakeoff %>% 
+    filter(showstopper == "UNKNOWN")
+```
+
+<div class="exercise--instructions__content"><ul>
+<li>Adapt your code for creating <code>bakeoff</code> to add the <code>na</code> argument. Define <code>NA</code> values as a character string vector that includes the two default values (in the default order) <em>plus</em> <strong>"UNKNOWN"</strong>.</li>
+</ul></div>
+```{r}
+# Edit to add list of missing values
+bakeoff <- read_csv("https://assets.datacamp.com/production/repositories/1613/datasets/53cf6583aa659942b787897319a1ac053cbcfa5a/bakeoff.csv", 
+                    na = c("", "NA", "UNKNOWN"))
+```
+
+<div class="exercise--instructions__content"><ul>
+<li>Add a <code>filter()</code> line after the pipe (<code>%&gt;%</code>) now to show rows where <code>showstopper</code> is missing, using the <code>is.na()</code> function.</li>
+</ul></div>
+```{r}
+# Filter rows where showstopper is NA 
+bakeoff %>% 
+    filter(is.na(showstopper))
+```
+
+<p class="">Nice! We only had 4 missing values for the showstopper variable to start, but now all 21 are present and accounted for.
+</p>
+
+## Know your data
+
+
+
+### Arrange and glimpse
+
+
+<div class>
+<p>From here, if we don't ask you to load a package, you can assume it's already loaded.</p>
+<p>You can combine <a href="http://tibble.tidyverse.org/reference/glimpse.html"><code>glimpse()</code></a> with other functions in a sequence using the pipe (<code>%&gt;%</code>) operator. For example, you can use other <code>dplyr</code> functions like <code>arrange</code> first, then use <code>glimpse</code> by adding a line after the final pipe (<code>%&gt;%</code>):</p>
+<pre><code>bakers_mini %&gt;% 
+  arrange(age) %&gt;% 
+  glimpse() # no argument needed here
+</code></pre>
+<p>Take a glimpse of the <code>bakeoff</code> data we imported in the first set of exercises. On which date did the first episode of the show air in the US?</p>
+
+</div>
+
+<ul>
+<li><div class="dc-input-radio__text"><code>2010-08-17</code></div></li>
+<strong><li><div class="dc-input-radio__text"><code>2014-12-28</code></div></li></strong>
+<li><div class="dc-input-radio__text"><code>2013-08-20</code></div></li>
+</ul>
+
+<p class="">Correct! The first episode of the first US season aired on December 28, 2014.
+</p>
+
+### Summarize your data
+
+
+<div class>
+<p>You can combine <a href="https://www.rdocumentation.org/packages/skimr/versions/1.0.2/topics/skim"><code>skim()</code></a> with other functions in a sequence using the pipe (<code>%&gt;%</code>) operator. For example, you could use other <code>dplyr</code> functions like <code>group_by</code> first, then use <code>skim()</code> by adding a line after the final pipe. </p>
+<pre><code>bakers_mini %&gt;% 
+  group_by(series) %&gt;% 
+  skim() # no argument needed here
+</code></pre>
+<p>This will produce summary statistics for each <code>series</code>. Let's practice this!</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Load the <code>skimr</code> package.</li>
+</ul></div>
+```{r}
+# Load skimr
+library(skimr)
+```
+
+<div class="exercise--instructions__content"><ul>
+<li>First <code>filter()</code> to extract only those observations where <code>us_season</code> is not missing, then pipe that to <code>skim()</code>. Recall that <code>!</code> means "not", so <code>!is.na()</code> creates the right logical condition.</li>
+</ul></div>
+```{r}
+# Filter and skim
+bakeoff %>% 
+  filter(!is.na(us_season)) %>% 
+  skim()
+```
+
+<div class="exercise--instructions__content"><ul>
+<li>Add a line above the final <code>skim()</code> to group by <code>us_season</code> first, before getting the summary statistics.</li>
+</ul></div>
+```{r}
+# Edit to filter, group by, and skim
+bakeoff %>% 
+  filter(!is.na(us_season)) %>% 
+  group_by(us_season) %>% 
+  skim()
+```
+
+<p class="">Nice piping &amp; skimming! Producing quick grouped summaries with the <code>skim</code> function is a real time (and sanity) saver.
+</p>
+
+### Know your variable types
+
+
+<div class>
+<p>How many variables of each type do we have in the <code>bakeoff</code> data? You may use any of the data science tools we've learned for getting to know your data (<code>dplyr</code> and <code>skimr</code> are loaded for you). You may also want to try piping a skimmed object to <code>summary()</code>, also from the <code>skimr</code> package:</p>
+<pre><code>tibble_name %&gt;% 
+  skim() %&gt;%  # no argument needed here
+  summary() # no argument needed here
+</code></pre>
+
+</div>
+
+<ul>
+<strong><li><div class="dc-input-radio__text">Date: 2, character: 3, factor: 1, integer: 4</div></li></strong>
+<li><div class="dc-input-radio__text">Date: 3, character: 3, factor: 1, integer: 3</div></li>
+<li><div class="dc-input-radio__text">Date: 2, character: 3, factor: 1, integer: 3</div></li>
+</ul>
+
+<p class="">Correct!
+</p>
+
+## Count with your data
+
+
+
+### Distinct and count
+
+
+<div class><p>In every episode of "The Great British Bake-Off", bakers complete 3 challenges and the show's judges award the title "Star Baker" to the baker who excelled in that week's challenges (with the exception of the finale). Each baker's result for every episode is stored in <code>bakeoff</code>- <code>result</code> is a character variable, and the value "SB" stands for star baker.</p></div>
+<div class="exercise--instructions__content"><p>View the distinct values for the <code>result</code> variable. Is "SB" one of them?</p></div>
+```{r}
+# View distinct results
+bakeoff %>% 
+  distinct(result)
+```
+<div class="exercise--instructions__content"><p>Adapt your code to <code>count</code> rows by <code>result</code> instead. How many star bakers are there?</p></div>
+```{r}
+# Count rows for each result
+bakeoff %>% 
+  count(result)
+```
+<div class="exercise--instructions__content"><p>Adapt your code to <code>count</code> by a logical condition instead: if the <code>result</code> is equal to <code>"SB"</code>.</p></div>
+```{r}
+# Count whether or not star baker
+bakeoff %>% 
+  count(result == "SB")
+```
+
+<p class="">Nice logical detective work! There are 488 results that are not star baker.
+</p>
+
+### Count episodes
+
+
+<div class>
+<p>In the video, here's how we used <code>count()</code> back-to-back to roll up a level of detail across <code>series</code>:</p>
+<pre><code>bakers %&gt;% 
+  count(aired_us, series) %&gt;% 
+  count(aired_us)
+</code></pre>
+<pre><code># A tibble: 2 x 2
+  aired_us    nn
+  &lt;lgl&gt;    &lt;int&gt;
+1 FALSE        4
+2 TRUE         4
+</code></pre>
+<p>Recall that <code>bakeoff</code> includes each baker's result for every episode. Let's practice counting the number of episodes per series.</p>
+</div>
+<div class="exercise--instructions__content"><p>Add a line after the pipe (%&gt;%) to count rows by series and episode.</p></div>
+```{r}
+# Count the number of rows by series and episode
+bakeoff %>% 
+  count(series, episode)
+```
+
+<div class="exercise--instructions__content"><ul>
+<li>Adapt your code to add a second <code>count()</code> by series again to count the total number of episodes per series.</li>
+</ul></div>
+```{r}
+# Add second count by series
+bakeoff %>% 
+  count(series, episode) %>% 
+  count(series)
+```
+
+<p class="">Great work- you can see that by series 3 we were treated to 10 episodes with each new series!
+</p>
+
+### Count bakers
+
+
+<div class>
+<p>In the last exercise, here's how you used <code>count()</code> back-to-back to count episodes by series: </p>
+<pre><code>bakeoff %&gt;% 
+  count(series, episode) %&gt;% 
+  count(series)
+</code></pre>
+<pre><code># A tibble: 8 x 2
+  series    nn
+   &lt;int&gt; &lt;int&gt;
+1      1     6
+2      2     8
+3      3    10
+4      4    10
+5      5    10
+6      6    10
+7      7    10
+8      8    10
+</code></pre>
+<p>Now, using the same <code>bakeoff</code> data, you'll practice that again, focusing on counting bakers.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Create a new tibble by <code>count</code>ing rows by <code>series</code> and <code>baker</code>. Print your new counted tibble.</li>
+</ul></div>
+```{r}
+# Count the number of rows by series and baker
+bakers_by_series <- bakeoff %>% 
+  count(series, baker)
+  
+# Print to view
+bakers_by_series
+```
+
+<div class="exercise--instructions__content"><ul>
+<li>Add a line to <code>count</code> the already counted tibble by <code>series</code> again. Which series had the most bakers? Which had the least?</li>
+</ul></div>
+```{r}
+# Count again by series
+bakers_by_series %>% 
+  count(series)
+```
+
+<div class="exercise--instructions__content"><ul>
+<li>Now <code>count</code> the same tibble by <code>baker</code> again and use <code>sort = TRUE</code>. What's the most common baker name?</li>
+</ul></div>
+```{r}
+# Count again by baker
+bakers_by_series %>%
+  count(baker, sort = TRUE)
+```
+
+<p class="">Good work- Series 4 had the most bakers with 13 total (a baker's dozen!). Kate is the most popular name- Kates have appeared in 3 different series of the TV show.
+</p>
+
+### Plot counts
+
+
+<div class><p>You can learn a lot about your data by counting, but sometimes you can learn even more by plotting counts. This is especially true when you have lots of things to count! With eight series, 74 episodes, and 95 bakers, a plot can be more helpful than a table of numbers. We'll use <code>ggplot2</code> (already loaded for you) to visualize the number of bakers across episodes for each series from <code>bakeoff</code>.</p></div>
+<div class="exercise--instructions__content"><p>Make a bar chart using <code>geom_bar</code> to plot the number of bakers from <code>bakeoff</code> per <code>episode</code> along the x-axis. Use <code>facet_wrap</code> by <code>series</code>.</p></div>
+```{r}
+library(tidyverse)
+ggplot(bakeoff, aes(episode)) + 
+    geom_bar() + 
+    facet_wrap(~series)
+```
+
+<p class="">You made it through the first chapter! We have a lot of work left to do with The Great British Bake Off data, but notice how this plot is a great sanity check: the number of bakers tends to go down with every episode (never up!), with a few exceptions where no one was eliminated. Also, you can see that there are fewer episodes in the first two series. Finally, you can see that there are always three bakers who make it to the series finale.
+</p>
+
+# Tame your data
+
+<p class="chapter__description">
+    In this chapter, you will learn some basics of data taming, like how to tame your variable types, names, and values.
+  </p>
+
+## Cast column types
+
+
+
+### Cast a column to a date
+
+
+<div class>
+<p>As we saw in the video, a good workflow for parsing dates using <code>readr</code> is to, for example:</p>
+<ul>
+<li>Use <code>parse_date("2012-14-08", format = "%Y-%d-%m")</code> first, then</li>
+<li>Use <code>col_date(format = "%Y-%d-%m")</code> within <code>cols()</code> as the <code>col_types</code> argument of <code>read_csv()</code>. </li>
+</ul>
+<p>In <code>"desserts.csv"</code>, the variable <code>uk_airdate</code> is formatted like <code>"17 August 2010"</code>. Let's parse, then cast this variable!</p>
+<p>Later on in Chapter 4, we'll showcase some functions from the <code>lubridate</code> package to help you extract data from dates, once they are cast properly.</p>
+</div>
+<div class="exercise--instructions__content"><p>Use <code>?parse_date</code> to find the right format to parse the date <code>"17 August 2010"</code>.</p></div>
+```{r}
+# Find format to parse "17 August 2010" 
+parse_date("17 August 2010", format = "%d %B %Y")
+```
+
+<div class="exercise--instructions__content"><p>Cast the <code>uk_airdate</code> column as a date of the right format using the <code>col_date()</code> function with the <code>format</code> argument.</p></div>
+```{r}
+# Edit to cast uk_airdate
+desserts <- read_csv("https://raw.githubusercontent.com/ThanhDatIU/datacamp/main/desserts.csv", 
+                     col_types = cols(
+                       uk_airdate = col_date(format = "%d %B %Y")
+                     )
+                    )
+```
+
+<div class="exercise--instructions__content"><p>Sort <code>desserts</code> in descending order by <code>uk_airdate</code>. when did the last episode air in the UK?</p></div>
+```{r}
+# Arrange by descending uk_airdate
+desserts %>% 
+    arrange(desc(uk_airdate))
+```
+
+<p class="">Looking good! Notice that <code>us_airdate</code> didn't need to be cast - this is because the date format <code>%Y-%m-%d</code> is unambiguous, so it is automatically parsed as a date by <code>readr</code>.
+</p>
+
+### Cast a column to a number
+
+
+<div class>
+<p>In the video, we saw a good workflow for parsing columns using <code>readr</code>:</p>
+<ul>
+<li>Use <code>parse_number()</code> to practice, then</li>
+<li>Use <code>col_number()</code> to cast. </li>
+</ul>
+<p>But sometimes you'll need to start with casting, then diagnose parsing problems using a new <code>readr</code> function called <a href="https://www.rdocumentation.org/packages/readr/versions/1.1.1/topics/problems"><code>problems()</code></a>. Using <code>problems()</code> on a result of <code>read_csv()</code> will show you the rows and columns where parsing error occurred, what the parser expected to find (for example, a number), and the actual value that caused the parsing error.</p>
+<p>Let's practice this with <code>"desserts.csv"</code>, which includes data about the judges' ranks for each baker in the <code>technical</code> challenge, for every episode.</p>
+</div>
+<div class="exercise--instructions__content"><p>Add another line to <code>cols()</code> to cast the <code>technical</code> column as a number. You will get a parsing error! Read the red text carefully.</p></div>
+```{r}
+# Try to cast technical as a number
+desserts <- read_csv("https://raw.githubusercontent.com/ThanhDatIU/datacamp/main/desserts.csv", 
+                     col_types = cols(
+           			   uk_airdate = col_date(format = "%d %B %Y"),
+                       technical = col_number()
+                     )
+                    )
+```
+<div class="exercise--instructions__content"><p>Pass the <code>desserts</code> tibble to the <code>problems()</code> function. Which values were not parsed (take a look at the <code>actual</code> column)?</p></div>
+```{r}
+# View parsing problems
+problems(desserts)
+```
+<div class="exercise--instructions__content"><p>Adapt the code so that the value that <code>read_csv()</code> couldn't parse would instead be read as missing (think back to chapter 1!)</p></div>
+```{r}
+# Edit code to fix the parsing error 
+desserts <- read_csv("https://raw.githubusercontent.com/ThanhDatIU/datacamp/main/desserts.csv",
+                      col_types = cols(
+                        uk_airdate = col_date(format = "%d %B %Y"),
+                        technical = col_number()
+                      ),
+                        na = c("", "NA", "N/A")
+                     )
+
+# View parsing problems
+problems(desserts)
+```
+
+<p class="">Great work dealing with a tricky parsing problem!
+</p>
+
+### Cast a column as a factor
+
+
+<div class>
+<p>Factors are categorical variables, where the possible values are a fixed and known set. For example, take a simple factor like <code>bake</code> below:</p>
+<pre><code>bake &lt;- c("pie", "cake", "neither") 
+parse_factor(bake, levels = NULL) 
+</code></pre>
+<pre><code>[1] pie  cake neither
+Levels: pie cake neither
+</code></pre>
+<p>You can use <code>parse_factor()</code> to parse variables and <code>col_factor()</code> to cast columns as categorical. Both functions have a <code>levels</code> argument that is used to specify the possible values for the factors. When <code>levels</code> is set to <code>NULL</code>, the possible values will be inferred from the unique values in the dataset. Alternatively, you can pass a list of possible values.</p>
+<p>This is the last time you'll read in <code>"desserts.csv"</code>! This time, you will look at the <code>result</code> column, which contains the outcome of the competition for each baker.</p>
+</div>
+<div class="exercise--instructions__content"><p>Adapt your code from the previous exercise to cast <code>result</code> as a factor; detect the factor levels based on the unique values present in each variable. Use <code>glimpse()</code> to check your work.</p></div>
+```{r}
+# Cast result a factor
+desserts <- read_csv("https://raw.githubusercontent.com/ThanhDatIU/datacamp/main/desserts_tidy.csv", 
+                     na = c("", "NA", "N/A"),
+                     col_types = cols(
+                       uk_airdate = col_date(format = "%d %B %Y"),
+                       technical = col_number(),                       
+                       result = col_factor(levels = NULL)
+                     )
+                    )
+
+# Glimpse to view
+glimpse(desserts)
+```
+
+<p class="">You've casted like a champ! While it takes a lot of work up front, casting column types when you import can make your analyses easier to reproduce (for yourself too!).
+</p>
+
+## Recode values
+
+
+
+### Recode a character variable
+
+
+<div class>
+<p>In this exercise, you'll <a href="https://www.rdocumentation.org/packages/dplyr/versions/0.7.3/topics/recode"><code>recode()</code></a> the <code>nut</code> variable in the <code>desserts</code> data. This is a character variable that tells us, for each bake, whether a nut was a key ingredient and if so, what kind of nut!</p>
+<p>Remember that the arguments of <code>recode()</code> are the variable that you want to recode, and then an expression of the form <code>old_value = new_value</code>. <code>recode()</code> is most useful when used inside a <code>mutate()</code> to create a new variable or reassign the old one.</p>
+<p>Often you want to recode a certain value as missing. In this case, it is important to preserve the data type of the variable. R has built-in words to indicate missing data of various types, for example <code>NA_character_</code> for missing value for a character variable, or <code>NA_integer_</code> for missing integer data. The <code>NA</code> value is of the logical type.</p>
+<p>Remember that you can use <code>?function_name_here</code> to read more about arguments and how to use them.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Count the distinct values in the <code>nut</code> variable, <strong>sorting the result</strong> based on the number of rows. How many bakes included filberts as the nut?</li>
+</ul></div>
+```{r}
+# Count rows grouping by nut variable
+desserts %>% 
+    count(nut, sort = TRUE)
+```
+
+<div class="exercise--instructions__content"><ul>
+<li>What is a <code>"filbert"</code>, you may ask? Recode <code>"filbert"</code> to <code>"hazelnut"</code>, store the result in the same <code>nut</code> column, and count again.</li>
+</ul></div>
+```{r}
+# Recode filberts as hazelnuts
+desserts_2 <- desserts %>% 
+  mutate(nut = recode(nut, "filbert" = "hazelnut"))
+
+# Count rows again
+desserts_2 %>% 
+    count(nut, sort = TRUE)
+```
+
+<div class="exercise--instructions__content"><ul>
+<li>Edit your code to also recode <code>"no nut"</code> as a missing <em>character</em> value, and count again to check your work.</li>
+</ul></div>
+```{r}
+# Edit code to recode "no nut" as missing
+desserts_2 <- desserts %>% 
+  mutate(nut = recode(nut, "filbert" = "hazelnut", 
+                           "no nut" = NA_character_))
+
+# Count rows again
+desserts_2 %>% 
+    count(nut, sort = TRUE)
+```
+
+<p class="">Nice! <code>NA</code> is a logical constant, so it is always helpful to remember the <code>NA</code> constants like <code>NA_character_</code> and <code>NA_integer_</code> when working with strings or numbers. Always know your variable types!
+</p>
+
+### Recode a numeric variable
+
+
+<div class>
+<p>Dummy variables are often used in data analysis to bin a variable into one of two categories to indicate the absence or presence of something. Dummy variables take the value <code>0</code> or <code>1</code> to stand for, for example, loser or winner. Dummy variables are often <em>factor</em> variables as opposed to numeric - we'll cover more about factors in the last chapter.</p>
+<p>In <code>desserts</code>, the <code>technical</code> variable is a number representing the judges' ranks for each baker in the technical challenge, for every episode (remember to run <code>glimpse(desserts)</code> to take a peek). In this exercise, you will recode the numeric <code>technical</code> variable to a new factor dummy variable.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Create a new dummy variable called <code>tech_win</code>: it should be equal to <code>1</code> if the baker was ranked first in the technical challenge, and <code>0</code> if not. Remember that when recoding numeric variables, you need to put the <em>old</em> value in backticks, for example, <code>`5` = 6</code>.</li>
+</ul></div>
+```{r}
+# Create dummy variable: 1 if won, 0 if not
+desserts <- desserts %>% 
+  mutate(tech_win = recode(technical, `1` = 1,
+                           .default = 0))
+```
+
+<div class="exercise--instructions__content"><ul>
+<li>Use <code>count</code> to compare the number of rows where <code>technical</code> is equal to <code>1</code> versus all distinct values in the new <code>tech_win</code> variable.</li>
+</ul></div>
+```{r}
+# Count to compare values                      
+desserts %>% 
+  count(technical == 1, tech_win)
+```
+
+<div class="exercise--instructions__content"><ul>
+<li>You may have noticed that <code>tech_win</code> is a numeric variable (a <code>dbl</code>). Adapt your code to use <a href="https://www.rdocumentation.org/packages/dplyr/versions/0.7.3/topics/recode" target="_blank" rel="noopener noreferrer"><code>recode_factor()</code></a> instead of <code>recode</code> to convert it to a factor.</li>
+</ul></div>
+```{r}
+# Edit to recode tech_win as factor
+desserts <- desserts %>% 
+  mutate(tech_win = recode_factor(technical, `1` = 1,
+                                  .default = 0))
+
+# Count to compare values                      
+desserts %>% 
+  count(technical == 1, tech_win)
+```
+
+<p class="">Great job! We'll do more complex recoding and learn more about factors in the last chapter- get excited!
+</p>
+
+## Select variables
+
+
+
+### Combine functions with select
+
+
+<div class>
+<p>The <code>ratings</code> data tells us about how many UK viewers tuned in to watch "The Great British Bake-Off" for each episode of each series. If you explore <code>ratings</code> in console, you'll see that there is a separate variable for the number of viewers for each episode. A key question we'll return to in Chapter 3 is: how many more viewers watched the finale than the premiere episode?</p>
+<p>Use the data science tools you've learned so far to answer: </p>
+<blockquote>
+  <p>For series with 10 episodes, which showed the most growth in viewers from the premiere to the finale? Which showed the least?</p>
+</blockquote>
+
+</div>
+
+<ul>
+<li><div class="dc-input-radio__text">Most: series 6, Least = series 7</div></li>
+<strong><li><div class="dc-input-radio__text">Most: series 5, Least = series 8</div></li></strong>
+<li><div class="dc-input-radio__text">Most: series 8, Least = series 3</div></li>
+<li><div class="dc-input-radio__text">Most: series 7, Least = series 5</div></li>
+</ul>
+
+<p class="">Correct! Series 5 on BBC One showed the most, while series 8 on Channel 4 showed the least.
+</p>
+
+### Recode factor to plot
+
+
+<div class>
+<p>In the last exercise, you may have used <code>mutate()</code> to find the difference between the number of premiere and finale episode viewers for each series. This variable, which I created and called <code>viewer_growth</code>, is now available in <code>ratings</code>, and feel free to check out it. </p>
+<p>Now let's practice using <code>select()</code> to check the result of another <code>mutate</code> with <code>recode_factor()</code>.</p>
+</div>
+<div class="exercise--instructions__content">
+<p>If you have examined <code>ratings</code>, you might have seen that series have aired on three different channels: "Channel 4", "BBC One", "BBC Two". </p>
+<ul>
+<li>Create a new <em>factor</em> variable <code>bbc</code> by recoding <code>channel</code> with two levels using <code>recode_factor()</code>: <code>0</code> if that series aired on <code>"Channel 4"</code> and <code>1</code> if that series aired on any BBC station.</li>
+</ul>
+</div>
+```{r}
+ratings = read.csv("https://raw.githubusercontent.com/ThanhDatIU/datacamp/main/02.03_messy_ratings.csv")
+# Recode channel as factor: "Channel 4" (0) or not (1)
+ratings <- ratings %>% 
+  mutate(bbc = recode_factor(channel, 
+                             "Channel 4" = 0,
+                             .default = 1))
+```
+
+<div class="exercise--instructions__content"><p>Use <code>select()</code> to view the <code>series</code>, <code>channel</code>, <code>bbc</code>, and <code>viewer_growth</code> variables to check that your recoding worked.</p></div>
+```{r}
+ratings <- ratings %>% 
+  filter(episodes == 10) %>%
+  mutate(viewer_growth = e10_viewers_7day - e1_viewers_7day)
+# Select to look at variables to plot next
+ratings %>% 
+  select(series, channel, bbc, viewer_growth)
+```
+
+<div class="exercise--instructions__content"><p>Make a bar chart of <code>ratings</code> where the height of the bars shows <code>viewer_growth</code>, with <code>series</code> on the x-axis. Use <code>fill</code> and the newly created factor variable to color the bars according to whether it aired on a BBC channel to see when the show switched from the BBC.</p></div>
+```{r}
+# Make a filled bar chart
+ggplot(ratings, aes(x = series, y = viewer_growth, fill = bbc)) +
+  geom_col()
+```
+
+<p class="">Good selections. Remember to look up the other select helper functions using <code>?select</code>. What is going on with <code>viewer_growth</code> in series 8? Stay tuned to find out!
+</p>
+
+### Select and reorder variables
+
+
+<div class>
+<p>As we have seen, selecting a subset of columns to print can help you check that a <code>mutate()</code> worked as expected, and rearranging columns next to each other can help you spot obvious errors in data entry.</p>
+<p>The <a href="https://www.rdocumentation.org/packages/tidyselect/versions/0.2.4/topics/select_helpers"><code>select()</code> helpers</a> are functions that you can use inside <code>select()</code> to allow you to select variables based on their names. </p>
+<p>In this exercise, you'll work with the <code>ratings</code> data, and you'll use a new helper function called <a href="https://www.rdocumentation.org/packages/tidyselect/versions/0.2.4/topics/select_helpers"><code>everything()</code></a> which can be useful when reordering columns. Use <code>?everything</code> to read more. You will learn more about using helper functions in the next lesson.</p>
+</div>
+<div class="exercise--instructions__content"><p>Use <code>select()</code> to move <code>channel</code> to the front of <code>ratings</code>, while also keeping <em>all</em> other variables using <code>everything()</code>.</p></div>
+```{r}
+# Move channel to first column
+ratings %>% 
+  select(channel, everything())
+```
+<div class="exercise--instructions__content"><p>Adapt your code to drop only those variables that end with "day".</p></div>
+```{r}
+# Drop 7- and 28-day episode ratings
+ratings %>% 
+  select(-ends_with("day"))
+```
+<div class="exercise--instructions__content"><p>Move <code>channel</code> to the first column and keep <em>all</em> other variables <em>except</em> those that end with "day".</p></div>
+```{r}
+# Move channel to front and drop 7-/28-day episode ratings
+ratings %>% 
+  select(channel, everything(), -ends_with("day"))
+```
+
+<p class=""><code>everything()</code> is a great little helper! If it had been placed at the end, it would have added back in all the columns that end with <code>"day"</code>. Placing it before deselecting columns, though, is a real time-saver.
+</p>
+
+## Tame variable names
+
+
+
+### Reformat variables
+
+
+<div class>
+<p>In the video, you saw how to use <a href="https://www.rdocumentation.org/packages/janitor/versions/1.0.0/topics/clean_names"><code>clean_names()</code></a> from the <code>janitor</code> package to convert all variable names to snake_case. Here is how:</p>
+<pre><code>library(janitor)
+young_bakers3 &lt;- young_bakers3 %&gt;% 
+   clean_names()
+</code></pre>
+<p>The function <code>clean_names()</code> takes an argument <code>case</code> that can be used to convert variable names to other cases, like <code>"upper_camel"</code> or <code>"all_caps"</code>.</p>
+<p>Let's practice using the <code>messy_ratings</code> tibble. Remember you can use <code>?clean_names</code> to see the function arguments and how to use them.</p>
+</div>
+<div class="exercise--instructions__content"><p>Use <code>glimpse()</code> to view the variable names in <code>messy_ratings</code>, and load the <code>janitor</code> package.</p></div>
+```{r}
+messy_ratings <- read.csv("https://raw.githubusercontent.com/ThanhDatIU/datacamp/main/02.03_messy_ratings.csv")
+# Glimpse to see variable names
+glimpse(messy_ratings)
+
+# Load janitor
+library(janitor)
+```
+<div class="exercise--instructions__content"><p>Convert all variable names to <code>"lower_camel"</code> case in a new tibble called <code>ratings</code>; <code>glimpse()</code> to view again.</p></div>
+```{r}
+# Reformat to lower camelcase
+ratings <- messy_ratings %>% 
+  clean_names("lower_camel")
+
+# Glimpse new tibble
+glimpse(ratings)
+```
+<div class="exercise--instructions__content"><p>Adapt your code to convert all variable names to snake_case instead; <code>glimpse()</code> to view the new variable names.</p></div>
+```{r}
+# Reformat to snake case
+ratings <- messy_ratings %>% 
+  clean_names()
+    
+# Glimpse cleaned names
+glimpse(ratings)
+```
+
+<p class="">Great job! You have a ton of case options with the <code>clean_names</code> function- choose wisely!
+</p>
+
+### Rename and subset variables
+
+
+<div class>
+<p>In the next chapter, when we reshape data to be tidy, you'll see the importance of having tame variable names. </p>
+<p>Now that our variable names in <code>ratings</code> have been converted to snake_case, you'll practice combining renaming with <code>select()</code> helper functions to take advantage of the variable name structure. </p>
+<p>As mentioned in the video, to rename a group of variables, you only need to specify a <em>prefix</em> of the new name. </p>
+<p>For example, <code>my_tbl %&gt;% select(  new_name_ = starts_with("oldname")  )</code> will find all variables in <code>my_tbl</code> whose names start with <code>oldname</code>, <em>enumerate them</em>, then rename each variable as <code>new_name_&lt;N&gt;</code>, where <code>N</code> is a number. If <code>my_tbl</code> has variables <code>oldname</code>, <code>oldname_v1</code>, <code>oldname3</code>, running the statement above will replace these names with <code>new_name_1</code>, <code>new_name_2</code>, <code>new_name_3</code>. Notice how we only specified <code>new_name_</code> in <code>select()</code>, and the numbers were appended automatically!</p>
+<p>Take a second to <code>glimpse()</code> at <code>ratings</code> in your console, and take note of the variables that store data about the number of viewers. Can you see the pattern in their names? In this exercise, you will first select those variables using a helper function, and then rename them!</p>
+</div>
+<div class="exercise--instructions__content">
+<li>Select <code>series</code> and the variables with 7-day viewer data from <code>ratings</code>. Use a helper function inside <code>select()</code> to match the naming pattern of the variables that contain the viewer data; </li>
+```{r}
+# Select 7-day viewer data by series
+viewers_7day <- ratings %>% 
+    select(series, ends_with("7day"))
+```
+<li>
+<code>glimpse()</code> to view the result.</li>
+```{r}
+# Glimpse
+glimpse(viewers_7day)
+```
+</div>
+
+<div class="exercise--instructions__content"><p>Adapt your code to rename each 7-day viewers variable to <code>viewers_7day_&lt;episode&gt;</code>, where <code>&lt;episode&gt;</code> takes on all the possible episode values.</p></div>
+```{r}
+# Adapt code to also rename 7-day viewer data
+viewers_7day <- ratings %>% 
+    select(series, viewers_7day_ = ends_with("7day"))
+
+# Glimpse
+glimpse(viewers_7day)
+```
+
+<p class="">Great job batch renaming! Using <code>select</code> helper functions is a powerful way to tame your variable names. Tame names make it easier to tidy your data (see Chapter 3)!
+</p>
+
+### Rename and reorder variables
+
+
+<div class><p>In the previous exercise, you renamed all the variables in <code>ratings</code> that end with "7day" <em>and</em> kept only a subset of variables. In this exercise, you'll adapt that code to drop some specific columns, while keeping and reordering other columns.</p></div>
+<div class="exercise--instructions__content"><p>Drop the ten columns that contain 28-day viewer data and keep all the <code>viewers_7day_</code> variables in the front.</p></div>
+```{r}
+# Adapt code to drop 28-day columns; keep 7-day in front
+viewers_7day <- ratings %>% 
+    select(viewers_7day_ = ends_with("7day"), 
+           everything(), 
+           -ends_with("28day"))
+
+# Glimpse
+glimpse(viewers_7day)
+```
+<div class="exercise--instructions__content"><p>Adapt your code to keep the original order of variables now, while still renaming the variables with the 7-day data using <code>viewers_7day_</code> and dropping the ten columns that contain 28-day viewer data as in the previous step.</p></div>
+```{r}
+# Adapt code to keep original order
+viewers_7day <- ratings %>% 
+    select(everything(), 
+           viewers_7day_ = ends_with("7day"), 
+           -ends_with("28day"))
+
+# Glimpse
+glimpse(viewers_7day)
+```
+
+<p class="">You are a master data tamer! You are done with Chapter 2 and ready to start tidying.
+</p>
+
+# Tidy your data
+
+<p class="chapter__description">
+    Now that your data has been tamed, it is time to get tidy. In this chapter, you will get hands-on experience tidying data and combining multiple tidying functions together in a chain using the pipe operator. 
+  </p>
+  
+## Introduction to Tidy Data
+
+
+
+### Tidy line-up
+
+
+<div class><p>Four data frames are loaded for you. They each contain some data on the number of viewers who watched episodes of the "The Great British Bake-off". Determine which one is tidy.</p></div>
+
+<ul>
+<li><div class="dc-input-radio__text"><code>ratings1</code></div></li>
+<li><div class="dc-input-radio__text"><code>ratings2</code></div></li>
+<strong><li><div class="dc-input-radio__text"><code>ratings3</code></div></li></strong>
+<li><div class="dc-input-radio__text"><code>ratings4</code></div></li>
+</ul>
+```{r}
+ratings3=tribble(~series,~episode,~uk_premiere,~window,
+        "6","1","2015-08-05","7day",
+"6","1","2015-08-05","28day",
+"6","2","2015-08-12","7day",
+"6","2","2015-08-12","28day",
+"6","3","2015-08-19","7day",
+"6","3","2015-08-19","28day")
+```
+<p class="">Correct! This is the only tidy data in our line-up!
+</p>
+
+### Plot untidy data
+
+
+<div class><p>We'll start by visualizing the number of show viewers (in millions, cumulative across seven days) across series by episode using the <code>ratings</code> data.</p></div>
+<div class="exercise--instructions__content"><ul>
+<li>Use <code>ggplot2</code> to make a bar chart that shows the number of viewers for the first episode by series.</li>
+</ul></div>
+```{r}
+ratings <- read_csv("https://raw.githubusercontent.com/ThanhDatIU/datacamp/main/messy_ratings.csv",
+                     col_types = cols(
+                    series = col_factor(levels = NULL)
+                    ))
+
+# Plot of episode 1 viewers by series
+ggplot(ratings, aes(x = series, y = e1)) +
+    geom_col()
+```
+
+<div class="exercise--instructions__content"><ul>
+<li>Adapt your code to make another bar plot just like the first, but this time plot the viewers for the second episode by series.</li>
+</ul></div>
+```{r}
+# Adapt code to plot episode 2 viewers by series
+ggplot(ratings, aes(x = series, y = e2)) +
+    geom_col()
+```
+
+<p class="">Series 8 was the first with different hosts on a different channel. Do you notice a pattern? To draw any conclusions, we'd want to plot the viewers for every episode though- aren't you glad you weren't asked to make all 10 plots? Wouldn't it be nice if episode was a variable we could use?
+</p>
+
+## Gather
+
+
+
+### Gather by hand
+
+
+<div class><p>Type <code>mini</code> in the console to see a small un-tidy data frame. On a sheet of paper, sketch out the tidy version of this data. In the tidy version, what is in the "value" column in the sixth row (not counting the header row)?</p></div>
+
+<ul>
+<strong><li><div class="dc-input-radio__text">IN.</div></li></strong>
+<li><div class="dc-input-radio__text">OUT.</div></li>
+<li><div class="dc-input-radio__text">NA.</div></li>
+</ul>
+
+<p class="">Correct! David was IN in episode 2.
+</p>
+
+### Gather &amp; plot
+
+
+<div class>
+<p>In a previous frustrating exercise working with untidy data, we attempted to visualize viewers per episode across series with the untidy <code>ratings</code> data.</p>
+<p><img src="https://assets.datacamp.com/production/repositories/1613/datasets/0e686a52da94bfa5373dbe9688240d7b89e8c412/ratings_long_bars.png" alt></p>
+<p>Here is the plot we wanted to create. To make it, we'll tidy the data, then use <a href="https://www.rdocumentation.org/packages/dplyr/versions/0.7.5/topics/ranking"><code>row_number()</code></a> from the <code>dplyr</code> package to create a continuous episode count variable, such that episode 1 from series 1 will have a value of <code>1</code>, episode 1 from series 2 will have a value of <code>7</code>, and so on. This new variable will be mapped onto the x-axis using <code>ggplot2</code>.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Gather all columns but <code>series</code>. Name the key <code>episode</code> and the value <code>viewers_7day</code>. For plotting, store the key values as a factor variable to preserve the original ordering of the episodes, and remove rows that are <code>NA</code>.</li>
+</ul></div>
+```{r}
+tidy_ratings <- ratings %>%
+    # Gather and convert episode to factor
+	gather(key = "episode", value = "viewers_7day", -series, 
+           factor_key = TRUE, na.rm = TRUE)
+```
+
+<div class="exercise--instructions__content"><ul>
+<li>Next, sort the rows by <code>series</code> then <code>episode</code>.</li>
+</ul></div>
+```{r}
+tidy_ratings <- ratings %>%
+	# Gather and convert episode to factor
+    gather(key = "episode", value = "viewers_7day", -series, 
+           factor_key = TRUE, na.rm = TRUE) %>% 
+	# Sort in ascending order by series and episode
+    arrange(series, episode)
+```
+
+<div class="exercise--instructions__content"><ul>
+<li>Add a line after the <code>%&gt;%</code> to create a new cumulative <code>episode_count</code> variable using <a href="https://www.rdocumentation.org/packages/dplyr/versions/0.7.5/topics/ranking" target="_blank" rel="noopener noreferrer"><code>row_number()</code></a> from the <code>dplyr</code> package.</li>
+</ul></div>
+```{r}
+tidy_ratings <- ratings %>%
+	# Gather and convert episode to factor
+    gather(key = "episode", value = "viewers_7day", -series, 
+           factor_key = TRUE, na.rm = TRUE) %>% 
+	# Sort in ascending order by series and episode
+    arrange(series, episode) %>%
+	# Create new variable using row_number()
+    mutate(episode_count = row_number())
+```
+
+<div class="exercise--instructions__content"><ul>
+<li>Make a bar chart to visualize 7-day viewers by <code>episode_count</code>, filled by <code>series</code>.</li>
+</ul></div>
+```{r}
+# Plot viewers by episode and series
+ggplot(tidy_ratings, aes(x = episode_count, 
+                         y = viewers_7day, 
+                         fill = series)) +
+    geom_col()
+```
+
+<p class="">Beautiful plot! In series 8, one of the judges accidentally tweeted out the winner's name 12 hours before the finale aired. Do you think that hurt their finale viewer numbers?
+</p>
+
+### Gather &amp; plot non-sequential columns
+
+
+<div class>
+<p>In this exercise, you'll combine <code>tidyr</code> with <a href="https://www.rdocumentation.org/packages/dplyr/versions/0.7.5/topics/select"><code>dplyr::select()</code></a> to keep and gather non-sequential columns in the <code>ratings2</code> data. You can review the <code>select</code> <a href="https://www.rdocumentation.org/packages/dplyr/versions/0.7.5/topics/select">helper functions here</a>. The <code>ratings2</code> data includes per-episode data:</p>
+<ul>
+<li>
+<code>e*_7day</code>: viewers within a 7-day window, and</li>
+<li>
+<code>e*_28day</code>: viewers within a 28-day window. </li>
+</ul>
+<p>Here, we'll focus on the 7-day viewers.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Create a new data frame called <code>week_ratings</code>, selecting the variables you will need from <code>ratings2</code> to plot only the 7-day viewers by episode and series.</li>
+</ul></div>
+```{r}
+ratings2=read.csv("https://raw.githubusercontent.com/ThanhDatIU/datacamp/main/messy_ratings2.csv")
+# Glimpse new tibble
+glimpse(ratings2)
+# Select 7-day viewer ratings
+week_ratings <- ratings2 %>% 
+    select(series, ends_with("7day"))
+```
+
+<div class="exercise--instructions__content"><ul>
+<li>Add a line after the <code>%&gt;%</code> to gather the 7-day viewer data into one column called <code>viewers_7day</code>, removing all rows with missing values and converting the key variable, <code>episode</code>, to a factor.</li>
+</ul></div>
+```{r}
+week_ratings <- ratings2 %>% 
+	# Select 7-day viewer ratings
+    select(series, ends_with("7day")) %>% 
+	# Gather 7-day viewers by episode
+    gather(episode, viewers_7day, ends_with("7day"), na.rm = TRUE, factor_key = TRUE)
+```
+
+<div class="exercise--instructions__content"><ul>
+<li>Make a line plot to visualize the 7-day viewers by <code>episode</code>, facetted by <code>series</code>. Since the x-axis is a factor, you'll use the group aesthetic to plot one line per <code>series</code>.</li>
+</ul></div>
+```{r}
+# Plot 7-day viewers by episode and series
+ggplot(week_ratings, aes(x = episode, 
+                         y = viewers_7day, 
+                         group = series)) +
+    geom_line() +
+    facet_wrap(~series)
+```
+
+<p class="">You're done gathering! This plot tells you a lot, but the x-axis labels are a mess! We need to do more tidying to make this plot better.
+</p>
+
+## separate()
+
+
+
+### Separate a column
+
+
+<div class>
+<p>To create the <code>week_ratings</code> data, we first selected all the columns in <code>ratings2</code> that contain data about the number of 7-day viewers in millions for each series, then we gathered those 10 columns into two columns.</p>
+<p>In this exercise, you'll use the <code>tidyr</code>, <code>dplyr</code>, and <code>readr</code> packages (all are loaded) to tidy and plot the <code>week_ratings</code> data so we can read the x-axis, which labels each episode!</p>
+</div>
+<div class="exercise--instructions__content">
+<li>Add a line after the <code>%&gt;%</code> in your code from the last set of gathering exercises to separate the existing column named <code>episode</code> into a new column also called <code>episode</code>. </li>
+<li>Drop the extra part that always says "7day". </li>
+```{r}
+week_ratings <- ratings2 %>% 
+    select(series, ends_with("7day")) %>% 
+    gather(episode, viewers_7day, ends_with("7day"), 
+           na.rm = TRUE) %>% 
+	# Edit to separate key column and drop extra
+    separate(episode, into = "episode", extra = "drop") 
+```
+<li>Print to view the result.</li>
+```{r}
+# Print to view
+week_ratings
+```
+</div>
+
+<div class="exercise--instructions__content"><ul>
+<li>The <code>episode</code> column is a character, but it will be easier to work with as a number. Use <code>readr::parse_number()</code> to drop the non-numeric characters before the episode number. Print again to view.</li>
+</ul></div>
+```{r}
+week_ratings <- ratings2 %>% 
+    select(series, ends_with("7day")) %>% 
+    gather(episode, viewers_7day, ends_with("7day"), 
+           na.rm = TRUE) %>% 
+    separate(episode, into = "episode", extra = "drop") %>%
+	# Edit to parse episode number
+    mutate(episode = parse_number(episode))
+
+# Print to view
+week_ratings
+```
+
+<div class="exercise--instructions__content"><ul>
+<li>Edit your code for the facetted line plot from the previous exercise to also color the lines by <code>series</code>. Using <a href="https://www.rdocumentation.org/packages/ggplot2/versions/3.0.0/topics/guides" target="_blank" rel="noopener noreferrer"><code>guides()</code></a>, remove the <code>color</code> guide by setting it equal to <code>FALSE</code>, and add <code>theme_minimal()</code>.</li>
+</ul></div>
+```{r}
+# Edit your code to color by series and add a theme
+ggplot(week_ratings, aes(x = episode, y = viewers_7day, 
+                         group = series, color = series)) +
+    geom_line() +
+    facet_wrap(~series) +
+    guides(color = FALSE) +
+    theme_minimal()
+```
+
+<p class="">Nice work separating and parsing- you are becoming a tidy data pro! Notice the x-axis in this plot: episodes don't actually have decimals! We'll see how to deal with this in the last chapter when we work with factors.
+</p>
+
+### Unite columns
+
+
+<div class>
+<p>In the <code>tidyr</code> package, the opposite of <code>separate()</code> is <a href="https://www.rdocumentation.org/packages/tidyr/versions/0.8.1/topics/unite"><code>unite()</code></a>. Sometimes you need to paste values from two or more columns together to tidy. Here is an example usage for <code>unite()</code>:</p>
+<pre><code>data %&gt;%
+    unite(new_var, old_var1, old_var2)
+</code></pre>
+<p>The <code>ratings2</code> dataset includes these variables:</p>
+<ul>
+<li>
+<code>series</code>: 1-8</li>
+<li>
+<code>episode</code>: 1-10</li>
+<li>
+<code>viewers_millions</code>: whole number of 7-day viewers in millions</li>
+<li>
+<code>viewers_decimal</code>: additional number of 7-days viewers in millions</li>
+</ul>
+<p>If <code>viewers_millions</code> = 2 and <code>viewers_decimal</code> = .6, then the total number of viewers in millions is 2.6. In this exercise, you'll practice uniting these two columns into a single new column.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Create a new variable by uniting the two viewers data columns into one column called <code>viewers_7day</code>; print to view.</li>
+</ul></div>
+```{r}
+ratings_2=read.csv("https://raw.githubusercontent.com/ThanhDatIU/datacamp/main/rating_s2.csv")
+ratings3 <- ratings_2  %>% 
+	# Unite viewers in millions and decimals together		
+	unite(viewers_7day, viewers_millions, viewers_decimal,na.rm =TRUE)
+
+# Print to view
+ratings3
+```
+<div class="exercise--instructions__content"><ul>
+<li>Adapt your <code>unite()</code> code to use a new argument, <code>sep</code>. The default separator between new columns is <code>_</code>. Instead, set <code>sep = ""</code>. Print the new data frame to view it.</li>
+</ul></div>
+```{r}
+ratings3 <- ratings_2  %>% 
+	# Adapt to change the separator
+	unite(viewers_7day, viewers_millions, viewers_decimal, sep = "")
+
+# Print to view
+ratings3
+```
+<div class="exercise--instructions__content"><ul>
+<li>Adapt the provided code to cast the new <code>viewers_7day</code> column to a number.</li>
+</ul></div>
+```{r}
+ratings3 <- ratings_2  %>% 
+	# Unite and change the separator    
+	unite(viewers_7day, viewers_millions, viewers_decimal, sep = "") %>% 
+	# Adapt to cast viewers as a number
+	mutate(viewers_7day = parse_number(viewers_7day))
+
+# Print to view
+ratings3
+```
+
+<p class="">Good Job!
+</p>
+
+## spread()
+
+
+
+<h3>**Spread rows into columns**</h3>
+
+
+<div class>
+<p>In this exercise, you'll use the <code>tidyr</code>, <code>dplyr</code>, and <code>readr</code> packages to tidy the <code>ratings2</code> data after using <code>dplyr::count()</code>. The <code>tidy_ratings_all</code> data should have four variables to work with:</p>
+<ul>
+<li>
+<code>series</code> (integer: 1-8), </li>
+<li>
+<code>episode</code> (integer: 1-10), </li>
+<li>
+<code>days</code> (integer: 7 or 28), and </li>
+<li>
+<code>viewers</code> (numeric).</li>
+</ul>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Start by gathering all columns that end with "day" into two columns: <code>episode</code> and <code>viewers</code>. Separate the key column into two columns named <code>episode</code> and <code>days</code>. Both of these two separated columns need to be parsed as numbers also, within a <code>mutate</code>.</li>
+</ul></div>
+```{r}
+# Create tidy data with 7- and 28-day viewers
+tidy_ratings_all <- ratings_2 %>%
+	gather(key = episode, value = viewers, ends_with("day"), na.rm = TRUE) %>% 
+    separate(episode, into = c("episode", "days")) %>%  
+    mutate(episode = parse_number(episode),
+           days = parse_number(days))
+```
+
+<div class="exercise--instructions__content"><ul>
+<li>Using your new tidy data, count the number of viewers grouping by <code>series</code> and <code>days</code>. <strong>Remember:</strong> you <em>don't</em> need to use <code>group_by</code> before <code>count</code>, but you <em>do</em> need to use the <code>wt =</code> argument to sum the values in the <code>viewers</code> column.</li>
+</ul></div>
+```{r}
+# Create tidy data with 7- and 28-day viewers
+tidy_ratings_all <- ratings2 %>%
+    gather(episode, viewers, ends_with("day"), na.rm = TRUE) %>% 
+    separate(episode, into = c("episode", "days")) %>%  
+    mutate(episode = parse_number(episode),
+           days = parse_number(days)) 
+
+tidy_ratings_all %>% 
+	# Count viewers by series and days
+    count(series, days, wt = viewers)
+```
+
+<div class="exercise--instructions__content"><ul>
+<li>Add a line after the <code>%&gt;%</code> to reshape the output of <code>count</code> such that you have 3 columns: <code>series</code>, <code>days_7</code>, and <code>days_28</code>. To do this within <a href="https://www.rdocumentation.org/packages/tidyr/versions/0.8.1/topics/spread" target="_blank" rel="noopener noreferrer"><code>spread()</code></a>, set <code>sep = "_"</code> as an argument.</li>
+</ul></div>
+```{r}
+# Create tidy data with 7- and 28-day viewers
+tidy_ratings_all <- ratings2 %>% 
+    gather(episode, viewers, ends_with("day"), na.rm = TRUE) %>% 
+    separate(episode, into = c("episode", "days")) %>%  
+    mutate(episode = parse_number(episode),
+           days = parse_number(days)) 
+
+tidy_ratings_all %>% 
+	# Count viewers by series and days
+    count(series, days, wt = viewers) %>%
+	# Adapt to spread counted values
+    spread(days, n, sep = "_")
+```
+
+<p class="">Great work! The <code>sep = "_"</code> argument is especially helpful when you are spreading by a numeric variable so that you don't end up with variable names that start with numbers.
+</p>
+
+## Tidy multiple sets of columns
+
+
+
+### Masterclass: Tidy I
+
+
+<div class><p>In the last three exercises, you'll tidy the <code>ratings</code> data to create a scatterplot to see the relationship between the number of premiere and finale UK viewers (7-day only) by series.</p></div>
+<div class="exercise--instructions__content"><ul>
+<li>Create a new tibble called <code>tidy_ratings</code> by gathering the 7-day viewer data by <code>episode</code> (all columns except <code>series</code>), removing the rows from output where the value column in <code>NA</code>. The key column should be named <code>episode</code>, the value should be <code>viewers</code>.</li>
+</ul></div>
+```{r}
+# Gather viewer columns and remove NA rows
+tidy_ratings <- ratings %>%
+	gather(key = episode, value = viewers, -series, na.rm = TRUE)
+```
+
+<div class="exercise--instructions__content"><p>Using the pipe, add a line of code to convert the <code>episode</code> variable into a number.</p></div>
+```{r}
+# Adapt code to parse episode as a number
+tidy_ratings <- ratings %>%
+    gather(episode, viewers, -series, na.rm = TRUE) %>%
+    mutate(episode = parse_number(episode))
+```
+
+<div class="exercise--instructions__content"><p>Fill in the blanks in the provided code to filter rows that contain viewer data for each series' premiere and finale episodes- don't forget to undo the grouping when you are done!</p></div>
+```{r}
+# Fill in blanks to get premiere/finale data
+tidy_ratings <- ratings %>%
+    gather(episode, viewers, -series, na.rm = TRUE) %>%
+    mutate(episode = parse_number(episode)) %>% 
+    group_by(series) %>% 
+    filter(episode == 1 | episode == max(episode)) %>% 
+    ungroup()
+```
+
+<p class="">Now we have a tidy version of the <code>ratings</code> data with only premiere and finale episodes. Let's see if that tweet spoiled the Series 8 finale. You'll see why we needed the last <code>ungroup()</code> in the next exercises.
+</p>
+
+### Masterclass: Tidy II
+
+
+<div class>
+<p>In the previous exercise, you gathered, then did a grouped filter to make <code>tidy_ratings</code>. In this exercise, you'll make two charts in <code>ggplot2</code> with this tidy data to see if the judge's tweet spoiled the Series 8 finale ratings. </p>
+<p>The two plots you'll make, a slope chart and a dumbbell chart, are nice ways to show change between two data points combining <code>geom_point()</code> and <code>geom_line()</code>.</p>
+<p>You'll use these to visualize the "finale bump" in viewers between the premiere and finale episodes across series.</p>
+</div>
+<div class="exercise--instructions__content"><p>Recode the <code>episode</code> variable as either <code>"first"</code> or <code>"last"</code>.</p></div>
+```{r}
+# Recode first/last episodes
+first_last <- tidy_ratings %>% 
+  mutate(episode = recode(episode, `1` = "first", .default = "last"))
+```
+
+<div class="exercise--instructions__content"><p>Make a slope chart where the x-axis values are either <code>"first"</code> or <code>"last"</code>, and the slope of the line connecting the two points shows the change in viewers. Color the points and lines by <code>series</code>.</p></div>
+```{r}
+# Fill in to make slope chart
+ggplot(first_last, aes(x = episode, y = viewers, color = series)) +
+  geom_point() +
+  geom_line(aes(group = series))
+```
+
+<div class="exercise--instructions__content"><p>To make a dumbbell chart instead, switch the x-axis and color variable mapping. After flipping the axes using <code>coord_flip()</code>, the length of the "dumbbell" now illustrates the size of the "finale bump."</p></div>
+```{r}
+# Switch the variables mapping x-axis and color
+ggplot(first_last, aes(x = series, y = viewers, color = episode)) +
+  geom_point() + # keep
+  geom_line(aes(group = series)) + # keep
+  coord_flip() # keep
+```
+
+<p class="">Great work- notice how each of these two plots relied on data that is tidy! Series 8 had a pretty small 'finale bump', but we are still looking at raw changes in viewers. Let's visualize percentage changes in viewers instead.
+</p>
+
+### Masterclass: Tidy III
+
+
+<div class>
+<p>In the previous exercise, you visualized the size of the "finale bump" in viewers for each series. From those charts, we know that finale episodes always garner more viewers than premieres. We also know that the change in viewers for series 8 seemed smaller compared to some previous series. </p>
+<p>But the question of whether the series 8 finale viewers were "spoiled" might be best answered by comparing the relative percentage changes in premiere and finale viewers across series. In this exercise, you'll reshape <code>first_last</code> once more to calculate and visualize the <em>relative finale bump</em>.</p>
+</div>
+<div class="exercise--instructions__content"><p>Create a new data frame called <code>bump_by_series</code> with three columns: <code>series</code>, <code>first</code>, and <code>last</code>.</p></div>
+```{r}
+# Spread into three columns
+bump_by_series <- first_last %>% 
+    spread(episode, viewers)
+```
+
+<div class="exercise--instructions__content"><p>Add a line after the <code>%&gt;%</code> to create a new variable called <code>bump</code> to calculate the difference between finale and premiere viewers in the numerator, divided by the number of premiere viewers.</p></div>
+```{r}
+# Calculate relative increase in viewers
+bump_by_series <- first_last %>% 
+    spread(episode, viewers) %>% 
+    mutate(bump = (last - first) / first)
+```
+
+<div class="exercise--instructions__content"><p>Fill in the provided code to make a bar chart with one bar per series, where the height of the bar shows the bump in 7-day viewers from the premiere to the finale episodes. Do any series stand out?</p></div>
+```{r}
+# Fill in to make bar chart of bumps by series
+ggplot(bump_by_series, aes(x = series, y = bump)) +
+  geom_col() + 
+  scale_y_continuous(labels = scales::percent) # converts to %
+```
+
+<p class="">Series 8 definitely had the lowest 'finale bump' so far- only 6% more viewers watched the finale than the premiere. Notice that we had to <code>spread</code> here, because the tidy version of the data depends on the question you want to ask.
+</p>
+
+# Transform your data
+
+<p class="chapter__description">
+    In this chapter, you will learn how to tame specific types of variables that are known to be tricky to work with, such as dates, strings, and factors. 
+  </p>
+  
+## Recoding with case_when
+
+
+
+### Combine two variables
+
+
+<div class>
+<p>In this exercise, you'll use <code>case_when()</code> with the <code>bakers</code> data to create a new variable based on the number of times each baker was crowned as star baker or the technical challenge winner:</p>
+<ul>
+<li>If star baker is <em>greater than</em> technical wins, recode as <code>super_star</code>
+</li>
+<li>If star baker is <em>less than</em> technical wins, recode as <code>high_tech</code>
+</li>
+<li>Recode the rest as <code>well_rounded</code>
+</li>
+</ul>
+</div>
+<div class="exercise--instructions__content"><p>Create a new variable with three levels as described above.</p></div>
+```{r}
+bakers=read.csv("https://raw.githubusercontent.com/ThanhDatIU/datacamp/main/baker_results.csv")
+# Create skills variable with 3 levels
+bakers_skill <- bakers %>% 
+  mutate(skill = case_when(
+    star_baker > technical_winner ~ "super_star",
+    star_baker < technical_winner ~ "high_tech",
+    TRUE ~ "well_rounded"
+  ))
+```
+
+<div class="exercise--instructions__content"><p>Filter the rows where both <code>star_baker</code> and <code>technical_winner</code> are zero, then count the number of bakers by <code>skill</code>. How many do you see?</p></div>
+```{r}
+# Filter zeroes to examine skill variable
+bakers_skill %>% 
+  filter(star_baker == 0 & technical_winner == 0) %>% 
+  count(skill)
+```
+
+<p class="">Whoops- we may not want bakers who never won star baker or the technical challenge to be called 'well-rounded'. Let's add another level to take care of this!
+</p>
+
+<p class="">Whoops- we may not want bakers who never won star baker or the technical challenge to be called 'well-rounded'. Let's add another level to take care of this!
+</p>
+
+### Add another bin
+
+
+<div class>
+<p>In this exercise, you'll edit your previous code so that <code>skill</code> has four levels:</p>
+<ul>
+<li>If both star baker and technical wins are zero, recode as <code>NA_character_</code>
+</li>
+<li>If star baker is <em>greater than</em> technical wins, recode as <code>super_star</code>
+</li>
+<li>If star baker is <em>less than</em> technical wins, recode as <code>high_tech</code>
+</li>
+<li>If star baker is <em>equal to</em> technical wins, recode as <code>well_rounded</code>
+</li>
+</ul>
+</div>
+<div class="exercise--instructions__content"><p>Edit the <code>skill</code> variable you just created to have the four levels as described above.</p></div>
+```{r}
+# Edit skill variable to have 4 levels
+bakers_skill <- bakers %>% 
+  mutate(skill = case_when(
+    star_baker > technical_winner ~ "super_star",
+    star_baker < technical_winner ~ "high_tech",
+    star_baker == 0 & technical_winner == 0 ~ NA_character_,
+    star_baker == technical_winner  ~ "well_rounded"
+  ))
+```
+
+<div class="exercise--instructions__content"><p>Add a pipe and use <a href="https://www.rdocumentation.org/packages/tidyr/versions/0.8.1/topics/drop_na" target="_blank" rel="noopener noreferrer"><code>drop_na()</code></a> from the <code>tidyr</code> package to drop all rows where <code>skill</code> is <code>NA</code>.</p></div>
+```{r}
+# Add pipe to drop skill = NA
+bakers_skill <- bakers %>% 
+  mutate(skill = case_when(
+    star_baker > technical_winner ~ "super_star",
+    star_baker < technical_winner ~ "high_tech",
+    star_baker == 0 & technical_winner == 0 ~ NA_character_,
+    star_baker == technical_winner  ~ "well_rounded"
+  )) %>% 
+  drop_na(skill)
+```
+
+<div class="exercise--instructions__content"><p>Count the number of bakers in each <code>skill</code> level.</p></div>
+```{r}
+# Count bakers by skill
+bakers_skill %>% 
+  count(skill)
+```
+
+<p class="">Very nice- now we only have 15 'well-rounded' bakers, and we dropped the 41 bakers who never won star baker or a technical challenge.
+</p>
+
+## Factors
+
+
+
+### Cast a factor and examine levels
+
+
+<div class><p>In this exercise, you'll start where you left off in the last series of exercises, working with the <code>bakers</code> data to examine your new categorical variable called <code>skill</code>, which has three levels: <code>well_rounded</code>, <code>super_star</code>, and <code>high_tech</code>.</p></div>
+<div class="exercise--instructions__content"><p>Cast the <code>skill</code> variable as a factor.</p></div>
+```{r}
+bakers=bakers_skill
+# Cast skill as a factor
+bakers <- bakers %>% 
+  mutate(skill = as.factor(skill))
+```
+
+<div class="exercise--instructions__content"><p>Examine the levels of the factor, and if you were to plot it, think about what the order of the levels would be.</p></div>
+```{r}
+# Examine levels
+bakers %>% 
+  pull(skill) %>% 
+  levels()
+```
+
+<p class="">Sometimes factors have a natural order to them- like beginner, intermediate, and advanced- but sometimes they don't. Know your data, and know your factors!
+</p>
+
+### Plot factor counts
+
+
+<div class>
+<p>In this exercise, you'll use <code>ggplot2</code> to make a bar chart with one per level of the <code>skill</code> factor we just made, where the height of the bar shows the number of bakers in each skill level. </p>
+<p>Notice a <em>big</em> difference between the data here and the data we have used before to make a bar chart- here, you want the height of the bars to be represent the number of rows in the <code>bakers</code> data in each skill level. This is compared to bar charts we made where the height represented values in the data (when you used <code>geom_col()</code>).</p>
+</div>
+<div class="exercise--instructions__content"><p>Using the <code>bakers</code> data, plot the counts of bakers by each <code>skill</code> level, coloring the bars for series winners.</p></div>
+```{r}
+# Plot counts of bakers by skill, fill by winner
+ggplot(bakers, aes(x = skill, fill = series_winner)) +
+  geom_bar()
+```
+<div class="exercise--instructions__content"><p>Edit your plot code to reverse the order of the <code>skill</code> factor levels along the x-axis.</p></div>
+```{r}
+# Edit to reverse x-axis order
+ggplot(bakers, aes(x = fct_rev(skill), fill = series_winner)) +
+  geom_bar()
+```
+
+<p class="">Great job! Note that when you use function like <code>fct_rev()</code>, <code>forcats</code> converts the character to a factor for your plot only.
+</p>
+
+## Dates
+
+
+
+### Cast characters as dates
+
+
+<div class><p>As we saw in the video, you can use <code>lubridate</code> to parse and cast a date variable within a <code>mutate()</code>. In this exercise, you'll practice doing this with the <code>baker_dates</code> data, and then go even further to extract data from the dates like the labelled month. Remember to use <code>?month</code> to read about the <code>month()</code> function and its arguments.</p></div>
+<div class="exercise--instructions__content"><p>Cast <code>last_date_appeared_us</code> as a date.</p></div>
+```{r}
+library(lubridate)
+baker_dates=read.csv("https://raw.githubusercontent.com/ThanhDatIU/datacamp/main/baker_dates.csv")
+# Cast last_date_appeared_us as a date
+baker_dates_cast <- baker_dates %>% 
+  mutate(last_date_appeared_us = dmy(last_date_appeared_us))
+```
+
+<div class="exercise--instructions__content"><p>Add a line to your code to create a new variable called <code>last_month_us</code>, with the month of each bakers' last date appeared in the US as a character string such as "Jan."</p></div>
+```{r}
+library(lubridate)
+# Add a line to extract labeled month
+baker_dates_cast <- baker_dates %>% 
+  mutate(last_month_us = month(last_date_appeared_us, label = TRUE))
+```
+
+<div class="exercise--instructions__content"><p>Use a bar chart to plot the frequencies of bakers by <code>last_month_us</code>- in which month have we said goodbye to the most bakers?</p></div>
+```{r}
+# Make bar chart by last month
+ggplot(baker_dates_cast, aes(x = last_month_us)) + 
+    geom_bar()
+```
+
+<p class="">Success! There are more functions like <code>year</code> for getting out other date components- you can even extract fiscal quarters or semesters! Look at the documentation to see more ways.
+</p>
+
+### Calculate timespans
+
+
+<div class><p>As we saw in the video, the first step to calculating a timespan in <code>lubridate</code> is to make an <code>interval</code>, then use division to convert the units to what you want (like <code>weeks(x)</code> or <code>months(x)</code>). The <code>x</code> refers to the number of time units to be included in the period. In this exercise, you'll calculate timespans with the <code>baker_time</code> data we just made.</p></div>
+<div class="exercise--instructions__content"><ul>
+<li>Create a new <code>interval</code> called <code>time_on_air</code>, calculated as the timespan between each baker's first and last date that they appeared in the UK.</li>
+</ul></div>
+```{r}
+baker_time <- baker_dates  %>% 
+  mutate(time_on_air = interval(first_date_appeared_uk, last_date_appeared_uk),
+         weeks_on_air = time_on_air / weeks(1),
+         months_on_air = time_on_air %/% months(1))
+
+# Create interval between first and last UK dates
+baker_time <- baker_time %>% 
+  mutate(time_on_air = interval(first_date_appeared_uk, last_date_appeared_uk))
+```
+
+<div class="exercise--instructions__content"><ul>
+<li>Add another line to your <code>mutate()</code> call to create another variable called <code>weeks_on_air</code>, which converts <code>time_on_air</code> to the number of weeks (time unit = 1).</li>
+</ul></div>
+```{r}
+# Add a line to create weeks on air variable
+baker_time <- baker_time  %>% 
+  mutate(time_on_air = interval(first_date_appeared_uk, last_date_appeared_uk),
+         weeks_on_air = time_on_air / weeks(1))
+```
+
+<div class="exercise--instructions__content"><ul>
+<li>Add another line to your <code>mutate()</code> call to create another variable called <code>months_on_air</code>, which stores the number of months each baker was "on air" in whole numbers.</li>
+</ul></div>
+```{r}
+# Add a line to create whole months on air variable
+baker_time <- baker_time  %>% 
+  mutate(time_on_air = interval(first_date_appeared_uk, last_date_appeared_uk),
+         weeks_on_air = time_on_air / weeks(1),
+         months_on_air = time_on_air %/% months(1))
+```
+
+<p class="">Here again, <code>lubridate</code> gives you many options for working with periods from <code>years</code> down to <code>picoseconds</code>. You may also end up needing to work with durations too, which have similar functions that always start with a <code>d</code> from <code>dyears</code> to <code>dpicoseconds</code>.
+</p>
+
+## Strings
+
+
+
+### Wrangle a character variable
+
+
+<div class>
+<p>In this exercise, we'll wrangle the values in the <code>position_reached</code> variable, which looks like this right now:</p>
+<pre><code>bakers %&gt;% 
+  count(position_reached)
+# A tibble: 8 x 2
+  position_reached     n
+  &lt;chr&gt;            &lt;int&gt;
+1 Runner up            2
+2 Runner Up           12
+3 Runner-Up            1
+4 Third Place          1
+5 winner               2
+6 Winner               1
+7 WINNER               5
+8 NA                  71
+</code></pre>
+<p>Let's clean these strings up!</p>
+</div>
+<div class="exercise--instructions__content"><p>Convert all the values in the <code>position_reached</code> variable to upper case.</p></div>
+```{r}
+bakers=read.csv("https://raw.githubusercontent.com/ThanhDatIU/datacamp/main/messy_baker_results.csv")
+# Convert to lower case
+bakers <- bakers %>% 
+  mutate(position_reached = str_to_upper(position_reached))
+```
+
+<div class="exercise--instructions__content"><p>Replace all dashes with a single space (<code>" "</code>).</p></div>
+```{r}
+# Add another mutate to replace "-" with " "
+bakers <- bakers %>% 
+  mutate(position_reached = str_to_upper(position_reached),
+         position_reached = str_replace(position_reached, "-", " "))
+```
+
+<div class="exercise--instructions__content"><p>Replace "THIRD PLACE" with "RUNNER UP", and count your new <code>position_reached</code> variable.</p></div>
+```{r}
+# Add another mutate to replace "THIRD PLACE" with "RUNNER UP" and count
+bakers <- bakers %>% 
+  mutate(position_reached = str_to_upper(position_reached),
+         position_reached = str_replace(position_reached, "-", " "),
+         position_reached = str_replace(position_reached, "THIRD PLACE", "RUNNER UP"))
+
+# Count rows
+bakers %>% 
+  count(position_reached)
+```
+
+<p class="">Great work! Each of the 8 series had one winner and two runner-ups, so now this variable is much easier to work with!
+</p>
+
+### Detect a string pattern
+
+
+<div class>
+<p>In this exercise, we'll wrangle each bakers' <code>occupation</code> from the <code>bakers</code> data, which is currently a character string like this:</p>
+<pre><code>bakers %&gt;% 
+  select(baker, occupation)
+# A tibble: 6 x 2
+  baker   occupation               
+  &lt;chr&gt;   &lt;chr&gt;                    
+1 Jason   Civil Engineering Student
+2 Simon   Rugby Coach              
+3 Enwezor Business consultant      
+4 Martha  Student                  
+5 Lee     Pastor                   
+6 Liam    Student 
+</code></pre>
+<p>We'll create a logical variable (<code>TRUE</code> or <code>FALSE</code>) indicating whether or not each baker is a student.</p>
+</div>
+<div class="exercise--instructions__content"><p>Convert all the values in the <code>occupation</code> variable to lower case.</p></div>
+```{r}
+# Convert to lower case
+bakers <- bakers %>% 
+    mutate(occupation = str_to_lower(occupation))
+```
+
+<div class="exercise--instructions__content"><p>Create a new variable called <code>student</code> that is <code>TRUE</code> if the string <code>"student"</code> is present in the <code>occupation</code> variable, and <code>FALSE</code> if it is not.</p></div>
+```{r}
+# Add a line to create new variable called student
+bakers <- bakers %>% 
+    mutate(occupation = str_to_lower(occupation), 
+           student = str_detect(occupation, "student"))
+```
+
+<div class="exercise--instructions__content"><p>Filter all students in the <code>bakers</code> data frame, and look at their names, occupations, and confirm that they are all students. Did we mis-classify anyone?</p></div>
+```{r}
+# Find all students and examine occupations
+bakers %>% 
+  filter(student == TRUE) %>% 
+  select(baker, occupation, student)
+```
+
+<p class="">Rav's occupation was student support, but we classified him as a student. This shows a common problem in working with data- it helps to always check your work!
+</p>

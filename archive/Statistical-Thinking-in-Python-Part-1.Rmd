@@ -1,0 +1,1571 @@
+---
+title: "Statistical Thinking in Python (Part 1)"
+subtitle: "Justin Bois - DataCamp"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+author:
+  - name: "Dat Tran"
+output:
+  rmdformats::robobook:
+    keep_md: true
+    thumbnails: true
+    lightbox: true
+    gallery: true
+    use_bookdown: true
+---
+
+***
+
+**Course Description**
+
+<p class="course__description">After all of the hard work of acquiring data and getting them into a form you can work with, you ultimately want to make clear, succinct conclusions from them. This crucial last step of a data analysis pipeline hinges on the principles of statistical inference. In this course, you will start building the foundation you need to think statistically, speak the language of your data, and understand what your data is telling you. The foundations of statistical thinking took decades to build, but can be grasped much faster today with the help of computers. With the power of Python-based tools, you will rapidly get up-to-speed and begin thinking statistically by the end of this course.</p>
+
+<style>
+
+h1,h2,h3,h4,h5,h6,h {
+  font-family: Futura;
+}
+
+body {
+  font-family: "Georgia";
+  text-align: justify;
+}
+
+p {
+  font-family: "Georgia";
+  color: black;
+  font-style: normal;
+}
+</style>
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE,message=F,warning=F)
+library(reticulate)
+```
+
+# Graphical Exploratory Data Analysis
+
+<p class="chapter__description">
+    Before diving into sophisticated statistical inference techniques, you should first explore your data by plotting them and computing simple summary statistics. This process, called exploratory data analysis, is a crucial first step in statistical analysis of data.
+  </p>
+
+## Introduction to Exploratory Data Analysis
+
+
+
+### Tukey's comments on EDA
+
+<p>Even though you probably have not read Tukey's book, I suspect you already have a good idea about his viewpoint from the video introducing you to exploratory data analysis. Which of the following quotes is <strong>not</strong> directly from Tukey?</p>
+
+<li>Exploratory data analysis is detective work.</li>
+<li>There is no excuse for failing to plot and look.</li>
+<li>The greatest value of a picture is that it forces us to notice what we never expected to see.</li>
+<li>It is important to understand what you <em>can do</em> before you learn how to measure how <em>well</em> you seem to have <em>done</em> it.</li>
+<strong><li>Often times EDA is too time consuming, so it is better to jump right in and do your hypothesis tests.</li></strong>
+
+<p class="dc-completion-pane__message dc-u-maxw-100pc">You're right. That statement is pretty absurd. If you don't have time to do EDA, you really don't have time to do hypothesis tests. And you should always do EDA first.</p>
+
+### Advantages of graphical EDA
+
+<p>Which of the following is <em>not</em> true of graphical EDA?</p>
+
+<li>It often involves converting tabular data into graphical form.</li>
+<li>If done well, graphical representations can allow for more rapid interpretation of data.</li>
+<strong><li>A nice looking plot is always the end goal of a statistical analysis.</li></strong>
+<li>There is no excuse for neglecting to do graphical EDA.</li>
+
+<p class="dc-completion-pane__message dc-u-maxw-100pc">Correct! While a good, informative plot <em>can</em> sometimes be the end point of an analysis, it is more like a beginning: it helps guide you in the quantitative statistical analyses that come next.</p>
+
+## Plotting a histogram
+
+
+
+### Plotting a histogram of iris data
+
+
+<div class>
+<p>For the exercises in this section, you will use a classic data set collected by botanist Edward Anderson and made famous by Ronald Fisher, one of the most prolific statisticians in history. Anderson carefully measured the anatomical properties of samples of three different species of iris, <em>Iris setosa</em>, <em>Iris versicolor</em>, and <em>Iris virginica</em>. The full data set is <a href="http://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_iris.html">available as part of scikit-learn</a>. Here, you will work with his measurements of petal length.</p>
+<p>Plot a histogram of the petal lengths of his 50 samples of <em>Iris versicolor</em> using matplotlib/seaborn's default settings. Recall that to specify the default seaborn style, you can use <code>sns.set()</code>, where <code>sns</code> is the alias that <code>seaborn</code> is imported as.</p>
+<p>The subset of the data set containing the <em>Iris versicolor</em> petal lengths in units of centimeters (cm) is stored in the NumPy array <code>versicolor_petal_length</code>.</p>
+<p>In the video, Justin plotted the histograms by using the <code>pandas</code> library and indexing the DataFrame to extract the desired column. Here, however, you only need to use the provided NumPy array. Also, Justin assigned his plotting statements (except for <code>plt.show()</code>) to the dummy variable <code>_</code>. This is to prevent unnecessary output from being displayed. It is not required for your solutions to these exercises, however it is good practice to use it. Alternatively, if you are working in an interactive environment such as a Jupyter notebook, you could use a <code>;</code> after your plotting statements to achieve the same effect. Justin prefers using <code>_</code>. Therefore, you will see it used in the solution code.</p>
+</div>
+```{python}
+# edited/added
+import numpy as np
+import pandas as pd
+from sklearn.datasets import load_iris
+
+iris = load_iris()
+iris_df = pd.DataFrame(data= np.c_[iris['data'], iris['target']],
+                     columns= iris['feature_names'] + ['target'])
+versicolor_petal_length = iris_df[iris_df.target == 1]["petal length (cm)"]
+versicolor_petal_length
+```
+
+<li>Import <code>matplotlib.pyplot</code> and <code>seaborn</code> as their usual aliases (<code>plt</code> and <code>sns</code>).</li>
+```{python}
+# Import plotting modules
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+
+```
+
+<li>Use <code>seaborn</code> to set the plotting defaults.</li>
+```{python}
+# Set default Seaborn style
+sns.set()
+
+
+```
+
+<li>Plot a histogram of the <em>Iris versicolor</em> petal lengths using <code>plt.hist()</code> and the provided NumPy array <code>versicolor_petal_length</code>.</li>
+
+
+<li>Show the histogram using <code>plt.show()</code>.</li>
+```{python}
+# Plot histogram of versicolor petal lengths
+_ = plt.hist(versicolor_petal_length)
+
+# Show histogram
+plt.show()
+
+```
+
+<p class="">Great work!</p>
+
+### Axis labels!
+
+
+<div class><p>In the last exercise, you made a nice histogram of petal lengths of <em>Iris versicolor</em>, but <strong>you didn't label the axes!</strong> That's ok; it's not your fault since we didn't ask you to. Now, add axis labels to the plot using <code>plt.xlabel()</code> and <code>plt.ylabel()</code>. Don't forget to add units and assign both statements to <code>_</code>. The packages <code>matplotlib.pyplot</code> and <code>seaborn</code> are already imported with their standard aliases. This will be the case in what follows, unless specified otherwise.</p></div>
+
+<li>Label the axes. Don't forget that you should always include units in your axis labels. Your \(y\)-axis label is just <code>'count'</code>. Your \(x\)-axis label is <code>'petal length (cm)'</code>. The units are essential!</li>
+
+
+<li>Display the plot constructed in the above steps using <code>plt.show()</code>.</li>
+```{python}
+# Plot histogram of versicolor petal lengths
+_ = plt.hist(versicolor_petal_length)
+
+# Label axes
+_ = plt.xlabel('petal length (cm)')
+_ = plt.ylabel('count')
+
+# Show histogram
+plt.show()
+
+```
+
+<p class="">Great work!</p>
+
+
+### Adjusting the number of bins in a histogram
+
+
+<div class>
+<p>The histogram you just made had ten bins. This is the default of matplotlib. The "square root rule" is a commonly-used rule of thumb for choosing number of bins: choose the number of bins to be the square root of the number of samples. Plot the histogram of <em>Iris versicolor</em> petal lengths again, this time using the square root rule for the number of bins. You specify the number of bins using the <code>bins</code> keyword argument of <code>plt.hist()</code>.</p>
+<p>The plotting utilities are already imported and the seaborn defaults already set. The variable you defined in the last exercise, <code>versicolor_petal_length</code>, is already in your namespace.</p>
+</div>
+
+<li>Import <code>numpy</code> as <code>np</code>. This gives access to the square root function, <code>np.sqrt()</code>.</li>
+```{python}
+# Import numpy
+import numpy as np
+
+
+```
+
+<li>Determine how many data points you have using <code>len()</code>.</li>
+```{python}
+# Compute number of data points: n_data
+n_data = len(versicolor_petal_length)
+
+
+```
+
+<li>Compute the number of bins using the square root rule.</li>
+```{python}
+# Number of bins is the square root of number of data points: n_bins
+n_bins = np.sqrt(n_data)
+
+
+```
+
+<li>Convert the number of bins to an integer using the built in <code>int()</code> function.</li>
+```{python}
+# Convert number of bins to integer: n_bins
+n_bins = int(n_bins)
+
+
+```
+
+<li>Generate the histogram and make sure to use the <code>bins</code> keyword argument.</li>
+
+
+<li>Hit submit to plot the figure and see the fruit of your labors!</li>
+```{python}
+# Plot the histogram
+_ = plt.hist(versicolor_petal_length, bins=n_bins)
+
+# Label axes
+_ = plt.xlabel('petal length (cm)')
+_ = plt.ylabel('count')
+
+# Show histogram
+plt.show()
+```
+
+<p class="">Great work!</p>
+
+
+## Plot all of your data: Bee swarm plots
+
+
+
+### Bee swarm plot
+
+
+<div class>
+<p>Make a bee swarm plot of the iris petal lengths. Your x-axis should contain each of the three species, and the y-axis the petal lengths. A data frame containing the data is in your namespace as <code>df</code>.</p>
+<p>For your reference, the code Justin used to create the bee swarm plot in the video is provided below:</p>
+<pre><code>_ = sns.swarmplot(x='state', y='dem_share', data=df_swing)
+_ = plt.xlabel('state')
+_ = plt.ylabel('percent of vote for Obama')
+plt.show()
+</code></pre>
+<p>In the IPython Shell, you can use <code>sns.swarmplot?</code> or <code>help(sns.swarmplot)</code> for more details on how to make bee swarm plots using seaborn.</p>
+</div>
+
+<li>In the IPython Shell, inspect the DataFrame <code>df</code> using <code>df.head()</code>. This will let you identify which column names you need to pass as the <code>x</code> and <code>y</code> keyword arguments in your call to <code>sns.swarmplot()</code>.</li>
+
+
+<li>Use <code>sns.swarmplot()</code> to make a bee swarm plot from the DataFrame containing the Fisher iris data set, <code>df</code>. The x-axis should contain each of the three species, and the y-axis should contain the petal lengths.</li>
+
+
+<li>Label the axes.</li>
+```{python}
+df = iris_df
+df.loc[df.target == 0,'species'] = 'setosa'
+df.loc[df.target == 1,'species'] = 'versicolor'
+df.loc[df.target == 2,'species'] = 'virginica'
+```
+
+<li>Show your plot.</li>
+```{python}
+# Create bee swarm plot with Seaborn's default settings
+_ = sns.swarmplot(x='species', y='petal length (cm)', hue="species",data=df)
+
+# Label the axes
+_ = plt.xlabel('species')
+_ = plt.ylabel('petal length (cm)')
+
+# Show the plot
+plt.show()
+
+```
+
+<p class="">Great work!</p>
+
+
+### Interpreting a bee swarm plot
+
+
+<div class><p>Which of the following conclusions could you draw from the bee swarm plot of iris petal lengths you generated in the previous exercise? For your convenience, the bee swarm plot is regenerated and shown to the right.</p></div>
+
+```{python}
+# Create bee swarm plot with Seaborn's default settings
+_ = sns.swarmplot(x='species', y='petal length (cm)', data=df)
+
+# Label the axes
+_ = plt.xlabel('species')
+_ = plt.ylabel('petal length (cm)')
+
+# Show the plot
+plt.show()
+
+```
+
+<li>All I. versicolor petals are shorter than I. virginica petals.</li>
+<li>I. setosa petals have a broader range of lengths than the other two species.</li>
+<strong><li>I. virginica petals tend to be the longest, and I. setosa petals tend to be the shortest of the three species.</li></strong>
+<li>I. versicolor is a hybrid of I. virginica and I. setosa.</li>
+
+<p class="">Correct! Notice that we said "tend to be." Some individual <em>I. virginica</em> flowers <em>may</em> be shorter than individual <em>I. versicolor</em> flowers. It is also <em>possible</em> that an individual <em>I. setosa</em> flower may have longer petals than in individual <em>I. versicolor</em> flower, though this is highly unlikely, and was not observed by Anderson.</p>
+
+## Plot all of your data: ECDFs
+
+
+
+### Computing the ECDF
+
+
+<div class>
+<p>In this exercise, you will write a function that takes as input a 1D array of data and then returns the <code>x</code> and <code>y</code> values of the ECDF. You will use this function over and over again throughout this course and its sequel. ECDFs are among the most important plots in statistical analysis. You can write your own function, <code>foo(x,y)</code> according to the following skeleton:</p>
+<pre><code>def foo(a,b):
+    """State what function does here"""
+    # Computation performed here
+    return x, y
+</code></pre>
+<p>The function <code>foo()</code> above takes two arguments <code>a</code> and <code>b</code> and returns two values <code>x</code> and <code>y</code>. The function header <code>def foo(a,b):</code> contains the function signature <code>foo(a,b)</code>, which consists of the function name, along with its parameters. For more on writing your own functions, see DataCamp's course <a href="https://www.datacamp.com/courses/python-data-science-toolbox-part-1">Python Data Science Toolbox (Part 1) here</a>!</p>
+</div>
+
+<li>Define a function with the signature <code>ecdf(data)</code>. Within the function definition,<ul>
+<li>Compute the number of data points, <code>n</code>, using the <code>len()</code> function.</li>
+
+
+<li>The \(x\)-values are the sorted data. Use the <code>np.sort()</code> function to perform the sorting.</li>
+
+
+<li>The \(y\) data of the ECDF go from <code>1/n</code> to <code>1</code> in equally spaced increments. You can construct this using <code>np.arange()</code>. Remember, however, that the end value in <code>np.arange()</code> is not inclusive. Therefore, <code>np.arange()</code> will need to go from <code>1</code> to <code>n+1</code>. Be sure to divide this by <code>n</code>.</li>
+
+
+<li>The function returns the values <code>x</code> and <code>y</code>.</li>
+
+
+</ul>
+</li>
+```{python}
+def ecdf(data):
+    """Compute ECDF for a one-dimensional array of measurements."""
+    # Number of data points: n
+    n = len(data)
+
+    # x-data for the ECDF: x
+    x = np.sort(data)
+
+    # y-data for the ECDF: y
+    y = np.arange(1, n+1) / n
+
+    return x, y
+
+```
+
+<p class="">Great work! This function will be of great use for you!</p>
+
+
+### Plotting the ECDF
+
+
+<div class><p>You will now use your <code>ecdf()</code> function to compute the ECDF for the petal lengths of Anderson's <em>Iris versicolor</em> flowers. You will then plot the ECDF. Recall that your <code>ecdf()</code> function returns two arrays so you will need to unpack them. An example of such unpacking is <code>x, y = foo(data)</code>, for some function <code>foo()</code>.</p></div>
+
+<li>Use <code>ecdf()</code> to compute the ECDF of <code>versicolor_petal_length</code>. Unpack the output into <code>x_vers</code> and <code>y_vers</code>.</li>
+```{python}
+# Compute ECDF for versicolor data: x_vers, y_vers
+x_vers, y_vers = ecdf(versicolor_petal_length)
+
+
+```
+
+<li>Plot the ECDF as dots. Remember to include <code>marker = '.'</code> and <code>linestyle = 'none'</code> in addition to <code>x_vers</code> and <code>y_vers</code> as arguments inside <code>plt.plot()</code>.</li>
+
+
+<li>Label the axes. You can label the y-axis <code>'ECDF'</code>.</li>
+
+
+<li>Show your plot.</li>
+```{python}
+# Generate plot
+_ = plt.plot(x_vers, y_vers, marker='.', linestyle='none')
+
+# Label the axes
+_ = plt.xlabel('petal length (cm)')
+_ = plt.ylabel('ECDF')
+
+# Display the plot
+plt.show()
+
+```
+
+<p class="">Great work!</p>
+
+
+### Comparison of ECDFs
+
+
+<div class>
+<p>ECDFs also allow you to compare two or more distributions (though plots get cluttered if you have too many). Here, you will plot ECDFs for the petal lengths of all three iris species. You already wrote a function to generate ECDFs so you can put it to good use!</p>
+<p>To overlay all three ECDFs on the same plot, you can use <code>plt.plot()</code> three times, once for each ECDF. Remember to include <code>marker='.'</code> and <code>linestyle='none'</code> as arguments inside <code>plt.plot()</code>.</p>
+</div>
+```{python}
+setosa_petal_length = df[df.species == 'setosa']['petal length (cm)']
+versicolor_petal_length = df[df.species == 'versicolor']['petal length (cm)']
+virginica_petal_length = df[df.species == 'virginica']['petal length (cm)']
+```
+
+<li>Compute ECDFs for each of the three species using your <code>ecdf()</code> function. The variables <code>setosa_petal_length</code>, <code>versicolor_petal_length</code>, and <code>virginica_petal_length</code> are all in your namespace. Unpack the ECDFs into <code>x_set, y_set</code>, <code>x_vers, y_vers</code> and <code>x_virg, y_virg</code>, respectively.</li>
+```{python}
+# Compute ECDFs
+x_set, y_set = ecdf(setosa_petal_length)
+x_vers, y_vers = ecdf(versicolor_petal_length)
+x_virg, y_virg = ecdf(virginica_petal_length)
+
+
+```
+
+<li>Plot all three ECDFs on the same plot as dots. To do this, you will need three <code>plt.plot()</code> commands. Assign the result of each to <code>_</code>.</li>
+
+
+<li>A legend and axis labels have been added for you, so hit submit to see all the ECDFs!</li>
+```{python}
+# Plot all ECDFs on the same plot
+_ = plt.plot(x_set, y_set, marker='.', linestyle='none')
+_ = plt.plot(x_vers, y_vers, marker='.', linestyle='none')
+_ = plt.plot(x_virg, y_virg, marker='.', linestyle='none')
+
+# Annotate the plot
+_ = plt.legend(('setosa', 'versicolor', 'virginica'), loc='lower right')
+_ = plt.xlabel('petal length (cm)')
+_ = plt.ylabel('ECDF')
+
+# Display the plot
+plt.show()
+```
+
+<p class="">The ECDFs expose clear differences among the species. Setosa is much shorter, also with less absolute variability in petal length than versicolor and virginica.</p>
+
+
+## Onward toward the whole story!
+
+You now have some great graphical EDA tools. You can quickly generate and investigate a histogram. You can immediately get a feel for your data by plotting all of them, with bee swarm plots or ECDFs. In almost every data set we encounter in this course, and in its sequel, and also in real life, we start with graphical EDA. Remember what Tukey said, “Exploratory data analysis can never be the whole story, but nothing else can serve as the foundation stone.” — John Tukey
+
+"Exploratory data analysis can never be the whole story, but nothing else can serve as the foundation stone.". In the next chapter, you will build upon graphical EDA with quantitative EDA, which allows you to compute useful summary statistics. With your foundation stone in place, you will spend the last half of this course learning to think probabilistically. You will learn about probability distributions for both discrete and continuous variables, which provide the mathematical foundation for you to draw meaningful conclusions from your data. We will not get mired in mathematical details, but rather will unleash the power of the NumPy random module to use hacker statistics in order to simulate the probabilistic stories and distributions that we encounter. You will find that by writing a few lines of Python code, you can perform even putatively complicated statistical analyses. As you work through this course and its sequel, you will grow ever closer to being able to tell what Tukey calls "the whole story.". Now, let's get to work!
+
+# Quantitative Exploratory Data Analysis
+
+<p class="chapter__description">
+    In this chapter, you will compute useful summary statistics, which serve to concisely describe salient features of a dataset with a few numbers.
+  </p>
+
+## Introduction to summary statistics: The sample mean and median
+
+<p>Which one of the following statements is true about means and medians?</p>
+
+<li>An outlier can significantly affect the value of both the mean and the median.</li>
+<strong><li>An outlier can significantly affect the value of the mean, but not the median.</li></strong>
+<li>Means and medians are in general both robust to single outliers.</li>
+<li>The mean and median are equal if there is an odd number of data points.</li>
+
+<p class="dc-completion-pane__message dc-u-maxw-100pc">Correct!</p>
+
+### Means and medians
+
+
+
+### Computing means
+
+
+<div class><p>The mean of all measurements gives an indication of the typical magnitude of a measurement. It is computed using <code>np.mean()</code>.</p></div>
+
+<li>Compute the mean petal length of <em>Iris versicolor</em> from Anderson's classic data set. The variable <code>versicolor_petal_length</code> is provided in your namespace. Assign the mean to <code>mean_length_vers</code>.</li>
+```{python}
+# Compute the mean
+mean_length_vers = np.mean(versicolor_petal_length)
+
+
+```
+
+<li>Hit submit to print the result.</li>
+```{python}
+# Print the results with some nice formatting
+print('I. versicolor:', mean_length_vers, 'cm')
+```
+
+<p class="">Great work!</p>
+
+
+## Percentiles, outliers, and box plots
+
+
+
+### Computing percentiles
+
+
+<div class><p>In this exercise, you will compute the percentiles of petal length of <em>Iris versicolor</em>.</p></div>
+
+<li>Create <code>percentiles</code>, a NumPy array of percentiles you want to compute. These are the 2.5th, 25th, 50th, 75th, and 97.5th. You can do so by creating a list containing these ints/floats and convert the list to a NumPy array using <code>np.array()</code>. For example, <code>np.array([30, 50])</code> would create an array consisting of the 30th and 50th percentiles.</li>
+```{python}
+# Specify array of percentiles: percentiles
+percentiles = np.array([2.5, 25, 50, 75, 97.5])
+
+
+```
+
+<li>Use <code>np.percentile()</code> to compute the percentiles of the petal lengths from the <em>Iris versicolor</em> samples. The variable <code>versicolor_petal_length</code> is in your namespace.</li>
+```{python}
+# Compute percentiles: ptiles_vers
+ptiles_vers = np.percentile(versicolor_petal_length, percentiles)
+
+
+```
+
+<li>Print the percentiles.</li>
+```{python}
+# Print the result
+print(ptiles_vers)
+```
+
+<p class="">Great work!</p>
+
+
+### Comparing percentiles to ECDF
+
+
+<div class>
+<p>To see how the percentiles relate to the ECDF, you will plot the percentiles of <em>Iris versicolor</em> petal lengths you calculated in the last exercise on the ECDF plot you generated in chapter 1. The percentile variables from the previous exercise are available in the workspace as <code>ptiles_vers</code> and <code>percentiles</code>.</p>
+<p>Note that to ensure the Y-axis of the ECDF plot remains between 0 and 1, you will need to rescale the <code>percentiles</code> array accordingly - in this case, dividing it by 100.</p>
+</div>
+
+<li>Plot the percentiles as red diamonds on the ECDF. Pass the x and y co-ordinates - <code>ptiles_vers</code> and <code>percentiles/100</code> - as positional arguments and specify the <code>marker='D'</code>, <code>color='red'</code> and <code>linestyle='none'</code> keyword arguments. The argument for the y-axis - <code>percentiles/100</code> has been specified for you.</li>
+
+
+<li>Display the plot.</li>
+```{python}
+# Plot the ECDF
+_ = plt.plot(x_vers, y_vers, '.')
+_ = plt.xlabel('petal length (cm)')
+_ = plt.ylabel('ECDF')
+
+# Overlay percentiles as red x's
+_ = plt.plot(ptiles_vers, percentiles/100, marker='D', color='red',
+         linestyle='none')
+
+# Show the plot
+plt.show()
+
+```
+
+<p class="">Great work!</p>
+
+
+### Box-and-whisker plot
+
+
+<div class>
+<p>Making a box plot for the petal lengths is unnecessary because the iris data set is not too large and the bee swarm plot works fine. However, it is always good to get some practice. Make a box plot of the iris petal lengths. You have a pandas DataFrame, <code>df</code>, which contains the petal length data, in your namespace. Inspect the data frame <code>df</code> in the IPython Shell using <code>df.head()</code> to make sure you know what the pertinent columns are.</p>
+<p>For your reference, the code used to produce the box plot in the video is provided below:</p>
+<pre><code>_ = sns.boxplot(x='east_west', y='dem_share', data=df_all_states)
+_ = plt.xlabel('region')
+_ = plt.ylabel('percent of vote for Obama')
+</code></pre>
+<p>In the IPython Shell, you can use <code>sns.boxplot?</code> or <code>help(sns.boxplot)</code> for more details on how to make box plots using seaborn.</p>
+</div>
+
+<li>The set-up is exactly the same as for the bee swarm plot; you just call <code>sns.boxplot()</code> with the same keyword arguments as you would <code>sns.swarmplot()</code>. The x-axis is <code>'species'</code> and y-axis is <code>'petal length (cm)'</code>.</li>
+
+
+<li>Don't forget to label your axes!</li>
+
+
+<li>Display the figure using the normal call.</li>
+```{python}
+# Create box plot with Seaborn's default settings
+_ = sns.boxplot(x='species', y='petal length (cm)', data=df)
+
+# Label the axes
+_ = plt.xlabel('species')
+_ = plt.ylabel('petal length (cm)')
+
+# Show the plot
+plt.show()
+
+```
+
+<p class="">Great work!</p>
+
+
+## Variance and standard deviation
+
+
+
+### Computing the variance
+
+
+<div class><p>It is important to have some understanding of what commonly-used functions are doing under the hood. Though you may already know how to compute variances, this is a beginner course that does not assume so. In this exercise, we will explicitly compute the variance of the petal length of <em>Iris veriscolor</em> using the equations discussed in the videos. We will then use <code>np.var()</code> to compute it.</p></div>
+
+<li>Create an array called <code>differences</code> that is the difference between the petal lengths (<code>versicolor_petal_length</code>) and the mean petal length. The variable <code>versicolor_petal_length</code> is already in your namespace as a NumPy array so you can take advantage of NumPy's vectorized operations.</li>
+```{python}
+# Array of differences to mean: differences
+differences = versicolor_petal_length - np.mean(versicolor_petal_length)
+
+
+```
+
+<li>Square each element in this array. For example, <code>x**2</code> squares each element in the array <code>x</code>. Store the result as <code>diff_sq</code>.</li>
+```{python}
+# Square the differences: diff_sq
+diff_sq = differences**2
+
+
+```
+
+<li>Compute the mean of the elements in <code>diff_sq</code> using <code>np.mean()</code>. Store the result as <code>variance_explicit</code>.</li>
+```{python}
+# Compute the mean square difference: variance_explicit
+variance_explicit = np.mean(diff_sq)
+
+
+```
+
+<li>Compute the variance of <code>versicolor_petal_length</code> using <code>np.var()</code>. Store the result as <code>variance_np</code>.</li>
+```{python}
+# Compute the variance using NumPy: variance_np
+variance_np = np.var(versicolor_petal_length)
+
+
+```
+
+<li>Print both <code>variance_explicit</code> and <code>variance_np</code> in one <code>print</code> call to make sure they are consistent.</li>
+```{python}
+# Print the results
+print(variance_explicit, variance_np)
+
+```
+
+<p class="">Great work!</p>
+
+
+### The standard deviation and the variance
+
+
+<div class><p>As mentioned in the video, the standard deviation is the square root of the variance. You will see this for yourself by computing the standard deviation using <code>np.std()</code> and comparing it to what you get by computing the variance with <code>np.var()</code> and then computing the square root.</p></div>
+
+<li>Compute the variance of the data in the <code>versicolor_petal_length</code> array using <code>np.var()</code> and store it in a variable called <code>variance</code>.</li>
+```{python}
+# Compute the variance: variance
+variance = np.var(versicolor_petal_length)
+
+
+```
+
+<li>Print the square root of this value.</li>
+```{python}
+# Print the square root of the variance
+print(np.sqrt(variance))
+
+
+```
+
+<li>Print the standard deviation of the data in the <code>versicolor_petal_length</code> array using <code>np.std()</code>.</li>
+```{python}
+# Print the standard deviation
+print(np.std(versicolor_petal_length))
+```
+
+<p class="">Yep, they are exactly the same!</p>
+
+
+## Covariance and the Pearson correlation coefficient
+
+
+
+### Scatter plots
+
+
+<div class>
+<p>When you made bee swarm plots, box plots, and ECDF plots in previous exercises, you compared the petal lengths of different species of iris. But what if you want to compare two properties of a single species? This is exactly what we will do in this exercise. We will make a <strong>scatter plot</strong> of the petal length and width measurements of Anderson's <em>Iris versicolor</em> flowers. If the flower scales (that is, it preserves its proportion as it grows), we would expect the length and width to be correlated.</p>
+<p>For your reference, the code used to produce the scatter plot in the video is provided below:</p>
+<pre><code>_ = plt.plot(total_votes/1000, dem_share, marker='.', linestyle='none')
+_ = plt.xlabel('total votes (thousands)')
+_ = plt.ylabel('percent of vote for Obama')
+</code></pre>
+</div>
+
+<li>Use <code>plt.plot()</code> with the appropriate keyword arguments to make a scatter plot of <em>versicolor</em> petal length (x-axis) versus petal width (y-axis). The variables <code>versicolor_petal_length</code> and <code>versicolor_petal_width</code> are already in your namespace. Do not forget to use the <code>marker='.'</code> and <code>linestyle='none'</code> keyword arguments.</li>
+
+
+<li>Label the axes.</li>
+```{python}
+setosa_petal_width = df[df.species == 'setosa']['petal width (cm)']
+versicolor_petal_width = df[df.species == 'versicolor']['petal width (cm)']
+virginica_petal_width = df[df.species == 'virginica']['petal width (cm)']
+```
+
+<li>Display the plot.</li>
+```{python}
+# Make a scatter plot
+_ = plt.plot(versicolor_petal_length, versicolor_petal_width,
+             marker='.', linestyle='none')
+
+# Label the axes
+_ = plt.xlabel('petal length (cm)')
+_ = plt.ylabel('petal width (cm)')
+
+# Show the result
+plt.show()
+
+```
+
+<p class="">Indeed, we see some correlation. Longer petals also tend to be wider.</p>
+
+
+### Variance and covariance by looking
+
+
+<div class>
+<p>Consider four scatter plots of \(x\)-\(y\) data, appearing to the right. Which has, respectively,</p>
+<ul>
+<li>the highest variance in the variable \(x\),</li>
+
+
+<li>the highest covariance,</li>
+
+
+<li>negative covariance?</li>
+
+
+</ul>
+</div>
+
+<!-- <center> -->
+<!-- <img src="/Users/git/Desktop/varcovar.png"> -->
+<!-- </center> -->
+
+<li>a, c, b</li>
+<li>d, c, a</li>
+<strong><li>d, c, b</li></strong>
+<li>d, d, b</li>
+
+<p class="">Well-reasoned!</p>
+
+### Computing the covariance
+
+
+<div class>
+<p>The covariance may be computed using the Numpy function <code>np.cov()</code>. For example, we have two sets of data <code>x</code> and <code>y</code>, <code>np.cov(x, y)</code> returns a 2D array where entries <code>[0,1]</code> and <code>[1,0]</code> are the covariances. Entry <code>[0,0]</code> is the variance of the data in <code>x</code>, and entry <code>[1,1]</code> is the variance of the data in <code>y</code>. This 2D output array is called the <strong>covariance matrix</strong>, since it organizes the self- and covariance.</p>
+<p>To remind you how the <em>I. versicolor</em> petal length and width are related, we include the scatter plot you generated in a previous exercise.</p>
+</div>
+
+<li>Use <code>np.cov()</code> to compute the covariance matrix for the petal length (<code>versicolor_petal_length</code>) and width (<code>versicolor_petal_width</code>) of <em>I. versicolor</em>. </li>
+```{python}
+# Compute the covariance matrix: covariance_matrix
+covariance_matrix = np.cov(versicolor_petal_length, versicolor_petal_width)
+
+
+```
+
+<li>Print the covariance matrix.</li>
+```{python}
+# Print covariance matrix
+print(covariance_matrix)
+
+
+```
+
+<li>Extract the covariance from entry <code>[0,1]</code> of the covariance matrix. Note that by symmetry, entry <code>[1,0]</code> is the same as entry <code>[0,1]</code>.</li>
+```{python}
+# Extract covariance of length and width of petals: petal_cov
+petal_cov = covariance_matrix[0,1]
+
+
+```
+
+<li>Print the covariance.</li>
+```{python}
+# Print the length/width covariance
+print(petal_cov)
+
+```
+
+<p class="">Great work!</p>
+
+
+### Computing the Pearson correlation coefficient
+
+
+<div class>
+<p>As mentioned in the video, the Pearson correlation coefficient, also called the Pearson r, is often easier to interpret than the covariance. It is computed using the <code>np.corrcoef()</code> function. Like <code>np.cov()</code>, it takes two arrays as arguments and returns a 2D array. Entries <code>[0,0]</code> and <code>[1,1]</code> are necessarily equal to <code>1</code> (can you think about why?), and the value we are after is entry <code>[0,1]</code>.</p>
+<p>In this exercise, you will write a function, <code>pearson_r(x, y)</code> that takes in two arrays and returns the Pearson correlation coefficient. You will then use this function to compute it for the petal lengths and widths of <em>I. versicolor</em>.</p>
+<p>Again, we include the scatter plot you generated in a previous exercise to remind you how the petal width and length are related.</p>
+</div>
+
+<li>Define a function with signature <code>pearson_r(x, y)</code>.<ul>
+<li>Use <code>np.corrcoef()</code> to compute the correlation matrix of <code>x</code> and <code>y</code> (pass them to <code>np.corrcoef()</code> in that order).</li>
+
+
+<li>The function returns entry <code>[0,1]</code> of the correlation matrix.</li>
+
+
+</ul>
+</li>
+```{python}
+def pearson_r(x, y):
+    """Compute Pearson correlation coefficient between two arrays."""
+    # Compute correlation matrix: corr_mat
+    corr_mat = np.corrcoef(x, y)
+
+    # Return entry [0,1]
+    return corr_mat[0,1]
+
+
+```
+
+<li>Compute the Pearson correlation between the data in the arrays <code>versicolor_petal_length</code> and <code>versicolor_petal_width</code>. Assign the result to <code>r</code>.</li>
+```{python}
+# Compute Pearson correlation coefficient for I. versicolor
+r = pearson_r(versicolor_petal_width, versicolor_petal_length)
+
+
+```
+
+<li>Print the result.</li>
+```{python}
+# Print the result
+print(r)
+```
+
+
+
+# Thinking Probabilistically - Discrete Variables
+
+<p class="chapter__description">
+    Statistical inference rests upon probability. Because we can very rarely say anything meaningful with absolute certainty from data, we use probabilistic language to make quantitative statements about data. In this chapter, you will learn how to think probabilistically about discrete quantities: those that can only take certain values, like integers.
+  </p>
+
+<p class="">Great work!</p>
+
+## Probabilistic logic and statistical inference
+
+
+
+### What is the goal of statistical inference?
+
+<p>Why do we do statistical inference?</p>
+
+<li>To draw probabilistic conclusions about what we might expect if we collected the same data again.</li>
+<li>To draw actionable conclusions from data.</li>
+<li>To draw more general conclusions from relatively few data or observations.</li>
+<strong><li>All of these.</li></strong>
+
+<p class="dc-completion-pane__message dc-u-maxw-100pc">Correct! Statistical inference involves taking your data to probabilistic conclusions about what you would expect if you took even more data, and you can make decisions based on these conclusions.</p>
+
+### Why do we use the language of probability?
+
+<p>Which of the following is <em>not</em> a reason why we use probabilistic language in statistical inference?</p>
+
+<li>Probability provides a measure of uncertainty.</li>
+<strong><li>Probabilistic language is not very precise.</li></strong>
+<li>Data are almost never exactly the same when acquired again, and probability allows us to say how much we expect them to vary.</li>
+
+<p class="dc-completion-pane__message dc-u-maxw-100pc">Correct. Probabilistic language is in fact very precise. It precisely describes uncertainty.</p>
+
+## Random number generators and hacker statistics
+
+
+
+### Generating random numbers using the np.random module
+
+
+<div class>
+<p>We will be hammering the <code>np.random</code> module for the rest of this course and its sequel. Actually, you will probably call functions from this module more than any other while wearing your hacker statistician hat. Let's start by taking its simplest function, <code>np.random.random()</code> for a test spin. The function returns a random number between zero and one. Call <code>np.random.random()</code> a few times in the IPython Shell. You should see numbers jumping around between zero and one.</p>
+<p>In this exercise, we'll generate lots of random numbers between zero and one, and then plot a histogram of the results. If the numbers are truly random, all bars in the histogram should be of (close to) equal height.</p>
+<p>You may have noticed that, in the video, Justin generated 4 random numbers by passing the keyword argument <code>size=4</code> to <code>np.random.random()</code>. Such an approach is more efficient than a <code>for</code> loop: in this exercise, however, you will write a <code>for</code> loop to experience hacker statistics as the practice of repeating an experiment over and over again.</p>
+</div>
+
+<li>Seed the random number generator using the seed <code>42</code>.</li>
+```{python}
+# Seed the random number generator
+np.random.seed(42)
+
+
+```
+
+<li>Initialize an empty array, <code>random_numbers</code>, of 100,000 entries to store the random numbers. Make sure you use <code>np.empty(100000)</code> to do this.</li>
+```{python}
+# Initialize random numbers: random_numbers
+random_numbers = np.empty(100000)
+
+
+```
+
+<li>Write a <code>for</code> loop to draw 100,000 random numbers using <code>np.random.random()</code>, storing them in the <code>random_numbers</code> array. To do so, loop over <code>range(100000)</code>.</li>
+```{python}
+# Generate random numbers by looping over range(100000)
+for i in range(100000):
+    random_numbers[i] = np.random.random()
+
+
+```
+
+<li>Plot a histogram of <code>random_numbers</code>. It is not necessary to label the axes in this case because we are just checking the random number generator. Hit submit to show your plot.</li>
+```{python}
+# Plot a histogram
+_ = plt.hist(random_numbers)
+
+# Show the plot
+plt.show()
+
+```
+
+<p class="">Good work! The histogram is almost exactly flat across the top, indicating that there is equal chance that a randomly-generated number is in any of the bins of the histogram.</p>
+
+
+### The np.random module and Bernoulli trials
+
+
+<div class><p>You can think of a Bernoulli trial as a flip of a possibly biased coin. Specifically, each coin flip has a probability \(p\) of landing heads (success) and probability \(1-p\) of landing tails (failure). In this exercise, you will write a function to perform <code>n</code> Bernoulli trials, <code>perform_bernoulli_trials(n, p)</code>, which returns the number of successes out of <code>n</code> Bernoulli trials, each of which has probability <code>p</code> of success. To perform each Bernoulli trial, use the <code>np.random.random()</code> function, which returns a random number between zero and one.</p></div>
+
+<li>Define a function with signature <code>perform_bernoulli_trials(n, p)</code>.<ul>
+<li>Initialize to zero a variable <code>n_success</code> the counter of <code>True</code>s, which are Bernoulli trial successes.</li>
+
+
+<li>Write a <code>for</code> loop where you perform a Bernoulli trial in each iteration and increment the number of success if the result is <code>True</code>. Perform <code>n</code> iterations by looping over <code>range(n)</code>.<ul><li>To perform a Bernoulli trial, choose a random number between zero and one using <code>np.random.random()</code>. If the number you chose is less than <code>p</code>, increment <code>n_success</code> (use the <code>+= 1</code> operator to achieve this).</li>
+
+</ul>
+</li>
+
+
+<li>The function returns the number of successes <code>n_success</code>.</li>
+
+
+</ul>
+</li>
+```{python}
+def perform_bernoulli_trials(n, p):
+    """Perform n Bernoulli trials with success probability p
+    and return number of successes."""
+    # Initialize number of successes: n_success
+    n_success = 0
+
+    # Perform trials
+    for i in range(n):
+        # Choose random number between zero and one: random_number
+        random_number = np.random.random()
+
+        # If less than p, it's a success so add one to n_success
+        if random_number < p:
+            n_success += 1
+
+    return n_success
+```
+
+<p class="">Good work!</p>
+
+
+### How many defaults might we expect?
+
+
+<div class><p>Let's say a bank made 100 mortgage loans. It is possible that anywhere between 0 and 100 of the loans will be defaulted upon. You would like to know the probability of getting a given number of defaults, given that the probability of a default is <code>p = 0.05</code>. To investigate this, you will do a simulation. You will perform 100 Bernoulli trials using the <code>perform_bernoulli_trials()</code> function you wrote in the previous exercise and record how many defaults we get. Here, a success is a default. (Remember that the word "success" just means that the Bernoulli trial evaluates to <code>True</code>, i.e., did the loan recipient default?) You will do this for another 100 Bernoulli trials. And again and again until we have tried it 1000 times. Then, you will plot a histogram describing the probability of the number of defaults.</p></div>
+
+<li>Seed the random number generator to 42.</li>
+```{python}
+# Seed random number generator
+np.random.seed(42)
+
+
+```
+
+<li>Initialize <code>n_defaults</code>, an empty array, using <code>np.empty()</code>. It should contain 1000 entries, since we are doing 1000 simulations.</li>
+```{python}
+# Initialize the number of defaults: n_defaults
+n_defaults = np.empty(1000)
+
+
+```
+
+<li>Write a <code>for</code> loop with <code>1000</code> iterations to compute the number of defaults per 100 loans using the <code>perform_bernoulli_trials()</code> function. It accepts two arguments: the number of trials <code>n</code> - in this case 100 - and the probability of success <code>p</code> - in this case the probability of a default, which is <code>0.05</code>. On each iteration of the loop store the result in an entry of <code>n_defaults</code>.</li>
+```{python}
+# Compute the number of defaults
+for i in range(1000):
+    n_defaults[i] = perform_bernoulli_trials(100, 0.05)
+
+
+```
+
+<li>Plot a histogram of <code>n_defaults</code>. Include the <code>normed=True</code> keyword argument so that the height of the bars of the histogram indicate the probability.</li>
+
+
+<li>Show your plot.</li>
+```{python}
+# edited/added
+# Plot the histogram with default number of bins; label your axes
+_ = plt.hist(n_defaults, density=True, stacked=True)
+_ = plt.xlabel('number of defaults out of 100 loans')
+_ = plt.ylabel('probability') 
+
+# Show the plot
+plt.show()
+```
+
+<p class="">Nice work! This is actually not an optimal way to plot a histogram when the results are known to be integers. We will revisit this in forthcoming exercises.</p>
+
+
+### Will the bank fail?
+
+
+<div class>
+<p>Plot the number of defaults you got from the previous exercise, in your namespace as <code>n_defaults</code>, as a CDF. The <code>ecdf()</code> function you wrote in the first chapter is available.</p>
+<p>If interest rates are such that the bank will lose money if 10 or more of its loans are defaulted upon, what is the probability that the bank will lose money?</p>
+</div>
+
+<li>Compute the <code>x</code> and <code>y</code> values for the ECDF of <code>n_defaults</code>.</li>
+```{python}
+# Compute ECDF: x, y
+x, y = ecdf(n_defaults)
+
+
+```
+
+<li>Plot the ECDF, making sure to label the axes. Remember to include <code>marker = '.'</code> and <code>linestyle = 'none'</code> in addition to <code>x</code> and <code>y</code> in your call <code>plt.plot()</code>.</li>
+
+
+<li>Show the plot.</li>
+```{python}
+# Plot the CDF with labeled axes
+_ = plt.plot(x, y, marker='.', linestyle='none')
+_ = plt.xlabel('number of defaults out of 100')
+_ = plt.ylabel('CDF')
+
+# Show the plot
+plt.show()
+
+
+```
+
+<li>Compute the total number of entries in your <code>n_defaults</code> array that were greater than or equal to 10. To do so, compute a boolean array that tells you whether a given entry of <code>n_defaults</code> is <code>&gt;= 10</code>. Then sum all the entries in this array using <code>np.sum()</code>. For example, <code>np.sum(n_defaults &lt;= 5)</code> would compute the number of defaults with 5 or <em>fewer</em> defaults.</li>
+```{python}
+# Compute the number of 100-loan simulations with 10 or more defaults: n_lose_money
+n_lose_money = np.sum(n_defaults >= 10)
+
+
+```
+
+<li>The probability that the bank loses money is the fraction of <code>n_defaults</code> that are greater than or equal to 10. Print this result by hitting submit!</li>
+```{python}
+# Compute and print probability of losing money
+print('Probability of losing money =', n_lose_money / len(n_defaults))
+
+```
+
+<p class="">As we might expect, we most likely get 5/100 defaults. But we still have about a 2% chance of getting 10 or more defaults out of 100 loans.</p>
+
+
+## Probability distributions and stories: The Binomial distribution
+
+
+
+### Sampling out of the Binomial distribution
+
+
+<div class>
+<p>Compute the probability mass function for the number of defaults we would expect for 100 loans as in the last section, but instead of simulating all of the Bernoulli trials, perform the sampling using <code>np.random.binomial()</code>. This is identical to the calculation you did in the last set of exercises using your custom-written <code>perform_bernoulli_trials()</code> function, but far more computationally efficient. Given this extra efficiency, we will take 10,000 samples instead of 1000. After taking the samples, plot the CDF as last time. This CDF that you are plotting is that of the Binomial distribution.</p>
+<p><em>Note</em>: For this exercise and all going forward, the random number generator is pre-seeded for you (with <code>np.random.seed(42)</code>) to save you typing that each time.</p>
+</div>
+
+<li>Draw samples out of the Binomial distribution using <code>np.random.binomial()</code>. You should use parameters <code>n = 100</code> and <code>p = 0.05</code>, and set the <code>size</code> keyword argument to <code>10000</code>.</li>
+```{python}
+# Take 10,000 samples out of the binomial distribution: n_defaults
+n_defaults = np.random.binomial(n=100, p=0.05, size=10000)
+
+
+```
+
+<li>Compute the CDF using your previously-written <code>ecdf()</code> function.</li>
+```{python}
+# Compute CDF: x, y
+x, y = ecdf(n_defaults)
+
+
+```
+
+<li>Plot the CDF with axis labels. The x-axis here is the number of defaults out of 100 loans, while the y-axis is the CDF.</li>
+
+
+<li>Show the plot.</li>
+```{python}
+# Plot the CDF with axis labels
+_ = plt.plot(x, y, marker='.', linestyle='none')
+_ = plt.xlabel('number of defaults out of 100 loans')
+_ = plt.ylabel('CDF')
+
+# Show the plot
+plt.show()
+
+```
+
+<p class="">Great work! If you know the story, using built-in algorithms to directly sample out of the distribution is <em>much</em> faster.</p>
+
+
+### Plotting the Binomial PMF
+
+
+<div class>
+<p>As mentioned in the video, plotting a nice looking PMF requires a bit of matplotlib trickery that we will not go into here. Instead, we will plot the PMF of the Binomial distribution as a histogram with skills you have already learned. The trick is setting up the edges of the bins to pass to <code>plt.hist()</code> via the <code>bins</code> keyword argument. We want the bins centered on the integers. So, the edges of the bins should be <code>-0.5, 0.5, 1.5, 2.5, ...</code> up to <code>max(n_defaults) + 1.5</code>. You can generate an array like this using <code>np.arange()</code> and then subtracting <code>0.5</code> from the array.</p>
+<p>You have already sampled out of the Binomial distribution during your exercises on loan defaults, and the resulting samples are in the NumPy array <code>n_defaults</code>.</p>
+</div>
+
+<li>Using <code>np.arange()</code>, compute the bin edges such that the bins are centered on the integers. Store the resulting array in the variable <code>bins</code>. </li>
+```{python}
+# Compute bin edges: bins
+bins = np.arange(0, max(n_defaults) + 1.5) - 0.5
+
+
+```
+
+<li>Use <code>plt.hist()</code> to plot the histogram of <code>n_defaults</code> with the <code>normed=True</code> and <code>bins=bins</code> keyword arguments.</li>
+
+
+<li>Show the plot.</li>
+```{python}
+# Generate histogram
+_ = plt.hist(n_defaults, density=True, stacked=True, bins=bins)
+
+# Label axes
+_ = plt.xlabel('number of defaults out of 100 loans')
+_ = plt.ylabel('PMF')
+
+# Show the plot
+plt.show()
+```
+
+<p class="">Great work!</p>
+
+
+## Poisson processes and the Poisson distribution
+
+
+
+### Relationship between Binomial and Poisson distributions
+
+
+<div class>
+<p>You just heard that the Poisson distribution is a limit of the Binomial distribution for rare events. This makes sense if you think about the stories. Say we do a Bernoulli trial every minute for an hour, each with a success probability of 0.1. We would do 60 trials, and the number of successes is Binomially distributed, and we would expect to get about 6 successes. This is just like the Poisson story we discussed in the video, where we get on average 6 hits on a website per hour. So, the Poisson distribution with arrival rate equal to \(np\) approximates a Binomial distribution for \(n\) Bernoulli trials with probability \(p\) of success (with \(n\) large and \(p\) small). Importantly, the Poisson distribution is often simpler to work with because it has only one parameter instead of two for the Binomial distribution.</p>
+<p>Let's explore these two distributions computationally. You will compute the mean and standard deviation of samples from a Poisson distribution with an arrival rate of 10. Then, you will compute the mean and standard deviation of samples from a Binomial distribution with parameters \(n\) and \(p\) such that \(np = 10\).</p>
+</div>
+
+<li>Using the <code>np.random.poisson()</code> function, draw <code>10000</code> samples from a Poisson distribution with a mean of <code>10</code>.</li>
+```{python}
+# Draw 10,000 samples out of Poisson distribution: samples_poisson
+samples_poisson = np.random.poisson(10, size=10000)
+
+# Print the mean and standard deviation
+print('Poisson:     ', np.mean(samples_poisson),
+                       np.std(samples_poisson))
+
+
+```
+
+<li>Make a list of the <code>n</code> and <code>p</code> values to consider for the Binomial distribution. Choose <code>n = [20, 100, 1000]</code> and <code>p = [0.5, 0.1, 0.01]</code> so that \(np\) is always 10.</li>
+```{python}
+# Specify values of n and p to consider for Binomial: n, p
+n = [20, 100, 1000]
+p = [0.5, 0.1, 0.01]
+
+
+```
+
+<li>Using <code>np.random.binomial()</code> inside the provided <code>for</code> loop, draw <code>10000</code> samples from a Binomial distribution with each <code>n, p</code> pair and print the mean and standard deviation of the samples. There are 3 <code>n, p</code> pairs: <code>20, 0.5</code>, <code>100, 0.1</code>, and <code>1000, 0.01</code>. These can be accessed inside the loop as <code>n[i], p[i]</code>.</li>
+```{python}
+# Draw 10,000 samples for each n,p pair: samples_binomial
+for i in range(3):
+    samples_binomial = np.random.binomial(n[i], p[i], size=10000)
+
+    # Print results
+    print('n =', n[i], 'Binom:', np.mean(samples_binomial),
+                                 np.std(samples_binomial))
+
+```
+
+<p class="">The means are all about the same, which can be shown to be true by doing some pen-and-paper work. The standard deviation of the Binomial distribution gets closer and closer to that of the Poisson distribution as the probability <code>p</code> gets lower and lower.</p>
+
+
+### How many no-hitters in a season?
+
+
+<div class>
+<p>In baseball, a no-hitter is a game in which a pitcher does not allow the other team to get a hit. This is a rare event, and since the beginning of the so-called modern era of baseball (starting in 1901), there have only been 251 of them through the 2015 season in over 200,000 games. The ECDF of the number of no-hitters in a season is shown to the right. Which probability distribution would be appropriate to describe the number of no-hitters we would expect in a given season?</p>
+<p><em>Note</em>: The no-hitter data set was scraped and calculated from the data sets available at <a href="http://www.retrosheet.org">retrosheet.org</a> (<a href="http://www.retrosheet.org/notice.txt">license</a>).</p>
+</div>
+
+<!-- <imr src="/Users/git/Desktop/nohitters.png"> -->
+
+<li>Discrete uniform</li>
+<li>Binomial</li>
+<li>Poisson</li>
+<strong><li>Both Binomial and Poisson, though Poisson is easier to model and compute.</li></strong>
+<li>Both Binomial and Poisson, though Binomial is easier to model and compute.</li>
+
+<p class="">Correct! When we have rare events (low p, high n), the Binomial distribution is Poisson. This has a single parameter, the mean number of successes per time interval, in our case the mean number of no-hitters per season.</p>
+
+### Was 2015 anomalous?
+
+
+<div class><p>1990 and 2015 featured the most no-hitters of any season of baseball (there were seven). Given that there are on average 251/115 no-hitters per season, what is the probability of having seven or more in a season?</p></div>
+
+<li>Draw <code>10000</code> samples from a Poisson distribution with a mean of <code>251/115</code> and assign to <code>n_nohitters</code>.</li>
+```{python}
+# Draw 10,000 samples out of Poisson distribution: n_nohitters
+n_nohitters = np.random.poisson(251/115, size=10000)
+
+
+```
+
+<li>Determine how many of your samples had a result greater than or equal to <code>7</code> and assign to <code>n_large</code>.</li>
+```{python}
+# Compute number of samples that are seven or greater: n_large
+n_large = np.sum(n_nohitters >= 7)
+
+
+```
+
+<li>Compute the probability, <code>p_large</code>, of having <code>7</code> or more no-hitters by dividing <code>n_large</code> by the total number of samples (<code>10000</code>).</li>
+```{python}
+# Compute probability of getting seven or more: p_large
+p_large = n_large / 10000
+
+
+```
+
+<li>Hit submit to print the probability that you calculated.</li>
+```{python}
+# Print the result
+print('Probability of seven or more no-hitters:', p_large)
+
+```
+
+<p class="">The result is about 0.007. This means that it is not that improbable to see a 7-or-more no-hitter season in a century. We have seen two in a century and a half, so it is not unreasonable.</p>
+
+# Thinking Probabilistically - Continuous Variables
+
+<p class="chapter__description">
+    It’s time to move onto continuous variables, such as those that can take on any fractional value. Many of the principles are the same, but there are some subtleties. At the end of this final chapter, you will be speaking the probabilistic language you need to launch into the inference techniques covered in the sequel to this course.
+  </p>
+
+## Probability density functions
+
+
+
+### Interpreting PDFs
+
+
+<div class><p>Consider the PDF shown to the right (it may take a second to load!). Which of the following is true?</p></div>
+```{python}
+# Make a scatter plot
+_ = plt.plot(versicolor_petal_length, versicolor_petal_width,
+             marker='.', linestyle='none')
+
+# Label the axes
+_ = plt.xlabel('petal length (cm)')
+_ = plt.ylabel('petal width (cm)')
+
+# Show the result
+plt.show()
+```
+
+<strong><li><mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" role="presentation" tabindex="0" ctxtmenu_counter="29" style="font-size: 116.7%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D465 TEX-I"></mjx-c></mjx-mi></mjx-math><mjx-assistive-mml role="presentation" unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi></math></mjx-assistive-mml></mjx-container> is more likely to be <strong>less than 10</strong> than to be greater than 10.</li></strong>
+<li><mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" role="presentation" tabindex="0" ctxtmenu_counter="30" style="font-size: 116.7%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D465 TEX-I"></mjx-c></mjx-mi></mjx-math><mjx-assistive-mml role="presentation" unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi></math></mjx-assistive-mml></mjx-container> is more likely to be <strong>greater than 10</strong> than to be less than 10.</li>
+<li>We cannot tell from the PDF if <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" role="presentation" tabindex="0" ctxtmenu_counter="31" style="font-size: 116.7%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D465 TEX-I"></mjx-c></mjx-mi></mjx-math><mjx-assistive-mml role="presentation" unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi></math></mjx-assistive-mml></mjx-container> is more likely to be greater than or less than 10.</li>
+<li>This is not a valid PDF because it has two peaks.</li>
+
+<p class="">Correct! The probability is given by the <em>area under the PDF</em>, and there is more area to the left of 10 than to the right.</p>
+
+### Interpreting CDFs
+
+
+<div class><p>On the right is the CDF corresponding to the PDF you considered in the last exercise. Using the CDF, what is the probability that \(x\) is greater than 10?</p></div>
+
+```{python}
+# Make a scatter plot
+_ = plt.plot(versicolor_petal_length, versicolor_petal_width,
+             marker='.', linestyle='none')
+
+# Label the axes
+_ = plt.xlabel('petal length (cm)')
+_ = plt.ylabel('petal width (cm)')
+
+# Show the result
+plt.show()
+```
+
+<strong><li>0.25</li></strong>
+<li>0.75</li>
+<li>3.75</li>
+<li>15</li>
+
+<p class="">Correct! The value of the CDF at x = 10 is 0.75, so the probability that x &lt; 10 is 0.75. Thus, the probability that x &gt; 10 is 0.25.</p>
+
+## Introduction to the Normal distribution
+
+
+
+### The Normal PDF
+
+
+<div class><p>In this exercise, you will explore the Normal PDF and also learn a way to plot a PDF of a known distribution using hacker statistics. Specifically, you will plot a Normal PDF for various values of the variance.</p></div>
+
+<li>Draw 100,000 samples from a Normal distribution that has a mean of <code>20</code> and a standard deviation of <code>1</code>. Do the same for Normal distributions with standard deviations of <code>3</code> and <code>10</code>, each still with a mean of <code>20</code>. Assign the results to <code>samples_std1</code>, <code>samples_std3</code> and <code>samples_std10</code>, respectively.</li>
+```{python}
+# Draw 100000 samples from Normal distribution with stds of interest: samples_std1, samples_std3, samples_std10
+samples_std1 = np.random.normal(20, 1, size=100000)
+samples_std3 = np.random.normal(20, 3, size=100000)
+samples_std10 = np.random.normal(20, 10, size=100000)
+
+
+```
+
+<li>Plot a histograms of each of the samples; for each, use 100 bins, also using the keyword arguments <code>normed=True</code> and <code>histtype='step'</code>. The latter keyword argument makes the plot look much like the smooth theoretical PDF. You will need to make 3 <code>plt.hist()</code> calls.</li>
+
+
+<li>Hit submit to make a legend, showing which standard deviations you used, and show your plot! There is no need to label the axes because we have not defined what is being described by the Normal distribution; we are just looking at shapes of PDFs.</li>
+```{python}
+# Make histograms
+_ = plt.hist(samples_std1, bins=100, density=True, stacked=True, histtype='step')
+_ = plt.hist(samples_std3, bins=100, density=True, stacked=True, histtype='step')
+_ = plt.hist(samples_std10, bins=100, density=True, stacked=True, histtype='step')
+
+# Make a legend, set limits and show plot
+_ = plt.legend(('std = 1', 'std = 3', 'std = 10'))
+plt.ylim(-0.01, 0.42)
+plt.show()
+
+```
+
+<p class="">Great work! You can see how the different standard deviations result in PDFs of different widths. The peaks are all centered at the mean of 20.</p>
+
+
+### The Normal CDF
+
+
+<div class><p>Now that you have a feel for how the Normal PDF looks, let's consider its CDF. Using the samples you generated in the last exercise (in your namespace as <code>samples_std1</code>, <code>samples_std3</code>, and <code>samples_std10</code>), generate and plot the CDFs.</p></div>
+
+<li>Use your <code>ecdf()</code> function to generate x and y values for CDFs: <code>x_std1, y_std1</code>, <code>x_std3, y_std3</code> and <code>x_std10, y_std10</code>, respectively.</li>
+```{python}
+# Generate CDFs
+x_std1, y_std1 = ecdf(samples_std1)
+x_std3, y_std3 = ecdf(samples_std3)
+x_std10, y_std10 = ecdf(samples_std10)
+
+
+```
+
+<li>Plot all three CDFs as dots (do not forget the <code>marker</code> and <code>linestyle</code> keyword arguments!).</li>
+
+
+<li>Hit submit to make a legend, showing which standard deviations you used, and to show your plot. There is no need to label the axes because we have not defined what is being described by the Normal distribution; we are just looking at shapes of CDFs.</li>
+```{python}
+# Plot CDFs
+_ = plt.plot(x_std1, y_std1, marker='.', linestyle='none')
+_ = plt.plot(x_std3, y_std3, marker='.', linestyle='none')
+_ = plt.plot(x_std10, y_std10, marker='.', linestyle='none')
+
+# Make a legend and show the plot
+_ = plt.legend(('std = 1', 'std = 3', 'std = 10'), loc='lower right')
+plt.show()
+
+```
+
+<p class="">Great work! The CDFs all pass through the mean at the 50th percentile; the mean and median of a Normal distribution are equal. The width of the CDF varies with the standard deviation.</p>
+
+
+## The Normal distribution: Properties and warnings
+
+
+
+### Gauss and the 10 Deutschmark banknote
+
+
+<div class><p>What are the mean and standard deviation, respectively, of the Normal distribution that was on the 10 Deutschmark banknote, shown to the right?</p></div>
+
+```{python}
+# Make a scatter plot
+_ = plt.plot(versicolor_petal_length, versicolor_petal_width,
+             marker='.', linestyle='none')
+
+# Label the axes
+_ = plt.xlabel('petal length (cm)')
+_ = plt.ylabel('petal width (cm)')
+
+# Show the result
+plt.show()
+```
+
+<strong><li>mean = 3, std = 1</li></strong>
+<li>mean = 3, std = 2</li>
+<li>mean = 0.4, std = 1</li>
+<li>mean = 0.6, std = 6</li>
+
+<p class="">Correct!</p>
+
+### Are the Belmont Stakes results Normally distributed?
+
+
+<div class>
+<p>Since 1926, the Belmont Stakes is a 1.5 mile-long race of 3-year old thoroughbred horses. <a href="https://en.wikipedia.org/wiki/Secretariat_(horse)">Secretariat</a> ran the fastest Belmont Stakes in history in 1973. While that was the fastest year, 1970 was the slowest because of unusually wet and sloppy conditions. With these two outliers removed from the data set, compute the mean and standard deviation of the Belmont winners' times. Sample out of a Normal distribution with this mean and standard deviation using the <code>np.random.normal()</code> function and plot a CDF. Overlay the ECDF from the winning Belmont times. Are these close to Normally distributed?</p>
+<p><em>Note</em>: Justin scraped the data concerning the Belmont Stakes from the <a href="https://en.wikipedia.org/wiki/Belmont_Stakes">Belmont Wikipedia page</a>.</p>
+</div>
+```{python}
+# edited/added
+belmont_no_outliers_df = pd.read_csv("https://assets.datacamp.com/production/repositories/469/datasets/7507bfed990379f246b4f166ea8a57ecf31c6c9d/belmont.csv")
+
+```
+```{python}
+belmont_no_outliers = np.array(list(map(lambda i: int(belmont_no_outliers_df['Time'][i][0])*60 + float(belmont_no_outliers_df['Time'][i][2:7]), range(91))))
+```
+
+<li>Compute mean and standard deviation of Belmont winners' times with the two outliers removed. The NumPy array <code>belmont_no_outliers</code> has these data.</li>
+```{python}
+# Compute mean and standard deviation: mu, sigma
+mu = np.mean(belmont_no_outliers)
+sigma = np.std(belmont_no_outliers)
+
+
+```
+
+<li>Take 10,000 samples out of a normal distribution with this mean and standard deviation using <code>np.random.normal()</code>.</li>
+```{python}
+# Sample out of a normal distribution with this mu and sigma: samples
+samples = np.random.normal(mu, sigma, size=10000)
+
+
+```
+
+<li>Compute the CDF of the theoretical samples and the ECDF of the Belmont winners' data, assigning the results to <code>x_theor, y_theor</code> and <code>x, y</code>, respectively.</li>
+```{python}
+# Get the CDF of the samples and of the data
+x_theor, y_theor = ecdf(samples)
+x, y = ecdf(belmont_no_outliers)
+
+
+```
+
+<li>Hit submit to plot the CDF of your samples with the ECDF, label your axes and show the plot.</li>
+```{python}
+# Plot the CDFs and show the plot
+_ = plt.plot(x_theor, y_theor)
+_ = plt.plot(x, y, marker='.', linestyle='none')
+_ = plt.xlabel('Belmont winning time (sec.)')
+_ = plt.ylabel('CDF')
+plt.show()
+
+```
+
+<p class="">The theoretical CDF and the ECDF of the data suggest that the winning Belmont times are, indeed, Normally distributed. This also suggests that in the last 100 years or so, there have not been major technological or training advances that have significantly affected the speed at which horses can run this race.</p>
+
+
+### What are the chances of a horse matching or beating Secretariat's record?
+
+
+<div class><p>Assume that the Belmont winners' times are Normally distributed (with the 1970 and 1973 years removed), what is the probability that the winner of a given Belmont Stakes will run it as fast or faster than Secretariat?</p></div>
+
+<li>Take 1,000,000 samples from the normal distribution using the <code>np.random.normal()</code> function. The mean <code>mu</code> and standard deviation <code>sigma</code> are already loaded into the namespace of your IPython instance.</li>
+```{python}
+# Take a million samples out of the Normal distribution: samples
+samples = np.random.normal(mu, sigma, size=1000000)
+
+
+```
+
+<li>Compute the fraction of samples that have a time less than or equal to Secretariat's time of 144 seconds.</li>
+```{python}
+# Compute the fraction that are faster than 144 seconds: prob
+prob = np.sum(samples <= 144) / len(samples)
+
+
+```
+
+<li>Print the result.</li>
+```{python}
+# Print the result
+print('Probability of besting Secretariat:', prob)
+
+```
+
+<p class="">Great work! We had to take a million samples because the probability of a fast time is very low and we had to be sure to sample enough. We get that there is only a 0.06% chance of a horse running the Belmont as fast as Secretariat.</p>
+
+
+## The Exponential distribution
+
+
+
+### Matching a story and a distribution
+
+<p>How might we expect the time between Major League no-hitters to be distributed? Be careful here: a few exercises ago, we considered the probability distribution for the number of no-hitters in a season. Now, we are looking at the probability distribution of the <em>time between</em> no hitters.</p>
+
+<li>Normal</li>
+<strong><li>Exponential</li></strong>
+<li>Poisson</li>
+<li>Uniform</li>
+
+<p class="dc-completion-pane__message dc-u-maxw-100pc">Correct!</p>
+
+### Waiting for the next Secretariat
+
+<p>Unfortunately, Justin was not alive when Secretariat ran the Belmont in 1973. Do you think he will get to see a performance like that? To answer this, you are interested in how many years you would expect to wait until you see another performance like Secretariat's. How is the waiting time until the next performance as good or better than Secretariat's distributed? Choose the best answer.</p>
+
+<li>Normal, because the distribution of Belmont winning times are Normally distributed.</li>
+<li>Normal, because there is a most-expected waiting time, so there should be a single peak to the distribution.</li>
+<li>Exponential: It is very unlikely for a horse to be faster than Secretariat, so the distribution should decay away to zero for high waiting time.</li>
+<strong><li>Exponential: A horse as fast as Secretariat is a rare event, which can be modeled as a Poisson process, and the waiting time between arrivals of a Poisson process is Exponentially distributed.</li></strong>
+
+<p>Correct! The Exponential distribution describes the waiting times between rare events, and Secretariat is <em>rare</em>!</p>
+
+### If you have a story, you can simulate it!
+
+
+<div class>
+<p>Sometimes, the story describing our probability distribution does not have a named distribution to go along with it. In these cases, fear not! You can always simulate it. We'll do that in this and the next exercise.</p>
+<p>In earlier exercises, we looked at the rare event of no-hitters in Major League Baseball. <em>Hitting the cycle</em>, when a batter gets all four kinds of hits in a single game, is another rare baseball event. Like no-hitters, this can be modeled as a Poisson process, so the time between hits of the cycle are also Exponentially distributed.</p>
+<p>How long must we wait to see a no-hitter <em>and then</em> a batter hit the cycle? The idea is that we have to wait some time for the no-hitter, and then after the no-hitter, we have to wait for hitting the cycle. Stated another way, what is the total waiting time for the arrival of two different Poisson processes in succession? The total waiting time is the time waited for the no-hitter, plus the time waited for the hitting the cycle.</p>
+<p>Now, you will write a function to sample out of the distribution described by this story.</p>
+</div>
+
+<li>Define a function with call signature <code>successive_poisson(tau1, tau2, size=1)</code> that samples the waiting time for a no-hitter and a hit of the cycle.<ul>
+<li>Draw waiting times <code>tau1</code> (<code>size</code> number of samples) for the no-hitter out of an exponential distribution and assign to <code>t1</code>.</li>
+
+
+<li>Draw waiting times <code>tau2</code> (<code>size</code> number of samples) for hitting the cycle out of an exponential distribution and assign to <code>t2</code>.</li>
+
+
+<li>The function returns the sum of the waiting times for the two events.</li>
+
+
+</ul>
+</li>
+```{python}
+def successive_poisson(tau1, tau2, size=1):
+    """Compute time for arrival of 2 successive Poisson processes."""
+    # Draw samples out of first exponential distribution: t1
+    t1 = np.random.exponential(tau1, size=size)
+
+    # Draw samples out of second exponential distribution: t2
+    t2 = np.random.exponential(tau2, size=size)
+
+    return t1 + t2
+
+```
+
+<p class="">Great work! We'll put the function to use in the next exercise.</p>
+
+
+### Distribution of no-hitters and cycles
+
+
+<div class><p>Now, you'll use your sampling function to compute the waiting time to observe a no-hitter and hitting of the cycle. The mean waiting time for a no-hitter is 764 games, and the mean waiting time for hitting the cycle is 715 games.</p></div>
+
+<li>Use your <code>successive_poisson()</code> function to draw 100,000 out of the distribution of waiting times for observing a no-hitter and a hitting of the cycle.</li>
+```{python}
+# Draw samples of waiting times
+waiting_times = successive_poisson(764, 715, size=100000)
+
+
+```
+
+<li>Plot the PDF of the waiting times using the step histogram technique of a previous exercise. Don't forget the necessary keyword arguments. You should use <code>bins=100</code>, <code>normed=True</code>, and <code>histtype='step'</code>.</li>
+
+
+<li>Label the axes.</li>
+
+
+<li>Show your plot.</li>
+```{python}
+# Make the histogram
+_ = plt.hist(waiting_times, bins=100, histtype='step', density=True, stacked=True)
+
+# Label axes
+_ = plt.xlabel('total waiting time (games)')
+_ = plt.ylabel('PDF')
+
+# Show the plot
+plt.show()
+
+```
+
+<p class="">Great work! Notice that the PDF is peaked, unlike the waiting time for a single Poisson process. For fun (and enlightenment), I encourage you to also plot the CDF.</p>

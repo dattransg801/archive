@@ -1,0 +1,1476 @@
+# (PART) SQL {.unnumbered}
+
+# Queries {.unnumbered}
+
+## Introduction to SQL {.unnumbered}
+
+<h3 class="course__description-title">Nick Carchedi</h3>
+<p class="course__instructor-description display-none-mobile-course-page-experiment">Nick is a Product Manager at DataCamp. Prior to joining DataCamp, he earned his master's degree at Johns Hopkins Biostatistics and worked as a data scientist for McKinsey. Nick's passion for teaching data science began in graduate school, where he was heavily involved in tutoring fellow students, developing the Johns Hopkins Data Science Specialization, and building the swirl R package.</p>
+
+**Course Description**
+
+<p class="course__description">The role of a data scientist is to turn raw data into actionable insights. Much of the world's raw data—from electronic medical records to customer transaction histories—lives in organized collections of tables called relational databases. To be an effective data scientist, you must know how to wrangle and extract data from these databases using a language called SQL . This course teaches syntax in SQL shared by many types of databases, such as PostgreSQL, MySQL, SQL Server, and Oracle. This course teaches you everything you need to know to begin working with databases today!</p>
+
+```{r setup, warning=F,message = FALSE, echo=F, result='hide'}
+library(dplyr)
+library(dbplyr)
+library(RSQLite)
+library(sqldf)
+library(tidyverse)
+library(readxl)
+
+films = read.csv("archive/SQL-Databases/cinema/films.csv") %>% mutate(release_year = as.integer(release_year)) %>% replace(is.na(.), "NULL")
+people = read.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vSmas_DW2YYejEvuB_i5d4y7ENAn7SmC1Uw5K4gC2P0AFJ21SPhIRrRFRTVfsHKKTIuCxK81m3mlKoj/pub?gid=0&single=true&output=csv")
+reviews = read.csv("archive/SQL-Databases/cinema/reviews.csv")
+roles = read.csv("archive/SQL-Databases/cinema/roles.csv")
+
+conn <- src_memdb()        # create a SQLite database in memory
+con <- conn$con            # needed for SQL chunk
+copy_to(conn, films, overwrite = TRUE)
+copy_to(conn, people, overwrite = TRUE)
+copy_to(conn, reviews, overwrite = TRUE)
+copy_to(conn, roles, overwrite = TRUE)
+```
+
+
+
+### Selecting columns {.unnumbered}
+
+<p class="chapter__description">
+    This chapter provides a brief introduction to working with relational databases. You'll learn about their structure, how to talk about them using database lingo, and how to begin an analysis using simple SQL commands to select and summarize columns from database tables.
+  </p>
+
+
+
+#### Onboarding | Tables {.unnumbered}
+
+
+<div class>
+<p>The DataCamp interface for SQL courses contains a few unique features you should be aware of.</p>
+<p>For this course, you'll be using a database containing information on almost 5000 films. To the right, underneath the editor, you can see the data in this database by clicking through the tabs.</p>
+<p>From looking at the tabs, who is the first person listed in the <code>people</code> table?</p>
+</div>
+
+```{sql connection=con}
+SELECT * FROM people;
+```
+
+<li>Kanye West</li>
+<li>Biggie Smalls</li>
+<strong><li>50 Cent</li></strong>
+<li>Jay Z</li>
+
+
+<p class="">That's correct! Head over to the next exercise to see how we can answer a similar question with code!</p>
+
+#### Onboarding | Query Result {.unnumbered}
+
+
+<div class>
+<p>Notice the <strong>query result</strong> tab in the bottom right corner of your screen. This is where the results of your SQL queries will be displayed.</p>
+<p>Run this query in the editor and check out the resulting table in the query result tab!</p>
+<pre><code>SELECT name FROM people;
+</code></pre>
+<p>Who is the second person listed in the query result?</p>
+</div>
+
+```{sql connection=con}
+SELECT name FROM people;
+```
+
+<li>Kanye West</li>
+<strong><li>A. Michael Baldwin</li></strong>
+<li>50 Cent</li>
+<li>Jay Z</li>
+
+<p class="">Correct!</p>
+
+#### Onboarding | Errors {.unnumbered}
+
+
+<div class>
+<p>If you submit the code to the right, you'll see that you get two types of errors.</p>
+<p><em>SQL</em> errors are shown below the editor. These are errors returned by the <em>SQL</em> engine. You should see:</p>
+<pre><code>syntax error at or near "'DataCamp &lt;3 SQL'" LINE 2: 'DataCamp &lt;3 SQL' ^
+</code></pre>
+<p><br><em>DataCamp</em> errors are shown in the <strong>Instructions</strong> box. These will let you know in plain English where you went wrong in your code! You should see:</p>
+<pre><code>You need to add SELECT at the start of line 2!
+</code></pre>
+</div>
+
+<div class="exercise--instructions__content"><p>Submit the code to the right, check out the errors, then fix them!</p></div>
+```{sql connection=con}
+-- Try running me!
+SELECT 'DataCamp <3 SQL'
+```
+
+```{sql connection=con}
+-- Try running me!
+SELECT 'DataCamp <3 SQL'
+AS result;
+```
+
+<p class="">Excellent error editing! You can feel safe experimenting with code in the editor – you'll always get feedback if something goes wrong.</p>
+
+#### Onboarding | Multi-step {.unnumbered}
+
+
+<div class><p>The following multi-step exercise allows you to practice a new concept through repetition. Check it out!</p></div>
+<div class="exercise--instructions__content"><p>Submit the query in the editor! Don't worry, you'll learn how it works soon.</p></div>
+```{sql connection=con}
+SELECT 'SQL'
+AS result;
+```
+
+<div class="exercise--instructions__content"><p>Now change <code>'SQL'</code> to <code>'SQL is'</code> and click Submit!</p></div>
+```{sql connection=con}
+SELECT 'SQL is'
+AS result;
+```
+<div class="exercise--instructions__content"><p>Finally, change <code>'SQL is'</code> to <code>'SQL is cool'</code> and click Submit!</p></div>
+```{sql connection=con}
+SELECT 'SQL is cool'
+AS result;
+```
+
+<p class="">Well done! The time has come to actually fetch information from tables now!</p>
+
+#### Beginning your SQL journey {.unnumbered}
+
+<div class=""><p>Now that you're familiar with the interface, let's get straight into it.</p>
+<p>SQL, which stands for <em>Structured Query Language</em>, is a language for interacting with data stored in something called a <em>relational database</em>.</p>
+<p>You can think of a relational database as a collection of tables. A table is just a set of rows and columns, like a spreadsheet, which represents exactly one type of entity. For example, a table might represent employees in a company or purchases made, but not both.</p>
+<p>Each row, or <em>record</em>, of a table contains information about a single entity. For example, in a table representing employees, each row represents a single person. Each column, or <em>field</em>, of a table contains a single attribute for all rows in the table. For example, in a table representing employees, we might have a column containing first and last names for all employees.</p>
+<p>The table of employees might look something like this:</p>
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>name</th>
+<th>age</th>
+<th>nationality</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Jessica</td>
+<td>22</td>
+<td>Ireland</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Gabriel</td>
+<td>48</td>
+<td>France</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Laura</td>
+<td>36</td>
+<td>USA</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<p>How many fields does the employees table above contain?</p></div>
+
+<li>1</li>
+<li>2</li>
+<li>3</li>
+<strong><li>4</li></strong>
+
+<p class="dc-completion-pane__message dc-u-maxw-100pc">Correct! The table contains four columns, or fields.</p>
+
+#### SELECTing single columns {.unnumbered}
+
+
+<div class>
+<p>While SQL can be used to create and modify databases, the focus of this course will be <em>querying</em> databases. A <em>query</em> is a request for data from a database table (or combination of tables). Querying is an essential skill for a data scientist, since the data you need for your analyses will often live in databases.</p>
+<p>In SQL, you can select data from a table using a <code>SELECT</code> statement. For example, the following query selects the <code>name</code> column from the <code>people</code> table:</p>
+<pre><code>SELECT name
+FROM people;
+</code></pre>
+<p>In this query, <code>SELECT</code> and <code>FROM</code> are called keywords. In SQL, keywords are not case-sensitive, which means you can write the same query as:</p>
+<pre><code>select name
+from people;
+</code></pre>
+<p>That said, it's good practice to make SQL keywords uppercase to distinguish them from other parts of your query, like column and table names.</p>
+<p>It's also good practice (but not necessary for the exercises in this course) to include a semicolon at the end of your query. This tells SQL where the end of your query is!</p>
+<p>Remember, you can see the results of executing your query in the <strong>query</strong> tab!</p>
+</div>
+<div class="exercise--instructions__content"><p>Select the <code>title</code> column from the <code>films</code> table.</p></div>
+```{sql connection=con}
+SELECT title
+FROM films;
+```
+
+<div class="exercise--instructions__content"><p>Select the <code>release_year</code> column from the <code>films</code> table.</p></div>
+```{sql connection=con}
+SELECT release_year
+FROM films;
+```
+<div class="exercise--instructions__content"><p>Select the <code>name</code> of each person in the <code>people</code> table.</p></div>
+```{sql connection=con}
+SELECT name 
+FROM people;
+```
+
+<p class="">Great work!</p>
+
+#### SELECTing multiple columns {.unnumbered}
+
+
+<div class>
+<p>Well done! Now you know how to select single columns.</p>
+<p>In the real world, you will often want to select multiple columns. Luckily, SQL makes this really easy. To select multiple columns from a table, simply separate the column names with commas!</p>
+<p>For example, this query selects two columns, <code>name</code> and <code>birthdate</code>, from the <code>people</code> table:</p>
+<pre><code>SELECT name, birthdate
+FROM people;
+</code></pre>
+<p>Sometimes, you may want to select all columns from a table. Typing out every column name would be a pain, so there's a handy shortcut:</p>
+<pre><code>SELECT *
+FROM people;
+</code></pre>
+<p>If you only want to return a certain number of results, you can use the <code>LIMIT</code> keyword to limit the number of rows returned:</p>
+<pre><code>SELECT *
+FROM people
+LIMIT 10;
+</code></pre>
+<p>Before getting started with the instructions below, check out the column names in the <code>films</code> table!</p>
+</div>
+<div class="exercise--instructions__content"><p>Get the title of every film from the <code>films</code> table.</p></div>
+```{sql connection=con}
+SELECT title
+FROM films;
+```
+
+<div class="exercise--instructions__content"><p>Get the title and release year for every film.</p></div>
+```{sql connection=con}
+SELECT title, release_year
+FROM films;
+```
+<div class="exercise--instructions__content"><p>Get the title, release year and country for every film.</p></div>
+```{sql connection=con}
+SELECT title, release_year, country
+FROM films;
+```
+<div class="exercise--instructions__content"><p>Get all columns from the <code>films</code> table.</p></div>
+```{sql connection=con}
+SELECT *
+FROM films;
+```
+
+<p class="">Great work!</p>
+
+#### SELECT DISTINCT {.unnumbered}
+
+
+<div class>
+<p>Often your results will include many duplicate values. If you want to select all the unique values from a column, you can use the <code>DISTINCT</code> keyword.</p>
+<p>This might be useful if, for example, you're interested in knowing which languages are represented in the <code>films</code> table:</p>
+<pre><code>SELECT DISTINCT language
+FROM films;
+</code></pre>
+<p>Remember, you can check out the data in the tables by clicking on the table name!</p>
+</div>
+<div class="exercise--instructions__content"><p>Get all the unique countries represented in the <code>films</code> table.</p></div>
+```{sql connection=con}
+SELECT DISTINCT country
+FROM films;
+```
+
+<div class="exercise--instructions__content"><p>Get all the different film certifications from the <code>films</code> table.</p></div>
+```{sql connection=con}
+SELECT DISTINCT certification
+FROM films;
+```
+<div class="exercise--instructions__content"><p>Get the different types of film roles from the <code>roles</code> table.</p></div>
+```{sql connection=con}
+SELECT DISTINCT role
+FROM roles;
+```
+
+<p class="">Great work!</p>
+
+#### Learning to COUNT {.unnumbered}
+
+<div class>
+<p>What if you want to count the number of employees in your employees table? The <code>COUNT()</code> function lets you do this by returning the number of rows in one or more columns.</p>
+<p>For example, this code gives the number of rows in the <code>people</code> table:</p>
+<pre><code>SELECT COUNT(*)
+FROM people;
+</code></pre>
+<p></p>
+<hr>
+How many records are contained in the <code>reviews</code> table?</div>
+```{sql connection=con}
+SELECT COUNT(*)
+FROM reviews;
+```
+
+<li>9,468</li>
+<li>8,397</li>
+<strong><li>4,968</li></strong>
+<li>9,837</li>
+<li>9,864</li>
+
+<p class="">Correct!</p>
+
+#### Practice with COUNT {.unnumbered}
+
+
+<div class>
+<p>As you've seen, <code>COUNT(*)</code> tells you how many rows are in a table. However, if you want to count the number of <em>non-missing</em> values in a particular column, you can call <code>COUNT()</code> on just that column.</p>
+<p>For example, to count the number of birth dates present in the <code>people</code> table:</p>
+<pre><code>SELECT COUNT(birthdate)
+FROM people;
+</code></pre>
+<p>It's also common to combine <code>COUNT()</code> with <code>DISTINCT</code> to count the number of <em>distinct</em> values in a column.</p>
+<p>For example, this query counts the number of distinct birth dates contained in the <code>people</code> table:</p>
+<pre><code>SELECT COUNT(DISTINCT birthdate)
+FROM people;
+</code></pre>
+<p>Let's get some practice with <code>COUNT()</code>!</p>
+</div>
+<div class="exercise--instructions__content"><p>Count the number of rows in the <code>people</code> table.</p></div>
+```{sql connection=con}
+SELECT COUNT(*)
+FROM people;
+```
+
+<div class="exercise--instructions__content"><p>Count the number of (non-missing) birth dates in the <code>people</code> table.</p></div>
+```{sql connection=con}
+SELECT COUNT(birthdate)
+FROM people;
+```
+<div class="exercise--instructions__content"><p>Count the number of unique birth dates in the <code>people</code> table.</p></div>
+```{sql connection=con}
+SELECT COUNT(DISTINCT birthdate)
+FROM people;
+```
+<div class="exercise--instructions__content"><p>Count the number of unique languages in the <code>films</code> table.</p></div>
+```{sql connection=con}
+SELECT COUNT(DISTINCT language)
+FROM films;
+```
+<div class="exercise--instructions__content"><p>Count the number of unique countries in the <code>films</code> table.</p></div>
+```{sql connection=con}
+SELECT COUNT(DISTINCT country)
+FROM films;
+```
+
+<p class="">Great work!</p>
+
+### Filtering rows {.unnumbered}
+
+<p class="chapter__description">
+    This chapter builds on the first by teaching you how to filter tables for rows satisfying some criteria of interest. You'll learn how to use basic comparison operators, combine multiple criteria, match patterns in text, and much more.
+  </p>
+  
+#### Filtering results {.unnumbered}
+
+<div class=""><p>Congrats on finishing the first chapter! You now know how to select columns and perform basic counts. This chapter will focus on filtering your results.</p>
+<p>In SQL, the <code>WHERE</code> keyword allows you to filter based on both text and numeric values in a table. There are a few different comparison operators you can use:</p>
+<ul>
+<li><code>=</code> equal</li>
+<li><code>&lt;&gt;</code> not equal</li>
+<li><code>&lt;</code> less than</li>
+<li><code>&gt;</code> greater than</li>
+<li><code>&lt;=</code> less than or equal to</li>
+<li><code>&gt;=</code> greater than or equal to</li>
+</ul>
+<p>For example, you can filter text records such as <code>title</code>. The following code returns all films with the title <code>'Metropolis'</code>:</p>
+<pre><code>SELECT title
+FROM films
+WHERE title = 'Metropolis';
+</code></pre>
+<p>Notice that the <code>WHERE</code> clause always comes after the <code>FROM</code> statement!</p>
+<p><strong>Note that in this course we will use <code>&lt;&gt;</code> and not <code>!=</code> for the not equal operator, as per the SQL standard.</strong></p>
+<p></p><hr>
+What does the following query return?<p></p>
+<pre><code>SELECT title
+FROM films
+WHERE release_year &gt; 2000;
+</code></pre></div>
+
+<li>Films released before the year 2000</li>
+<strong><li>Films released after the year 2000</li></strong>
+<li>Films released after the year 2001</li>
+<li>Films released in 2000
+</li>
+
+<p class="dc-completion-pane__message dc-u-maxw-100pc">Correct!</p>
+
+#### Simple filtering of values {.unnumbered}
+
+
+<div class>
+<p>As you learned in the previous exercise, the <code>WHERE</code> clause can also be used to filter numeric records, such as years or ages.</p>
+<p>For example, the following query selects all details for films with a budget over ten thousand dollars:</p>
+<pre><code>SELECT *
+FROM films
+WHERE budget &gt; 10000;
+</code></pre>
+<p>Now it's your turn to use the <code>WHERE</code> clause to filter numeric values!</p>
+</div>
+<div class="exercise--instructions__content"><p>Get all details for all films released in 2016.</p></div>
+```{sql connection=con}
+SELECT *
+FROM films
+WHERE release_year = 2016;
+```
+
+<div class="exercise--instructions__content"><p>Get the number of films released before 2000.</p></div>
+```{sql connection=con}
+SELECT COUNT(*)
+FROM films
+WHERE release_year < 2000;
+```
+<div class="exercise--instructions__content"><p>Get the title and release year of films released after 2000.</p></div>
+```{sql connection=con}
+SELECT title, release_year
+FROM films
+WHERE release_year > 2000;
+```
+
+<p class="">Great job! After filtering of numeric values, it's time to explore filtering of text!</p>
+
+#### Simple filtering of text {.unnumbered}
+
+
+<div class>
+<p>Remember, the <code>WHERE</code> clause can also be used to filter text results, such as names or countries.</p>
+<p>For example, this query gets the titles of all films which were filmed in China:</p>
+<pre><code>SELECT title
+FROM films
+WHERE country = 'China';
+</code></pre>
+<p>Now it's your turn to practice using <code>WHERE</code> with text values!</p>
+<p><strong>Important: in PostgreSQL (the version of SQL we're using), you must use single quotes with <code>WHERE</code>.</strong></p>
+</div>
+<div class="exercise--instructions__content"><p>Get all details for all French language films.</p></div>
+```{sql connection=con}
+SELECT *
+FROM films
+WHERE language = 'French';
+```
+
+<div class="exercise--instructions__content"><p>Get the name and birth date of the person born on November 11th, 1974. Remember to use ISO date format (<code>'1974-11-11'</code>)!</p></div>
+```{sql connection=con}
+SELECT name, birthdate
+FROM people
+WHERE birthdate = '1974-11-11';
+```
+<div class="exercise--instructions__content"><p>Get the number of Hindi language films.</p></div>
+```{sql connection=con}
+SELECT COUNT(*)
+FROM films
+WHERE language = 'Hindi';
+```
+<div class="exercise--instructions__content"><p>Get all details for all films with an R certification.</p></div>
+```{sql connection=con}
+SELECT *
+FROM films
+WHERE certification = 'R';
+```
+
+<p class="">Wonderful! Let's look at combining different conditions now!</p>
+
+#### WHERE AND {.unnumbered}
+
+
+<div class>
+<p>Often, you'll want to select data based on multiple conditions. You can build up your <code>WHERE</code> queries by combining multiple conditions with the <code>AND</code> keyword.</p>
+<p>For example,</p>
+<pre><code>SELECT title
+FROM films
+WHERE release_year &gt; 1994
+AND release_year &lt; 2000;
+</code></pre>
+<p>gives you the titles of films released between 1994 and 2000.</p>
+<p>Note that you need to specify the column name separately for every <code>AND</code> condition, so the following would be invalid:</p>
+<pre><code>SELECT title
+FROM films
+WHERE release_year &gt; 1994 AND &lt; 2000;
+</code></pre>
+<p>You can add as many <code>AND</code> conditions as you need!</p>
+</div>
+<div class="exercise--instructions__content"><p>Get the title and release year for all Spanish language films released before 2000.</p></div>
+```{sql connection=con}
+SELECT title, release_year
+FROM films
+WHERE release_year < 2000
+AND language = 'Spanish';
+```
+
+<div class="exercise--instructions__content"><p>Get all details for Spanish language films released after 2000.</p></div>
+```{sql connection=con}
+SELECT *
+FROM films
+WHERE release_year > 2000
+AND language = 'Spanish';
+```
+<div class="exercise--instructions__content"><p>Get all details for Spanish language films released after 2000, but before 2010.</p></div>
+```{sql connection=con}
+SELECT *
+FROM films
+WHERE release_year > 2000
+AND release_year < 2010
+AND language = 'Spanish';
+```
+
+<p class="">Great work! Being able to combine conditions with <code>AND</code> will prove to be very useful if you only want your query to return a specific subset of records!</p>
+
+#### WHERE AND OR {.unnumbered}
+
+<div class=""><p>What if you want to select rows based on multiple conditions where some but not <em>all</em> of the conditions need to be met? For this, SQL has the <code>OR</code> operator.</p>
+<p>For example, the following returns all films released in <em>either</em> 1994 or 2000:</p>
+<pre><code>SELECT title
+FROM films
+WHERE release_year = 1994
+OR release_year = 2000;
+</code></pre>
+<p>Note that you need to specify the column for every <code>OR</code> condition, so the following is invalid:</p>
+<pre><code>SELECT title
+FROM films
+WHERE release_year = 1994 OR 2000;
+</code></pre>
+<p>When combining <code>AND</code> and <code>OR</code>, be sure to enclose the individual clauses in parentheses, like so:</p>
+<pre><code>SELECT title
+FROM films
+WHERE (release_year = 1994 OR release_year = 1995)
+AND (certification = 'PG' OR certification = 'R');
+</code></pre>
+<p>Otherwise, due to SQL's precedence rules, you may not get the results you're expecting!</p>
+<p></p><hr>
+What does the <code>OR</code> operator do?<p></p></div>
+
+<strong><li>Display only rows that meet at least one of the specified conditions.</li></strong>
+<li>Display only rows that meet all of the specified conditions.</li>
+<li>Display only rows that meet none of the specified conditions.</li>
+
+<p class="dc-completion-pane__message dc-u-maxw-100pc">Correct!</p>
+
+#### WHERE AND OR (2) {.unnumbered}
+
+
+<div class>
+<p>You now know how to select rows that meet <strong>some</strong> but not <strong>all</strong> conditions by combining <code>AND</code> and <code>OR</code>.</p>
+<p>For example, the following query selects all films that were released in 1994 or 1995 which had a rating of PG or R.</p>
+<pre><code>SELECT title
+FROM films
+WHERE (release_year = 1994 OR release_year = 1995)
+AND (certification = 'PG' OR certification = 'R');
+</code></pre>
+<hr>
+<p>Now you'll write a query to get the title and release year of films released in the 90s which were in French or Spanish and which took in more than $2M gross.</p>
+<p>It looks like a lot, but you can build the query up one step at a time to get comfortable with the underlying concept in each step. Let's go!</p>
+</div>
+<div class="exercise--instructions__content"><p>Get the title and release year for films released in the 90s.</p></div>
+```{sql connection=con}
+SELECT title, release_year
+FROM films
+WHERE release_year >= 1990 AND release_year < 2000;
+```
+
+<div class="exercise--instructions__content"><p>Now, build on your query to filter the records to only include French or Spanish language films.</p></div>
+```{sql connection=con}
+SELECT title, release_year
+FROM films
+WHERE (release_year >= 1990 AND release_year < 2000)
+AND (language = 'French' OR language = 'Spanish');
+```
+
+<div class="exercise--instructions__content"><p>Finally, restrict the query to only return films that took in more than $2M gross.</p></div>
+```{sql connection=con}
+SELECT title, release_year
+FROM films
+WHERE (release_year >= 1990 AND release_year < 2000)
+AND (language = 'French' OR language = 'Spanish')
+AND gross > 2000000;
+```
+
+<p class="">That was pretty involved!</p>
+
+#### BETWEEN {.unnumbered}
+
+<div class=""><p>As you've learned, you can use the following query to get titles of all films released in and between 1994 and 2000:</p>
+<pre><code>SELECT title
+FROM films
+WHERE release_year &gt;= 1994
+AND release_year &lt;= 2000;
+</code></pre>
+<p>Checking for ranges like this is very common, so in SQL the <code>BETWEEN</code> keyword provides a useful shorthand for filtering values within a specified range. This query is equivalent to the one above:</p>
+<pre><code>SELECT title
+FROM films
+WHERE release_year
+BETWEEN 1994 AND 2000;
+</code></pre>
+<p>It's important to remember that <code>BETWEEN</code> is <em>inclusive</em>, meaning the beginning and end values are included in the results!</p>
+<p></p><hr>
+What does the <code>BETWEEN</code> keyword do?<p></p></div>
+
+<li>Filter numeric values</li>
+<li>Filter text values</li>
+<li>Filter values in a specified list</li>
+<li>Filter values in a specified range</li>
+
+<p class="dc-completion-pane__message dc-u-maxw-100pc">Correct!</p>
+
+#### BETWEEN (2) {.unnumbered}
+
+
+<div class>
+<p>Similar to the <code>WHERE</code> clause, the <code>BETWEEN</code> clause can be used with multiple <code>AND</code> and <code>OR</code> operators, so you can build up your queries and make them even more powerful!</p>
+<p>For example, suppose we have a table called <code>kids</code>. We can get the names of all kids between the ages of 2 and 12 from the United States:</p>
+<pre><code>SELECT name
+FROM kids
+WHERE age BETWEEN 2 AND 12
+AND nationality = 'USA';
+</code></pre>
+<p>Take a go at using <code>BETWEEN</code> with <code>AND</code> on the films data to get the title and release year of all Spanish language films released between 1990 and 2000 (inclusive) with budgets over $100 million. We have broken the problem into smaller steps so that you can build the query as you go along!</p>
+</div>
+<div class="exercise--instructions__content"><p>Get the title and release year of all films released between 1990 and 2000 (inclusive).</p></div>
+```{sql connection=con}
+SELECT title, release_year
+FROM films
+WHERE release_year BETWEEN 1990 AND 2000;
+```
+
+<div class="exercise--instructions__content"><p>Now, build on your previous query to select only films that have budgets over $100 million.</p></div>
+```{sql connection=con}
+SELECT title, release_year
+FROM films
+WHERE release_year BETWEEN 1990 AND 2000
+AND budget > 100000000;
+```
+
+<div class="exercise--instructions__content"><p>Now restrict the query to only return Spanish language films.</p></div>
+```{sql connection=con}
+SELECT title, release_year
+FROM films
+WHERE release_year BETWEEN 1990 AND 2000
+AND budget > 100000000
+AND language = 'Spanish';
+```
+
+<div class="exercise--instructions__content"><p>Finally, modify to your previous query to include all Spanish language <em>or</em> French language films with the same criteria as before. Don't forget your parentheses!</p></div>
+```{sql connection=con}
+SELECT title, release_year
+FROM films
+WHERE release_year BETWEEN 1990 AND 2000
+AND budget > 100000000
+AND (language = 'Spanish' OR language = 'French');
+```
+
+<p class="">Well done! Off to the next filtering operator!</p>
+
+#### WHERE IN {.unnumbered}
+
+
+<div class>
+<p>As you've seen, <code>WHERE</code> is very useful for filtering results. However, if you want to filter based on many conditions, <code>WHERE</code> can get unwieldy. For example:</p>
+<pre><code>SELECT name
+FROM kids
+WHERE age = 2
+OR age = 4
+OR age = 6
+OR age = 8
+OR age = 10;
+</code></pre>
+<p>Enter the <code>IN</code> operator! The <code>IN</code> operator allows you to specify multiple values in a <code>WHERE</code> clause, making it easier and quicker to specify multiple <code>OR</code> conditions! Neat, right?</p>
+<p>So, the above example would become simply:</p>
+<pre><code>SELECT name
+FROM kids
+WHERE age IN (2, 4, 6, 8, 10);
+</code></pre>
+<p>Try using the <code>IN</code> operator yourself!</p>
+</div>
+<div class="exercise--instructions__content"><p>Get the title and release year of all films released in 1990 or 2000 that were longer than two hours. Remember, duration is in minutes!</p></div>
+```{sql connection=con}
+SELECT title, release_year
+FROM films
+WHERE release_year IN (1990, 2000)
+AND duration > 120;
+```
+
+<div class="exercise--instructions__content"><p>Get the title and language of all films which were in English, Spanish, or French.</p></div>
+```{sql connection=con}
+SELECT title, language
+FROM films
+WHERE language IN ('English', 'Spanish', 'French');
+```
+<div class="exercise--instructions__content"><p>Get the title and certification of all films with an NC-17 or R certification.</p></div>
+```{sql connection=con}
+SELECT title, certification
+FROM films
+WHERE certification IN ('NC-17', 'R');
+```
+
+<p class="">Your SQL vocabulary is growing by the minute!</p>
+
+#### Introduction to NULL {.unnumbered}
+
+<div class=""><p>In SQL, <code>NULL</code> represents a missing or unknown value. You can check for <code>NULL</code> values using the expression <code>IS NULL</code>. For example, to count the number of missing birth dates in the <code>people</code> table:</p>
+<pre><code>SELECT COUNT(*)
+FROM people
+WHERE birthdate IS NULL;
+</code></pre>
+<p>As you can see, <code>IS NULL</code> is useful when combined with <code>WHERE</code> to figure out what data you're missing.</p>
+<p>Sometimes, you'll want to filter out missing values so you only get results which are not <code>NULL</code>. To do this, you can use the <code>IS NOT NULL</code> operator.</p>
+<p>For example, this query gives the names of all people whose birth dates are <em>not</em> missing in the <code>people</code> table.</p>
+<pre><code>SELECT name
+FROM people
+WHERE birthdate IS NOT NULL;
+</code></pre>
+<p></p><hr>
+What does <code>NULL</code> represent?<p></p></div>
+
+<li>A corrupt entry</li>
+<strong><li>A missing value</li></strong>
+<li>An empty string</li>
+<li>An invalid value</li>
+
+<p class="dc-completion-pane__message dc-u-maxw-100pc">Correct! <code>NULL</code> is used to represent unknown values.</p>
+
+#### NULL and IS NULL {.unnumbered}
+
+
+<div class><p>Now that you know what <code>NULL</code> is and what it's used for, it's time for some practice!</p></div>
+<div class="exercise--instructions__content"><p>Get the names of people who are still alive, i.e. whose death date is missing.</p></div>
+```{sql connection=con}
+SELECT name
+FROM people
+WHERE deathdate IS NULL;
+```
+
+<div class="exercise--instructions__content"><p>Get the title of every film which doesn't have a budget associated with it.</p></div>
+```{sql connection=con}
+SELECT title
+FROM films
+WHERE budget IS NULL;
+```
+<div class="exercise--instructions__content"><p>Get the number of films which don't have a language associated with them.</p></div>
+```{sql connection=con}
+SELECT COUNT(*)
+FROM films
+WHERE language IS NULL;
+```
+
+<p class="">Alright! Are you ready for a last type of operator?</p>
+
+#### LIKE and NOT LIKE {.unnumbered}
+
+
+<div class>
+<p>As you've seen, the <code>WHERE</code> clause can be used to filter text data. However, so far you've only been able to filter by specifying the exact text you're interested in. In the real world, often you'll want to search for a <em>pattern</em> rather than a specific text string.</p>
+<p>In SQL, the <code>LIKE</code> operator can be used in a <code>WHERE</code> clause to search for a pattern in a column. To accomplish this, you use something called a <em>wildcard</em> as a placeholder for some other values. There are two wildcards you can use with <code>LIKE</code>:</p>
+<p>The <code>%</code> wildcard will match zero, one, or many characters in text. For example, the following query matches companies like <code>'Data'</code>, <code>'DataC'</code> <code>'DataCamp'</code>, <code>'DataMind'</code>, and so on:</p>
+<pre><code>SELECT name
+FROM companies
+WHERE name LIKE 'Data%';
+</code></pre>
+<p>The <code>_</code> wildcard will match a <em>single</em> character. For example, the following query matches companies like <code>'DataCamp'</code>, <code>'DataComp'</code>, and so on:</p>
+<pre><code>SELECT name
+FROM companies
+WHERE name LIKE 'DataC_mp';
+</code></pre>
+<p>You can also use the <code>NOT LIKE</code> operator to find records that <em>don't</em> match the pattern you specify.</p>
+<p>Got it? Let's practice!</p>
+</div>
+<div class="exercise--instructions__content"><p>Get the names of all people whose names begin with 'B'. The pattern you need is <code>'B%'</code>.</p></div>
+```{sql connection=con}
+SELECT name
+FROM people
+WHERE name LIKE 'B%';
+```
+
+<div class="exercise--instructions__content"><p>Get the names of people whose names have 'r' as the second letter. The pattern you need is <code>'_r%'</code>.</p></div>
+```{sql connection=con}
+SELECT name
+FROM people
+WHERE name LIKE '_r%';
+```
+<div class="exercise--instructions__content"><p>Get the names of people whose names don't start with A. The pattern you need is <code>'A%'</code>.</p></div>
+```{sql connection=con}
+SELECT name
+FROM people
+WHERE name NOT LIKE 'A%';
+```
+
+<p class="">This concludes the second chapter of the intro to SQL course. Rush over to chapter 3 if you want to learn more about aggregate functions!</p>
+
+### Aggregate Functions {.unnumbered}
+
+<p class="chapter__description">
+    This chapter teaches you how to use aggregate functions to summarize data and gain useful insights. You'll also learn about arithmetic in SQL and how to use aliases to make your results more readable.
+  </p>
+  
+#### Aggregate functions {.unnumbered}
+
+
+<div class>
+<p>Often, you will want to perform some calculation on the data in a database. SQL provides a few functions, called <em>aggregate functions</em>, to help you out with this.</p>
+<p>For example,</p>
+<pre><code>SELECT AVG(budget)
+FROM films;
+</code></pre>
+<p>gives you the average value from the <code>budget</code> column of the <code>films</code> table. Similarly, the <code>MAX()</code> function returns the highest budget:</p>
+<pre><code>SELECT MAX(budget)
+FROM films;
+</code></pre>
+<p>The <code>SUM()</code> function returns the result of adding up the numeric values in a column:</p>
+<pre><code>SELECT SUM(budget)
+FROM films;
+</code></pre>
+<p>You can probably guess what the <code>MIN()</code> function does! Now it's your turn to try out some SQL functions.</p>
+</div>
+<div class="exercise--instructions__content"><p>Use the <code>SUM()</code> function to get the total duration of all films.</p></div>
+```{sql connection=con}
+SELECT SUM(duration)
+FROM films;
+```
+
+<div class="exercise--instructions__content"><p>Get the average duration of all films.</p></div>
+```{sql connection=con}
+SELECT AVG(duration)
+FROM films;
+```
+<div class="exercise--instructions__content"><p>Get the duration of the shortest film.</p></div>
+```{sql connection=con}
+SELECT MIN(duration)
+FROM films;
+```
+<div class="exercise--instructions__content"><p>Get the duration of the longest film.</p></div>
+```{sql connection=con}
+SELECT MAX(duration)
+FROM films;
+```
+
+<p class="">Sequelistic!</p>
+
+#### Aggregate functions practice {.unnumbered}
+
+
+<div class><p>Good work. Aggregate functions are important to understand, so let's get some more practice!</p></div>
+<div class="exercise--instructions__content"><p>Use the <code>SUM()</code> function to get the total amount grossed by all films.</p></div>
+```{sql connection=con}
+SELECT SUM(gross)
+FROM films;
+```
+
+<div class="exercise--instructions__content"><p>Get the average amount grossed by all films.</p></div>
+```{sql connection=con}
+SELECT AVG(gross)
+FROM films;
+```
+<div class="exercise--instructions__content"><p>Get the amount grossed by the worst performing film.</p></div>
+```{sql connection=con}
+SELECT MIN(gross)
+FROM films;
+```
+<div class="exercise--instructions__content"><p>Get the amount grossed by the best performing film.</p></div>
+```{sql connection=con}
+SELECT MAX(gross)
+FROM films;
+```
+
+<p class="">Well done! Don't forget about these functions. You'll find yourself using them over and over again to get a quick grasp of the data in a SQL database.</p>
+
+#### Combining aggregate functions {.unnumbered}
+
+
+<div class>
+<p>Aggregate functions can be combined with the <code>WHERE</code> clause to gain further insights from your data.</p>
+<p>For example, to get the total budget of movies made in the year 2010 or later:</p>
+<pre><code>SELECT SUM(budget)
+FROM films
+WHERE release_year &gt;= 2010;
+</code></pre>
+<p>Now it's your turn!</p>
+</div>
+<div class="exercise--instructions__content"><p>Use the <code>SUM()</code> function to get the total amount grossed by all films made in the year 2000 or later.</p></div>
+```{sql connection=con}
+SELECT SUM(gross)
+FROM films
+WHERE release_year >= 2000;
+```
+
+<div class="exercise--instructions__content"><p>Get the average amount grossed by all films whose titles start with the letter 'A'.</p></div>
+```{sql connection=con}
+SELECT AVG(gross)
+FROM films
+where title LIKE 'A%';
+```
+<div class="exercise--instructions__content"><p>Get the amount grossed by the worst performing film in 1994.</p></div>
+```{sql connection=con}
+SELECT MIN(gross)
+FROM films
+WHERE release_year = 1994;
+```
+<div class="exercise--instructions__content"><p>Get the amount grossed by the best performing film between 2000 and 2012, inclusive.</p></div>
+```{sql connection=con}
+SELECT MAX(gross)
+FROM films
+WHERE release_year BETWEEN 2000 AND 2012;
+```
+
+<p class="">Nice. Can you see how SQL basically provides you a bunch of building blocks that you can combine in all kinds of ways? Hence the name: Structured Query Language.</p>
+
+#### A note on arithmetic {.unnumbered}
+
+
+<div class>
+<p>In addition to using aggregate functions, you can perform basic arithmetic with symbols like <code>+</code>, <code>-</code>, <code>*</code>, and <code>/</code>.</p>
+<p>So, for example, this gives a result of <code>12</code>:</p>
+<pre><code>SELECT (4 * 3);
+</code></pre>
+<p>However, the following gives a result of <code>1</code>:</p>
+<pre><code>SELECT (4 / 3);
+</code></pre>
+<p>What's going on here?</p>
+<p>SQL assumes that if you divide an integer by an integer, you want to get an integer back. So be careful when dividing!</p>
+<p>If you want more precision when dividing, you can add decimal places to your numbers. For example,</p>
+<pre><code>SELECT (4.0 / 3.0) AS result;
+</code></pre>
+<p>gives you the result you would expect: <code>1.333</code>.</p>
+<p></p>
+<hr>
+What is the result of <code>SELECT (10 / 3);</code>?</div>
+```{sql connection=con}
+SELECT (10 / 3);
+```
+
+<li>2.333</li>
+<li>3.333</li>
+<li>3</li>
+<li>3.0</li>
+
+<p class="">Correct!</p>
+
+#### It's AS simple AS aliasing {.unnumbered}
+
+
+<div class>
+<p>You may have noticed in the first exercise of this chapter that the column name of your result was just the name of the function you used. For example,</p>
+<pre><code>SELECT MAX(budget)
+FROM films;
+</code></pre>
+<p>gives you a result with one column, named <code>max</code>. But what if you use two functions like this?</p>
+<pre><code>SELECT MAX(budget), MAX(duration)
+FROM films;
+</code></pre>
+<p>Well, then you'd have two columns named <code>max</code>, which isn't very useful!</p>
+<p>To avoid situations like this, SQL allows you to do something called <em>aliasing</em>. Aliasing simply means you assign a temporary name to something. To alias, you use the <code>AS</code> keyword, which you've already seen earlier in this course.</p>
+<p>For example, in the above example we could use aliases to make the result clearer:</p>
+<pre><code>SELECT MAX(budget) AS max_budget,
+       MAX(duration) AS max_duration
+FROM films;
+</code></pre>
+<p>Aliases are helpful for making results more readable!</p>
+</div>
+<div class="exercise--instructions__content"><p>Get the title and net profit (the amount a film grossed, minus its budget) for all films. Alias the net profit as <code>net_profit</code>.</p></div>
+```{sql connection=con}
+SELECT title, gross - budget AS net_profit
+FROM films;
+```
+
+<div class="exercise--instructions__content"><p>Get the title and duration in hours for all films. The duration is in minutes, so you'll need to divide by 60.0 to get the duration in hours. Alias the duration in hours as <code>duration_hours</code>.</p></div>
+```{sql connection=con}
+SELECT title, duration / 60.0 AS duration_hours
+FROM films;
+```
+<div class="exercise--instructions__content"><p>Get the average duration in hours for all films, aliased as <code>avg_duration_hours</code>.</p></div>
+```{sql connection=con}
+SELECT AVG(duration) / 60.0 AS avg_duration_hours  
+FROM films;
+```
+
+<div class="dc-completed__message"><p class="">Boooom!</p></div>
+
+#### Even more aliasing {.unnumbered}
+
+
+<div class>
+<p>Let's practice your newfound aliasing skills some more before moving on!</p>
+<p><strong>Recall:</strong> SQL assumes that if you divide an integer by an integer, you want to get an integer back. </p>
+<p>This means that the following will erroneously result in <code>400.0</code>:</p>
+<pre><code>SELECT 45 / 10 * 100.0;
+</code></pre>
+<p>This is because <code>45 / 10</code> evaluates to an integer (<code>4</code>), and not a decimal number like we would expect.</p>
+<p>So when you're dividing make sure at least one of your numbers has a decimal place:</p>
+<pre><code>SELECT 45 * 100.0 / 10;
+</code></pre>
+<p>The above now gives the correct answer of <code>450.0</code> since the numerator (<code>45 * 100.0</code>) of the division is now a decimal!</p>
+</div>
+<div class="exercise--instructions__content"><p>Get the percentage of <code>people</code> who are no longer alive. Alias the result as <code>percentage_dead</code>. Remember to use <code>100.0</code> and not <code>100</code>!</p></div>
+```{sql connection=con}
+-- get the count(deathdate) and multiply by 100.0
+-- then divide by count(*) 
+SELECT COUNT(deathdate) * 100.0 / COUNT(*) AS percentage_dead
+FROM people;
+```
+
+<div class="exercise--instructions__content"><p>Get the number of years between the newest film and oldest film. Alias the result as <code>difference</code>.</p></div>
+```{sql connection=con}
+SELECT MAX(release_year) - MIN(release_year)
+AS difference
+FROM films;
+```
+<div class="exercise--instructions__content"><p>Get the number of decades the <code>films</code> table covers. Alias the result as <code>number_of_decades</code>. The top half of your fraction should be enclosed in parentheses.</p></div>
+```{sql connection=con}
+SELECT (MAX(release_year) - MIN(release_year)) / 10.0
+AS number_of_decades
+FROM films;
+```
+
+<p class="">We're at the end of chapter 3! In chapter 4, you will learn about sorting, grouping and joins. Head over there quickly!</p>
+
+### Sorting and grouping {.unnumbered}
+
+<p class="chapter__description">
+    This chapter provides a brief introduction to sorting and grouping your results.
+  </p>
+  
+#### ORDER BY {.unnumbered}
+
+<div class=""><p>Congratulations on making it this far! You now know how to select and filter your results.</p>
+<p>In this chapter you'll learn how to sort and group your results to gain further insight. Let's go!</p>
+<p>In SQL, the <code>ORDER BY</code> keyword is used to sort results in ascending or descending order according to the values of one or more columns. </p>
+<p>By default <code>ORDER BY</code> will sort in ascending order. If you want to sort the results in descending order, you can use the <code>DESC</code> keyword. For example,</p>
+<pre><code>SELECT title
+FROM films
+ORDER BY release_year DESC;
+</code></pre>
+<p>gives you the titles of films sorted by release year, from newest to oldest.</p>
+<p></p><hr>
+How do you think <code>ORDER BY</code> sorts a column of text values by default?<p></p></div>
+
+<strong><li>Alphabetically (A-Z)</li></strong>
+<li>Reverse alphabetically (Z-A)</li>
+<li>There's no natural ordering to text data</li>
+<li>By number of characters (fewest to most)</li>
+
+<p class="dc-completion-pane__message dc-u-maxw-100pc">Correct!</p>
+
+#### Sorting single columns {.unnumbered}
+
+
+<div class><p>Now that you understand how <code>ORDER BY</code> works, give these exercises a go!</p></div>
+<div class="exercise--instructions__content"><p>Get the names of people from the <code>people</code> table, sorted alphabetically.</p></div>
+```{sql connection=con}
+SELECT name
+FROM people
+ORDER BY name;
+```
+
+<div class="exercise--instructions__content"><p>Get the names of people, sorted by birth date.</p></div>
+```{sql connection=con}
+SELECT name
+FROM people
+ORDER BY birthdate;
+```
+<div class="exercise--instructions__content"><p>Get the birth date and name for every person, in order of when they were born.</p></div>
+```{r}
+sqldf("SELECT birthdate, name
+FROM people
+ORDER BY birthdate;") %>% head
+```
+
+<p class="">Great work!</p>
+
+#### Sorting single columns (2) {.unnumbered}
+
+
+<div class><p>Let's get some more practice with <code>ORDER BY</code>!</p></div>
+<div class="exercise--instructions__content"><p>Get the title of films released in 2000 or 2012, in the order they were released.</p></div>
+```{sql connection=con}
+SELECT title
+FROM films
+WHERE release_year IN (2000, 2012)
+ORDER BY release_year;
+```
+
+<div class="exercise--instructions__content"><p>Get all details for all films except those released in 2015 and order them by duration.</p></div>
+```{sql connection=con}
+SELECT *
+FROM films
+WHERE release_year <> 2015
+ORDER BY duration;
+```
+<div class="exercise--instructions__content"><p>Get the title and gross earnings for movies which begin with the letter 'M' and order the results alphabetically.</p></div>
+```{sql connection=con}
+SELECT title, gross
+FROM films
+WHERE title LIKE 'M%'
+ORDER BY title;
+```
+
+<p class="">Can you feel the SQL power dawn on you?!</p>
+
+#### Sorting single columns (DESC) {.unnumbered}
+
+
+<div class>
+<p>To order results in <em>descending</em> order, you can put the keyword <code>DESC</code> after your <code>ORDER BY</code>. For example, to get all the names in the <code>people</code> table, in reverse alphabetical order:</p>
+<pre><code>SELECT name
+FROM people
+ORDER BY name DESC;
+</code></pre>
+<p>Now practice using <code>ORDER BY</code> with <code>DESC</code> to sort single columns in descending order!</p>
+</div>
+<div class="exercise--instructions__content"><p>Get the IMDB score and film ID for every film from the reviews table, sorted from highest to lowest score.</p></div>
+```{sql connection=con}
+SELECT imdb_score, film_id
+FROM reviews
+ORDER BY imdb_score DESC;
+```
+
+<div class="exercise--instructions__content"><p>Get the title for every film, in reverse order.</p></div>
+```{sql connection=con}
+SELECT title
+FROM films
+ORDER BY title DESC;
+```
+<div class="exercise--instructions__content"><p>Get the title and duration for every film, in order of longest duration to shortest.</p></div>
+```{sql connection=con}
+SELECT title, duration
+FROM films
+ORDER BY duration DESC;
+```
+
+<p class="">Nice. Let's explore how you can sort multiple columns!</p>
+
+#### Sorting multiple columns {.unnumbered}
+
+
+<div class>
+<p><code>ORDER BY</code> can also be used to sort on multiple columns. It will sort by the first column specified, then sort by the next, then the next, and so on. For example,</p>
+<pre><code>SELECT birthdate, name
+FROM people
+ORDER BY birthdate, name;
+</code></pre>
+<p>sorts on birth dates first (oldest to newest) and then sorts on the names in alphabetical order. <strong>The order of columns is important!</strong></p>
+<p>Try using <code>ORDER BY</code> to sort multiple columns! Remember, to specify multiple columns you separate the column names with a comma.</p>
+</div>
+<div class="exercise--instructions__content"><p>Get the birth date and name of people in the <code>people</code> table, in order of when they were born and alphabetically by name.</p></div>
+```{r}
+sqldf("SELECT birthdate, name
+FROM people
+ORDER BY birthdate, name;") %>% head
+```
+
+
+<div class="exercise--instructions__content"><p>Get the release year, duration, and title of films ordered by their release year and duration.</p></div>
+
+```{r}
+sqldf("SELECT release_year, duration, title
+FROM films
+ORDER BY release_year, duration;") %>% head
+```
+
+<div class="exercise--instructions__content"><p>Get certifications, release years, and titles of films ordered by certification (alphabetically) and release year.</p></div>
+```{sql connection=con}
+SELECT certification, release_year, title
+FROM films
+ORDER BY certification, release_year;
+```
+<div class="exercise--instructions__content"><p>Get the names and birthdates of people ordered by name and birth date.</p></div>
+```{sql connection=con}
+SELECT name, birthdate
+FROM people
+ORDER BY name, birthdate;
+```
+
+<p class="">Well done. Notice how the second column you order on only steps in when the first column is not decisive to tell the order. The second column acts as a tie breaker.</p>
+
+#### GROUP BY {.unnumbered}
+
+<div class=""><p>Now you know how to sort results! Often you'll need to aggregate results. For example, you might want to count the number of male and female employees in your company. Here, what you want is to group all the males together and count them, and group all the females together and count them. In SQL, <code>GROUP BY</code> allows you to group a result by one or more columns, like so:</p>
+<pre><code>SELECT sex, count(*)
+FROM employees
+GROUP BY sex;
+</code></pre>
+<p>This might give, for example:</p>
+<table>
+<thead>
+<tr>
+<th>sex</th>
+<th>count</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>male</td>
+<td>15</td>
+</tr>
+<tr>
+<td>female</td>
+<td>19</td>
+</tr>
+</tbody>
+</table>
+<p><br>
+Commonly, <code>GROUP BY</code> is used with <em>aggregate functions</em> like <code>COUNT()</code> or <code>MAX()</code>. Note that <code>GROUP BY</code> always goes after the <code>FROM</code> clause!</p>
+<p></p><hr>
+What is <code>GROUP BY</code> used for?<p></p></div>
+
+<li>Performing operations by column</li>
+<li>Performing operations all at once</li>
+<li>Performing operations in a particular order</li>
+<li>Performing operations by group</li>
+
+<p class="dc-completion-pane__message dc-u-maxw-100pc">Correct! <code>GROUP BY</code> is for performing operations within groups.</p>
+
+#### GROUP BY practice {.unnumbered}
+
+
+<div class>
+<p>As you've just seen, combining aggregate functions with <code>GROUP BY</code> can yield some powerful results!</p>
+<p>A word of warning: SQL will return an error if you try to <code>SELECT</code> a field that is not in your <code>GROUP BY</code> clause without using it to calculate some kind of value about the entire group.</p>
+<p>Note that you can combine <code>GROUP BY</code> with <code>ORDER BY</code> to group your results, calculate something about them, and then order your results. For example,</p>
+<pre><code>SELECT sex, count(*)
+FROM employees
+GROUP BY sex
+ORDER BY count DESC;
+</code></pre>
+<p>might return something like</p>
+<table>
+<thead><tr>
+<th>sex</th>
+<th>count</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>female</td>
+<td>19</td>
+</tr>
+<tr>
+<td>male</td>
+<td>15</td>
+</tr>
+</tbody>
+</table>
+<p><br>
+because there are more females at our company than males. Note also that <code>ORDER BY</code> always goes after <code>GROUP BY</code>. Let's try some exercises!</p>
+</div>
+<div class="exercise--instructions__content"><p>Get the release year and count of films released in each year.</p></div>
+```{sql connection=con}
+SELECT release_year, COUNT(*)
+FROM films
+GROUP BY release_year;
+```
+
+<div class="exercise--instructions__content"><p>Get the release year and average duration of all films, grouped by release year.</p></div>
+```{sql connection=con}
+SELECT release_year, AVG(duration)
+FROM films
+GROUP BY release_year;
+```
+<div class="exercise--instructions__content"><p>Get the release year and largest budget for all films, grouped by release year.</p></div>
+```{sql connection=con}
+SELECT release_year, MAX(budget)
+FROM films
+GROUP BY release_year;
+```
+<div class="exercise--instructions__content"><p>Get the IMDB score and count of film reviews grouped by IMDB score in the <code>reviews</code> table.</p></div>
+```{sql connection=con}
+SELECT imdb_score, COUNT(*)
+FROM reviews
+GROUP BY imdb_score;
+```
+
+<p class="">Now that you've accustomed yourself with <code>GROUP BY</code>, let's throw it in the mix with other SQL constructs you already know!</p>
+
+#### GROUP BY practice (2) {.unnumbered}
+
+
+<div class>
+<p>Now practice your new skills by combining <code>GROUP BY</code> and <code>ORDER BY</code> with some more aggregate functions!</p>
+<p>Make sure to always put the <code>ORDER BY</code> clause at the end of your query. You can't sort values that you haven't calculated yet!</p>
+</div>
+<div class="exercise--instructions__content"><p>Get the release year and lowest gross earnings per release year.</p></div>
+```{sql connection=con}
+SELECT release_year, MIN(gross)
+FROM films
+GROUP BY release_year;
+```
+
+<div class="exercise--instructions__content"><p>Get the language and total gross amount films in each language made.</p></div>
+```{sql connection=con}
+SELECT language, SUM(gross)
+FROM films
+GROUP BY language;
+```
+<div class="exercise--instructions__content"><p>Get the country and total budget spent making movies in each country.</p></div>
+```{sql connection=con}
+SELECT country, SUM(budget)
+FROM films
+GROUP BY country;
+```
+<div class="exercise--instructions__content"><p>Get the release year, country, and highest budget spent making a film for each year, for each country. Sort your results by release year and country.</p></div>
+```{r}
+sqldf("SELECT release_year, country, MAX(budget)
+FROM films
+GROUP BY release_year, country
+ORDER BY release_year, country;") %>% head
+```
+
+<div class="exercise--instructions__content"><p>Get the country, release year, and lowest amount grossed per release year per country. Order your results by country and release year.</p></div>
+```{sql connection=con}
+SELECT country, release_year, MIN(gross)
+FROM films
+GROUP BY country, release_year
+ORDER BY country, release_year;
+```
+
+<p class="">Off to the next statement!</p>
+
+#### HAVING a great time {.unnumbered}
+
+
+<div class>
+<p>In SQL, aggregate functions can't be used in <code>WHERE</code> clauses. For example, the following query is invalid:</p>
+<pre><code>SELECT release_year
+FROM films
+GROUP BY release_year
+WHERE COUNT(title) &gt; 10;
+</code></pre>
+<p>This means that if you want to filter based on the result of an aggregate function, you need another way! That's where the <code>HAVING</code> clause comes in. For example,</p>
+<pre><code>SELECT release_year
+FROM films
+GROUP BY release_year
+HAVING COUNT(title) &gt; 10;
+</code></pre>
+<p>shows only those years in which more than 10 films were released.</p>
+<p></p>
+<hr>
+In how many different years were more than 200 movies released?</div>
+```{sql connection=con}
+SELECT release_year
+FROM films
+GROUP BY release_year
+HAVING COUNT(release_year) > 200;
+```
+
+<li>2</li>
+<strong><li>13</li></strong>
+<li>44</li>
+<li>63</li>
+
+<p class="">That's correct! We're nearing the end of the course, so it's time to combine everything that you've learned and answer some interesting questions!</p>
+
+#### All together now {.unnumbered}
+
+
+<div class>
+<p>Time to practice using <code>ORDER BY</code>, <code>GROUP BY</code> and <code>HAVING</code> together.</p>
+<p>Now you're going to write a query that returns the average budget and average gross earnings for films in each year after 1990, if the average budget is greater than $60 million.</p>
+<p>This is going to be a big query, but you can handle it!</p>
+</div>
+<div class="exercise--instructions__content"><p>Get the release year, budget and gross earnings for each film in the <code>films</code> table.</p></div>
+```{sql connection=con}
+SELECT release_year, budget, gross
+FROM films;
+```
+
+<div class="exercise--instructions__content"><p>Modify your query so that only records with a <code>release_year</code> after 1990 are included.</p></div>
+```{sql connection=con}
+SELECT release_year, budget, gross
+FROM films
+WHERE release_year > 1990;
+```
+
+<div class="exercise--instructions__content"><p>Remove the budget and gross columns, and group your results by release year.</p></div>
+```{sql connection=con}
+SELECT release_year
+FROM films
+WHERE release_year > 1990
+GROUP BY release_year;
+```
+
+<div class="exercise--instructions__content"><p>Modify your query to include the average budget and average gross earnings for the results you have so far. Alias the average budget as <code>avg_budget</code>; alias the average gross earnings as <code>avg_gross</code>.</p></div>
+```{sql connection=con}
+SELECT release_year, AVG(budget) AS avg_budget, AVG(gross) AS avg_gross
+FROM films
+WHERE release_year > 1990
+GROUP BY release_year;
+```
+
+<p>Modify your query so that only years with an average budget of greater than $60 million are included.</p>
+```{sql connection=con}
+SELECT release_year, AVG(budget) AS avg_budget, AVG(gross) AS avg_gross
+FROM films
+WHERE release_year > 1990
+GROUP BY release_year
+HAVING AVG(budget) > 60000000;
+```
+
+<p>Finally, modify your query to order the results from highest average gross earnings to lowest.</p>
+```{sql connection=con}
+SELECT release_year, AVG(budget) AS avg_budget, AVG(gross) AS avg_gross
+FROM films
+WHERE release_year > 1990
+GROUP BY release_year
+HAVING AVG(budget) > 60000000
+ORDER BY avg_gross DESC;
+```
+
+<p class="">Wooooow! Let's do another one!</p>
+
+#### All together now (2) {.unnumbered}
+
+
+<div class>
+<p>Great work! Now try another large query. This time, all in one go!</p>
+<p>Remember, if you only want to return a certain number of results, you can use the <code>LIMIT</code> keyword to limit the number of rows returned</p>
+</div>
+<div class="exercise--instructions__content"><p>Get the country, average budget, and average gross take of countries that have made more than 10 films. Order the result by country name, and limit the number of results displayed to 5. You should alias the averages as <code>avg_budget</code> and <code>avg_gross</code> respectively.</p></div>
+```{sql connection=con}
+-- select country, average budget, 
+-- and average gross
+SELECT country, AVG(budget) AS avg_budget, 
+       AVG(gross) AS avg_gross
+-- from the films table
+FROM films
+-- group by country 
+GROUP BY country
+-- where the country has more than 10 titles
+HAVING COUNT(title) > 10
+-- order by country
+ORDER BY country
+-- limit to only show 5 results
+LIMIT 5;
+```
+
+<p class="">Superb work on a selection saga! <code>SELECT</code> queries can get rather long, but breaking them down into individual clauses makes them easier to write.</p>
+
+#### A taste of things to come {.unnumbered}
+
+
+<div class>
+<p>Congrats on making it to the end of the course! By now you should have a good understanding of the basics of SQL.</p>
+<p>There's one more concept we're going to introduce. You may have noticed that all your results so far have been from just one table, e.g., <code>films</code> or <code>people</code>.</p>
+<p>In the real world however, you will often want to query multiple tables. For example, what if you want to see the IMDB score for a particular movie?</p>
+<p>In this case, you'd want to get the ID of the movie from the <code>films</code> table and then use it to get IMDB information from the <code>reviews</code> table. In SQL, this concept is known as a <strong>join</strong>, and a basic join is shown in the editor to the right.</p>
+<p>The query in the editor gets the IMDB score for the film <em>To Kill a Mockingbird</em>! Cool right?</p>
+<p>As you can see, joins are incredibly useful and important to understand for anyone using SQL.</p>
+<p>We have a whole follow-up course dedicated to them called <a href="https://learn.datacamp.com/courses/joining-data-in-postgresql">Joining Data in SQL</a> for you to hone your database skills further!</p>
+</div>
+<div class="exercise--instructions__content"><p>Submit the code in the editor and inspect the results.</p></div>
+```{sql connection=con}
+SELECT title, imdb_score
+FROM films
+JOIN reviews
+ON films.id = reviews.film_id
+WHERE title = 'To Kill a Mockingbird';
+```
+
+<div class=""><p>What is the IMDB score for the film <em>To Kill a Mockingbird</em>?</p></div>
+
+<li>8.1</li>
+<li>8.4</li>
+<li>7.7</li>
+<li>9.3</li>
+

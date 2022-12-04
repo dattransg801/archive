@@ -1,0 +1,2469 @@
+## Sentiment Analysis {.unnumbered}
+
+<h3 class="course__description-title">Ted Kwartler</h3>
+<p class="course__instructor-description display-none-mobile-course-page-experiment">
+    Ted Kwartler is the VP, Trusted AI at DataRobot.  At DataRobot, Ted sets product strategy for explainable and ethical uses of data technology in the company's application. Ted brings unique insights and experience utilizing data, business acumen and ethics to his current and previous positions at Liberty Mutual Insurance and Amazon.  In addition to having 4 DataCamp courses he teaches graduate courses at the Harvard Extension School and is the author of Text Mining in Practice with R. 
+  </p>
+
+**Course Description**
+
+<p class="course__description">Add sentiment analysis to your text mining toolkit! Sentiment analysis is used by text miners in marketing, politics, customer service and elsewhere. In this course you will learn to identify positive and negative language, specific emotional intent, and make compelling visualizations. You will end the course by applying your sentiment analysis skills to Airbnb reviews to learn what makes for a good rental.</p>
+
+### Fast & dirty: Polarity scoring {.unnumbered}
+
+<p class="">In the first chapter, you will learn how to apply qdap's sentiment function called <a href="https://www.rdocumentation.org/packages/qdap/topics/polarity" target="_blank" rel="noopener noreferrer"> polarity() </a>. </p>
+
+#### Let's talk about our feelings {.unnumbered}
+
+
+
+##### Jump right in! Visualize polarity {.unnumbered}
+
+
+<div class>
+<p>Sentiment analysis helps you extract an author's feelings towards a subject.  This exercise will give you a taste of what's to come!</p>
+<p>We created <code>text_df</code> representing a conversation with <code>person</code> and <code>text</code> columns.  </p>
+<p>Use <a href="https://www.rdocumentation.org/packages/qdap/topics/qdap"><code>qdap</code></a>'s <a href="https://www.rdocumentation.org/packages/qdap/topics/polarity"><code>polarity()</code></a> function to score <code>text_df</code>. <code>polarity()</code> will accept a single character object or data frame with a grouping variable to calculate a positive or negative score.  </p>
+<p>In this example you will use the <a href="https://www.rdocumentation.org/packages/magrittr/topics/magrittr"><code>magrittr</code></a> package's dollar pipe operator <a href="https://www.rdocumentation.org/packages/magrittr/topics/%25%24%25?"><code>%\$%</code></a>.  The dollar sign forwards the data frame into <code>polarity()</code> and you declare a text column name or the text column <em>and</em> a grouping variable without quotes.  </p>
+<pre><code>text_data_frame %$% polarity(text_column_name)
+</code></pre>
+<p>To create an object with the dollar sign operator:</p>
+<pre><code>polarity_object &lt;- text_data_frame %$% 
+  polarity(text_column_name, grouping_column_name)
+</code></pre>
+<p>More specifically, to make a quantitative judgement about the sentiment of some text, you need to give it a score.  A simple method is a positive or negative value related to a sentence, passage or a collection of documents called a corpus.  Scoring with positive or negative values only is called "polarity."  A useful function for extracting polarity scores is <a href="https://www.rdocumentation.org/packages/qdap/topics/counts"><code>counts()</code></a> applied to the polarity object. For a quick visual call <a href="https://www.rdocumentation.org/packages/graphics/topics/plot"><code>plot()</code></a>  on the <code>polarity()</code> outcome.</p>
+</div>
+
+<li>Examine the <code>text_df</code> conversation data frame.</li>
+
+
+<li>Using <a href="https://www.rdocumentation.org/packages/magrittr/topics/%25%24%25?"><code>%$%</code></a> pass <code>text_df</code> to <a href="https://www.rdocumentation.org/packages/qdap/topics/polarity"><code>polarity()</code></a> along with the column name <code>text</code> <strong>without</strong> quotes.  This will print the polarity for all text.</li>
+
+
+<li>Create a new object <code>datacamp_conversation</code> by forwarding <code>text_df</code> with <code>%$%</code> to <code>polarity()</code>.  Pass in <code>text</code> followed by the grouping <code>person</code> column.  This will calculate polarity according to each individual person.  Since it is all within parentheses the result will be printed too.   </li>
+
+
+<li>Apply <code>counts()</code> to <code>datacamp_conversation</code> to print the specific emotional words that were found.</li>
+
+
+<li>
+<a href="https://www.rdocumentation.org/packages/graphics/topics/plot"><code>plot()</code></a> the <code>datacamp_conversation</code>.</li>
+```{r}
+# edited/added
+library(tidyverse)
+library(magrittr)
+library(qdap)
+text_df=read.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vSr1GbdxxFhoZcAqH_pkr-E61NMiKnffJdAPlbfLv5FrfJkTgOeDq8KCv1-WolHMf0N0K-5nUcMH3Ta/pub?gid=6240657&single=true&output=csv")
+
+# Examine the text data
+text_df
+
+# Calc overall polarity score
+text_df %$% polarity(text)
+
+# Calc polarity score by person
+(datacamp_conversation <- text_df %$% polarity(text, person))
+
+# Counts table from datacamp_conversation
+counts(datacamp_conversation)
+
+# Plot the conversation polarity
+plot(datacamp_conversation)
+```
+
+<p class="">Excellent, that was easy!
+</p>
+
+
+##### TM refresher (I) {.unnumbered}
+
+
+<div class>
+<p>In the <a href="https://www.datacamp.com/courses/intro-to-text-mining-bag-of-words">Text Mining: Bag of Words</a> course you learned that a corpus is a set of texts, and you studied some functions for preprocessing the text. To recap, one way to create &amp; clean a corpus is with the functions below. Even though this is a different course, sentiment analysis is part of text mining so a refresher can be helpful.  </p>
+
+<li>Turn a character vector into a text source using <a href="https://www.rdocumentation.org/packages/tm/topics/VectorSource"><code>VectorSource()</code></a>.</li>
+
+
+<li>Turn a text source into a corpus using <a href="https://www.rdocumentation.org/packages/tm/topics/VCorpus"><code>VCorpus()</code></a>.</li>
+
+
+<li>Remove unwanted characters from the corpus using cleaning functions like <a href="https://www.rdocumentation.org/packages/tm/topics/removePunctuation"><code>removePunctuation()</code></a> and <a href="https://www.rdocumentation.org/packages/tm/topics/stripWhitespace"><code>stripWhitespace()</code></a> from <code>tm</code>, and <a href="https://www.rdocumentation.org/packages/qdap/topics/replace_abbreviation"><code>replace_abbreviation()</code></a> from <code>qdap</code>.</li>
+
+
+
+<p>In this exercise a custom <code>clean_corpus()</code> function has been created using standard preprocessing functions for easier application.</p>
+<p><code>clean_corpus()</code> accepts the output of <code>VCorpus()</code> and applies cleaning functions.  For example:</p>
+<pre><code>processed_corpus &lt;- clean_corpus(my_corpus)
+</code></pre>
+</div>
+<div class="exercise--instructions__content">
+<p>Your R session has a text vector, <code>tm_define</code>, containing two small documents and the function <code>clean_corpus()</code>.</p>
+
+<li>Create an object called <code>tm_vector</code> by applying <a href="https://www.rdocumentation.org/packages/tm/topics/VectorSource"><code>VectorSource()</code></a> to <code>tm_define</code>.</li>
+
+
+<li>Make <code>tm_corpus</code> using <a href="https://www.rdocumentation.org/packages/tm/topics/VCorpus"><code>VCorpus()</code></a> on <code>tm_vector</code>.  </li>
+
+
+<li>Use <a href="https://www.rdocumentation.org/packages/NLP/topics/content"><code>content()</code></a> to examine the contents of the first document in <code>tm_corpus</code>. <li>Documents in the corpus are accessed using list syntax, so use double square brackets, e.g. <code>[[1]]</code>.</li>
+
+
+
+<li>Clean the corpus text using the custom function <code>clean_corpus()</code> on <code>tm_corpus</code>.  Call this new object <code>tm_clean</code>.</li>
+
+
+<li>Examine the first document of the new <code>tm_clean</code> object again to see how the text changed after <code>clean_corpus()</code> was applied.</li>
+```{r}
+# edited/added
+library(tm)
+tm_define=c("Text mining is the process of distilling actionable insights from text.","Sentiment analysis represents the set of tools to extract an author's feelings towards a subject.")
+clean_corpus=function(corpus){
+  corpus <- tm_map(corpus, content_transformer(replace_abbreviation))
+  corpus <- tm_map(corpus, removePunctuation)
+  corpus <- tm_map(corpus, removeNumbers)
+  corpus <- tm_map(corpus, removeWords, c(stopwords("en"), "coffee"))
+  corpus <- tm_map(corpus, content_transformer(tolower))
+  corpus <- tm_map(corpus, stripWhitespace)
+  return(corpus)
+}
+
+# clean_corpus(), tm_define are pre-defined
+clean_corpus
+tm_define
+
+# Create a VectorSource
+tm_vector <- VectorSource(tm_define)
+
+# Apply VCorpus
+tm_corpus <- VCorpus(tm_vector)
+
+# Examine the first document's contents
+content(tm_corpus[[1]])
+
+# Clean the text
+tm_clean <- clean_corpus(tm_corpus)
+
+# Reexamine the contents of the first doc
+content(tm_clean[[1]])
+```
+
+
+</div>
+
+<p class="">Feeling fresh! If you work with text, it's useful to know how to manipulate corpora.
+</p>
+
+##### TM refresher (II) {.unnumbered}
+
+
+<div class>
+<p>Now let's create a Document Term Matrix (DTM). In a DTM:</p>
+
+<li>Each row of the matrix represents a document.</li>
+
+
+<li>Each column is a unique word token.</li>
+
+
+<li>Values of the matrix correspond to an individual document's word usage.</li>
+
+
+
+<p>The DTM is the basis for many <em>bag of words</em> analyses.  Later in the course, you will also use the related Term Document Matrix (TDM). This is the transpose; that is, columns represent documents and rows represent unique word tokens.</p>
+<p>You should construct a DTM after cleaning the corpus (using <code>clean_corpus()</code>).  To do so, call <a href="https://www.rdocumentation.org/packages/tm/topics/DocumentTermMatrix"><code>DocumentTermMatrix()</code></a> on the corpus object.</p>
+<pre><code>tm_dtm &lt;- DocumentTermMatrix(tm_clean)
+</code></pre>
+<p>If you need a more in-depth refresher check out the <a href="https://www.datacamp.com/courses/text-mining-with-bag-of-words-in-r">Text Mining with Bag-of-Words in R</a> course. Hopefully these two exercises have prepared you well enough to embark on your sentiment analysis journey!</p>
+<p><em>Be aware that this is real data from Twitter and as such there is always a risk that it may contain profanity or other offensive content (in this exercise, and any following exercises that also use real Twitter data).</em></p>
+</div>
+<div class="exercise--instructions__content">
+<p>We've created a <a href="https://www.rdocumentation.org/packages/tm/topics/VCorpus"><code>VCorpus()</code></a> object called <code>clean_text</code> containing 1000 tweets mentioning coffee.  The tweets have been cleaned with the previously mentioned preprocessing steps and your goal is to create a DTM from it.</p>
+
+<li>Apply <a href="https://www.rdocumentation.org/packages/tm/topics/DocumentTermMatrix"><code>DocumentTermMatrix()</code></a> to the <code>clean_text</code> corpus to create a term frequency weighted DTM called <code>tf_dtm</code> . </li>
+
+
+<li>Change the <code>DocumentTermMatrix()</code> object into a simple matrix with <a href="https://www.rdocumentation.org/packages/dtwclust/versions/3.1.0/topics/as.matrix"><code>as.matrix()</code></a>.  Call the new object <code>tf_dtm_m</code>.</li>
+
+
+<li>Check the dimensions of the matrix using <a href="https://www.rdocumentation.org/packages/base/topics/dim"><code>dim()</code></a>.  </li>
+
+
+<li>Use square bracket indexing to see a subset of the matrix.</li>
+
+
+<li>Select rows 16 to 20, and columns 2975 to 2985</li>
+
+
+<li>Note the frequency value of the word "working."</li>
+```{r}
+# edited/added
+clean_text <- read.csv("https://assets.datacamp.com/production/repositories/19/datasets/27a2a8587eff17add54f4ba288e770e235ea3325/coffee.csv", stringsAsFactors = FALSE) %>%
+  pull(text) %>%
+  VectorSource %>%
+  VCorpus %>%
+  clean_corpus
+
+# clean_text is pre-defined
+clean_text
+
+# Create tf_dtm
+tf_dtm <- DocumentTermMatrix(clean_text)
+
+# Create tf_dtm_m
+tf_dtm_m <- as.matrix(tf_dtm)
+
+# Dimensions of DTM matrix
+dim(tf_dtm_m)
+
+# Subset part of tf_dtm_m for comparison
+tf_dtm_m[16:20, 2975:2985]
+```
+
+
+</div>
+
+<p class="">Delightful use of a DocumentTermMatrix! These things crop up regularly in text mining.
+</p>
+
+#### Zipf's law &amp; subjectivity lexicon {.unnumbered}
+
+##### What is a subjectivity lexicon? {.unnumbered}
+
+<div class=""><p>As discussed in the video a lexicon is a list of words.  What is the purpose of a subjectivity lexicon?</p></div>
+
+
+- [ ] A subjectivity lexicon lets you extract meaningful insights from text.
+- [x] A subjectivity lexicon is a predefined list of words associated with emotional context such as positive/negative.
+- [ ] A subjectivity lexicon lets you subjectively argue your point!
+
+
+<p class="dc-completion-pane__message dc-u-maxw-100pc">Absolutely correct! The meaning of text can depend upon who wrote it.</p>
+
+##### Where can you observe Zipf's law? {.unnumbered}
+
+
+<div class>
+<p>Although Zipf observed a steep and predictable decline in word usage you may not buy into Zipf's law.  You may be thinking "I know plenty of words, and have a distinctive vocabulary".  That may be the case, but the same can't be said for most people!  To prove it, let's construct a visual from 3 million tweets mentioning "#sb". Keep in mind that the visual doesn't follow Zipf's law perfectly, the tweets all mentioned the same hashtag so it is a bit skewed.  That said, the visual you will make follows a steep decline showing a small lexical diversity among the millions of tweets. So there is some science behind using lexicons for natural language analysis!</p>
+<p>In this exercise, you will use the package <a href="https://www.rdocumentation.org/packages/metricsgraphics/"><code>metricsgraphics</code></a>.  Although the author suggests using the pipe <a href="https://www.rdocumentation.org/packages/magrittr/topics/%25%3E%25"><code>%&gt;%</code></a> operator, you will construct the graphic step-by-step to learn about the various aspects of the plot.  The main function of the package <a href="https://www.rdocumentation.org/packages/metricsgraphics/"><code>metricsgraphics</code></a> is the <a href="https://www.rdocumentation.org/packages/metricsgraphics/topics/mjs_plot"><code>mjs_plot()</code></a> function which is the first step in creating a JavaScript plot.  Once you have that, you can add other layers on top of the plot. </p>
+<p>An example <a href="https://www.rdocumentation.org/packages/metricsgraphics/"><code>metricsgraphics</code></a> workflow without using the <a href="https://www.rdocumentation.org/packages/magrittr/topics/%25%3E%25"><code>%&gt;%</code></a> operator is below:</p>
+<pre><code>metro_plot &lt;- mjs_plot(data, x = x_axis_name, y = y_axis_name, show_rollover_text = FALSE)
+metro_plot &lt;- mjs_line(metro_plot)
+metro_plot &lt;- mjs_add_line(metro_plot, line_one_values)
+metro_plot &lt;- mjs_add_legend(metro_plot, legend = c('names', 'more_names'))
+metro_plot
+</code></pre>
+</div>
+
+<li>Use <a href="https://www.rdocumentation.org/packages/utils/topics/head"><code>head()</code></a> on <code>sb_words</code> to review top words.</li>
+
+
+<li>Create a new column <code>expectations</code> by dividing the largest word frequency, <code>freq[1]</code>, by the <code>rank</code> column.</li>
+
+
+<li>Start <code>sb_plot</code> using <a href="https://www.rdocumentation.org/packages/metricsgraphics/topics/mjs_plot"><code>mjs_plot()</code></a>.
+<li>Pass in <code>sb_words</code> with <code>x = rank</code> and <code>y = freq</code>.  </li>
+
+
+<li>Within <a href="https://www.rdocumentation.org/packages/metricsgraphics/topics/mjs_plot"><code>mjs_plot()</code></a> set <code>show_rollover_text</code> to <code>FALSE</code>.</li>
+
+
+
+</li>
+
+
+<li>Overwrite <code>sb_plot</code> using <a href="https://www.rdocumentation.org/packages/metricsgraphics/topics/mjs_line"><code>mjs_line()</code></a>  and pass in <code>sb_plot</code>.  </li>
+
+
+<li>Add to <code>sb_plot</code> with <a href="https://www.rdocumentation.org/packages/metricsgraphics/topics/mjs_add_line"><code>mjs_add_line()</code></a>.<br><li>Pass in the previous <code>sb_plot</code> object and the vector, <code>expectations</code>.  </li>
+
+
+</li>
+
+
+<li>Place a legend on a new <code>sb_plot</code> object using <a href="https://www.rdocumentation.org/packages/metricsgraphics/topics/mjs_add_legend"><code>mjs_add_legend()</code></a>.<br>
+<li>Pass in the previous <code>sb_plot</code> object </li>
+
+
+<li>The legend labels should consist of <code>"Frequency"</code> and <code>"Expectation"</code>.</li>
+
+
+
+</li>
+
+
+<li>Call <code>sb_plot</code> to display the plot. Mouseover a point to simultaneously highlight a <code>freq</code> and <code>Expectation</code> point. The magic of JavaScript!</li>
+```{r}
+# edited/added
+library(metricsgraphics)
+sb_words=read.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vSr1GbdxxFhoZcAqH_pkr-E61NMiKnffJdAPlbfLv5FrfJkTgOeDq8KCv1-WolHMf0N0K-5nUcMH3Ta/pub?gid=842100586&single=true&output=csv")
+
+# Examine sb_words
+head(sb_words)
+
+# Create expectations
+sb_words$expectations <- sb_words %$% 
+  {freq[1] / rank}
+
+# Create metrics plot
+sb_plot <- mjs_plot(sb_words, x = rank, y = freq, show_rollover_text = FALSE)
+
+# Add 1st line
+sb_plot <- mjs_line(sb_plot)
+
+# Add 2nd line
+sb_plot <- mjs_add_line(sb_plot, expectations)
+
+# Add legend
+sb_plot <- mjs_add_legend(sb_plot, legend = c("Frequency", "Expectation"))
+
+# Display plot
+sb_plot
+```
+
+<p class="">Great job! While you may not obey Zipf's Law, it seems like most people on Twitter do!
+</p>
+
+
+##### Polarity on actual text {.unnumbered}
+
+
+<div class>
+<p>So far you have learned the basic components needed for assessing positive or negative intent in text. Remember the following points so you can feel confident in your results.</p>
+
+<li>The <strong><em>subjectivity lexicon</em></strong> is a predefined list of words associated with emotions or positive/negative feelings.</li>
+
+
+<li>You don't have to list every word in a subjectivity lexicon because <strong><em>Zipf's law</em></strong> describes human expression.</li>
+
+
+
+<p>A quick way to get started is to use the <a href="https://www.rdocumentation.org/packages/qdap/topics/polarity"><code>polarity()</code></a> function which has a built-in subjectivity lexicon.</p>
+<p>The function scans the text to identify words in the lexicon. It then creates a cluster around an identified subjectivity word.  Within the cluster <strong><em>valence shifters</em></strong> adjust the score.  Valence shifters are words that amplify or negate the emotional intent of the subjectivity word.  For example, "well known" is positive while "not well known" is negative.  Here "not" is a negating term and reverses the emotional intent of "well known."  In contrast, "very well known" employs an amplifier increasing the positive intent.</p>
+<p>The <code>polarity()</code> function then calculates a score using subjectivity terms, valence shifters and the total number of words in the passage.  This exercise demonstrates a simple polarity calculation. In the next video we look under the hood of <code>polarity()</code> for more detail.</p>
+</div>
+<div class="exercise--instructions__content"><p>Calculate the <a href="https://www.rdocumentation.org/packages/qdap/topics/polarity"><code>polarity()</code></a> of <code>positive</code> in a new object called <code>pos_score</code>.  Encase the entire call in parentheses so the output is also printed.</p></div>
+
+
+<div class="exercise--instructions__content"><p>Manually perform the same polarity calculation.</p>
+
+<li>Get a word count object by calling <a href="https://www.rdocumentation.org/packages/qdap/topics/counts" target="_blank" rel="noopener noreferrer"><code>counts()</code></a> on the polarity object. </li>
+
+<li>All the identified subjectivity words are part of count object's list.  Specifically, positive words are in <code>\$pos.words</code> element vector.  Find the number of positive words in <code>n_good</code> by calling <code>length()</code> on the <em>first</em> part of the <code>\$pos.words</code> element.   </li>
+
+<li>Capture the total number of words and assign it to <code>n_words</code>. This value is stored in <code>pos_count</code> as the <code>wc</code> element. </li>
+
+<li>De-construct the <code>polarity()</code> calculation by dividing <code>n_good</code> by <a href="https://www.rdocumentation.org/packages/base/topics/MathFun" target="_blank" rel="noopener noreferrer"><code>sqrt()</code></a> of <code>n_words</code>.  Compare the result to <code>pos_pol</code> to the equation's result.</li>
+```{r}
+# Example statements
+positive <- "DataCamp courses are good for learning"
+
+# Calculate polarity of both statements
+(pos_score <- polarity(positive))
+
+# From previous step
+positive <- "DataCamp courses are good for learning"
+pos_score <- polarity(positive)
+
+# Get counts
+(pos_counts <- counts(pos_score))
+
+# Number of positive words
+n_good <- length(pos_counts$pos.words[[1]])
+
+# Total number of words
+n_words <- pos_counts$wc
+
+# Verify polarity score
+n_good / sqrt(n_words)
+```
+</div>
+
+<p class="">Well done! Using the <code>polarity()</code> function is much easier, and still gets the same answer!
+</p>
+
+####qdap's polarity &amp; lexicon {.unnumbered}
+
+
+
+##### Happy songs! {.unnumbered}
+
+
+<div class>
+<p>Of course just positive and negative words aren't enough. In this exercise you will learn about valence shifters which tell you about the author's emotional intent. Previously you applied <a href="https://www.rdocumentation.org/packages/qdap/topics/polarity"><code>polarity()</code></a> to text without valence shifters. In this example you will see amplification and negation words in action.</p>
+<p>Recall that an <strong>amplifying</strong> word adds 0.8 to a positive word in <code>polarity()</code> so the positive score becomes 1.8. For negative words 0.8 is subtracted so the total becomes -1.8.  Then the score is divided by the square root of the total number of words.</p>
+<p>Consider the following example from Frank Sinatra:</p>
+
+<li><strong>"It was a very good year"</strong></li>
+
+
+
+<p>"Good" equals 1 and "very" adds another 0.8. So, 1.8/sqrt(6) results in 0.73 polarity. </p>
+<p>A <strong>negating</strong> word such as "not" will inverse the subjectivity score. Consider the following example from Bobby McFerrin:</p>
+
+<li><strong>"Don't worry Be Happy"</strong></li>
+
+
+
+<p>"worry is now 1 due to the negation "don't."  Adding the "happy", +1, equals 2.  With 4 total words, <code>2 / sqrt(4)</code> equals a polarity score of 1.</p>
+</div>
+
+<li>Examine the conversation data frame,<code>conversation</code>.  Note the valence shifters like "never" in the text column.</li>
+
+
+<li>Apply <code>polarity()</code> to the <code>text</code> column of <code>conversation</code> to calculate polarity for the entire conversation.</li>
+
+
+<li>Calculate the polarity scores by student, assigning the result to <code>student_pol</code>.
+<li>Call <code>polarity()</code> again, this time passing two columns of <code>conversation</code>. </li>
+
+
+<li>The text variable is <code>text</code> and the grouping variable is <code>student</code>.</li>
+
+
+
+</li>
+
+
+<li>To see the student level results, use <code>scores()</code> on <code>student_pol</code>.</li>
+
+
+<li>The <code>counts()</code> function applied to <code>student_pol</code> will print the sentence level polarity for the entire data frame along with lexicon words identified.</li>
+
+
+<li>The polarity object, <code>student_pol</code>, can be plotted with <code>plot()</code>.</li>
+```{r}
+# edited/added
+conversation=tribble(~student,~text,
+"Martijn","This restaurant is never bad",
+"Nick","The lunch was very good",
+"Nicole","It was awful I got food poisoning and was extremely ill")
+
+# Examine conversation
+conversation
+
+# Polarity - All
+polarity(conversation$text)
+
+# Polarity - Grouped
+student_pol <- conversation %$%
+  polarity(text, student)
+
+# Student results
+scores(student_pol)
+
+# Sentence by sentence
+counts(student_pol)
+
+# qdap plot
+plot(student_pol)
+```
+
+<p class="">It was a very good <em>piece of code you just wrote</em>! 'Extremely good' is more positive than 'very good', which is more positive than 'good', which is more positive than 'quite good'.
+</p>
+
+
+##### LOL, this song is wicked good {.unnumbered}
+
+
+<div class>
+<p>Even with Zipf's law in action, you will still need to adjust lexicons to fit the text source (for example twitter versus legal documents) or the author's demographics (teenager versus the elderly).  This exercise demonstrates the explicit components of <a href="https://www.rdocumentation.org/packages/qdap/topics/polarity"><code>polarity()</code></a> so you can change it if needed.</p>
+<p>In Trey Songz "Lol :)" song there is a lyric "LOL smiley face, LOL smiley face."  In the basic <code>polarity()</code> function, "LOL" is not defined as positive.  However, "LOL" stands for "Laugh Out Loud" and should be positive.  As a result, you should adjust the lexicon to fit the text's context which includes pop-culture slang.  If your analysis contains text from a specific channel (Twitter's "LOL"), location (Boston's "Wicked Good"), or age group (teenagers' "sick") you will likely have to adjust the lexicon.</p>
+<p>In this exercise you are not adjusting the subjectivity lexicon or <a href="https://www.rdocumentation.org/packages/qdap/topics/qdap"><code>qdap</code></a> dictionaries containing valence shifters.  Instead you are examining the existing word data frame objects so you can change them in the following exercise.</p>
+<p>We've created <code>text</code> containing two excerpts from Beyoncé's "Crazy in Love" lyrics for the exercise.</p>
+</div>
+
+<li>Print <a href="https://www.rdocumentation.org/packages/qdapDictionaries/topics/key.pol"><code>key.pol</code></a> to see a portion of the subjectivity words and values.</li>
+
+
+<li>Examine the predefined <a href="https://www.rdocumentation.org/packages/qdapDictionaries/topics/negation.words"><code>negation.words</code></a> to print all the negating terms.</li>
+
+
+<li>Now print the <a href="https://www.rdocumentation.org/packages/qdapDictionaries/topics/amplification.words"><code>amplification.words</code></a> to see the words that add values to the lexicon. </li>
+
+
+<li>Check the <a href="https://www.rdocumentation.org/packages/qdapDictionaries/topics/deamplification.words"><code>deamplification.words</code></a> to print the words that reduce the lexicon values.</li>
+
+
+<li>Call <code>text</code> to see conversation.</li>
+
+
+<div class="exercise--instructions__content">
+<li>Calculate <a href="https://www.rdocumentation.org/packages/qdap/topics/polarity" target="_blank" rel="noopener noreferrer"><code>polarity()</code></a> as follows.
+<li>Set <code>text.var</code> to <code>text\$words</code>.</li>
+<li>Set <code>grouping.var</code> to <code>text\$speaker</code>.</li>
+<li>Set <code>polarity.frame</code> to <code>key.pol</code>.</li>
+<li>Set <code>negators</code> to <code>negation.words</code>.</li>
+<li>Set <code>amplifiers</code> to <code>amplification.words</code>.</li>
+<li>Set <code>deamplifiers</code> to <code>deamplification.words</code>.</li></li>
+</div>
+```{r}
+# edited/added
+text=tribble(~speaker,~words,"beyonce","I know I dont understand Just how your love can do what no one else can","jay_z","They cant figure him out they like hey, is he insane")
+
+# Examine the key.pol
+key.pol
+
+# Negators
+negation.words
+
+# Amplifiers
+amplification.words
+
+# De-amplifiers
+deamplification.words
+
+# Examine
+text
+
+# Complete the polarity parameters
+polarity(
+  text.var       = text$words,
+  grouping.var   = text$speaker,
+  polarity.frame = key.pol,
+  negators       = negation.words,
+  amplifiers     = amplification.words,
+  deamplifiers   = deamplification.words
+)
+```
+
+<p class="">Powerful polarizing! The <code>polarity()</code> function is very flexible and allows you to override score given to each word.
+</p>
+
+##### Stressed Out! {.unnumbered}
+
+
+<div class>
+<p>Here you will adjust the negative words to account for the specific text.  You will then compare the basic and custom <code>polarity()</code> scores.</p>
+<p>A popular song from Twenty One Pilots is called "Stressed Out".  If you scan the song lyrics, you will observe the song is about youthful nostalgia.  Overall, most people would say the polarity is negative.  Repeatedly the lyrics mention stress, fears and pretending.</p>
+<p>Let's compare the song lyrics using the default subjectivity lexicon and also a custom one.</p>
+<p>To start, you need to verify the <a href="https://www.rdocumentation.org/packages/qdapDictionaries/versions/1.0.7/topics/key.pol"><code>key.pol</code></a> subjectivity lexicon does not already have the term you want to add.  One way to check is with <a href="https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/grep"><code>grep()</code></a>.  The <code>grep()</code> function returns the row containing characters that match a search pattern.  Here is an example used while indexing.</p>
+<pre><code>data_frame[grep("search_pattern", data_frame$column), ]
+</code></pre>
+<p>After verifying the slang or new word is not already in the <a href="https://www.rdocumentation.org/packages/qdapDictionaries/versions/1.0.7/topics/key.pol"><code>key.pol</code></a> lexicon you need to add it.  The code below uses <a href="https://www.rdocumentation.org/packages/qdap/versions/2.4.3/topics/sentiment_frame"><code>sentiment_frame()</code></a> to construct the new lexicon.  Within the code <code>sentiment_frame()</code> accepts the original positive word vector, <a href="https://www.rdocumentation.org/packages/qdapDictionaries/versions/1.0.7/topics/positive.words"><code>positive.words</code></a>.  Next, the original <a href="https://www.rdocumentation.org/packages/qdapDictionaries/versions/1.0.7/topics/negative.words"><code>negative.words</code></a> are concatenated to "smh" and "kappa", both considered negative slang.  Although you can declare the positive and negative weights, the default is 1 and -1 so they are not included below.  </p>
+<pre><code>custom_pol &lt;- sentiment_frame(positive.words, c(negative.words, "hate", "pain"))
+</code></pre>
+<p>Now you are ready to apply polarity and it will reference the <em>custom</em> subjectivity lexicon!</p>
+</div>
+<div class="exercise--instructions__content">
+<p>We've created <code>stressed_out</code> which contains the lyrics to the song "Stressed Out", by Twenty One Pilots.</p>
+
+<li>Use <a href="https://www.rdocumentation.org/packages/qdap/versions/2.4.3/topics/polarity"><code>polarity()</code></a> on <code>stressed_out</code> to see the default score.</li>
+
+
+<li>Check <a href="https://www.rdocumentation.org/packages/qdapDictionaries/versions/1.0.7/topics/key.pol"><code>key.pol</code></a> for any words containing "stress".  Use <a href="https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/grep"><code>grep()</code></a> to index the data frame by searching in the <code>x</code> column.</li>
+
+
+<li>Create <code>custom_pol</code> as a new sentiment data frame.<br>
+<li>Call  <a href="https://www.rdocumentation.org/packages/qdap/versions/2.4.3/topics/sentiment_frame"><code>sentiment_frame()</code></a> and pass <a href="https://www.rdocumentation.org/packages/qdapDictionaries/versions/1.0.7/topics/positive.words"><code>positive.words</code></a> as the first argument without concatenating any new terms.</li>
+
+
+<li>Next, use <a href="https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/c"><code>c()</code></a> to combine <a href="https://www.rdocumentation.org/packages/qdapDictionaries/versions/1.0.7/topics/negative.words"><code>negative.words</code></a> with new terms <strong>"stressed"</strong> and <strong>"turn back"</strong>.</li>
+
+
+
+</li>
+
+
+<li>Reapply <code>polarity()</code> to <code>stressed_out</code> with the additional parameter <code>polarity.frame = custom_pol</code> to compare how the new words change the score to a more accurate representation of the song.</li>
+```{r}
+# edited/added
+stressed_out="I wish I found some better sounds no ones ever heard\nI wish I had a better voice that sang some better words\nI wish I found some chords in an order that is new\nI wish I didnt have to rhyme every time I sang\nI was told when I get older all my fears would shrink\nBut now Im insecure and I care what people think\nMy names Blurryface and I care what you think\nMy names Blurryface and I care what you think\nWish we could turn back time, to the good old days\nWhen our momma sang us to sleep but now were stressed out\nWish we could turn back time to the good old days\nWhen our momma sang us to sleep but now were stressed out\nWere stressed out\nSometimes a certain smell will take me back to when I was young\nHow come Im never able to identify where its coming from\nId make a candle out of it if I ever found it\nTry to sell it never sell out of it Id probably only sell one\nItd be to my brother, cause we have the same nose\nSame clothes homegrown a stones throw from a creek we used to roam\nBut it would remind us of when nothing really mattered\nOut of student loans and tree-house homes we all would take the latter\nMy names Blurryface and I care what you think\nMy names Blurryface and I care what you think\nWish we could turn back time, to the good old days\nWhen our momma sang us to sleep but now were stressed out\nWish we could turn back time, to the good old days\nWhen our momma sang us to sleep but now were stressed out\nWe used to play pretend, give each other different names\nWe would build a rocket ship and then wed fly it far away\nUsed to dream of outer space but now theyre laughing at our face #\nSaying, Wake up you need to make money\nYeah\nWe used to play pretend give each other different names\nWe would build a rocket ship and then wed fly it far away\nUsed to dream of outer space but now theyre laughing at our face\nSaying, Wake up, you need to make money\nYeah\nWish we could turn back time, to the good old days\nWhen our momma sang us to sleep but now were stressed out\nWish we could turn back time, to the good old days\nWhen our momma sang us to sleep but now were stressed out\nUsed to play pretend, used to play pretend bunny\nWe used to play pretend wake up, you need the money\nUsed to play pretend used to play pretend bunny\nWe used to play pretend, wake up, you need the money\nWe used to play pretend give each other different names\nWe would build a rocket ship and then wed fly it far away\nUsed to dream of outer space but now theyre laughing at our face\nSaying, Wake up, you need to make money\nYeah"
+
+# stressed_out has been pre-defined
+head(stressed_out)
+
+# Basic lexicon score
+polarity(stressed_out)
+
+# Check the subjectivity lexicon
+key.pol[grep("stress", x)]
+
+# New lexicon
+custom_pol <- sentiment_frame(positive.words, c(negative.words, "stressed", "turn back"))
+
+# Compare new score
+polarity(stressed_out, polarity.frame = custom_pol)
+```
+
+
+</div>
+
+<p class="">Great work! It's important to take the specific features of the text you're analyzing into account so that you can make sure your results are accurate.
+</p>
+
+### Sentiment analysis {.unnumbered}
+
+<p class="">In the second chapter you will explore 3 subjectivity lexicons from tidytext.  Then you will do an inner join to score some text.</p>
+
+#### Wheel of emotion {.unnumbered}
+
+
+
+##### One theory of emotion {.unnumbered}
+
+<div class=""><p>What is the philosophical basis for the Plutchik's wheel of emotion?</p></div>
+
+
+- [ ] Plutchik wanted a round framework so made it like a wheel.
+- [ ] Plutchik was an angry person and wanted to explain his actions to others.
+- [x] Plutchik believed the primary emotions were formed as survival mechanisms in humans and animals.
+- [ ] Plutchik performed extensive field tests with sloths in the field because they are slow to react.
+
+
+<p class="dc-completion-pane__message dc-u-maxw-100pc">Yes! To survive in the wild, it is important to maintain a healthy fear of crocodiles.</p>
+
+##### DTM vs. tidytext matrix {.unnumbered}
+
+
+<div class>
+<p>The <a href="http://tidyverse.org">tidyverse</a> is a collection of R packages that share common philosophies and are designed to work together.  This chapter covers some tidy functions to manipulate data.  In this exercise you will compare a DTM to a tidy text data frame called a tibble.   </p>
+<p>Within the tidyverse, each observation is a single row in a data frame.  That makes working in different packages much easier since the fundamental data structure is the same.  Parts of this course borrow heavily from the <a href="https://www.rdocumentation.org/packages/tidytext"><code>tidytext</code></a> package which uses this data organization.</p>
+<p>For example, you may already be familiar with the <code>%&gt;%</code> operator from the <a href="https://www.rdocumentation.org/packages/magrittr/topics/magrittr"><code>magrittr</code></a> package. This forwards an object on its left-hand side as the first argument of the function on its right-hand side.</p>
+<p>In the example below, you are forwarding the <code>data</code> object to <code>function1()</code>.  Notice how the parentheses are empty.  This in turn is forwarded to <code>function2()</code>.  In the last function you don't have to add the <code>data</code> object because it was forwarded from the output of <code>function1()</code>.  However, you do add a fictitious parameter, <code>some_parameter</code> as <code>TRUE</code>.  These pipe forwards ultimately create the <code>object</code>.</p>
+<pre><code>object &lt;- data %&gt;% 
+           function1() %&gt;%
+           function2(some_parameter = TRUE)
+</code></pre>
+<p>To use the <code>%&gt;%</code> operator, you don't necessarily need to load the <code>magrittr</code> package, since it is also available in the <code>dplyr</code> package.
+<a href="https://www.rdocumentation.org/packages/dplyr"><code>dplyr</code></a>  also contains the functions <a href="https://www.rdocumentation.org/packages/dplyr/topics/join"><code>inner_join()</code></a> (which you'll learn more about later) and <a href="https://www.rdocumentation.org/packages/dplyr/topics/tally"><code>count()</code></a> for tallying data. The last function you'll need is <a href="https://www.rdocumentation.org/packages/dplyr/topics/mutate"><code>mutate()</code></a> to create new variables or modify existing ones. </p>
+<pre><code>object &lt;- data %&gt;%
+  mutate(new_Var_name = Var1 - Var2)
+</code></pre>
+<p>or to modify a variable</p>
+<pre><code>object &lt;- data %&gt;%
+  mutate(Var1 = as.factor(Var1))
+</code></pre>
+<p>You will also use <a href="https://www.rdocumentation.org/packages/tidyr"><code>tidyr</code></a>'s <a href="https://www.rdocumentation.org/packages/tidyr/topics/spread"><code>spread()</code></a> function to organize the data with each row being a line from the book and the positive and negative values as columns.  </p>
+<table>
+<thead><tr>
+<th>index</th>
+<th>negative</th>
+<th>positive</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>42</td>
+<td>2</td>
+<td>0</td>
+</tr>
+<tr>
+<td>43</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr>
+<td>44</td>
+<td>1</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<p>To change a DTM to a tidy format use <a href="https://www.rdocumentation.org/packages/broom/topics/tidy"><code>tidy()</code></a> from the  <a href="https://www.rdocumentation.org/packages/broom/"><code>broom</code></a> package.</p>
+<pre><code>tidy_format &lt;- tidy(Document_Term_Matrix)
+</code></pre>
+<p>This exercise uses text from the Greek tragedy, <em>Agamemnon</em>. <em>Agamemnon</em> is a story about marital infidelity and murder.  You can download a copy <a href="http://www.gutenberg.org/cache/epub/14417/pg14417.txt">here</a>.</p>
+</div>
+<div class="exercise--instructions__content">
+<p>We've already created a clean DTM called <code>ag_dtm</code> for this exercise.</p>
+
+<li>Create <code>ag_dtm_m</code> by applying <code>as.matrix()</code> to <code>ag_dtm</code>.</li>
+
+
+<li>Using brackets, <code>[</code> and <code>]</code>, index <code>ag_dtm_m</code> to row  <code>2206</code>.  </li>
+
+
+<li>Apply <a href="https://www.rdocumentation.org/packages/broom/topics/tidy"><code>tidy()</code></a> to <code>ag_dtm</code>.  Call the new object <code>ag_tidy</code>.</li>
+
+
+<li>Examine <code>ag_tidy</code> at rows <code>[831:835, ]</code> to compare the tidy format. You will see a common word from the examined part of <code>ag_dtm_m</code> in step 2.</li>
+```{r}
+# edited/added
+library(tidytext)
+ag_dtm = "archive/Sentiment-Analysis-in-R/datasets/pg14417.txt" %>%
+  readLines() %>%
+  VectorSource %>%
+  VCorpus %>%
+  clean_corpus %>%
+  DocumentTermMatrix
+
+# As matrix
+ag_dtm_m <- as.matrix(ag_dtm)
+
+# Examine line 2206 and columns 245:250
+ag_dtm_m[2206, 245:250]
+
+# Tidy up the DTM
+ag_tidy <- tidy(ag_dtm)
+
+# Examine tidy with a word you saw
+ag_tidy[831:835, ]
+```
+
+
+</div>
+
+<p class="">Aces!  See the difference?
+</p>
+
+##### Getting Sentiment Lexicons {.unnumbered}
+
+
+<div class>
+<p>So far you have used a single lexicon. Now we will transition to using three, each measuring sentiment in different ways.</p>
+<p>The <a href="https://www.rdocumentation.org/packages/tidytext/"><code>tidytext</code></a> package contains a function called <a href="https://www.rdocumentation.org/packages/tidytext/versions/0.2.2/topics/get_sentiments"><code>get_sentiments</code></a> which along with the [<code>textdata</code>] package allows you to download &amp; interact well researched lexicons.  Here is a small section of the <code>loughran</code> lexicon.</p>
+<table>
+<thead><tr>
+<th>Word</th>
+<th>Sentiment</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>abandoned</td>
+<td>negative</td>
+</tr>
+<tr>
+<td>abandoning</td>
+<td>negative</td>
+</tr>
+<tr>
+<td>abandonment</td>
+<td>negative</td>
+</tr>
+<tr>
+<td>abandonments</td>
+<td>negative</td>
+</tr>
+<tr>
+<td>abandons</td>
+<td>negative</td>
+</tr>
+</tbody>
+</table>
+<p>This lexicon contains 4150 terms with corresponding information. We will be exploring other lexicons but the structure &amp; method to get them is similar.</p>
+<p>Let's use <code>tidytext</code> with <code>textdata</code> to explore other lexicons' word labels!</p>
+</div>
+
+<li>Use <a href="https://www.rdocumentation.org/packages/tidytext/topics/get_sentiments"><code>get_sentiments()</code></a> to obtain the <code>"afinn"</code> lexicon, assigning to <code>afinn_lex</code>.</li>
+
+
+<li>Review the overall <a href="https://www.rdocumentation.org/packages/dplyr/topics/count"><code>count()</code></a> of <code>value</code> in <code>afinn_lex</code>.</li>
+
+
+<div class="exercise--instructions__content">
+<li>Do the same again, this time with the <code>"nrc"</code> lexicon. That is, 
+<li>get the sentiments, assigning to <code>nrc_lex</code>, then </li>
+<li>count the <code>sentiment</code> column, assigning to <code>nrc_counts</code>.</li></li>
+</div>
+
+
+<div class="exercise--instructions__content">
+<li>Create a ggplot labeling the y-axis as <code>n</code> vs. x-axis of <code>sentiment</code>.</li>
+<li>Add a <code>col</code> layer using <code>geom_col()</code>. (This is like <code>geom_bar()</code>, but used when you've already summarized with <code>count()</code>.)</li>
+</div>
+```{r}
+# edited/added
+library(textdata)
+library(syuzhet)
+library(ggthemes)
+
+# Subset to AFINN
+afinn_lex <- get_sentiments("afinn")
+
+# Count AFINN scores
+afinn_lex %>% 
+  count(value)
+
+# Subset to nrc
+nrc_lex <- read.csv("archive/Sentiment-Analysis-in-R/datasets/nrc.csv")
+
+# Make the nrc counts object
+nrc_counts <- nrc_lex %>% 
+  count(sentiment)
+
+# Plot n vs. sentiment
+ggplot(nrc_counts, aes(x = sentiment, y = n)) +
+  # Add a col layer
+  geom_col() +
+  theme_gdocs()
+```
+
+<p class="">Lovely lexicon exploration! Negative words are the most common type in the NRC lexicon.
+</p>
+
+#### Bing lexicon {.unnumbered}
+
+
+
+##### Bing tidy polarity: Simple example {.unnumbered}
+
+
+<div class>
+<p>Now that you understand the basics of an inner join, let's apply this to the "Bing" lexicon. Keep in mind the <a href="https://www.rdocumentation.org/packages/dplyr/topics/join"><code>inner_join()</code></a> function comes from <a href="https://www.rdocumentation.org/packages/dplyr/"><code>dplyr</code></a> and the lexicon object is obtained using <a href="https://www.rdocumentation.org/packages/tidytext/"><code>tidytext</code></a>'s <code>get_sentiments()</code> function'.</p>
+<p>The Bing lexicon labels words as positive or negative. The next three exercises let you interact with this specific lexicon.  To use <a href="https://www.rdocumentation.org/packages/tidytext/topics/get_sentiments"><code>get_sentiments()</code></a> pass in a string such as  "afinn", "bing", "nrc", or "loughran" to download the specific lexicon.</p>
+<p>The inner join workflow:</p>
+
+<li>Obtain the correct lexicon using <code>get_sentiments()</code>.</li>
+
+
+<li>Pass the lexicon and the tidy text data to <code>inner_join()</code>.</li>
+
+
+<li>In order for <code>inner_join()</code> to work there must be a shared column name. If there are no shared column names, declare them with an additional parameter, <code>by</code> equal to <a href="https://www.rdocumentation.org/packages/base/topics/c"><code>c</code></a> with column names like below.</li>
+
+
+
+<pre><code>object &lt;- x %&gt;% 
+    inner_join(y, by = c("column_from_x" = "column_from_y"))
+</code></pre>
+
+<li>Perform some aggregation and analysis on the table intersection.</li>
+
+
+
+</div>
+<div class="exercise--instructions__content">
+<p>We've loaded <code>ag_txt</code> containing the first 100 lines from Agamemnon and <code>ag_tidy</code> which is the tidy version.</p>
+
+<li>For comparison, use <a href="https://www.rdocumentation.org/packages/qdap/topics/polarity"><code>polarity()</code></a> on <code>ag_txt</code>.</li>
+
+
+<li>Get the <code>"bing"</code> lexicon by passing that string to <a href="https://www.rdocumentation.org/packages/tidytext/topics/get_sentiments"><code>get_sentiments()</code></a>.</li>
+```{r}
+
+
+
+```
+
+<li>Perform an  <a href="https://www.rdocumentation.org/packages/dplyr/topics/join"><code>inner_join()</code></a> with <code>ag_tidy</code> and <code>bing</code>.<br>
+<li>The word columns are called <code>"term"</code> in <code>ag_tidy</code> &amp; <code>"word"</code> in the lexicon, so declare the <code>by</code> argument. </li>
+
+
+<li>Call the new object <code>ag_bing_words</code>.</li>
+
+
+
+</li>
+
+
+<li>Print <code>ag_bing_words</code>, and look at some of the words that are in the result.</li>
+
+
+<li>Pass <code>ag_bing_words</code> to <a href="https://www.rdocumentation.org/packages/dplyr/topics/count"><code>count()</code></a> of <code>sentiment</code> using the pipe operator, %&gt;%.  Compare the <a href="https://www.rdocumentation.org/packages/qdap/topics/polarity"><code>polarity()</code></a> score to sentiment count ratio.</li>
+```{r}
+# edited/added
+ag_text = "archive/Sentiment-Analysis-in-R/datasets/pg14417.txt" %>%
+  readLines(3000)
+ag_tidy = ag_text %>%
+  VectorSource %>%
+  VCorpus %>%
+  clean_corpus %>%
+  DocumentTermMatrix %>%
+  tidy
+
+# Qdap polarity
+polarity(ag_text)
+
+# Get Bing lexicon
+bing <- get_sentiments("bing")
+
+# Join text to lexicon
+ag_bing_words <- inner_join(ag_tidy, bing, by = c("term" = "word"))
+
+# Examine
+ag_bing_words
+
+# Get counts by sentiment
+ag_bing_words %>%
+  count(sentiment)
+```
+
+
+</div>
+
+<p class="">Great work! Did you notice the sentiment <code>count()</code> ratio? It's 321:162.
+</p>
+
+##### Bing tidy polarity: Count &amp; spread the white whale {.unnumbered}
+
+
+<div class>
+<p>In this exercise you will apply another <a href="https://www.rdocumentation.org/packages/dplyr/topics/join"><code>inner_join()</code></a> using the <code>"bing"</code> lexicon.  </p>
+<p>Then you will manipulate the results with both <a href="https://www.rdocumentation.org/packages/dplyr/topics/count"><code>count()</code></a> from <a href="https://www.rdocumentation.org/packages/dplyr"><code>dplyr</code></a> and <a href="https://www.rdocumentation.org/packages/tidyr/topics/spread"><code>spread()</code></a> from <a href="https://www.rdocumentation.org/packages/tidyr"><code>tidyr</code></a> to learn about the text.</p>
+<p>The <code>spread()</code> function spreads a key-value pair across multiple columns.  In this case the key is the sentiment &amp; the values are the frequency of positive or negative terms for each line. Using <code>spread()</code> changes the data so that each row now has positive and negative values, even if it is 0.</p>
+</div>
+<div class="exercise--instructions__content">
+<p>In this exercise, your R session has <code>m_dick_tidy</code> which contains the book <em>Moby Dick</em> and <code>bing</code>, containing the lexicon similar to the previous exercise.</p>
+
+<li>Perform an <a href="https://www.rdocumentation.org/packages/dplyr/topics/join"><code>inner_join()</code></a> on <code>m_dick_tidy</code> and <code>bing</code>.<br>
+<li>As before, join the <code>"term"</code> column in <code>m_dick_tidy</code> to the <code>"word"</code> column in the lexicon.</li>
+
+
+<li>Call the new object <code>moby_lex_words</code>.</li>
+
+
+
+</li>
+
+
+<li>Create a column <code>index</code>, equal to <a href="https://www.rdocumentation.org/packages/base/topics/numeric"><code>as.numeric()</code></a> applied to <code>document</code>.  This occurs within <a href="https://www.rdocumentation.org/packages/dplyr/topics/mutate"><code>mutate()</code></a> in the tidyverse.</li>
+
+
+<li>Create <code>moby_count</code> by forwarding <code>moby_lex_words</code> to <a href="https://www.rdocumentation.org/packages/dplyr/topics/count"><code>count()</code></a>, passing in <code>sentiment, index</code>.</li>
+
+
+<li>Generate <code>moby_spread</code> by piping <code>moby_count</code> to <code>spread()</code> which contains <code>sentiment</code>, <code>n</code>, and <code>fill = 0</code>.</li>
+```{r}
+# edited/added
+m_dick_tidy = readRDS("archive/Sentiment-Analysis-in-R/datasets/all_books.rds") %>%
+  filter(book == "moby_dick") %>%
+  select(document, term, count)
+bing = get_sentiments("bing")
+
+# Inner join
+moby_lex_words <- inner_join(m_dick_tidy, bing, by = c("term" = "word"))
+
+moby_lex_words <- moby_lex_words %>%
+  # Set index to numeric document
+  mutate(index = as.numeric(document))
+
+moby_count <- moby_lex_words %>%
+  # Count by sentiment, index
+  count(sentiment, index)
+
+# Examine the counts
+moby_count
+
+moby_spread <- moby_count %>%
+  # Spread sentiments
+  spread(sentiment, n, fill = 0)
+
+# Review the spread data
+moby_spread
+```
+
+
+</div>
+
+<p class="">Excellent work! You slew the data wrangling white whale!
+</p>
+
+##### Bing tidy polarity: Call me Ishmael (with ggplot2)! {.unnumbered}
+
+
+<div class>
+<p>The last Bing lexicon exercise!  In this exercise you will use the pipe operator (<code>%&gt;%</code>) to create a timeline of the sentiment in <em>Moby Dick</em>.
+In the end you will also create a simple visual following the code structure below.  The next chapter goes into more depth for visuals. </p>
+<pre><code>ggplot(spread_data, aes(index_column, polarity_column)) +
+  geom_smooth()
+</code></pre>
+</div>
+
+<li>Inner join <code>moby</code> to the <code>bing</code> lexicon.
+<li>Call <a href="https://www.rdocumentation.org/packages/dplyr/topics/join"><code>inner_join()</code></a> to join the tibbles. </li>
+
+
+<li>Join by the <code>term</code> column in the text and the <code>word</code> column in the lexicon.</li>
+
+
+
+</li>
+
+
+<li>Count by <code>sentiment</code> and <code>index</code>. </li>
+
+
+<li>Reshape so that each sentiment has its own column.
+<li>Call <a href="https://www.rdocumentation.org/packages/tidyr/topics/spread"><code>spread()</code></a>.</li>
+
+
+<li>The key column (to split into multiple columns) is <code>sentiment</code>.</li>
+
+
+<li>The value column (containing the counts) is <code>n</code>.</li>
+
+
+<li>Also specify <code>fill = 0</code> to fill out missing values with a zero.</li>
+
+
+
+</li>
+
+
+<li>Use <code>mutate()</code> to add the <code>polarity</code> column. Define it as the difference between the <code>positive</code> and <code>negative</code> columns.</li>
+
+
+<div class="exercise--instructions__content">
+<li>Using <code>moby_polarity</code>, plot <code>polarity</code> vs. <code>index</code>.</li>
+
+
+<li>Add a smooth trend layer by calling <code>geom_smooth()</code> with no arguments.</li>
+</div>
+```{r}
+# edited/added
+moby = readRDS("archive/Sentiment-Analysis-in-R/datasets/all_books.rds") %>%
+  filter(book == "moby_dick") %>%
+  select(document, term, count)
+  
+  
+moby_polarity <- moby %>%
+  # Inner join to lexicon
+  inner_join(bing, by = c("term" = "word")) %>% mutate(index=row_number()) %>%
+  # Count the sentiment scores
+  count(sentiment, index) %>% 
+  # Spread the sentiment into positive and negative columns
+  spread(sentiment, n, fill = 0) %>%
+  # Add polarity column
+  mutate(polarity = positive - negative)
+
+# Plot polarity vs. index
+ggplot(moby_polarity, aes(index, polarity)) + 
+  # Add a smooth trend curve
+  geom_smooth()
+```
+
+<p class="">Call me <em>pleased with your work</em>! Does <em>Moby Dick</em> have a happy ending?
+</p>
+
+#### AFINN &amp; NRC lexicon {.unnumbered}
+
+
+
+##### AFINN: I'm your Huckleberry {.unnumbered}
+
+
+<div class>
+<p>Now we transition to the AFINN lexicon. The AFINN lexicon has numeric values from 5 to -5, not just positive or negative. Unlike the Bing lexicon's <code>sentiment</code>, the AFINN lexicon's sentiment score column is called <code>value</code>.</p>
+<p>As before, you apply <a href="https://www.rdocumentation.org/packages/dplyr/topics/join"><code>inner_join()</code></a> then <a href="https://www.rdocumentation.org/packages/dplyr/topics/count"><code>count()</code></a>.  Next, to sum the scores of each line, we use <code>dplyr</code>'s <a href="https://www.rdocumentation.org/packages/dplyr/topics/group_by"><code>group_by()</code></a> and <a href="https://www.rdocumentation.org/packages/dplyr/topics/summarise"><code>summarize()</code></a> functions. The <code>group_by()</code> function takes an existing data frame and converts it into a grouped data frame where operations are performed "by group". Then, the <code>summarize()</code> function lets you calculate a value for each group in your data frame using a function that aggregates data, like <code>sum()</code> or <code>mean()</code>. So, in our case we can do something like</p>
+<pre><code>data_frame %&gt;% 
+    group_by(book_line) %&gt;% 
+    summarize(total_value = sum(book_line))
+</code></pre>
+<p>In the tidy version of <em>Huckleberry Finn</em>, line 9703 contains words "best", "ever", "fun", "life" and "spirit". "best" and "fun" have AFINN scores of 3 and 4 respectively. After aggregating, line 9703 will have a total score of 7.</p>
+<p>In the tidyverse, <a href="https://www.rdocumentation.org/packages/dplyr/topics/filter"><code>filter()</code></a> is preferred to <a href="https://www.rdocumentation.org/packages/base/topics/subset"><code>subset()</code></a> because it combines the functionality of <code>subset()</code> with simpler syntax.  Here is an example that <code>filter()</code>s <code>data_frame</code> where some value in <code>column1</code> is equal to <code>24</code>.  Notice the column name is not in quotes.</p>
+<pre><code>filter(data_frame, column1 == 24)
+</code></pre>
+<p>The <code>afinn</code> object contains the AFINN lexicon.  The <code>huck</code> object is a tidy version of Mark Twain's <em>Adventures of Huckleberry Finn</em> for analysis.</p>
+<p>Line 5400 is <em>All the loafers looked glad; I reckoned they was used to having fun out of Boggs.</em> Stopwords and punctuation have already been removed in the dataset.</p>
+</div>
+
+<li>Run the code to look at line 5400, and see the sentiment scores of some words.</li>
+
+
+<li>
+<a href="https://www.rdocumentation.org/packages/dplyr/topics/join"><code>inner_join()</code></a> <code>huck</code> to the <code>afinn</code> lexicon.
+<li>Remember <code>huck</code> is already piped into the function so just add the lexicon.</li>
+
+
+<li>Join by the <code>term</code> column in the text and the <code>word</code> column in the lexicon.</li>
+
+
+
+</li>
+
+
+<li>Use <a href="https://www.rdocumentation.org/packages/dplyr/topics/tally"><code>count()</code></a> with <code>value</code> and <code>line</code> to tally/count observations by group.<br><li>Assign the result to <code>huck_afinn</code>.</li>
+
+
+</li>
+
+
+<div class="exercise--instructions__content">
+<li>Get the total sentiment score by line forwarding <code>huck_afinn</code> to <a href="https://www.rdocumentation.org/packages/dplyr/topics/group_by" target="_blank" rel="noopener noreferrer"><code>group_by()</code></a> and passing <code>line</code> without quotes.
+<li>Create <code>huck_afinn_agg</code> using <a href="https://www.rdocumentation.org/packages/dplyr/topics/summarise" target="_blank" rel="noopener noreferrer"><code>summarize()</code></a>, setting <code>total_value</code> equal to the <a href="https://www.rdocumentation.org/packages/base/topics/sum" target="_blank" rel="noopener noreferrer"><code>sum()</code></a> of <code>value * n</code>.</li></li>
+
+<li>Use <a href="https://www.rdocumentation.org/packages/dplyr/topics/filter" target="_blank" rel="noopener noreferrer"><code>filter()</code></a> on <code>huck_afinn_agg</code> and <code>line == 5400</code> to review a single line.</li>
+</div>
+
+
+<div class="exercise--instructions__content">
+<li>Create a sentiment timeline. Pass <code>huck_afinn_agg</code> to the <code>data</code> argument of <a href="https://www.rdocumentation.org/packages/ggplot2/topics/ggplot" target="_blank" rel="noopener noreferrer"><code>ggplot()</code></a>.
+<li>Then specify the <code>x</code> and <code>y</code> within <a href="https://www.rdocumentation.org/packages/ggplot2/topics/aes" target="_blank" rel="noopener noreferrer"><code>aes()</code></a> as  <code>line</code> and <code>total_value</code> without quotes.</li>
+<li>Add a layer with <a href="https://www.rdocumentation.org/packages/ggplot2/topics/geom_smooth" target="_blank" rel="noopener noreferrer"><code>geom_smooth()</code></a>.</li></li>
+</div>
+```{r}
+# edited/added
+afinn = get_sentiments("afinn")
+huck = readRDS("archive/Sentiment-Analysis-in-R/datasets/all_books.rds") %>%
+  filter(book == "huck_finn") %>% 
+  select(document, term, count) %>%
+  mutate(line = as.numeric(document)) %>% 
+  select(term,count,line)
+
+# See abbreviated line 5400
+huck %>% filter(line == 5400)
+
+# What are the scores of the sentiment words?
+afinn %>% filter(word %in% c("fun", "glad"))
+
+huck_afinn <- huck %>% 
+  # Inner Join to AFINN lexicon
+  inner_join(afinn, by = c("term" = "word")) %>%
+  # Count by value and line
+  count(value, line)
+
+huck_afinn_agg <- huck_afinn %>% 
+  # Group by line
+  group_by(line) %>%
+  # Sum values times n (by line)
+  summarize(total_value = sum(value * n))
+
+huck_afinn_agg %>% 
+  # Filter for line 5400
+  filter(line == 5400)
+
+# Plot total_value vs. line
+ggplot(huck_afinn_agg, aes(line, total_value)) + 
+  # Add a smooth trend curve
+  geom_smooth()
+```
+
+<p class="">Wow, you're a <code>tidytext</code> wizard! Huckleberry Finn has a not-quite-a-happy-ending.
+</p>
+
+##### The wonderful wizard of NRC {.unnumbered}
+
+
+<div class>
+<p>Last but not least, you get to work with the NRC lexicon which labels words across multiple emotional states. Remember Plutchik's wheel of emotion? The NRC lexicon tags words according to Plutchik's 8 emotions plus positive/negative.    </p>
+<p>In this exercise there is a new operator, <a href="https://www.rdocumentation.org/packages/base/topics/match"><code>%in%</code></a>, which matches a vector to another. In the code below <code>%in%</code> will return <code>FALSE</code>, <code>FALSE</code>, <code>TRUE</code>. This is because within <code>some_vec</code>, <code>1</code> and <code>2</code> are not found within <code>some_other_vector</code> but <code>3</code> is found and returns <code>TRUE</code>.  The <code>%in%</code> is useful to find matches.</p>
+<pre><code>some_vec &lt;- c(1, 2, 3)
+some_other_vector &lt;- c(3, "a", "b")
+some_vec %in% some_other_vector
+</code></pre>
+<p>Another new operator is <code>!</code>.  For logical conditions, adding <code>!</code> will inverse the result. In the above example, the <code>FALSE</code>, <code>FALSE</code>, <code>TRUE</code> will become <code>TRUE</code>, <code>TRUE</code>, <code>FALSE</code>. Using it in concert with <code>%in%</code> will inverse the response and is good for removing items that are matched.</p>
+<pre><code>!some_vec %in% some_other_vector
+</code></pre>
+<p>We've created <code>oz</code> which is the tidy version of <em>The Wizard of Oz</em> along with <code>nrc</code> containing the "NRC" lexicon with renamed columns.</p>
+</div>
+
+<li>Inner join <code>oz</code> to the <code>nrc</code> lexicon.
+<li>Call <a href="https://www.rdocumentation.org/packages/dplyr/topics/join"><code>inner_join()</code></a> to join the tibbles. </li>
+
+
+<li>Join <code>by</code> the <code>term</code> column in the text and the <code>word</code> column in the lexicon.</li>
+
+
+
+</li>
+
+
+<li>Filter to only Pluchik's emotions and drop the positive or negative words in the lexicon.<br><li>Use <a href="https://www.rdocumentation.org/packages/dplyr/topics/filter"><code>filter()</code></a> to keep rows where the <code>sentiment</code> is <em>not</em> <code>"positive"</code> or <code>"negative"</code>.</li>
+
+
+</li>
+
+
+<li>Group by sentiment. <li>Call <a href="https://www.rdocumentation.org/packages/dplyr/topics/group_by"><code>group_by()</code></a>, passing <code>sentiment</code> without quotes.</li>
+
+
+</li>
+
+
+<li>Get the total count of each sentiment.
+<li>Call <a href="https://www.rdocumentation.org/packages/dplyr/topics/summarise"><code>summarize()</code></a>, setting <code>total_count</code> equal to the <a href="https://www.rdocumentation.org/packages/base/topics/sum"><code>sum()</code></a> of <code>count</code>.</li>
+
+
+<li>Assign the result to <code>oz_plutchik</code>.</li>
+
+
+
+</li>
+
+
+<div class="exercise--instructions__content">
+<li>Create a bar plot with <a href="https://www.rdocumentation.org/packages/ggplot2/topics/ggplot" target="_blank" rel="noopener noreferrer"><code>ggplot()</code></a>.
+<li>Pass in <code>oz_plutchik</code> to the <code>data</code> argument.</li>
+<li>Then specify the <code>x</code> and <code>y</code> aesthetics, calling <a href="https://www.rdocumentation.org/packages/ggplot2/topics/aes" target="_blank" rel="noopener noreferrer"><code>aes()</code></a> and passing <code>sentiment</code> and <code>total_count</code> without quotes.</li>
+<li>Add a column geom with <a href="https://www.rdocumentation.org/packages/ggplot2/topics/geom_bar" target="_blank" rel="noopener noreferrer"><code>geom_col()</code></a>. (This is the same as <code>geom_bar()</code>, but doesn't summarize the data, since you've done that already.)</li></li>
+</div>
+```{r}
+# edited/added
+nrc = read.csv("archive/Sentiment-Analysis-in-R/datasets/nrc.csv")
+oz = read.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vRsVpiymfe4rFzAvI_AmrHHVUO47Yt62ivJM3GBVE8uarsARwuzuNmO1I5UylJhG1PzTJCYA8pP2NX3/pub?gid=0&single=true&output=csv")
+
+oz_plutchik <- oz %>% 
+  # Join to nrc lexicon by term = word
+  inner_join(nrc, by = c("term" = "word")) %>% 
+  # Only consider Plutchik sentiments
+  filter(!sentiment %in% c("positive", "negative")) %>%
+  # Group by sentiment
+  group_by(sentiment) %>% 
+  # Get total count by sentiment
+  summarize(total_count = sum(count))
+
+# Plot total_count vs. sentiment
+ggplot(oz_plutchik, aes(x = sentiment, y = total_count)) +
+  # Add a column geom
+  geom_col()
+```
+
+<p class="">Your childhood memories are correct: The Wizard of Oz is a scary story. Fear is the most prevalent sentiment in this text.
+</p>
+
+### Visualizing sentiment {.unnumbered}
+
+<p class="">Make compelling visuals with your sentiment output.</p>
+
+#### Parlor trick or worthwhile? {.unnumbered}
+
+
+
+##### Real insight? {.unnumbered}
+
+<div class=""><p>You are given a stack of 10 employee surveys and told to figure out the team's sentiment.  The two question survey has 1 question with a numeric scale (1-10) where employees answer how inspired they are at work and a second question for free form text.  </p>
+<p>You are asked to perform a sentiment analysis on the free form text.  Would performing sentiment analysis on the text be appropriate?</p></div>
+
+
+- [ ] Yes, the sentiment analysis confirms the employee ratings.
+- [x] No, the free form text will correlate with the ratings and with only 10 surveys the results may have selection and simultaneity bias.
+
+
+<p class="dc-completion-pane__message dc-u-maxw-100pc">Yes. In this case, sentiment anlaysis is unlikely to tell you much that you don't know already from the numeric scores.</p>
+
+##### Unhappy ending? Chronological polarity {.unnumbered}
+
+
+<div class>
+<p>Sometimes you want to track sentiment over time.  For example, during an ad campaign you could track brand sentiment to see the campaign's effect. You saw a few examples of this at the end of the last chapter.</p>
+<p>In this exercise you'll recap the workflow for exploring sentiment over time using the novel <em>Moby Dick</em>.  One should expect that happy moments in the book would have more positive words than negative.  Conversely dark moments and sad endings should use more negative language. You'll also see some tricks to make your sentiment time series more visually appealing.</p>
+<p>Recall that the workflow is:</p>
+<ol>
+<li>Inner join the text to the lexicon by word.</li>
+
+
+<li>Count the sentiments by line.</li>
+
+
+<li>Reshape the data so each sentiment has its own column.</li>
+
+
+<li>(Depending upon the lexicon) Calculate the polarity as positive score minus negative score.</li>
+
+
+<li>Draw the polarity time series.</li>
+
+
+</ol>
+<p>This exercise should look familiar: it extends <em>Bing tidy polarity: Call me Ishmael (with ggplot2)!</em>.</p>
+</div>
+
+<li>
+<a href="https://www.rdocumentation.org/packages/dplyr/topics/join"><code>inner_join()</code></a> the pre-loaded tidy version of Moby Dick, <code>moby</code>,  to the <code>bing</code> lexicon.<li>Join by the <code>"term"</code> column in the text and the <code>"word"</code> column in the lexicon.</li>
+
+
+</li>
+
+
+<li>Count by <code>sentiment</code> and <code>index</code>.  </li>
+
+
+<li>Reshape so that each sentiment has its own column using <a href="https://www.rdocumentation.org/packages/tidyr/topics/spread"><code>spread()</code></a> with the column <code>sentiment</code> and the counts column called <code>n</code>.<li>Also specify <code>fill = 0</code> to fill out missing values with a zero.</li>
+
+
+</li>
+
+
+<li>Using <code>mutate()</code> add two columns: <code>polarity</code> and <code>line_number</code>.
+<li>Set <code>polarity</code> equal to the positive score minus the negative score.</li>
+
+
+<li>Set <code>line_number</code> equal to the row number using the <a href="https://www.rdocumentation.org/packages/dplyr/topics/ranking"><code>row_number()</code></a> function.</li>
+
+
+
+</li>
+
+
+<div class="exercise--instructions__content">
+<li>Create a sentiment time series with <a href="https://www.rdocumentation.org/packages/ggplot2/topics/ggplot" target="_blank" rel="noopener noreferrer"><code>ggplot()</code></a>.
+<li>Pass in <code>moby_polarity</code> to the <code>data</code> argument.</li>
+<li>Call <a href="https://www.rdocumentation.org/packages/ggplot2/topics/aes" target="_blank" rel="noopener noreferrer"><code>aes()</code></a> and pass in <code>line_number</code> and <code>polarity</code> without quotes.</li>
+<li>Add a smoothed curve with <a href="https://www.rdocumentation.org/packages/ggplot2/topics/geom_smooth" target="_blank" rel="noopener noreferrer"><code>geom_smooth()</code></a>.</li>
+<li>Add a red horizontal line at zero by calling <a href="https://www.rdocumentation.org/packages/ggplot2/topics/geom_abline" target="_blank" rel="noopener noreferrer"><code>geom_hline()</code></a>, with parameters  <code>0</code> and <code>"red"</code>.</li>
+<li>Add a title with <a href="https://www.rdocumentation.org/packages/ggplot2/topics/labs" target="_blank" rel="noopener noreferrer"><code>ggtitle()</code></a> set to <code>"Moby Dick Chronological Polarity"</code>.</li></li>
+</div>
+```{r}
+moby_polarity <- moby %>%
+  # Inner join to the lexicon
+  inner_join(bing, by = c("term" = "word")) %>% mutate(index=row_number()) %>%
+  # Count by sentiment, index
+  count(sentiment, index) %>%
+  # Spread sentiments
+  spread(sentiment, n, fill = 0) %>%
+  mutate(
+    # Add polarity field
+    polarity = positive - negative,
+    # Add line number field
+    line_number = row_number()
+  )
+
+# Plot polarity vs. line_number
+ggplot(moby_polarity, aes(line_number, polarity)) + 
+  # Add a smooth trend curve
+  geom_smooth() +
+  # Add a horizontal line at y = 0
+  geom_hline(yintercept = 0, color = "red") +
+  # Add a plot title
+  ggtitle("Moby Dick Chronological Polarity") +
+  theme_gdocs()
+```
+
+<p class="">Nice data viz! The story isn't much happier this time around!
+</p>
+
+##### Word impact, frequency analysis {.unnumbered}
+
+
+<div class>
+<p>One of the easiest ways to explore data is with a frequency analysis. Although not difficult, in sentiment analysis this simple method can be surprisingly illuminating. Specifically, you will build a barplot.  In this exercise you are once again working with <code>moby</code> and <code>bing</code> to construct your visual. </p>
+<p>To get the bars ordered from lowest to highest, you will use a trick with factors. <a href="https://www.rdocumentation.org/packages/stats/versions/3.6.2/topics/reorder.default"><code>reorder()</code></a> lets you change the order of factor levels based upon another scoring variable. In this case, you will reorder the factor variable <code>term</code> by the scoring variable <code>polarity</code>.</p>
+</div>
+
+<li>Create <code>moby_tidy_sentiment</code>.
+<li>Use <code>count()</code> with <code>term</code>, <code>sentiment</code>, and <code>wt = count</code>.</li>
+
+
+<li>Pipe to <a href="https://www.rdocumentation.org/packages/tidyr/versions/1.1.4/topics/spread"><code>spread()</code></a> with <code>sentiment</code>, <code>n</code>, and <code>fill = 0</code>. </li>
+
+
+<li>Pipe to <a href="https://www.rdocumentation.org/packages/dplyr/versions/0.7.8/topics/mutate"><code>mutate()</code></a>.  Call the new variable <code>polarity</code>; calculated as <code>positive</code> minus <code>negative</code>.</li>
+
+
+
+</li>
+
+
+<li>Call <code>moby_tidy_sentiment</code> to review and compare it to the previous exercise.</li>
+
+
+<div class="exercise--instructions__content">
+<li>Use <a href="https://www.rdocumentation.org/packages/dplyr/versions/0.7.8/topics/filter" target="_blank" rel="noopener noreferrer"><code>filter()</code></a> on <code>moby_tidy_sentiment</code> to keep rows where the absolute <code>polarity</code> is greater than or equal to 50. <a href="https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/MathFun" target="_blank" rel="noopener noreferrer"><code>abs()</code></a> gives you absolute values.</li>
+<li><a href="https://www.rdocumentation.org/packages/dplyr/versions/0.7.8/topics/mutate" target="_blank" rel="noopener noreferrer"><code>mutate()</code></a> a new vector <code>pos_or_neg</code> with an  <a href="https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/ifelse" target="_blank" rel="noopener noreferrer"><code>ifelse()</code></a> function checking <em>if</em> <code>polarity &gt; 0</code> then declare the document <code>"positive"</code> <em>else</em> declare it <code>"negative"</code>.</li>
+</div>
+
+
+<div class="exercise--instructions__content">
+<li>Using <code>moby_tidy_pol</code>, plot <code>polarity</code> vs. <code>term</code>, reordered by <code>polarity</code> (<code>reorder(term, polarity)</code>), <code>fill</code>ed by <code>pos_or_neg</code>.</li>
+<li>Inside <code>element_text()</code>, rotate the x-axis text <code>90</code> degrees by setting <code>angle = 90</code> and shifting the vertical justification with <code>vjust = -0.1</code>.</li>
+</div>
+```{r}
+moby_tidy_sentiment <- moby %>% 
+  # Inner join to bing lexicon by term = word
+  inner_join(bing, by = c("term" = "word")) %>% 
+  # Count by term and sentiment, weighted by count
+  count(term, sentiment, wt = count) %>%
+  # Spread sentiment, using n as values
+  spread(sentiment, n, fill = 0) %>%
+  # Mutate to add a polarity column
+  mutate(polarity = positive - negative)
+
+# Review
+moby_tidy_sentiment
+
+moby_tidy_pol <- moby_tidy_sentiment %>% 
+  # Filter for absolute polarity at least 50 
+  filter(abs(polarity) >= 50) %>% 
+  # Add positive/negative status
+  mutate(
+    pos_or_neg = ifelse(polarity > 0, "positive", "negative")
+  )
+
+# Plot polarity vs. (term reordered by polarity), filled by pos_or_neg
+ggplot(moby_tidy_pol, aes(reorder(term, polarity), polarity, fill = pos_or_neg)) +
+  geom_col() + 
+  ggtitle("Moby Dick: Sentiment Word Frequency") + 
+  theme_gdocs() +
+  # Rotate text and vertically justify
+  theme(axis.text.x = element_text(angle = 90, vjust = -0.1))
+```
+
+<p class="">Amazing! You went all the way from documents to visualizations in no time at all.
+</p>
+
+#### Introspection {.unnumbered}
+
+
+
+##### Divide &amp; conquer: Using polarity for a comparison cloud {.unnumbered}
+
+
+<div class>
+<p>Now that you have seen how polarity can be used to divide a corpus, let's do it! This code will walk you through dividing a corpus based on sentiment so you can peer into the information in subsets instead of holistically.</p>
+<p>Your R session has <code>oz_pol</code> which was created by applying <a href="https://www.rdocumentation.org/packages/qdap/versions/2.4.3/topics/polarity"><code>polarity()</code></a> to "The Wonderful Wizard of Oz."</p>
+<p>For simplicity's sake, we created a simple custom function called <code>pol_subsections()</code> which will divide the corpus by polarity score.  First, the function accepts a data frame with each row being a sentence or document of the corpus.  The data frame is subset anywhere the polarity values are greater than or less than 0.  Finally, the positive and negative sentences, non-zero polarities, are pasted with parameter <code>collapse</code> so that the terms are grouped into a single corpus.  Lastly, the two documents are concatenated into a single vector of two distinct documents.</p>
+<pre><code>pol_subsections &lt;- function(df) {
+  x.pos &lt;- subset(df\$text, df\$polarity &gt; 0)
+  x.neg &lt;- subset(df\$text, df\$polarity &lt; 0)
+  x.pos &lt;- paste(x.pos, collapse = " ")
+  x.neg &lt;- paste(x.neg, collapse = " ")
+  all.terms &lt;- c(x.pos, x.neg)
+  return(all.terms)
+}
+</code></pre>
+<p>At this point you have omitted the neutral sentences and want to focus on organizing the remaining text.  In this exercise we use the <code>%&gt;%</code> operator again to forward objects to functions.  After some simple cleaning use <a href="https://www.rdocumentation.org/packages/wordcloud/versions/2.6/topics/comparison.cloud"><code>comparison.cloud()</code></a> to make the visual.</p>
+</div>
+
+<li>Extract the bits you need from <code>oz_pol</code>.<li>Call <a href="https://www.rdocumentation.org/packages/dplyr/versions/0.7.8/topics/select"><code>select()</code></a>,  declaring the first column <code>text</code> as <code>text.var</code> which is the raw text. The second column <code>polarity</code> should refer to the polarity scores <code>polarity</code>.  </li>
+
+
+</li>
+
+
+<li>Now apply <code>pol_subsections()</code> to <code>oz_df</code>. Call the new object <code>all_terms</code>.</li>
+
+
+<li>To create <code>all_corpus</code> apply <a href="https://www.rdocumentation.org/packages/tm/versions/0.7-8/topics/VectorSource"><code>VectorSource()</code></a> to <code>all_terms</code> and then <code>%&gt;%</code> to  <a href="https://www.rdocumentation.org/packages/tm/versions/0.7-8/topics/VCorpus"><code>VCorpus()</code></a>.</li>
+
+
+<div class="exercise--instructions__content">
+<li>Create a term-document matrix, <code>all_tdm</code>, using <a href="https://www.rdocumentation.org/packages/tm/versions/0.7-8/topics/TermDocumentMatrix" target="_blank" rel="noopener noreferrer"><code>TermDocumentMatrix()</code></a> on <code>all_corpus</code>.<br>
+<li>Add in the parameters <code>control = list(removePunctuation = TRUE, stopwords = stopwords(kind = "en")))</code>. </li>
+<li>Then <code>%&gt;%</code> to <a href="https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/matrix" target="_blank" rel="noopener noreferrer"><code>as.matrix()</code></a> and <code>%&gt;%</code> <em>again</em> to <code>set_colnames(c("positive", "negative"))</code>.</li></li>
+</div>
+
+
+<div class="exercise--instructions__content"><p>Apply <a href="https://www.rdocumentation.org/packages/wordcloud/versions/2.6/topics/comparison.cloud" target="_blank" rel="noopener noreferrer"><code>comparison.cloud()</code></a> to <code>all_tdm</code> with parameters <code>max.words = 50</code>, and <code>colors = c("darkgreen","darkred")</code>.</p></div>
+```{r}
+# edited/added
+library(wordcloud)
+oz_pol = "archive/Sentiment-Analysis-in-R/datasets/Wizard_Of_Oz.txt" %>%
+  readLines() %>%
+  polarity()
+pol_subsections=function(df) {
+  x.pos <- subset(df$text, df$polarity > 0)
+  x.neg <- subset(df$text, df$polarity < 0)
+  x.pos <- paste(x.pos, collapse = " ")
+  x.neg <- paste(x.neg, collapse = " ")
+  all.terms <- c(x.pos, x.neg)
+  return(all.terms)
+  }
+
+oz_df <- oz_pol$all %>%
+  # Select text.var as text and polarity
+  select(text = text.var, polarity = polarity)
+
+# Apply custom function pol_subsections()
+all_terms <- pol_subsections(oz_df)
+
+all_corpus <- all_terms %>%
+  # Source from a vector
+  VectorSource() %>% 
+  # Make a volatile corpus 
+  VCorpus()
+
+all_tdm <- TermDocumentMatrix(
+  # Create TDM from corpus
+  all_corpus,
+  control = list(
+    # Yes, remove the punctuation
+    removePunctuation = TRUE,
+    # Use English stopwords
+    stopwords = stopwords(kind = "en")
+  )
+) %>%
+  # Convert to matrix
+  as.matrix() %>%
+  # Set column names
+  set_colnames(c("positive", "negative"))
+
+comparison.cloud(
+  # Create plot from the all_tdm matrix
+  all_tdm,
+  # Limit to 50 words
+  max.words = 50,
+  # Use darkgreen and darkred colors
+  colors = c("darkgreen", "darkred")
+)
+```
+
+<p class="">Fantastic work! Word clouds are a great way to get an overview of your data.
+</p>
+
+##### Emotional introspection {.unnumbered}
+
+
+<div class>
+<p>In this exercise you go beyond subsetting on positive and negative language.  Instead you will subset text by each of the 8 emotions in Plutchik's emotional wheel to construct a visual. With this approach you will get more clarity in word usage by mapping to a specific emotion instead of just positive or negative.</p>
+<p>Using the <a href="https://www.rdocumentation.org/packages/tidytext/versions/0.3.2"><code>tidytext</code></a> subjectivity lexicon, "nrc", you perform an <a href="https://www.rdocumentation.org/packages/dplyr/versions/0.7.8/topics/join"><code>inner_join()</code></a> with your text.  The "nrc" lexicon has the 8 emotions plus positive and negative term classes.  So you will have to drop positive and negative words after performing your <a href="https://www.rdocumentation.org/packages/dplyr/versions/0.7.8/topics/join"><code>inner_join()</code></a>.  One way to do so is with the negation, <code>!</code>, and <a href="https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/grep"><code>grepl()</code></a>.</p>
+<p>The "Global Regular Expression Print Logical" function, <a href="https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/grep"><code>grepl()</code></a>, will return a True or False if a string pattern is identified in each row.  In this exercise you will search for positive <em>OR</em> negative using the <code>|</code> operator, representing "or" as shown below.  Often this straight line is above the enter key on a keyboard.  Since the <code>!</code> negation precedes <a href="https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/grep"><code>grepl()</code></a>, the T or F is switched so the <code>"positive|negative"</code> is dropped instead of kept.</p>
+<pre><code>Object &lt;- tibble %&gt;%
+  filter(!grepl("positive|negative", column_name))
+</code></pre>
+<p>Next you apply <code>count()</code> on the identified words along with <a href="https://www.rdocumentation.org/packages/tidyr/versions/1.1.4/topics/spread"><code>spread()</code></a> to get the data frame organized.  </p>
+<p><a href="https://www.rdocumentation.org/packages/wordcloud/versions/2.6/topics/comparison.cloud"><code>comparison.cloud()</code></a> requires its input to have row names, so you'll have to convert it to a base-R <code>data.frame</code>, calling <code>data.frame()</code> with the <code>row.names</code> argument.</p>
+</div>
+
+<li>
+<a href="https://www.rdocumentation.org/packages/dplyr/topics/join"><code>inner_join()</code></a> <code>moby</code> to <code>nrc</code>.</li>
+
+
+<li>Using <a href="https://www.rdocumentation.org/packages/dplyr/topics/filter"><code>filter()</code></a> with a negation (<code>!</code>) and <a href="https://www.rdocumentation.org/packages/topics/grep"><code>grepl()</code></a> search for <code>"positive|negative"</code>. The column to search is called <code>sentiment</code>.</li>
+
+
+<li>Use <a href="https://www.rdocumentation.org/packages/dplyr/topics/count"><code>count()</code></a> to count by <code>sentiment</code> and <code>term</code>.  </li>
+
+
+<li>Reshape the data frame with <a href="https://www.rdocumentation.org/packages/tidyr/topics/spread"><code>spread()</code></a>, passing in <code>sentiment</code>, <code>n</code>, and <code>fill = 0</code>. </li>
+
+
+<li>Convert to plain data frame with <a href="https://www.rdocumentation.org/packages/base/topics/as.data.frame"><code>data.frame()</code></a>, making the <code>term</code> column into rownames.</li>
+
+
+<li>Examine <code>moby_tidy</code> using <a href="https://www.rdocumentation.org/packages/utils/topics/head"><code>head()</code></a>.</li>
+
+
+<div class="exercise--instructions__content">
+<li>Using <code>moby_tidy</code>, draw a <a href="https://www.rdocumentation.org/packages/wordcloud/topics/comparison.cloud" target="_blank" rel="noopener noreferrer"><code>comparison.cloud()</code></a>. 
+<li>Limit to <code>50</code> words.</li>
+<li>Increase the title size to <code>1.5</code>.</li></li>
+</div>
+```{r}
+moby_tidy <- moby %>%
+  # Inner join to nrc lexicon
+  inner_join(nrc, by = c("term" = "word")) %>% 
+  # Drop positive or negative
+  filter(!grepl("positive|negative", sentiment)) %>% 
+  # Count by sentiment and term
+  count(sentiment, term) %>% 
+  # Spread sentiment, using n for values
+  spread(sentiment, n, fill = 0) %>% 
+  # Convert to data.frame, making term the row names
+  data.frame(row.names = "term")
+
+# Examine
+head(moby_tidy)
+
+
+# Plot comparison cloud
+comparison.cloud(moby_tidy, max.words = 50, title.size = 1.5)
+```
+
+<p class="">That's great! How does this cloud compare to the one from the previous exercise?
+</p>
+
+##### Compare &amp; contrast stacked bar chart {.unnumbered}
+
+
+<div class>
+<p>Another way to slice your text is to understand how much of the document(s) are made of positive or negative words.  For example a restaurant review may have some positive aspects such as "the food was good" but then continue to add "the restaurant was dirty, the staff was rude and parking was awful." As a result, you may want to understand how much of a document is dedicated to positive vs negative language.  In this example it would have a higher negative percentage compared to positive. </p>
+<p>One method for doing so is to <code>count()</code> the positive and negative words then divide by the number of subjectivity words identified.  In the restaurant review example, "good" would count as 1 positive and "dirty," "rude," and "awful" count as 3 negative terms.  A simple calculation would lead you to believe the restaurant review is 25% positive and 75% negative since there were 4 subjectivity terms.</p>
+<p>Start by performing the <a href="https://www.rdocumentation.org/packages/dplyr/versions/0.7.8/topics/join"><code>inner_join()</code></a> on a unified tidy data frame containing 4 books, Agamemnon, Oz, Huck Finn, and Moby Dick. Just like the previous exercise you will use <a href="https://www.rdocumentation.org/packages/dplyr/versions/0.7.8/topics/filter"><code>filter()</code></a> and <a href="https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/grep"><code>grepl()</code></a>.</p>
+<p>To perform the <code>count()</code> you have to group the data by book and then sentiment.  For example all the positive words for Agamemnon have to be grouped then tallied so that positive words from all books are not mixed.  Luckily, you can pass multiple variables into <code>count()</code> directly.</p>
+</div>
+
+<li>Inner join <code>all_books</code> to the lexicon, <code>nrc</code>.</li>
+
+
+<li>Filter to keep rows where <code>sentiment</code> contains <code>"positive"</code> or <code>"negative"</code>. That is, use <a href="https://www.rdocumentation.org/packages/base/topics/grep"><code>grepl()</code></a> on the <code>sentiment</code> column, checking <em>without</em> the negation so that <code>"positive|negative"</code> are kept.</li>
+
+
+<li>Count by <code>book</code> and <code>sentiment</code>.</li>
+
+
+<div class="exercise--instructions__content">
+<li>Group <code>books_sent_count</code> by <code>line</code>.</li>
+<li>Mutate to add a column named <code>percent_positive</code>. This should e calculated as <code>100</code> times <code>n</code> divided by the sum of <code>n</code>.</li>
+</div>
+
+
+<div class="exercise--instructions__content">
+<li>Using <code>book_pos</code>, plot <code>percent_positive</code> vs. <code>book</code>, using <code>sentiment</code> as the fill color.</li>
+<li>Add a column layer with <code>geom_col()</code>.</li>
+</div>
+```{r}
+# edited/added
+all_books = read.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vRsVpiymfe4rFzAvI_AmrHHVUO47Yt62ivJM3GBVE8uarsARwuzuNmO1I5UylJhG1PzTJCYA8pP2NX3/pub?gid=1005935087&single=true&output=csv")
+
+# Review tail of all_books
+tail(all_books)
+
+# Count by book & sentiment
+books_sent_count <- all_books %>%
+  # Inner join to nrc lexicon
+  inner_join(nrc, by = c("term" = "word")) %>% 
+  # Keep only positive or negative
+  filter(grepl("positive|negative", sentiment)) %>% 
+  # Count by book and by sentiment
+  count(book, sentiment)
+
+# Review entire object
+books_sent_count
+
+book_pos <- books_sent_count %>%
+  # Group by book
+  group_by(book) %>% 
+  # Mutate to add % positive column 
+  mutate(percent_positive = 100 * n / sum(n))
+
+# Plot percent_positive vs. book, filled by sentiment
+ggplot(book_pos, aes(book, percent_positive, fill = sentiment)) +  
+  # Add a col layer
+  geom_col()
+```
+
+<p class="">Cruising along!  Now you know how to see the proportional positivity in text.
+</p>
+
+#### Interpreting visualizations {.unnumbered}
+
+
+
+##### Kernel density plot {.unnumbered}
+
+
+<div class>
+<p>Now that you learned about a kernel density plot you can create one!  Remember it's like a smoothed histogram but isn't affected by binwidth.  This exercise will help you construct a kernel density plot from sentiment values.</p>
+<p>In this exercise you will plot 2 kernel densities.  One for Agamemnon and another for The Wizard of Oz.  For both you will perform an <a href="https://www.rdocumentation.org/packages/dplyr/versions/0.7.8/topics/join"><code>inner_join()</code></a> with the "afinn" lexicon.  Recall the "afinn" lexicon has terms scored from -5 to 5.  Once in a tidy format, both books will retain words and corresponding scores for the lexicon.</p>
+<p>After that, you need to row bind the results into a larger data frame using <code>bind_rows()</code> and create a plot with <a href="https://www.rdocumentation.org/packages/ggplot2/versions/3.3.5"><code>ggplot2</code></a>.    </p>
+<p>From the visual you will be able to understand which book uses more positive versus negative language.  There is clearly overlap as negative things happen to Dorothy but you could infer the kernel density is demonstrating a greater probability of positive language in the Wizard of Oz compared to Agamemnon.</p>
+<p>We've loaded <code>ag</code> and <code>oz</code> as tidy versions of Agamemnon and The Wizard of Oz respectively, and created <code>afinn</code> as a subset of the <a href="https://www.rdocumentation.org/packages/tidytext/versions/0.3.2"><code>tidytext</code></a> <code>"afinn"</code> lexicon.</p>
+</div>
+
+<li>Inner join <code>ag</code> to the lexicon, <code>afinn</code>, assigning to <code>ag_afinn</code>.</li>
+
+
+<li>Do the same for The Wizard of Oz. This is the same code, but starting with the <code>oz</code> dataset and assigning to <code>oz_afinn</code>.</li>
+
+
+<li>Use <code>bind_rows()</code> to combine <code>ag_afinn</code> to <code>oz_afinn</code>. Set the <code>.id</code> argument to <code>"book"</code> to create a new column with the name of each book.</li>
+
+
+<div class="exercise--instructions__content">
+<li>Using <code>all_df</code>, plot <code>value</code>, using <code>book</code> as the <code>fill</code> color.</li>
+<li>Set the <code>alpha</code> transparency to <code>0.3</code>.</li>
+</div>
+```{r}
+# edited/added
+ag = read.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vRsVpiymfe4rFzAvI_AmrHHVUO47Yt62ivJM3GBVE8uarsARwuzuNmO1I5UylJhG1PzTJCYA8pP2NX3/pub?gid=1056463743&single=true&output=csv")
+
+ag_afinn <- ag %>% 
+  # Inner join to afinn lexicon
+  inner_join(afinn, by = c("term" = "word"))
+
+oz_afinn <- oz %>% 
+  # Inner join to afinn lexicon
+  inner_join(afinn, by = c("term" = "word"))
+
+# Combine
+all_df <- bind_rows(agamemnon = ag_afinn, oz = oz_afinn, .id = "book")
+
+# Plot value, filled by book
+ggplot(all_df, aes(x = value, fill = book)) + 
+  # Set transparency to 0.3
+  geom_density(alpha = 0.3) + 
+  theme_gdocs() +
+  ggtitle("AFINN Score Densities")
+```
+
+<p class="">Not bad.  Kernel densities are great for understanding a distribution.
+</p>
+
+##### Box plot {.unnumbered}
+
+
+<div class>
+<p>An easy way to compare multiple distributions is with a box plot. This code will help you construct multiple box plots to make a compact visual.</p>
+<p>In this exercise the <code>all_book_polarity</code> object is already loaded.  The data frame contains two columns, <code>book</code> and <code>polarity</code>. It comprises all books with <a href="https://www.rdocumentation.org/packages/qdap/versions/2.4.3"><code>qdap</code></a>'s <a href="https://www.rdocumentation.org/packages/qdap/versions/2.4.3/topics/polarity"><code>polarity()</code></a> function applied. Here are the first 3 rows of the large object.</p>
+<table>
+<thead><tr>
+<th></th>
+<th>book</th>
+<th>polarity</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>14</td>
+<td>huck</td>
+<td>0.2773501</td>
+</tr>
+<tr>
+<td>22</td>
+<td>huck</td>
+<td>0.2581989</td>
+</tr>
+<tr>
+<td>26</td>
+<td>huck</td>
+<td>-0.5773503</td>
+</tr>
+</tbody>
+</table>
+<p>This exercise introduces <a href="https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/tapply"><code>tapply()</code></a> which allows you to apply functions over a ragged array.  You input a vector of values and then a vector of factors.  For each factor, value combination the third parameter, a function like <a href="https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/Extremes"><code>min()</code></a>, is applied.  For example here's some code with <a href="https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/tapply"><code>tapply()</code></a> used on two vectors.</p>
+<pre><code>f1 &lt;- as.factor(c("Group1", "Group2", "Group1", "Group2"))
+stat1 &lt;- c(1, 2, 1, 2)
+tapply(stat1, f1, sum)
+</code></pre>
+<p>The result is an array where <code>Group1</code> has a value of 2 (1+1) and <code>Group2</code> has a value of 4 (2+2).</p>
+</div>
+
+<li>Since it's already loaded, examine the <code>all_book_polarity</code> with <a href="https://www.rdocumentation.org/packages/utils/versions/3.6.2/topics/str"><code>str()</code></a>.</li>
+
+
+<li>Using <a href="https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/tapply"><code>tapply()</code></a>, pass in <code>all_book_polarity\$polarity</code>, <code>all_book_polarity\$book</code> and the <a href="https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/summary"><code>summary()</code></a> function.  This will print the summary statistics for the 4 books in terms of their <a href="https://www.rdocumentation.org/packages/qdap/versions/2.4.3/topics/polarity"><code>polarity()</code></a> scores.  You would expect to see Oz and Huck Finn to have higher averages than Agamemnon or Moby Dick.  Pay close attention to the median. </li>
+
+
+<li>Create a box plot with <a href="https://www.rdocumentation.org/packages/ggplot2/versions/3.3.5/topics/ggplot"><code>ggplot()</code></a> by passing in <code>all_book_polarity</code>.
+<li>Aesthetics should be <code>aes(x = book, y = polarity)</code>.  </li>
+
+
+<li>Using a <code>+</code> add the <a href="https://www.rdocumentation.org/packages/ggplot2/versions/3.3.5/topics/geom_boxplot"><code>geom_boxplot()</code></a> with <code>col = "darkred"</code>. Pay close attention to the dark line in each box representing median. </li>
+
+
+<li>Next add another layer called <a href="https://www.rdocumentation.org/packages/ggplot2/versions/3.3.5/topics/geom_jitter"><code>geom_jitter()</code></a> to add points for each of the words.</li>
+
+
+
+</li>
+```{r}
+# edited/added
+all_book_polarity=readRDS("archive/Sentiment-Analysis-in-R/datasets/all_book_polarity.rds")
+
+# Examine
+str(all_book_polarity)
+
+# Summary by document
+tapply(all_book_polarity$polarity, all_book_polarity$book, summary)
+
+# Box plot
+ggplot(all_book_polarity, aes(x = book, y = polarity)) +
+  geom_boxplot(fill = c("#bada55", "#F00B42", "#F001ED", "#BA6E15"), col = "darkred") +
+  geom_jitter(position = position_jitter(width = 0.1, height = 0), alpha = 0.02) +
+  theme_gdocs() +
+  ggtitle("Book Polarity")
+```
+
+<p class="">Boom goes the dynamite!  Box plots help you quickly compare multiple distributions
+</p>
+
+
+##### Radar chart {.unnumbered}
+
+
+<div class>
+<p>Remember <a href="https://en.wikipedia.org/wiki/Robert_Plutchik#/media/File:Plutchik-wheel.svg">Plutchik's wheel of emotion</a>?  The NRC lexicon has the 8 emotions corresponding to the first ring of the wheel. Previously you created a <a href="https://www.rdocumentation.org/packages/wordcloud/versions/2.6/topics/comparison.cloud"><code>comparison.cloud()</code></a> according to the 8 primary emotions.  Now you will create a radar chart similar to the wheel in this exercise.</p>
+<p>A <a href="https://www.rdocumentation.org/packages/radarchart/versions/0.3.1"><code>radarchart</code></a> is a two-dimensional representation of multidimensional data (at least 3). In this case the tally of the different emotions for a book are represented in the chart. Using a radar chart, you can review all 8 emotions simultaneously.  </p>
+<p>As before we've loaded the "nrc" lexicon as <code>nrc</code> and <code>moby_huck</code> which is a combined tidy version of both Moby Dick and Huck Finn.  </p>
+<p>In this exercise you once again use a negated <code>grepl()</code> to remove <code>"positive|negative"</code> emotional classes from the chart.  As a refresher here is an example:</p>
+<pre><code>object &lt;- tibble %&gt;%
+  filter(!grepl("positive|negative", column_name))
+</code></pre>
+<p>This exercise reintroduces <a href="https://www.rdocumentation.org/packages/tidyr/versions/1.1.4/topics/spread"><code>spread()</code></a> which rearranges the tallied emotional words.  As a refresher consider this raw data called <code>datacamp</code>.</p>
+<table>
+<thead><tr>
+<th>people</th>
+<th>food</th>
+<th>like</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>Nicole</td>
+<td>bread</td>
+<td>78</td>
+</tr>
+<tr>
+<td>Nicole</td>
+<td>salad</td>
+<td>66</td>
+</tr>
+<tr>
+<td>Ted</td>
+<td>bread</td>
+<td>99</td>
+</tr>
+<tr>
+<td>Ted</td>
+<td>salad</td>
+<td>21</td>
+</tr>
+</tbody>
+</table>
+<p>If you applied <a href="https://www.rdocumentation.org/packages/tidyr/versions/1.1.4/topics/spread"><code>spread()</code></a> as in <code>spread(datacamp, people, like)</code> the data looks like this.  </p>
+<table>
+<thead><tr>
+<th>food</th>
+<th>Nicole</th>
+<th>Ted</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>bread</td>
+<td>78</td>
+<td>99</td>
+</tr>
+<tr>
+<td>salad</td>
+<td>66</td>
+<td>21</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<li>Review <code>moby_huck</code> with <a href="https://www.rdocumentation.org/packages/utils/topics/head"><code>tail()</code></a>. </li>
+
+
+<li>
+<a href="https://www.rdocumentation.org/packages/dplyr/topics/join"><code>inner_join()</code></a> <code>moby_huck</code> and <code>nrc</code>.</li>
+
+
+<li>Next, <code>filter()</code> <em>negating</em> <code>"positive|negative"</code> in the <code>sentiment</code> column. Assign the result to <code>books_pos_neg</code>.</li>
+
+
+<li>After <code>books_pos_neg</code> is forwarded to <a href="https://www.rdocumentation.org/packages/dplyr/topics/group_by"><code>group_by()</code></a> with <code>book</code> and <code>sentiment</code>.  Then <a href="https://www.rdocumentation.org/packages/dplyr/topics/tally"><code>tally()</code></a> the object with an empty function.</li>
+
+
+<li>Then <a href="https://www.rdocumentation.org/packages/tidyr/topics/spread"><code>spread()</code></a> the <code>books_tally</code> by the <code>book</code> and <code>n</code> column.</li>
+
+
+<li>Review the <code>scores</code> data.</li>
+
+
+<div class="exercise--instructions__content"><p>Call <a href="https://www.rdocumentation.org/packages/radarchart/topics/chartJSRadar" target="_blank" rel="noopener noreferrer"><code>chartJSRadar()</code></a> on <code>scores</code> which is an <a href="http://www.htmlwidgets.org/" target="_blank" rel="noopener noreferrer"><code>htmlwidget</code></a> from the <a href="https://www.rdocumentation.org/packages/radarchart" target="_blank" rel="noopener noreferrer"><code>radarchart</code></a> package.</p></div>
+```{r}
+# edited/added
+library(radarchart)
+moby_huck = readRDS("archive/Sentiment-Analysis-in-R/datasets/all_books.rds") %>%
+  filter(book %in% c("moby_dick","huck")) %>%
+  select(book, document, term, count)
+
+# Review tail of moby_huck
+tail(moby_huck)
+
+scores <- moby_huck %>% 
+  # Inner join to lexicon
+  inner_join(nrc, by = c("term" = "word")) %>% 
+  # Drop positive or negative sentiments
+  filter(!grepl("positive|negative", sentiment)) %>% 
+  # Count by book and sentiment
+  count(book, sentiment) %>% 
+  # Spread book, using n as values
+  spread(book, n)
+
+# Review scores
+scores
+
+# JavaScript radar chart
+chartJSRadar(scores)
+```
+
+<p class="">Radical radar plotting! Bar plots are usually a clearer alternative, but radar charts do look pretty.
+</p>
+
+##### Treemaps for groups of documents {.unnumbered}
+
+
+<div class>
+<p>Often you will find yourself working with documents in groups, such as author, product or by company.  This exercise lets you learn about the text while retaining the groups in a compact visual.  For example, with customer reviews grouped by product you may want to explore multiple dimensions of the customer reviews at the same time.  First you could calculate the <code>polarity()</code> of the reviews.  Another dimension may be length.  Document length can demonstrate the emotional intensity.  If a customer leaves a short "great shoes!" one could infer they are actually less enthusiastic compared to a lengthier positive review.  You may also want to group reviews by product type such as women's, men's and children's shoes. A treemap lets you examine all of these dimensions.</p>
+<p>For text analysis, within a treemap each individual box represents a document such as a tweet.  Documents are grouped in some manner such as author.  The size of each box is determined by a numeric value such as number of words or letters.  The individual colors are determined by a sentiment score.  </p>
+<p>After you organize the tibble, you use the <a href="https://www.rdocumentation.org/packages/treemap/versions/2.4-3"><code>treemap</code></a> library containing the function <code>treemap()</code> to make the visual.  The code example below declares the data, grouping variables, size, color and other aesthetics.</p>
+<pre><code>treemap(
+  data_frame,
+  index = c("group", "individual_document"),
+  vSize = "doc_length",
+  vColor = "avg_score",
+  type = "value",
+  title = "Sentiment Scores by Doc",
+  palette = c("red", "white", "green")
+)
+</code></pre>
+<p>The pre-loaded <code>all_books</code> object contains a combined tidy format corpus with 4 Shakespeare, 3 Melville and 4 Twain books.  Based on the treemap you should be able to tell who writes longer books, and the polarity of the author as a whole and for individual books.</p>
+</div>
+<div class="exercise--instructions__content"><p>Calculate each book's length in a new object called <code>book_length</code> using <code>count()</code> with the <code>book</code> column.</p></div>
+
+
+<div class="exercise--instructions__content">
+<li>Inner join <code>all_books</code> to the lexicon, <code>afinn</code>.</li>
+<li>Group by <code>author</code> and <code>book</code>.</li>
+<li>Use <code>summarize()</code> to calculate the <code>mean_value</code> as the <code>mean()</code> of <code>value</code>.</li>
+<li>Inner join again, this time to <code>book_length</code>. Join <code>by</code> the <code>book</code> column.</li>
+</div>
+
+
+<div class="exercise--instructions__content">
+<li>Draw a treemap, setting the following arguments.
+<li>Use the <code>book_tree</code> from the previous step.</li>
+<li>Specify the aggregation <code>index</code> columns as <code>"author"</code> and <code>"book"</code>.</li>
+<li>Specify the vertex size column, <code>vSize</code>, as <code>"n"</code>.</li>
+<li>Specify the vertex color column, <code>vColor</code>, as <code>"mean_value"</code>.</li>
+<li>Specify a direct mapping from <code>vColor</code> to the palette by setting <code>type = "value"</code>.</li></li>
+</div>
+```{r}
+# edited/added
+library(treemap)
+all_books = readRDS("archive/Sentiment-Analysis-in-R/datasets/all_books.rds")
+
+book_length <- all_books %>%
+  # Count number of words per book
+  count(book)
+
+book_tree <- all_books %>% 
+  # Inner join to afinn lexicon
+  inner_join(afinn, by = c("term" = "word")) %>% 
+  # Group by author, book
+  group_by(author, book) %>%
+  # Calculate mean book value
+  summarize(mean_value = mean(value)) %>% 
+  # Inner join by book
+  inner_join(book_length, by = "book")
+
+# Examine the results
+book_tree
+
+treemap(
+  # Use the book tree
+  book_tree,
+  # Index by author and book
+  index = c("author", "book"),
+  # Use n as vertex size
+  vSize = "n",
+  # Color vertices by mean_value
+  vColor = "mean_value",
+  # Draw a value type
+  type = "value",
+  title = "Book Sentiment Scores",
+  palette = c("red", "white", "green")
+)
+```
+
+<p class="">Terrific treemapping! Treemaps are great ways to explore grouped data.
+</p>
+
+### Case study: Airbnb reviews {.unnumbered}
+
+<p class="">Is your property a good rental?  What do people look for in a good rental?</p>
+
+#### The text mining workflow {.unnumbered}
+
+
+
+##### Step 1: What do you want to know? {.unnumbered}
+
+<p>Throughout this chapter you will analyze the text of a corpus of Airbnb housing rental reviews.
+Which of the following questions can you answer using a sentiment analysis of these reviews?</p>
+
+
+- [ ] What document clusters exist in the reviews?
+- [ ] How many words are associated with rental reviews?
+- [x] What property qualities are listed in positive or negative comments?
+- [ ] What named entities are in the documents?
+
+
+<p class="dc-completion-pane__message dc-u-maxw-100pc">Your answer is positively amazing! Sentiment analysis is focussed on positive and negative text.</p>
+
+##### Step 2: Identify Text Sources {.unnumbered}
+
+
+<div class>
+<p>In this short exercise you will load and examine a small corpus of property rental reviews from around Boston. Hopefully you already know <a href="https://www.rdocumentation.org/packages/utils/topics/read.table"><code>read.csv()</code></a> which enables you to load a comma separated file. In this exercise you will also need to specify <code>stringsAsFactors = FALSE</code> when loading the corpus.  This ensures that the reviews are character vectors, not factors.  This may seem mundane but the point of this chapter is to get you doing an entire workflow from start to finish so let's begin with data ingestion!</p>
+<p>Next you simply apply <a href="https://www.rdocumentation.org/packages/utils/topics/str"><code>str()</code></a> to review the data frame's <code>str</code><em>ucture</em>.  It is a convenient function for compactly displaying initial values and class types for vectors.</p>
+<p>Lastly you will apply <a href="https://www.rdocumentation.org/packages/base/topics/dim"><code>dim()</code></a> to print the <code>dim</code><em>ensions</em> of the data frame.  For a data frame, your console will print the number of rows and the number of columns.</p>
+<p>Other functions like <a href="https://www.rdocumentation.org/packages/utils/topics/head"><code>head()</code></a>, <a href="https://www.rdocumentation.org/packages/utils/topics/head"><code>tail()</code></a> or <a href="https://www.rdocumentation.org/packages/base/topics/summary"><code>summary()</code></a> are often used for data exploration but in this case we keep the examination short so you can get to the fun sentiment analysis!</p>
+</div>
+<div class="exercise--instructions__content">
+<p>The Boston property rental reviews are stored in a CSV file located by the predefined variable <code>bos_reviews_file</code>. </p>
+
+<li>Load the property reviews from <code>bos_reviews_file</code> with <a href="https://www.rdocumentation.org/packages/utils/topics/read.table"><code>read.csv()</code></a>.  Call the object <code>bos_reviews</code>.  Be sure to pass in the parameter <code>stringsAsFactors = FALSE</code> so the comments are not unique factors.</li>
+
+<li>Examine the structure of the data frame using the base <a href="https://www.rdocumentation.org/packages/utils/topics/str"><code>str()</code></a> function applied to <code>bos_reviews</code>.</li>
+
+<li>Find out how many reviews you are working with by calling <a href="https://www.rdocumentation.org/packages/base/topics/dim"><code>dim()</code></a> on the <code>bos_reviews</code>.</li>
+```{r}
+# edited/added
+bos_reviews_file = "archive/Sentiment-Analysis-in-R/datasets/bos_reviews.rds"
+
+# bos_reviews_file has been pre-defined
+bos_reviews_file
+
+# load raw text
+bos_reviews <- readRDS(bos_reviews_file) # edited/added
+
+# Structure
+str(bos_reviews)
+
+# Dimensions
+dim(bos_reviews)
+```
+
+
+</div>
+
+<p class="">Hurrah! Now that you've imported the data, let's get started with the sentiment analysis.
+</p>
+
+##### Quickly examine the basic polarity {.unnumbered}
+
+
+<div class>
+<p>When starting a sentiment project, sometimes a quick <a href="https://www.rdocumentation.org/packages/qdap/topics/polarity"><code>polarity()</code></a>  will help you set expectations or learn about the problem.  In this exercise (to save time), you will apply <code>polarity()</code> to a portion of the <code>comments</code> vector while the larger polarity object is loaded in the background.</p>
+<p>Using a kernel density plot you should notice the reviews do <em>not</em> center on 0. Often there are two causes for this sentiment "grade inflation."  First, social norms may lead respondents to be pleasant instead of neutral.  This, of course, is channel specific.  Particularly snarky channels like e-sports or social media posts may skew negative leading to "deflation."   These channels have different expectations.  A second possible reason could be "feature based sentiment".  In some reviews an author may write "the bed was comfortable and nice but the kitchen was dirty and gross."  The sentiment of this type of review encompasses multiple features simultaneously and therefore could make an average score skewed.</p>
+<p>In a subsequent exercise you will adjust this "grade inflation" but here explore the reviews without any change.</p>
+</div>
+
+<li>Create <code>practice_pol</code> using <a href="https://www.rdocumentation.org/packages/qdap/topics/polarity"><code>polarity()</code></a> on the first six reviews as in <code>bos_reviews$comments[1:6]</code>
+</li>
+
+
+<li>Review the returned polarity object by calling <code>practice_pol</code>.</li>
+
+
+<li>Call <code>summary()</code> on <code>practice_pol\$all\$polarity</code> - this will access the overall polarity for all 6 comments.</li>
+
+
+<li>We've also loaded a larger polarity object for all 1000 comments. This new object is called <code>bos_pol</code>. Now apply <code>summary()</code> to the correct list element that returns <em>all</em> <em>polarity</em> scores of <code>bos_pol</code>.</li>
+
+
+<li>The sample code has a barplot and kernel density plot almost ready to print.  You must enter the data frame representing <em>all</em> scores.  <em>Hint: in the previous step, <code>polarity</code> represents a column of this data frame.</em>
+</li>
+```{r}
+# edited/added
+bos_pol = readRDS("archive/Sentiment-Analysis-in-R/datasets/bos_pol.rds")
+
+# Practice apply polarity to first 6 reviews
+practice_pol <- polarity(bos_reviews$comments[1:6])
+
+# Review the object
+practice_pol
+
+# Check out the practice polarity
+summary(practice_pol$all$polarity)
+
+# Summary for all reviews
+summary(bos_pol$all$polarity)
+
+# Plot Boston polarity all element
+ggplot(bos_pol$all, aes(x = polarity, y = ..density..)) +
+  geom_histogram(binwidth = 0.25, fill = "#bada55", colour = "grey60") +
+  geom_density(size = 0.75) +
+  theme_gdocs() 
+```
+
+<p class="">Out of the gate and you're crushing it! Quick and easy yet polarity can help you get familiar with your data.
+</p>
+
+
+#### Organize (&amp; clean) the text {.unnumbered}
+
+
+
+##### Create Polarity Based Corpora {.unnumbered}
+
+
+<div class>
+<p>In this exercise you will perform Step 3 of the text mining workflow.  Although <a href="https://www.rdocumentation.org/packages/qdap"><code>qdap</code></a> isn't a tidy package you will <a href="https://www.rdocumentation.org/packages/dplyr/topics/mutate"><code>mutate()</code></a> a new column based on the returned <code>polarity</code> list representing <em>all polarity</em> (that's a hint BTW) scores. In chapter 3 we used a custom function <code>pol_subsections</code> which uses only base R declarations.  However, in following the tidy principles this exercise uses <a href="https://www.rdocumentation.org/packages/dplyr/topics/filter"><code>filter()</code></a> then introduces <a href="https://www.rdocumentation.org/packages/dplyr/topics/pull"><code>pull()</code></a>. The <code>pull()</code> function works like works like <code>[[</code> to extract a single variable.  </p>
+<p>Once segregated you collapse all the positive and negative comments into two larger documents representing all words among the positive and negative rental reviews.  </p>
+<p>Lastly, you will create a Term Frequency Inverse Document Frequency (TFIDF) weighted Term Document Matrix (TDM).  Since this exercise code starts with a tidy structure, some of the functions borrowed from <a href="https://www.rdocumentation.org/packages/tm"><code>tm</code></a> are used along with the <code>%&gt;%</code> operator to keep the style consistent. If the basics of the <a href="https://www.rdocumentation.org/packages/tm"><code>tm</code></a> package aren't familiar check out the <a href="https://www.datacamp.com/courses/text-mining-with-bag-of-words-in-r">Text Mining with Bag-of-Words in R</a> course. Instead of counting the number of times a word is used (frequency), the values in the TDM are penalized for over used terms, which helps reduce non-informative words.</p>
+</div>
+
+<li>Get the positive comments.
+<li>Mutate to add a <code>polarity</code> column, equal to <code>bos_pol\$all\$polarity</code>.</li>
+
+
+<li>Filter to keep rows where <code>polarity</code> is greater than zero.</li>
+
+
+<li>Use <code>pull()</code> to extract the <code>comments</code> column. (Pass this column without quotes.)</li>
+
+
+<li>Collapse into a single string, separated by spaces using <code>paste()</code>, passing <code>collapse = " "</code>.</li>
+
+
+
+</li>
+
+
+<div class="exercise--instructions__content">
+<li>Do the same again, this time with negative comments.
+<li>Mutate to add a <code>polarity</code> column, equal to <code>bos_pol$all$polarity</code>.</li>
+<li>Filter to keep rows where <code>polarity</code> is less than zero.</li>
+<li>Extract the <code>comments</code> column.</li>
+<li>Collapse into a single string, separated by spaces.</li></li>
+</div>
+
+
+<div class="exercise--instructions__content">
+<li>Create a corpus of both positive and negative comments.<br>
+<li>Use <code>c()</code> to concatenate <code>pos_terms</code> and <code>neg_terms</code>.</li>
+<li>Source the text using <a href="https://www.rdocumentation.org/packages/tm/topics/VectorSource" target="_blank" rel="noopener noreferrer"><code>VectorSource()</code></a> without arguments.</li>
+<li>Convert to a volatile corpus by calling <a href="https://www.rdocumentation.org/packages/tm/topics/VCorpus" target="_blank" rel="noopener noreferrer"><code>VCorpus()</code></a>, again without arguments.</li></li>
+</div>
+
+
+<div class="exercise--instructions__content">
+<li>Create a term-document matrix from <code>all_corpus</code>.<br>
+<li>Use term frequency inverse document frequency weighting by setting <code>weighting</code> to <code>weightTfIdf</code>.</li>
+<li>Remove punctuation by setting <code>removePunctuation</code> to <code>TRUE</code>.</li>
+<li>Use English stopwords by setting <code>stopwords</code> to <code>stopwords(kind = "en")</code>.</li></li>
+</div>
+```{r}
+# edited/added
+bos_reviews = bos_reviews %>%
+    mutate(comments = enc2utf8(as.character(comments)))
+
+pos_terms <- bos_reviews %>%
+  # Add polarity column
+  mutate(polarity = bos_pol$all$polarity) %>%
+  # Filter for positive polarity
+  filter(polarity > 0) %>%
+  # Extract comments column
+  pull(comments) %>% 
+  # Paste and collapse
+  paste(collapse = " ")
+
+neg_terms <- bos_reviews %>%
+  # Add polarity column
+  mutate(polarity = bos_pol$all$polarity) %>%
+  # Filter for negative polarity
+  filter(polarity < 0) %>%
+  # Extract comments column
+  pull(comments) %>% 
+  # Paste and collapse
+  paste(collapse = " ")
+
+# Concatenate the terms
+all_corpus <- c(pos_terms, neg_terms) %>% 
+  # Source from a vector
+  VectorSource() %>% 
+  # Create a volatile corpus
+  VCorpus()
+
+all_tdm <- TermDocumentMatrix(
+  # Use all_corpus
+  all_corpus, 
+  control = list(
+    # Use TFIDF weighting
+    weighting = weightTfIdf, 
+    # Remove the punctuation
+    removePunctuation = TRUE,
+    # Use English stopwords
+    stopwords = stopwords(kind = "en")
+  )
+)
+
+# Examine the TDM
+all_tdm
+```
+
+<p class="">Congrats now you have a TFIDF weighted TDM splitting up your text!
+</p>
+
+##### Create a Tidy Text Tibble! {.unnumbered}
+
+
+<div class>
+<p>Since you learned about tidy principles this code helps you organize your data into a tibble so you can then work within the tidyverse!</p>
+<p>Previously you learned that applying <a href="https://www.rdocumentation.org/packages/broom/topics/tidy"><code>tidy()</code></a> on a <code>TermDocumentMatrix()</code> object will convert the TDM to a tibble.  In this exercise you will create the word data directly from the review column called <code>comments</code>.</p>
+<p>First you use <a href="https://www.rdocumentation.org/packages/tidytext/topics/unnest_tokens"><code>unnest_tokens()</code></a> to make the text lowercase and tokenize the reviews into single words.  </p>
+<p>Sometimes it is useful to capture the original word order within each group of a corpus. To do so, use <a href="https://www.rdocumentation.org/packages/dplyr/topics/mutate"><code>mutate()</code></a>.  In <code>mutate()</code> you will use <a href="https://www.rdocumentation.org/packages/base/topics/seq"><code>seq_along()</code></a> to create a sequence of numbers from 1 to the length of the object. This will capture the word order as it was written. </p>
+<p>In the <a href="https://www.rdocumentation.org/packages/tm"><code>tm</code></a> package, you would use <a href="https://www.rdocumentation.org/packages/tm/topics/removeWords"><code>removeWords()</code></a> to remove stopwords. In the tidyverse you first need to load the stop words lexicon and then apply an <a href="https://www.rdocumentation.org/packages/dplyr/topics/join"><code>anti_join()</code></a> between the tidy text data frame and the stopwords.</p>
+</div>
+
+<li>Create <code>tidy_reviews</code> by piping (<code>%&gt;%</code>) the original reviews object <code>bos_reviews</code> to the <a href="https://www.rdocumentation.org/packages/tidytext/topics/unnest_tokens"><code>unnest_tokens()</code></a> function.  Pass in a new column name, <code>word</code> and declare the <code>comments</code> column.  Remember in the tidyverse you don't need a <code>$</code> or quotes.</li>
+
+<li>Create a new variable the tidy way!  Rewrite <code>tidy_reviews</code> by piping <code>tidy_reviews</code> to <code>group_by</code> with the column <code>id</code>.  Then <code>%&gt;%</code> it again to <a href="https://www.rdocumentation.org/packages/dplyr/topics/mutate"><code>mutate()</code></a>.  Within mutate create a new variable <code>original_word_order</code> equal to <code>seq_along(word)</code>.  </li>
+
+<li>Print out the tibble, <code>tidy_reviews</code>.</li>
+
+<li>Load the premade "SMART" stopwords to your R session with <code>data("stop_words")</code>.</li>
+
+<li>Overwrite <code>tidy_reviews</code> by passing the original <code>tidy_reviews</code> to <a href="https://www.rdocumentation.org/packages/dplyr/topics/join"><code>anti_join()</code></a> with a <code>%&gt;%</code>. Within <code>anti_join()</code> pass in the predetermined <code>stop_words</code> lexicon.</li>
+```{r}
+# Vector to tibble
+tidy_reviews <- bos_reviews %>% 
+  unnest_tokens(word, comments)
+
+# Group by and mutate
+tidy_reviews <- tidy_reviews %>% 
+  group_by(id) %>% 
+  mutate(original_word_order = seq_along(word))
+
+# Quick review
+tidy_reviews
+
+# Load stopwords
+data("stop_words")
+
+# Perform anti-join
+tidy_reviews_without_stopwords <- tidy_reviews %>% 
+  anti_join(stop_words)
+```
+
+<p class="">Tidy Text Tibbles are a mouthful but you did it!
+</p>
+
+
+##### Compare Tidy Sentiment to Qdap Polarity {.unnumbered}
+
+
+<div class>
+<p>Here you will learn that differing sentiment methods will cause different results. Often you will simply need to have results align directionally although the specifics may be different. In the last exercise you created <code>tidy_reviews</code> which is a data frame of rental reviews without stopwords. Earlier in the chapter, you calculated and plotted <a href="https://www.rdocumentation.org/packages/qdap/versions/2.4.3"><code>qdap</code></a>'s basic <code>polarity()</code> function. This showed you the reviews tend to be positive.</p>
+<p>Now let's perform a similar analysis the <a href="https://www.rdocumentation.org/packages/tidytext/versions/0.3.2"><code>tidytext</code></a> way!  Recall from an earlier chapter you will perform an <a href="https://www.rdocumentation.org/packages/dplyr/versions/0.7.8/topics/join"><code>inner_join()</code></a> followed by <code>count()</code> and then a <a href="https://www.rdocumentation.org/packages/tidyr/versions/1.1.4/topics/spread"><code>spread()</code></a>.  </p>
+<p>Lastly, you will create a new column using <a href="https://www.rdocumentation.org/packages/dplyr/versions/0.7.8/topics/mutate"><code>mutate()</code></a> and passing in <code>positive - negative</code>.</p>
+</div>
+
+<li>Using the <a href="https://www.rdocumentation.org/packages/tidytext/versions/0.3.2/topics/get_sentiments"><code>get_sentiments()</code></a> function with "bing" will obtain the bing subjectivity lexicon.  Call the lexicon <code>bing</code>. </li>
+
+<li>Since you already wrote this code in Chapter 2 simply enter in the lexicon object, <code>bing</code>, the new column name (<code>polarity</code>) and its calculation within <a href="https://www.rdocumentation.org/packages/dplyr/versions/0.7.8/topics/mutate"><code>mutate()</code></a>.    </li>
+
+<li>Lastly call <a href="https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/summary"><code>summary()</code></a> on the new object <code>pos_neg</code>.  Although the values are different, are most rental reviews similarly positive compared to using <a href="https://www.rdocumentation.org/packages/qdap/versions/2.4.3/topics/polarity"><code>polarity()</code></a>?  Do you see "grade inflation?"</li>
+```{r}
+# Get the correct lexicon
+bing <- get_sentiments("bing")
+
+# Calculate polarity for each review
+pos_neg <- tidy_reviews %>% 
+  inner_join(bing) %>%
+  count(sentiment) %>%
+  spread(sentiment, n, fill = 0) %>% 
+  mutate(polarity = positive - negative)
+
+# Check outcome
+summary(pos_neg)
+```
+
+<p class="">Horray!  Often different polarity methods yield similar results.
+</p>
+
+
+#### Feature Extraction &amp; Analysis {.unnumbered}
+
+
+
+##### Assessing author effort {.unnumbered}
+
+
+<div class>
+<p>Often authors will use more words when they are more passionate. For example, a mad airline passenger will leave a longer review the worse (the perceived) service. Conversely a less impassioned passenger may not feel compelled to spend a lot of time writing a review. Lengthy reviews may inflate overall sentiment since the reviews will inherently contain more positive or negative language as the review lengthens. This coding exercise helps to examine effort and sentiment.</p>
+<p>In this exercise you will visualize the relationship between effort and sentiment. Recall your rental review tibble contains an <code>id</code> and that a word is represented in each row. As a result a simple <a href="https://www.rdocumentation.org/packages/dplyr/topics/count"><code>count()</code></a> of the <code>id</code> will capture the number of words used in each review.  Then you will join this summary to the positive and negative data. Ultimately you will create a scatter plot that will visualize author review length and its relationship to polarity.</p>
+</div>
+
+<li>Calculate a measure of effort as the count of <code>id</code>.</li>
+
+<li>Inner join to the polarity of each review, <code>pos_neg</code>.</li>
+
+<li>Mutate to add a <code>pol</code> column. Use <code>ifelse()</code> to set <code>pol</code> to <code>"Positive"</code> if <code>polarity</code> is greater than or equal to zero, else <code>"Negative"</code>.</li>
+
+<div class="exercise--instructions__content">
+<li>Using <code>pos_neg_pol</code>, plot <code>n</code> vs. <code>polarity</code>, colored by <code>pol</code>.</li>
+<li>Add a point layer using <code>geom_point()</code>.</li>
+<li>Add a smooth trend layer using <code>geom_smooth()</code>.</li>
+</div>
+```{r}
+# Review tidy_reviews and pos_neg
+tidy_reviews
+pos_neg
+
+pos_neg_pol <- tidy_reviews %>% 
+  # Effort is measured as count by id
+  count(id) %>% 
+  # Inner join to pos_neg
+  inner_join(pos_neg) %>% 
+  # Add polarity status
+  mutate(pol = ifelse(polarity >= 0, "Positive", "Negative"))
+
+# Examine results
+pos_neg_pol
+
+# Plot n vs. polarity, colored by pol
+ggplot(pos_neg_pol, aes(polarity, n, color = pol)) + 
+  # Add point layer
+  geom_point(alpha = 0.25) +
+  # Add smooth layer
+  geom_smooth(method = "lm", se = FALSE) +
+  theme_gdocs() +
+  ggtitle("Relationship between word effort & polarity")
+```
+
+<p class="">So fast! Now you know how much effort an author exerted.
+</p>
+
+##### Comparison Cloud {.unnumbered}
+
+
+<div class>
+<p>This exercise will create a common visual for you to understand term frequency. Specifically, you will review the most frequent terms from among the positive and negative collapsed documents. Recall the <strong>TermDocumentMatrix</strong> <code>all_tdm</code> you created earlier. Instead of 1000 rental reviews the matrix contains 2 documents containing all reviews separated by the <a href="https://www.rdocumentation.org/packages/qdap/topics/polarity"><code>polarity()</code></a> score.</p>
+<p>It's usually easier to change the TDM to a matrix. From there you simply rename the columns. Remember that the <a href="https://www.rdocumentation.org/packages/base/topics/row%2Bcolnames"><code>colnames()</code></a> function is called on the left side of the assignment operator as shown below.</p>
+<pre><code>colnames(OBJECT) &lt;- c("COLUMN_NAME1", "COLUMN_NAME2")
+</code></pre>
+<p>Once done, you will reorder the matrix to see the most positive and negative words. <em>Review these terms so you can answer the conclusion exercises!</em></p>
+<p>Lastly, you'll visualize the terms using <a href="https://www.rdocumentation.org/packages/wordcloud/topics/comparison.cloud"><code>comparison.cloud()</code></a>.</p>
+</div>
+
+<li>Change the pre-loaded <code>all_tdm</code> to a matrix called <code>all_tdm_m</code> using <a href="https://www.rdocumentation.org/packages/base/topics/matrix"><code>as.matrix()</code></a>.</li>
+
+<li>Use <a href="https://www.rdocumentation.org/packages/base/topics/row%2Bcolnames"><code>colnames()</code></a> on <code>all_tdm_m</code> to declare <code>c("positive", "negative")</code>.</li>
+
+<li>Apply <a href="https://www.rdocumentation.org/packages/base/topics/order"><code>order()</code></a> to <code>all_tdm_m[,1]</code>  and set <code>decreasing = TRUE</code>.</li>
+
+<li>Review the top 10 terms of the reordered TDM using pipe (<code>%&gt;%</code>) then <a href="https://www.rdocumentation.org/packages/utils/topics/head"><code>head()</code></a> with <code>n = 10</code>. </li>
+
+<li>Repeat the previous two steps with negative comments.  Now you will <a href="https://www.rdocumentation.org/packages/base/topics/order"><code>order()</code></a> by the <em>second</em> column, <code>all_tdm_m[,2]</code> and use <code>decreasing = TRUE</code>.  </li>
+
+<li>Review the 10 most negative terms indexing <code>all_tdm_m</code> by <code>order_by_neg</code>. Pipe this to <a href="https://www.rdocumentation.org/packages/utils/topics/head"><code>head()</code></a> with <code>n = 10</code>.</li>
+
+<div class="exercise--instructions__content"><p>Draw a <a href="https://www.rdocumentation.org/packages/wordcloud/topics/comparison.cloud" target="_blank" rel="noopener noreferrer"><code>comparison.cloud()</code></a> on <code>all_tdm_m</code>. Specify <code>max.words</code> equal to <code>20</code>.</p></div>
+```{r}
+# Matrix
+all_tdm_m <- as.matrix(all_tdm)
+
+# Column names
+colnames(all_tdm_m) <- c("positive", "negative")
+
+# Top pos words
+order_by_pos <- order(all_tdm_m[, 1], decreasing = TRUE)
+
+# Review top 10 pos words
+all_tdm_m[order_by_pos, ] %>% head(10)
+
+# Top neg words
+order_by_neg <- order(all_tdm_m[, 2], decreasing = TRUE)
+
+# Review top 10 neg words
+all_tdm_m[order_by_neg, ] %>% head(10)
+
+comparison.cloud(
+  # Use the term-document matrix
+  all_tdm_m,
+  # Limit to 20 words
+  max.words = 20, 
+  colors = c("darkgreen", "darkred")
+)
+```
+
+<p class="">Success.  Overused…yes.  Still useful…yes!
+</p>
+
+##### Scaled Comparison Cloud {.unnumbered}
+
+
+<div class>
+<p>Recall the "grade inflation" of polarity scores on the rental reviews?  Sometimes, another way to uncover an insight is to scale the scores back to 0 then perform the corpus subset. This means some of the previously positive comments may become part of the negative subsection or vice versa since the mean is changed to 0.  This exercise will help you scale the scores and then re-plot the <a href="https://www.rdocumentation.org/packages/wordcloud/topics/comparison.cloud"><code>comparison.cloud()</code></a>.  Removing the "grade inflation" can help provide additional insights.  </p>
+<p>Previously you applied <a href="https://www.rdocumentation.org/packages/qdap/topics/polarity"><code>polarity()</code></a> to the <code>bos_reviews$comments</code> and created a <a href="https://www.rdocumentation.org/packages/wordcloud/topics/comparison.cloud"><code>comparison.cloud()</code></a>.  In this exercise you will <a href="https://www.rdocumentation.org/packages/base/topics/scale"><code>scale()</code></a> the outcome before creating the <a href="https://www.rdocumentation.org/packages/wordcloud/topics/comparison.cloud"><code>comparison.cloud()</code></a>.  See if this shows something different in the visual!</p>
+<p>Since this is largely a review exercise, a lot of the code exists, just fill in the correct objects and parameters!</p>
+</div>
+
+<li>Review a section of the pre-loaded <code>bos_pol$all</code> while indexing <code>[1:6,1:3]</code>.</li>
+
+<li>Add a new column to called <code>scaled_polarity</code> with <a href="https://www.rdocumentation.org/packages/base/topics/scale"><code>scale()</code></a> applied to the polarity score column <code>bos_pol\$all\$polarity</code>.</li>
+
+<li>For positive comments, <a href="https://www.rdocumentation.org/packages/base/topics/subset"><code>subset()</code></a> where the new column <code>bos_reviews$scaled_polarity</code> is <strong>greater than</strong> (&gt;) zero.</li>
+
+<li>For negative comments, <code>subset()</code> where the new column <code>bos_reviews$scaled_polarity</code> is <strong>less than</strong> (&lt;) zero.</li>
+
+<li>Create  <code>pos_terms</code> using <a href="https://www.rdocumentation.org/packages/base/topics/paste"><code>paste()</code></a> on <code>pos_comments</code>.  </li>
+
+<li>Now create <code>neg_terms</code> with <a href="https://www.rdocumentation.org/packages/base/topics/paste"><code>paste()</code></a> on <code>neg_comments</code>.</li>
+
+<li>Organize the collapsed documents, <code>pos_terms</code> and <code>neg_terms</code> documents into a single corpus called <code>all_terms</code>.</li>
+
+<li>Following the usual <a href="https://www.rdocumentation.org/packages/tm/"><code>tm</code></a> workflow by nesting <a href="https://www.rdocumentation.org/packages/tm/topics/VectorSource"><code>VectorSource()</code></a> inside <a href="https://www.rdocumentation.org/packages/tm/topics/VCorpus"><code>VCorpus()</code></a> applied to <code>all_terms</code>.</li>
+
+<li>Make the <a href="https://www.rdocumentation.org/packages/tm/topics/TermDocumentMatrix"><code>TermDocumentMatrix()</code></a> using the <code>all_corpus</code> object.  Note this is a TfIdf weighted TDM with basic cleaning functions.</li>
+
+<li>Change <code>all_tdm</code> to <code>all_tdm_m</code> using <a href="https://www.rdocumentation.org/packages/base/topics/matrix"><code>as.matrix()</code></a>. Then rename the columns in the existing code to <code>"positive"</code> and <code>"negative"</code>.</li>
+
+<li>
+<strong><em>Finally!</em></strong> apply <a href="https://www.rdocumentation.org/packages/wordcloud/topics/comparison.cloud"><code>comparison.cloud()</code></a> to the matrix object <code>all_tdm_m</code>. Take notice of the new most frequent negative words. Maybe it will uncover an unknown insight!</li>
+```{r}
+# Review
+bos_pol$all[1:6,1:3]
+
+# Scale/center & append
+bos_reviews$scaled_polarity <- scale(bos_pol$all$polarity)
+
+# Subset positive comments
+pos_comments <- subset(bos_reviews$comments, bos_reviews$scaled_polarity > 0)
+
+# Subset negative comments
+neg_comments <- subset(bos_reviews$comments, bos_reviews$scaled_polarity < 0)
+
+# Paste and collapse the positive comments
+pos_terms <- paste(pos_comments, collapse = " ")
+
+# Paste and collapse the negative comments
+neg_terms <- paste(neg_comments, collapse = " ")
+
+# Organize
+all_terms <- c(pos_terms,neg_terms)
+
+# VCorpus
+all_corpus <- VCorpus(VectorSource(all_terms))
+
+# TDM
+all_tdm <- TermDocumentMatrix(
+  all_corpus, 
+  control = list(
+    weighting = weightTfIdf,
+    removePunctuation = TRUE, 
+    stopwords = stopwords(kind = "en")
+  )
+)
+
+# Column names
+all_tdm_m <- as.matrix(all_tdm)
+colnames(all_tdm_m) <- c("positive", "negative")
+
+# Comparison cloud
+comparison.cloud(
+  all_tdm_m, 
+  max.words = 100,
+  colors = c("darkgreen", "darkred")
+)
+```
+
+<p class="">Almost there!  Another comparison cloud to help you extract your insights.
+</p>
+
+
+#### Reach a conclusion {.unnumbered}
+
+
+
+##### Confirm an expected conclusion {.unnumbered}
+
+<div class=""><p>Refer to the following plot from the exercise <em>"Comparison Cloud"</em>: </p>
+<p>
+  <img src="http://s3.amazonaws.com/assets.datacamp.com/production/course_2016/datasets/comparison_cloud_ch4ex11.png" width="400">
+</p>
+<p>Its not surprising that the most common positive words for rentals included "walk", "restaurants", "subway" and "stations". In contrast, top negative terms included "condition", "dumpsters", "hygiene", "safety" and "sounds". </p>
+<p>If you were looking to rent your <em>clean</em> apartment and it was close to <em>public transit</em> and good <em>restaurants</em> would it get a favorable review?</p></div>
+
+
+- [x] Yes
+- [ ] No
+
+
+<p class="dc-completion-pane__message dc-u-maxw-100pc">Excellent, you got it right!</p>
+
+##### Choose a less expected insight {.unnumbered}
+
+<div class=""><p>Refer to the following plot from the exercise <em>"Scaled Comparison Cloud"</em>: </p>
+<p>
+  <img src="http://s3.amazonaws.com/assets.datacamp.com/production/course_2016/datasets/final_slide_cloud.png" width="700">
+</p>
+<p>For your rental, should you use an <em>automated posting</em>?</p></div>
+
+
+- [ ] Yes
+- [x] No
+
+
+<p class="dc-completion-pane__message dc-u-maxw-100pc">Boom! Can you believe it?  You're already a sentiment analysis wizard!! Congrats.</p>
+
+#### Your turn! {.unnumbered}
+
+##### Your turn!  {.unnumbered}
+
+Congratulations! You made it through the sentiment analysis course! I hope you found it interesting and enjoyable.
+
+##### Congratulations!! {.unnumbered}
+
+In this course you learned the basics of sentiment analysis. Specifically you learned about polarity, tidy text data formats and inner joins with subjectivity lexicons.
+
+##### Congratulations!! {.unnumbered}
+
+Then you added some visuals based on sentiment so you can tell a compelling sentiment narrative.
+
+##### Congratulations!! {.unnumbered}
+
+Lastly you wrapped it all up by performing a simple sentiment analysis on real data and came to a conclusion by following the text mining workflow. My hope is that this course gives you a solid foundation to add to your data science tool set. You should feel comfortable doing an analysis on your own and the tools you learned here can be applied in many use cases...so get to work and try your hand at sentiment analysis with text you find interesting.
+

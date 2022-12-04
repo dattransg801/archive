@@ -1,0 +1,666 @@
+
+##
+
+
+
+##
+
+
+<div class>
+<p>The volume and velocity of tweets posted on twitter every second is an indicator of the power of twitter data.</p>
+<p>The enormous amount of information available, from the tweet text and its metadata, gives great scope for analyzing extracted tweets and deriving insights.</p>
+<p>Let's extract a 1% random sample of live tweets using <code>stream_tweets()</code> for a 120 seconds window and save it in a data frame. </p>
+<p>The dimensions of the data frame will give you insights about the number of live tweets extracted and the number of columns that contain the actual tweeted text and metadata on the tweets.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Extract live tweets for 120 seconds time window.</li>
+<li>View dimensions of the data frame with the extracted tweets.</li>
+</ul></div>
+
+
+##
+
+
+
+##
+
+
+
+##
+
+
+
+##
+
+
+<div class>
+<p>Many functions are available in R to extract twitter data for analysis.</p>
+<p><code>search_tweets()</code> is a powerful function from <code>rtweet</code> which is used to extract tweets based on a search query.</p>
+<p>The function returns a maximum of 18,000 tweets for each request posted.</p>
+<p>In this exercise, you will use <code>search_tweets()</code> to extract tweets on the Emmy Awards which are American awards that recognize excellence in the television industry, by looking for tweets containing the Emmy Awards hashtag.</p>
+<p>The library <code>rtweet</code> has been pre-loaded for this exercise.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Extract 2000 tweets on <code>"#Emmyawards"</code>, including all retweets.</li>
+</ul></div>
+
+
+##
+
+
+<div class>
+<p>Similar to <code>search_tweets()</code>, <code>get_timeline()</code> is another function in the <code>rtweet</code> library that can be used to extract tweets. </p>
+<p>The <code>get_timeline()</code> function is different from <code>search_tweets()</code>. It extracts tweets posted by a given user to their timeline instead of searching based on a query.</p>
+<p>The <code>get_timeline()</code> function can extract upto 3200 tweets at a time.</p>
+<p>In this exercise, you will extract tweets posted by Cristiano Ronaldo, a very popular soccer player both on the field and on social media who has the <code>@Cristiano</code> twitter handle.</p>
+<p>The library <code>rtweet</code> has been pre-loaded for this exercise.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Extract 3200 tweets posted by Cristiano Ronaldo.</li>
+<li>View the first few rows and columns of the extracted tweets.</li>
+</ul></div>
+
+
+##
+
+
+
+##
+
+
+<div class>
+<p>The metadata components of extracted twitter data can be analyzed to derive insights.</p>
+<p>To identify twitter users who are interested in a topic, you can look at users who tweet often on that topic. The insights derived can be used to promote targeted products to interested users.</p>
+<p>In this exercise, you will identify users who have tweeted often on the topic <code>"Artificial Intelligence"</code>. </p>
+<p>Tweet data on <code>"Artificial Intelligence"</code>, extracted using <code>search_tweets()</code>, has been pre-loaded as <code>tweets_ai</code>. </p>
+<p>The library <code>rtweet</code> has been pre-loaded for this exercise.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Create a table of users and tweet counts.</li>
+<li>Sort table in descending order based on tweet counts.</li>
+<li>View the top 10 users who have tweeted the most.</li>
+</ul></div>
+
+
+##
+
+
+<div class>
+<p>The follower count for a twitter account indicates the popularity of the personality or a business entity and is a measure of influence in social media. </p>
+<p>Knowing the follower counts helps digital marketers strategically position ads on popular twitter accounts for increased visibility. </p>
+<p>In this exercise, you will extract user data and compare followers count for twitter accounts of four popular news sites: CNN, Fox News, NBC News, and New York Times.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Extract user data for twitter accounts of the 4 news sites.</li>
+<li>Create a data frame of screen names and follower counts for the sites.</li>
+</ul></div>
+
+
+##
+
+
+<div class>
+<p>A retweet helps utilize existing content to build a following for your brand.</p>
+<p>The number of times a twitter text is retweeted indicates what is trending. The inputs gathered can be leveraged by promoting your brand using the popular retweets.</p>
+<p>In this exercise, you will identify tweets on "Artificial Intelligence" that have been retweeted the most. </p>
+<p>Tweets on <code>"Artificial Intelligence"</code>, extracted using <code>search_tweets()</code>, have been saved as <code>tweets_ai</code>. </p>
+<p>The <code>rtweet</code> and <code>dplyr</code> libraries and the dataset <code>tweets_ai</code> have been pre-loaded.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Create a data frame of tweet texts and their retweet counts.</li>
+<li>Sort the data frame based on retweet counts.</li>
+</ul></div>
+
+
+##
+
+
+
+##
+
+
+<div class>
+<p>An original tweet is an original posting by a twitter user and is not a retweet, quote, or reply. </p>
+<p>The <code>"-filter"</code> can be combined with a search query to exclude retweets, quotes, and replies during tweet extraction.</p>
+<p>In this exercise, you will extract tweets on <code>"Superbowl"</code> that are original posts and not retweets, quotes, or replies. </p>
+<p>The libraries <code>rtweet</code> and <code>plyr</code> have been pre-loaded for this exercise.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Extract tweets that are not retweets, quotes, or replies.</li>
+<li>Check for the presence of replies.</li>
+<li>Check for the presence of quotes.</li>
+<li>Check for the presence of retweets.</li>
+</ul></div>
+
+
+##
+
+
+<div class>
+<p>You can use the language filter with a search query to filter tweets based on the language of the tweet.</p>
+<p>The filter extracts tweets that have been classified by Twitter as being of a particular language.</p>
+<p>Can you extract tweets posted in French on the topic <code>"Apple iphone"</code>?</p>
+<p>The library <code>rtweet</code> has been pre-loaded for this exercise.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Extract posts on <code>"Apple iphone"</code> that are tweeted in French.</li>
+<li>Display the tweet text.</li>
+<li>Display the tweet metadata showing the language of the tweet.</li>
+</ul></div>
+
+
+##
+
+
+<div class>
+<p>Popular tweets are tweets that are retweeted and favorited several times.</p>
+<p>They are useful in identifying current trends. A brand can promote its merchandise and build brand loyalty by identifying popular tweets and retweeting them.</p>
+<p>In this exercise, you will extract tweets on <code>"Chelsea"</code> that have been retweeted a minimum of 100 times and also favorited at least by 100 users.</p>
+<p>The library <code>rtweet</code> has been pre-loaded for this exercise.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Extract tweets with a minimum of 100 retweets and 100 favorites using filters.</li>
+<li>Create a data frame with the retweet and favorite counts. </li>
+<li>View the tweets.</li>
+</ul></div>
+
+
+##
+
+
+
+##
+
+
+<div class>
+<p>Analyzing twitter user data provides vital information which can be used to plan relevant promotional strategies. </p>
+<p>User information contains data on the number of followers and friends of the twitter user.</p>
+<p>The user information may have multiple instances of the same user as the user might have tweeted multiple times on a given subject. You need to take the mean values of the follower and friend counts in order to consider only one instance.</p>
+<p>In this exercise, you will extract the number of friends and followers of users who tweet on <code>#skincare</code> or <code>#cosmetics</code>. </p>
+<p>Tweets on <code>#skincare</code> or <code>#cosmetics</code>, extracted using <code>search_tweets()</code>, have been pre-loaded as <code>tweet_cos</code>. </p>
+<p>The libraries <code>rtweet</code> and <code>dplyr</code> have also been pre-loaded.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Extract user data from the pre-loaded tweets data frame.</li>
+<li>View the first 6 rows of the user data.</li>
+</ul></div>
+
+
+##
+
+
+<div class>
+<p>The ratio of the number of followers to the number of friends a user has is called the golden ratio. </p>
+<p>This ratio is a useful metric for marketers to strategize promotions.</p>
+<p>In this exercise, you will calculate the golden ratio for the aggregated data frame <code>counts_df</code> that was created in the last step of the previous exercise.</p>
+<p>The data frame <code>counts_df</code> and library <code>dplyr</code> have been pre-loaded for this exercise.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Calculate the golden ratio and store it in a new column.</li>
+<li>Sort the data frame in decreasing order of follower count.</li>
+</ul></div>
+
+
+##
+
+
+<div class>
+<p>A twitter list is a curated group of twitter accounts. </p>
+<p>Twitter users subscribe to lists that interest them. Collecting user information from twitter lists could help brands promote products to interested customers.</p>
+<p>In this exercise, you will extract lists of the twitter account of <code>"NBA"</code>, the popular basketball league National Basketball Association. </p>
+<p>For one of the lists, you will extract the subscribed users and the user information for some of these users.</p>
+<p>The <code>rtweet</code> library has been pre-loaded for this exercise.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Extract all the lists <code>"NBA"</code> subscribes to.</li>
+</ul></div>
+
+
+##
+
+
+
+##
+
+
+
+##
+
+
+<div class>
+<p>Location-specific trends identify popular topics trending in a specific location. You can extract trends at the country level or city level.</p>
+<p>It is more meaningful to extract trends around a specific region, in order to focus on twitter audience in that region for targeted marketing of a brand.</p>
+<p>Can you extract topics trending in Canada and view the trends?</p>
+<p>The library <code>rtweet</code> has been pre-loaded for this exercise.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Extract topics trending in Canada.</li>
+<li>View the first 6 columns of extracted data.</li>
+</ul></div>
+
+
+##
+
+
+<div class>
+<p>It is meaningful to extract trends around a specific region to focus on twitter audience in that region.</p>
+<p>Trending topics in a city provide a chance to promote region-specific events or products.</p>
+<p>In this exercise, you will extract topics that are trending in London and also look at the most tweeted trends. The libraries <code>rtweet</code> and <code>dplyr</code> have been pre-loaded for you.</p>
+<p><em>Note: <code>tweet_volume</code> is returned for trends only if this data is available.</em></p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Extract topics trending in London.</li>
+<li>View the first 6 columns of extracted data.</li>
+</ul></div>
+
+
+##
+
+
+
+##
+
+
+<div class>
+<p>Visualizing the frequency of tweets over time helps understand the interest level over a product. </p>
+<p>Walmart operates a chain of supermarkets and stores around the world. 
+It would be interesting to check the interest level and recall for the brand Walmart by visualizing the frequency of tweets.</p>
+<p>In this exercise, you will extract tweets on <code>"#walmart"</code> and create a time series plot for visualizing the interest levels.</p>
+<p>The library <code>rtweet</code> has been pre-loaded.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Extract tweets on <code>"#walmart"</code>, excluding all retweets.</li>
+</ul></div>
+
+
+##
+
+
+<div class>
+<p>A time series object contains the aggregated frequency of tweets over a specified time interval.</p>
+<p>Creating time series objects is the first step before visualizing tweet frequencies for comparison. </p>
+<p>In this exercise, you will be creating time series objects for the competing sportswear brands Puma and Nike.</p>
+<p>Tweets extracted using <code>search_tweets()</code> for <code>"#puma"</code> and <code>"#nike"</code> have been pre-loaded for you as <code>puma_st</code> and <code>nike_st</code>.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Create a time series object at hourly intervals for tweets on <code>"#puma"</code>.</li>
+</ul></div>
+
+<div class="exercise--instructions__content"><ul>
+<li>Create a time series object at hourly intervals for tweets on <code>"#nike"</code>.</li>
+</ul></div>
+
+##
+
+
+<div class>
+<p>The volume of tweets posted for a product is a strong indicator of its brand salience. Let's compare brand salience for two competing brands, Puma and Nike. </p>
+<p>In the previous exercise, you had created time series objects for tweets on Puma and Nike. 
+You will merge the time series objects and create time series plots to compare the frequency of tweets.</p>
+<p>The time series objects for Puma and Nike have been pre-loaded as <code>puma_ts</code> and <code>nike_ts</code> respectively.</p>
+<p>The libraries <code>rtweet</code>, <code>reshape</code>, and <code>ggplot2</code> have also been pre-loaded.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Merge the time series objects with <code>time</code> as the common column.</li>
+</ul></div>
+
+
+##
+
+
+
+##
+
+
+<div class>
+<p>Tweet text posted by twitter users is unstructured, noisy, and raw. </p>
+<p>It contains emoticons, URLs, and numbers. This redundant information has to be cleaned before analysis in order to yield reliable results. </p>
+<p>In this exercise, you will remove URLs and replace characters other than letters with spaces.</p>
+<p>The tweet data frame <code>twt_telmed</code>, with 1000 extracted tweets on <code>"telemedicine"</code>, has been pre-loaded for this exercise. </p>
+<p>The library <code>qdapRegex</code> has been pre-loaded for this exercise.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Extract tweet text from the pre-loaded dataset <code>twt_telmed</code>.</li>
+</ul></div>
+
+
+##
+
+
+<div class>
+<p>A corpus is a list of text documents. You have to convert the tweet text into a corpus to facilitate subsequent steps in text processing.</p>
+<p>When analyzing text, you want to ensure that a word is not counted as two different words because the case is different in the two instances. Hence, you need to convert text to lowercase. </p>
+<p>In this exercise, you will create a text corpus and convert all characters to lower case.</p>
+<p>The cleaned text output from the previous exercise has been pre-loaded as <code>twts_gsub</code>.</p>
+<p>The library <code>tm</code> has been pre-loaded for this exercise.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Convert text in <code>twt_gsub</code> data frame to a text corpus.</li>
+</ul></div>
+
+
+##
+
+
+<div class>
+<p>The text corpus usually has many common words like a, an, the, of, and but. These are called stop words.</p>
+<p>Stop words are usually removed during text processing so one can focus on the important words in the corpus to derive insights. </p>
+<p>Also, the additional spaces created during the removal of special characters, punctuation, numbers, and stop words need to be removed from the corpus.</p>
+<p>The corpus that you created in the last exercise has been pre-loaded as <code>twt_corpus_lwr</code>.</p>
+<p>The library <code>tm</code> has been pre-loaded for this exercise.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Remove English stop words from the corpus <code>twt_corpus_lwr</code>.</li>
+</ul></div>
+
+
+##
+
+
+
+##
+
+
+<div class>
+<p>Popular terms in a text corpus can be visualized using bar plots or word clouds.</p>
+<p>However, it is important to remove custom stop words present in the corpus first before using the visualization tools.</p>
+<p>In this exercise, you will check the term frequencies and remove custom stop words from the text corpus that you had created for <code>"telemedicine"</code>.</p>
+<p>The text corpus has been pre-loaded as <code>twt_corpus</code>.</p>
+<p>The libraries <code>qdap</code> and <code>tm</code> have been pre-loaded for this exercise.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Extract term frequencies for the top 60 words from <code>twt_corpus</code>.</li>
+</ul></div>
+
+
+##
+
+
+<div class>
+<p>Bar plot is a simple yet popular tool used in data visualization.</p>
+<p>It quickly helps summarize categories and their values in a visual form.</p>
+<p>In this exercise, you will create bar plots for the popular terms appearing in a text corpus.</p>
+<p>The refined text corpus that you created for <code>"telemedicine"</code> has been pre-loaded as <code>corp_refined</code>.</p>
+<p>The libraries <code>qdap</code> and <code>ggplot2</code> have been pre-loaded for this exercise.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Extract the term frequency for the top 10 words.</li>
+<li>Find terms with a frequency of more than 60.</li>
+<li>Create a bar plot.</li>
+</ul></div>
+
+<div class="exercise--instructions__content"><ul>
+<li>Extract the term frequency for the top 25 words.</li>
+<li>Find terms with a frequency of more than 50.</li>
+<li>Create a bar plot.</li>
+</ul></div>
+
+##
+
+
+<div class>
+<p>A word cloud is an image made up of words in which the size of each word indicates its frequency. </p>
+<p>It is an effective promotional image for marketing campaigns.</p>
+<p>In this exercise, you will create word clouds using the words in a text corpus.</p>
+<p>The refined text corpus that you created for <code>"telemedicine"</code> has been pre-loaded as <code>corp_refined</code>.</p>
+<p>The libraries <code>wordcloud</code> and <code>RColorBrewer</code> have been pre-loaded for this exercise.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Create a word cloud in red with min frequency of 20.</li>
+<li>Set scale for the font size range as 3 to 0.5.</li>
+</ul></div>
+
+<div class="exercise--instructions__content"><ul>
+<li>Create a word cloud with 6 colors and max 50 words.</li>
+<li>Set scale for the font size range as 4 to 1.</li>
+</ul></div>
+
+##
+
+
+
+##
+
+
+
+##
+
+
+<div class>
+<p>The document term matrix or DTM is a matrix representation of a corpus.</p>
+<p>Creating the DTM from the text corpus is the first step towards building a topic model. </p>
+<p>Can you create a DTM from the pre-loaded corpus on <code>"Climate change"</code> called <code>corpus_climate</code>?</p>
+<p>The library <code>tm</code> has been pre-loaded for this exercise.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Create a document term matrix (DTM) from the corpus.</li>
+</ul></div>
+
+
+##
+
+
+<div class>
+<p>Topic modeling is the task of automatically discovering topics from a vast amount of text.</p>
+<p>You can create topic models from the tweet text to quickly summarize the vast information available into distinct topics and gain insights.</p>
+<p>In this exercise, you will extract distinct topics from tweets on <code>"Climate change"</code>.</p>
+<p>The DTM of tweets on "Climate change" has been pre-loaded as <code>dtm_climate_new</code>.</p>
+<p>The library <code>topicmodels</code> has been pre-loaded for this exercise.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Create a topic model with 5 topics from the DTM.</li>
+<li>Select and view the top 10 terms in the topic model.</li>
+</ul></div>
+
+<div class="exercise--instructions__content"><ul>
+<li>Create a topic model with 4 topics from the DTM.</li>
+<li>Select and view the top 6 terms in the topic model.</li>
+</ul></div>
+
+##
+
+
+
+##
+
+
+<div class>
+<p>Sentiment analysis is useful in social media monitoring since it gives an overview of people's sentiments.</p>
+<p>Climate change is a widely discussed topic for which the perceptions range from being a severe threat to nothing but a hoax. </p>
+<p>In this exercise, you will perform sentiment analysis and extract the sentiment scores for tweets on <code>"Climate change"</code>. </p>
+<p>You will use those sentiment scores in the next exercise to plot and analyze how the collective sentiment varies among people.</p>
+<p>Tweets on <code>"Climate change"</code>, extracted using <code>search_tweets()</code>, have been pre-loaded as <code>tweets_cc</code>. </p>
+<p>The library <code>syuzhet</code> has been pre-loaded for this exercise.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Perform sentiment analysis for tweets on <code>"Climate change"</code>.</li>
+<li>View the sentiment scores.</li>
+</ul></div>
+
+
+##
+
+
+<div class>
+<p>You have extracted the sentiment scores for tweets on <code>"Climate change"</code> in the previous exercise.</p>
+<p>Can you plot and analyze the most prevalent sentiments among people and see how the collective sentiment varies?</p>
+<p>The data frame with the extracted sentiment scores has been pre-loaded as <code>sa.value</code>. </p>
+<p>The library <code>ggplot2</code> has been pre-loaded for this exercise.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Get the sum of the sentiment scores for each emotion.</li>
+<li>Convert the sum of scores to a data frame.</li>
+</ul></div>
+
+
+##
+
+
+
+##
+
+
+<div class>
+<p>A retweet network is a network of twitter users who retweet tweets posted by other users.</p>
+<p>People who retweet on travel can be potential players for broadcasting messages of a travel portal.</p>
+<p>In this exercise, you will prepare the tweet data on <code>#travel</code> for creating a retweet network.</p>
+<p>The tweet data frame has been pre-loaded as <code>twts_travel</code>.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Extract source and target vertices from the tweet data frame.</li>
+</ul></div>
+
+
+##
+
+
+<div class>
+<p>The core step in network analysis is to create a network object like a retweet network as it helps analyze the inter-relationships between the nodes.</p>
+<p>Understanding the position of potential customers on a retweet network allows a brand to identify key players who are likely to retweet posts to spread brand messaging.</p>
+<p>Can you create a retweet network on <code>#travel</code> using the matrix saved in the previous exercise?</p>
+<p>The matrix <code>rtwt_matrx</code> and the library <code>igraph</code> have been pre-loaded for this exercise.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Convert the matrix to a retweet network.</li>
+</ul></div>
+
+
+##
+
+
+
+##
+
+
+<div class>
+<p>In a retweet network, the out-degree of a user indicates the number of times the user retweets posts. </p>
+<p>Users with high out-degree scores are key players who can be used as a medium to retweet promotional posts.</p>
+<p>Can you identify users who can be used as a medium to retweet promotional posts for a travel portal? </p>
+<p>The retweet network on <code>#travel</code> has been pre-loaded as <code>nw_rtweet</code>.</p>
+<p>The library <code>igraph</code> has been pre-loaded for this exercise.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Calculate out-degree scores from the retweet network.</li>
+<li>Sort the out-degree scores in decreasing order.</li>
+<li>View users with the top 10 out-degree scores.</li>
+</ul></div>
+
+
+##
+
+
+<div class>
+<p>In a retweet network, the in-degree of a user indicates the number of times the user's posts are retweeted.</p>
+<p>Users with high in-degrees are influential as their tweets are retweeted many times.</p>
+<p>In this exercise, you will identify users who can be used to initiate branding messages of a travel portal. </p>
+<p>The retweet network on <code>#travel</code> has been pre-loaded as <code>nw_rtweet</code>.</p>
+<p>The library <code>igraph</code> has been pre-loaded for this exercise.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Compute in-degree scores from the retweet network.</li>
+<li>Sort the in-degree scores in decreasing order.</li>
+<li>View users with the top 10 in-degree scores.</li>
+</ul></div>
+
+
+##
+
+
+<div class>
+<p>Betweenness centrality represents the degree to which nodes stand between each other. </p>
+<p>In a retweet network, a user with a high betweenness centrality score would have more control over the network because more information will pass through the user.</p>
+<p>Can you identify users who are central to people who retweet the most and those whose tweets are retweeted frequently?</p>
+<p>The retweet network on <code>#travel</code> has been pre-loaded as <code>nw_rtweet</code>.</p>
+<p>The library <code>igraph</code> has been pre-loaded for this exercise.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Calculate betweenness scores from the retweet network.</li>
+<li>Sort the betweenness scores in decreasing order and round the values.</li>
+<li>View users with the top 10 betweenness scores.</li>
+</ul></div>
+
+
+##
+
+
+
+##
+
+
+<div class>
+<p>Visualization of twitter networks helps understand complex networks in an easier and appealing way.</p>
+<p>You can format a plot to enhance the readability and improve its visual appeal.</p>
+<p>In this exercise, you will visualize a retweet network on <code>#travel</code>.</p>
+<p>The retweet network has been pre-loaded as <code>nw_rtweet</code>. </p>
+<p>The library <code>igraph</code> has been pre-loaded for this exercise.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Create a base network plot for the retweet network.</li>
+</ul></div>
+
+
+##
+
+
+<div class>
+<p>It will be more meaningful if the vertex size in the plot is proportional to the number of times the user retweets.</p>
+<p>In this exercise, you will add attributes such that the vertex size is indicative of the number of times the user retweets. </p>
+<p>The retweet network has been pre-loaded as <code>nw_rtweet</code>. </p>
+<p>The library <code>igraph</code> has been pre-loaded for this exercise.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Create a variable for out-degree.</li>
+</ul></div>
+
+
+##
+
+
+<div class>
+<p>The users who retweet most will add more value if they have a high follower count as their retweets will reach a wider audience.</p>
+<p>In a network plot, the combination of vertex size indicating the number of retweets by a user and vertex color indicating a high follower count provides clear insights on the most influential users who can promote a brand.</p>
+<p>In this exercise, you will create a plot showing the most influential users.</p>
+<p>The retweet network <code>nw_rtweet</code>, the dataset <code>followers</code> with the follower count, and <code>vert_size</code> created in the last exercise have all been pre-loaded.</p>
+<p>The library <code>igraph</code> has been pre-loaded for this exercise.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>In <code>followers</code>, create a column and categorize follower counts above and below 500.</li>
+</ul></div>
+
+
+##
+
+
+
+##
+
+
+<div class>
+<p>Analyzing the geolocation of tweets helps influence customers with targeted marketing. </p>
+<p>The first step in analyzing geolocation data using maps is to extract the available geolocation coordinates.</p>
+<p>Veganism is a widely promoted topic. It is the practice of abstaining from the use of animal products and its followers are known as "vegans".</p>
+<p>In this exercise, you will extract the geolocation coordinates from tweets on <code>"#vegan"</code>. </p>
+<p>The library <code>rtweet</code> has been pre-loaded for this exercise.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Extract 18000 tweets on <code>#vegan</code> using <code>search_tweets()</code>.</li>
+</ul></div>
+
+
+##
+
+
+<div class>
+<p>It will be interesting to visualize tweets on <code>"#vegan"</code> on the map to see regions from where they are tweeted the most. A brand promoting vegan products can target people in these regions for their marketing. </p>
+<p>Remember not all tweets will have the geolocation data as this is an optional input for the users. </p>
+<p>The geolocation coordinates that you had extracted in the last exercise has been pre-loaded as <code>vegan_coord</code>.</p>
+<p>The library <code>maps</code> has also been pre-loaded for this exercise.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Omit rows with missing geo-coordinates in the data frame.</li>
+</ul></div>
+
+
+##
+
+

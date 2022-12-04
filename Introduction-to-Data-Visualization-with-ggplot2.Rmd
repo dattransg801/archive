@@ -1,0 +1,1743 @@
+# Visualization {.unnumbered}
+
+## Introduction to ggplot2 {.unnumbered}
+
+<!-- # Introduction to Ggplot2 {.unnumbered} -->
+
+<h3 class="course__description-title">Rick Scavetta</h3>
+<p class="course__description">Rick Scavetta is a biologist, workshop trainer, freelance data scientist and cofounder of Scavetta Academy, a company dedicated to helping scientists better understand and visualize their data. Rick's practical, hands-on exposure to a wide variety of datasets has informed him of the many problems scientists face when trying to visualize their data.</p>
+
+**Course Description**
+
+<p class="course__description">The ability to produce meaningful and beautiful data visualizations is an essential part of your skill set as a data scientist. This course, the first R data visualization tutorial in the series, introduces you to the principles of good visualizations and the grammar of graphics plotting concepts implemented in the ggplot2 package. ggplot2 has become the go-to tool for flexible and professional plots in R. Here, we’ll examine the first three essential layers for making a plot - Data, Aesthetics and Geometries. By the end of the course you will be able to make complex exploratory plots.</p>
+
+### Introduction {.unnumbered}
+
+<p class="chapter__description">
+    In this chapter we’ll get you into the right frame of mind for developing meaningful visualizations with R. You’ll understand that as a communications tool, visualizations require you to think about your audience first. You’ll also be introduced to the basics of ggplot2 - the 7 different grammatical elements (layers) and aesthetic mappings.
+  </p>
+
+#### Introduction {.unnumbered}
+
+
+
+##### Explore and explain {.unnumbered}
+
+<p>In this video we made the distinction between plots for exploring and plots for explaining data. Which of the following are exploratory plots typically <em>NOT</em>?</p>
+
+- [ ] Meant for a specialist audience.
+- [ ] Data-heavy.
+- [x] Pretty.
+- [ ] Rough first drafts.
+- [ ] Part of our data science toolkit as graphical data analysis.
+
+<p class="dc-completion-pane__message dc-u-maxw-100pc">Exactly. You're not concerned with beautiful at this point. However, the plots should be meaningful and conform to best practices so that you do not mislead yourself!</p>
+
+##### Drawing your first plot {.unnumbered}
+
+
+<div class><p>To get a first feel for <code>ggplot2</code>, let's try to run some basic <code>ggplot2</code> commands. The <code>mtcars</code> dataset contains information on 32 cars from a 1973 issue of Motor Trend magazine. This dataset is small, intuitive, and contains a variety of continuous and categorical variables.</p></div>
+
+
+<li>Load the <code>ggplot2</code> package using <a href="http://www.rdocumentation.org/packages/base/functions/library"><code>library()</code></a>.</li>
+<li>Use <a href="http://www.rdocumentation.org/packages/utils/functions/str"><code>str()</code></a> to explore the structure of the <code>mtcars</code> dataset.</li>
+<li>Hit submit. This will execute the example code on the right. See if you can understand what <code>ggplot</code> does with the data.</li>
+```{r}
+# Load the ggplot2 package
+library(ggplot2)
+
+# Explore the mtcars data frame with str()
+str(mtcars)
+
+# Execute the following command
+p <- ggplot(mtcars, aes(cyl, mpg)) +
+  geom_point()
+```
+
+<p class="">Phenomenal plotting! Notice that <code>ggplot2</code> treats <code>cyl</code> as a continuous variable. You get a plot, but it's not quite right, because it gives the impression that there is such a thing as a 5 or 7-cylinder car, which there is not.
+</p>
+
+##### Data columns types affect plot types {.unnumbered}
+
+
+<div class><p>The plot from the previous exercise wasn't really satisfying. Although <code>cyl</code> (the number of cylinders) is categorical, you probably noticed that it is classified as numeric in <code>mtcars</code>. This is really misleading because the representation in the plot doesn't match the actual data type. You'll have to explicitly tell <code>ggplot2</code> that <code>cyl</code> is a categorical variable.</p></div>
+
+
+<li>Change the <a href="http://www.rdocumentation.org/packages/ggplot2/functions/ggplot"><code>ggplot()</code></a> command by wrapping <a href="http://www.rdocumentation.org/packages/base/functions/factor"><code>factor()</code></a> around <code>cyl</code>.</li>
+<li>Hit submit and see if the resulting plot is better this time.</li>
+```{r}
+# Load the ggplot2 package
+library(ggplot2)
+
+# Change the command below so that cyl is treated as factor
+ggplot(mtcars, aes(factor(cyl), mpg)) +
+  geom_point()
+```
+
+<p class="">Stellar scatterplotting! Notice that <code>ggplot2</code> treats <code>cyl</code> as a factor. This time the x-axis does not contain variables like 5 or 7, only the values that are present in the dataset.
+</p>
+
+#### The grammar of graphics {.unnumbered}
+
+
+
+##### Mapping data columns to aesthetics {.unnumbered}
+
+
+<div class>
+<p>Let's dive a little deeper into the three main topics in this course: The data, aesthetics, and geom layers. We'll get to making pretty plots in the last chapter with the themes layer.</p>
+<p>We'll continue working on the 32 cars in the <code>mtcars</code> data frame.</p>
+<p>Consider how the examples and concepts we discuss throughout these courses apply to your own data-sets!</p>
+</div>
+<div class="exercise--instructions__content"><p>Add a color aesthetic mapped to the displacement of the car engine: inside <a href="http://www.rdocumentation.org/packages/ggplot2/functions/aes"><code>aes()</code></a>, add a <code>color</code> argument equal to <code>disp</code>.</p></div>
+```{r}
+# Edit to add a color aesthetic mapped to disp
+ggplot(mtcars, aes(wt, mpg, color = disp)) +
+  geom_point()
+```
+
+<div class="exercise--instructions__content"><p>This time, map <code>disp</code> to the <code>size</code> aesthetic.</p></div>
+```{r}
+# Change the color aesthetic to a size aesthetic
+ggplot(mtcars, aes(wt, mpg, size = disp)) +
+  geom_point()
+```
+
+<p class="">Legendary! Notice that a legend for the color and size scales was automatically generated.
+</p>
+
+##### Understanding variables {.unnumbered}
+
+
+<div class>
+<p>In the previous exercise you saw that <code>disp</code> can be mapped onto a color gradient or onto a continuous size scale.</p>
+<p>Another argument of <a href="http://www.rdocumentation.org/packages/ggplot2/functions/aes"><code>aes()</code></a> is the <code>shape</code> of the points. There are a finite number of shapes which <a href="http://www.rdocumentation.org/packages/ggplot2/functions/ggplot"><code>ggplot()</code></a> can automatically assign to the points. However, if you try this command in the console:</p>
+<pre><code>ggplot(mtcars, aes(wt, mpg, shape = disp)) +
+  geom_point()
+</code></pre>
+<p>It gives an error. What does this mean?</p>
+</div>
+
+- [ ] <code>shape</code> is not a defined argument.
+- [x] <code>shape</code> only makes sense with categorical data, and <code>disp</code> is continuous.
+- [ ] <code>shape</code> only makes sense with continuous data, and <code>disp</code> is categorical.
+- [ ] <code>shape</code> is not a variable in your dataset.
+- [ ] <code>shape</code> has to be defined as a function.
+
+<p class="">Correct. The error message 'A continuous variable can not be mapped to shape', means that shape doesn't exist on a continuous scale here.
+</p>
+
+#### ggplot2 layers {.unnumbered}
+
+
+
+##### Adding geometries {.unnumbered}
+
+
+<div class>
+<p>The <code>diamonds</code> dataset contains details of 1,000 diamonds. Among the variables included are <code>carat</code> (a measurement of the diamond's size) and <code>price</code>.</p>
+<p>You'll use two common geom layer functions:</p>
+
+<li>
+<a href="http://www.rdocumentation.org/packages/ggplot2/functions/geom_point"><code>geom_point()</code></a> adds points (as in a scatter plot).</li>
+<li>
+<a href="http://www.rdocumentation.org/packages/ggplot2/functions/geom_smooth"><code>geom_smooth()</code></a> adds a smooth trend curve.</li>
+
+<p>As you saw previously, these are added using the <code>+</code> operator.</p>
+<pre><code>ggplot(data, aes(x, y)) +
+  geom_*()
+</code></pre>
+<p>Where <code>*</code> is the specific geometry needed.</p>
+</div>
+<div class="exercise--instructions__content"><p>Explore the <code>diamonds</code> data frame with the <a href="http://www.rdocumentation.org/packages/utils/functions/str"><code>str()</code></a> function.</p></div>
+```{r}
+# Explore the diamonds data frame with str()
+str(diamonds)
+```
+
+<div class="exercise--instructions__content"><p>Edit the plot code to add a point geom. Use the <code>+</code> operator to add <a href="http://www.rdocumentation.org/packages/ggplot2/functions/geom_point"><code>geom_point()</code></a> to the <a href="http://www.rdocumentation.org/packages/ggplot2/functions/ggplot"><code>ggplot()</code></a> command.</p></div>
+
+<div class="exercise--instructions__content"><p>Add a smooth geom to the plot. Use the <code>+</code> operator to add <a href="http://www.rdocumentation.org/packages/ggplot2/functions/geom_smooth"><code>geom_smooth()</code></a>.</p></div>
+```{r}
+# Add geom_smooth() with +
+ggplot(diamonds, aes(carat, price)) +
+  geom_point() +
+  geom_smooth()
+```
+
+<p class="">Lovely layering! If you had executed the command without adding a <code>+</code>, it would produce an error message 'No layers in plot' because you are missing the third essential layer - the geom layer.
+</p>
+
+##### Changing one geom or every geom {.unnumbered}
+
+
+<div class>
+<p>If you have multiple geoms, then mapping an aesthetic to data variable inside the call to <code>ggplot()</code> will change <em>all</em> the geoms. It is also possible to make changes to <em>individual</em> geoms by passing arguments to the <code>geom_*()</code> functions.</p>
+<p><code>geom_point()</code> has an <code>alpha</code> argument that controls the opacity of the points. A value of <code>1</code> (the default) means that the points are totally opaque; a value of <code>0</code> means the points are totally transparent (and therefore invisible). Values in between specify transparency.</p>
+<p>The plot you drew last time is provided in the script.</p>
+</div>
+<div class="exercise--instructions__content"><p>Edit the plot code to map the <code>color</code> aesthetic to the <code>clarity</code> data variable.</p></div>
+```{r}
+# Map the color aesthetic to clarity
+ggplot(diamonds, aes(carat, price, color = clarity)) +
+  geom_point() +
+  geom_smooth()
+```
+
+<div class="exercise--instructions__content"><p>Make the points translucent by setting the <code>alpha</code> argument to <code>0.4</code>.</p></div>
+```{r}
+# Make the points 40% opaque
+ggplot(diamonds, aes(carat, price, color = clarity)) +
+  geom_point(alpha = 0.4) +
+  geom_smooth()
+```
+
+<p class="">Smooth work! <code>geom_point()</code> + <code>geom_smooth()</code> is a common combination.
+</p>
+
+##### Saving plots as variables {.unnumbered}
+
+
+<div class><p>Plots can be saved as variables, which can be added two later on using the <code>+</code> operator. This is really useful if you want to make multiple related plots from a common base.</p></div>
+
+
+<li>Using the <code>diamonds</code> dataset, plot the <code>price</code> (y-axis) versus the <code>carat</code> (x-axis), assigning to <code>plt_price_vs_carat</code>.</li>
+<li>Using <code>geom_point()</code>, add a point layer to <code>plt_price_vs_carat</code>.</li>
+```{r}
+# Draw a ggplot
+plt_price_vs_carat <- ggplot(
+  # Use the diamonds dataset
+  diamonds,
+  # For the aesthetics, map x to carat and y to price
+  aes(carat, price)
+)
+
+# Add a point layer to plt_price_vs_carat
+plt_price_vs_carat + geom_point()
+```
+
+
+<li>Add an <code>alpha</code> argument to the point layer to make the points 20% opaque, assigning to <code>plt_price_vs_carat_transparent</code>.</li>
+<li>Type the plot's variable name (<code>plt_price_vs_carat_transparent</code>) to display it.</li>
+```{r}
+# Edit this to make points 20% opaque: plt_price_vs_carat_transparent
+plt_price_vs_carat_transparent <- plt_price_vs_carat + geom_point(alpha = 0.2)
+
+# See the plot
+plt_price_vs_carat_transparent
+```
+
+
+<li>Inside <code>geom_point()</code>, call <code>aes()</code> and map <code>color</code> to <code>clarity</code>, assigning to <code>plt_price_vs_carat_by_clarity</code>.</li>
+<li>Type the plot's variable name (<code>plt_price_vs_carat_by_clarity</code>) to display it.</li>
+
+```{r}
+# Edit this to map color to clarity
+# Assign the updated plot to a new object
+plt_price_vs_carat_by_clarity <- plt_price_vs_carat + geom_point(aes(color = clarity))
+
+# See the plot
+plt_price_vs_carat_by_clarity
+```
+
+<p class="">Super saving of plotting steps! By assigning parts of plots to a variable then reusing that variable in other plots, it makes it really clear how much those plots have in common.
+</p>
+
+### Aesthetics {.unnumbered}
+
+<p class="chapter__description">
+    Aesthetic mappings are the cornerstone of the grammar of graphics plotting concept. This is where the magic happens - converting continuous and categorical data into visual scales that provide access to a large amount of information in a very short time. In this chapter you’ll understand how to choose the best aesthetic mappings for your data.
+  </p>
+
+#### Visible aesthetics {.unnumbered}
+
+
+
+##### All about aesthetics: color, shape and size {.unnumbered}
+
+
+<div class>
+<p>In the video you saw 9 visible aesthetics. Let's apply them to a categorical variable — the cylinders in <code>mtcars</code>, <code>cyl</code>.</p>
+<p>These are the aesthetics you can consider within <a href="http://www.rdocumentation.org/packages/ggplot2/functions/aes"><code>aes()</code></a> in this chapter: <code>x</code>, <code>y</code>, <code>color</code>, <code>fill</code>, <code>size</code>, <code>alpha</code>, <code>labels</code> and <code>shape</code>.</p>
+<p>One common convention is that you don't name the <code>x</code> and <code>y</code> arguments to <code>aes()</code>, since they almost always come first, but you do name other arguments.</p>
+<p>In the following exercise the <code>fcyl</code> column is categorical. It is <code>cyl</code> transformed into a <code>factor</code>.</p>
+</div>
+```{r}
+# edited/added
+library(tidyverse)
+library(forcats)
+
+mtcars <- mtcars %>% 
+  mutate(fcyl = as.factor(cyl),
+         fam = as.factor(am)) %>% 
+  mutate(fam = fct_recode(fam,
+                          "manual" = "1",
+                          "automatic" = "0"))
+```
+
+<div class="exercise--instructions__content"><p>Map <code>mpg</code> onto the <code>x</code> aesthetic, and <code>fcyl</code> onto the <code>y</code>.</p></div>
+```{r}
+# Map x to mpg and y to fcyl
+ggplot(mtcars, aes(mpg, fcyl)) +
+  geom_point()
+```
+
+<div class="exercise--instructions__content"><p>Swap the mappings of the first plot: <code>fcyl</code> onto the <code>x</code> aesthetic, and <code>mpg</code> onto the <code>y</code>.</p></div>
+```{r}
+# Swap mpg and fcyl
+ggplot(mtcars, aes(fcyl, mpg)) +
+  geom_point()
+```
+
+<div class="exercise--instructions__content"><p>Map <code>wt</code> onto <code>x</code>, <code>mpg</code> onto <code>y</code>, and <code>fcyl</code> onto <code>color</code>.</p></div>
+```{r}
+# Map x to wt, y to mpg and color to fcyl
+ggplot(mtcars, aes(wt, mpg, color = fcyl)) +
+  geom_point()
+```
+
+<div class="exercise--instructions__content"><p>Modify the point layer of the previous plot by changing the <code>shape</code> argument to <code>1</code> and increasing the <code>size</code> to <code>4</code>.</p></div>
+```{r}
+ggplot(mtcars, aes(wt, mpg, color = fcyl)) +
+  # Set the shape and size of the points
+  geom_point(shape = 1, size = 4)
+```
+
+<p class="">Astounding aestheticism! Head over to the next exercise for some more aesthetics!
+</p>
+
+##### All about aesthetics: color vs. fill {.unnumbered}
+
+
+<div class>
+<p>Typically, the <code>color</code> aesthetic changes the <em>outline</em>  of a geom and the <code>fill</code> aesthetic changes the <em>inside</em>. <code>geom_point()</code> is an exception: you use <code>color</code> (not <code>fill</code>) for the point color. However, some shapes have special behavior.</p>
+<p>The default <code>geom_point()</code> uses <code>shape = 19</code>: a solid circle. An alternative is <code>shape = 21</code>: a circle that allow you to use <em>both</em> <code>fill</code> for the inside <em>and</em> <code>color</code> for the outline. This is lets you to map two aesthetics to each point.</p>
+<p>All shape values are described on the <a href="https://www.rdocumentation.org/packages/graphics/topics/points"><code>points()</code></a> help page.</p>
+<p><code>fcyl</code> and <code>fam</code> are the <code>cyl</code> and <code>am</code> columns converted to factors, respectively.</p>
+</div>
+<div class="exercise--instructions__content"><p>Change the aesthetics so that <code>fcyl</code> maps to <code>fill</code> rather than <code>color</code>.</p></div>
+```{r}
+# Map fcyl to fill
+ggplot(mtcars, aes(wt, mpg, fill = fcyl)) +
+  geom_point(shape = 1, size = 4)
+```
+
+<div class="exercise--instructions__content"><p>In <code>geom_point()</code> change the <code>shape</code> argument to <code>21</code> and add an <code>alpha</code> argument set to <code>0.6</code>.</p></div>
+```{r}
+ggplot(mtcars, aes(wt, mpg, fill = fcyl)) +
+  # Change point shape; set alpha
+  geom_point(shape = 21, size = 4, alpha = 0.6)
+```
+
+<div class="exercise--instructions__content"><p>In the <code>ggplot()</code> aesthetics, map <code>fam</code> to <code>color</code>.</p></div>
+```{r}
+# Map color to fam
+ggplot(mtcars, aes(wt, mpg, fill = fcyl, color = fam)) +
+  geom_point(shape = 21, size = 4, alpha = 0.6)
+```
+
+<p class="">Shapely coding! Notice that mapping a categorical variable onto fill doesn't change the colors, although a legend is generated! This is because the default shape for points only has a color attribute and not a fill attribute! Use fill when you have another shape (such as a bar), or when using a point that does have a fill and a color attribute, such as <code>shape = 21</code>, which is a circle with an outline. Any time you use a solid color, make sure to use alpha blending to account for over plotting.
+</p>
+
+##### All about aesthetics: comparing aesthetics {.unnumbered}
+
+
+<div class><p>Now that you've got some practice with using attributes, be careful of a major pitfall: these attributes can overwrite the aesthetics of your plot!</p></div>
+
+
+
+<li>Using <code>mtcars</code>, create a plot base layer, <code>plt_mpg_vs_wt</code>. Map <code>mpg</code> onto <code>y</code> and <code>wt</code> onto <code>x</code>.</li>
+<li>Add a point layer, mapping the categorical no. of cylinders, <code>fcyl</code>, onto <code>size</code>.</li>
+```{r}
+# Establish the base layer
+plt_mpg_vs_wt <- ggplot(mtcars, aes(wt, mpg))
+
+# Map fcyl to size
+plt_mpg_vs_wt +
+  geom_point(aes(size = fcyl))  
+```
+
+
+<div class="exercise--instructions__content"><p>Change the mapping. This time <code>fcyl</code> should be mapped onto <code>alpha</code>.</p></div>
+```{r}
+# Base layer
+plt_mpg_vs_wt <- ggplot(mtcars, aes(wt, mpg))
+
+# Map fcyl to alpha, not size
+plt_mpg_vs_wt +
+  geom_point(aes(alpha = fcyl))
+```
+
+
+<div class="exercise--instructions__content"><p>Change the mapping again. This time <code>fycl</code> should be mapped onto <code>shape</code>.</p></div>
+
+```{r}
+# Base layer
+plt_mpg_vs_wt <- ggplot(mtcars, aes(wt, mpg))
+
+# Map fcyl to shape, not alpha
+plt_mpg_vs_wt +
+  geom_point(aes(shape = fcyl))
+```
+<li>Swap the geom layer: change points to text.</li>
+<li>Change the mapping again. This time <code>fycl</code> should be mapped onto <code>label</code>.</li>
+```{r}
+# Base layer
+plt_mpg_vs_wt <- ggplot(mtcars, aes(wt, mpg))
+
+# Use text layer and map fcyl to label
+plt_mpg_vs_wt +
+  geom_text(aes(label = fcyl))
+```
+
+<p class="">Nice! Which aesthetic do you think is the clearest for categorical data?
+</p>
+
+##### Aesthetics for categorical &amp; continuous variables {.unnumbered}
+
+<p>Many of the aesthetics can accept either continuous or categorical variables, but some are restricted to categorical data. Which aesthetics are only applicable to categorical data?</p>
+
+- [ ] <code>color</code> &amp; <code>fill</code>
+- [ ] <code>alpha</code> &amp; <code>size</code>
+- [x] <code>label</code> &amp; <code>shape</code>
+- [ ] <code>alpha</code> &amp; <code>label</code>
+- [ ] <code>x</code> &amp; <code>y</code>
+
+<p class="dc-completion-pane__message dc-u-maxw-100pc">Great! <code>label</code> and <code>shape</code> are only applicable to categorical data.</p>
+
+#### Using attributes {.unnumbered}
+
+
+
+##### All about attributes: color, shape, size and alpha {.unnumbered}
+
+
+<div class>
+<p>This time you'll use these arguments to set <em>attributes</em> of the plot, not map variables onto <em>aesthetics</em>.</p>
+<p>You can specify colors in R using <strong>hex codes</strong>: a hash followed by two hexadecimal numbers each for red, green, and blue (<code>"#RRGGBB"</code>). Hexadecimal is base-16 counting. You have 0 to 9, and A representing 10 up to F representing 15. Pairs of hexadecimal numbers give you a range from 0 to 255. <code>"#000000"</code> is "black" (no color), <code>"#FFFFFF"</code> means "white", and `"#00FFFF" is cyan (mixed green and blue).</p>
+<p>A hexadecimal color variable, <code>my_blue</code> has been defined for you.</p>
+</div>
+
+
+
+<div class="exercise--instructions__content"><p>Set the point color to <code>my_blue</code> and the alpha to <code>0.6</code>.</p></div>
+```{r}
+# A hexadecimal color
+my_blue <- "#4ABEFF"
+
+ggplot(mtcars, aes(wt, mpg)) +
+  # Set the point color to my_blue
+  geom_point(color = my_blue, alpha = 0.6)
+```
+
+
+
+<li>Change the <code>color</code> mapping to a <code>fill</code> mapping. That is, <code>fcyl</code> should be mapped onto <code>fill</code>.</li>
+<li>Set the <code>color</code> of the points to <code>my_blue</code>, point <code>size</code> to <code>10</code> and the point <code>shape</code> to <code>1</code>.</li>
+```{r}
+# A hexadecimal color
+my_blue <- "#4ABEFF"
+
+# Change the color mapping to a fill mapping
+ggplot(mtcars, aes(wt, mpg, fill = fcyl)) +
+  # Set point size to 10; shape to 1
+  geom_point(color = my_blue, size = 10, shape = 1)
+```
+
+<p class="">Hunky-dory hex specs! <code>ggplot2</code> lets you control these attributes in many ways to customize your plots.
+</p>
+
+##### All about attributes: conflicts with aesthetics {.unnumbered}
+
+
+<div class>
+<p>In the videos you saw that you can use all the aesthetics as attributes. Let's see how this works with the aesthetics you used in the previous exercises: <code>x</code>, <code>y</code>, <code>color</code>, <code>fill</code>, <code>size</code>, <code>alpha</code>, <code>label</code> and <code>shape</code>.</p>
+<p>In this exercise you will set all kinds of attributes of the points!</p>
+<p>You will continue to work with <code>mtcars</code>.</p>
+</div>
+<div class="exercise--instructions__content"><p>Add a point layer, setting <code>alpha</code>, the transparency, to <code>0.5</code>.</p></div>
+```{r}
+ggplot(mtcars, aes(wt, mpg, color = fcyl)) +
+  # Add point layer with alpha 0.5
+  geom_point(alpha = 0.5)
+```
+
+<div class="exercise--instructions__content"><p>Add a text layer, setting the <code>label</code> to the rownames of the dataset <code>mtcars</code>, and the <code>color</code> to <code>"red"</code>.</p></div>
+```{r}
+ggplot(mtcars, aes(wt, mpg, color = fcyl)) +
+  # Add text layer with label rownames(mtcars) and color red
+  geom_text(label = rownames(mtcars), color = 'red')
+```
+
+<div class="exercise--instructions__content"><p>Add a point layer, setting the <code>shape</code> to <code>24</code> and the <code>color</code> to <code>"yellow"</code>.</p></div>
+```{r}
+ggplot(mtcars, aes(wt, mpg, color = fcyl)) +
+  # Add points layer with shape 24 and color yellow
+  geom_point(shape = 24, color = 'yellow')
+```
+
+<p class="">Great work!
+</p>
+
+##### Going all out {.unnumbered}
+
+
+<div class>
+<p>In this exercise, you will gradually add more aesthetics layers to the plot. You're still working with the <code>mtcars</code> dataset, but this time you're using more features of the cars. Each of the columns is described on the <a href="https://www.rdocumentation.org/packages/datasets/topics/mtcars"><code>mtcars</code></a> help page. Columns <code>fcyl</code> and <code>fam</code> have been added (as before) as categorical versions of <code>cyl</code> and <code>am</code> respectively.</p>
+<p>Notice that adding more aesthetic mappings to your plot is not always a good idea! You may just increase complexity and decrease readability.</p>
+</div>
+
+
+<li>Use <code>mtcars</code> to draw a plot of <code>qsec</code> vs. <code>mpg</code>, colored by <code>fcyl</code>.</li>
+<li>Add a point layer.</li>
+```{r}
+# 3 aesthetics: qsec vs. mpg, colored by fcyl
+ggplot(mtcars, aes(mpg, qsec, color = fcyl)) +
+  geom_point()
+```
+
+
+<div class="exercise--instructions__content"><p>Add another aesthetic: map <code>fam</code> onto <code>shape</code>.</p></div>
+```{r}
+# 4 aesthetics: add a mapping of shape to fam
+ggplot(mtcars, aes(mpg, qsec, color = fcyl, shape = fam)) +
+  geom_point()
+```
+
+<div class="exercise--instructions__content"><p>Add another two aesthetics: map <code>hp</code> <em>divided by</em> <code>wt</code> onto <code>size</code>.</p></div>
+```{r}
+# 5 aesthetics: add a mapping of size to hp / wt
+ggplot(mtcars, aes(mpg, qsec, color = fcyl, shape = fam, size = hp / wt)) +
+  geom_point()
+```
+
+<p class="">That's a pretty slick plot! Between the x and y dimensions, the color, shape, and size of the points, your plot displays five dimensions of the dataset!
+</p>
+
+#### Modifying aesthetics {.unnumbered}
+
+
+
+##### Updating aesthetic labels {.unnumbered}
+
+
+<div class>
+<p>In this exercise, you'll modify some aesthetics to make a bar plot of the number of cylinders for cars with different types of transmission.</p>
+<p>You'll also make use of some functions for improving the appearance of the plot.</p>
+
+<li>
+<a href="https://www.rdocumentation.org/packages/ggplot2/topics/labs"><code>labs()</code></a> to set the x- and y-axis labels. It takes strings for each argument.</li>
+<li>
+<a href="https://www.rdocumentation.org/packages/ggplot2/topics/scale_manual"><code>scale_color_manual()</code></a> defines properties of the color scale (i.e. axis). The first argument sets the legend title. <code>values</code> is a named vector of colors to use.</li>
+
+</div>
+<div class="exercise--instructions__content"><p>Set the x-axis label to <code>"Number of Cylinders"</code>, and the y-axis label to <code>"Count"</code> using the <code>x</code> and <code>y</code> arguments of <a href="https://www.rdocumentation.org/packages/ggplot2/topics/labs"><code>labs()</code></a>, respectively.</p></div>
+```{r}
+ggplot(mtcars, aes(fcyl, fill = fam)) +
+  geom_bar() +
+  # Set the axis labels
+  labs(x = "Number of Cylinders", y = "Count")
+```
+
+<div class="exercise--instructions__content"><p>Implement a custom fill color scale using <a href="https://www.rdocumentation.org/packages/ggplot2/topics/scale_manual"><code>scale_fill_manual()</code></a>. Set the first argument to <code>"Transmission"</code>, and <code>values</code> to <code>palette</code>.</p></div>
+```{r}
+palette <- c(automatic = "#377EB8", manual = "#E41A1C")
+
+ggplot(mtcars, aes(fcyl, fill = fam)) +
+  geom_bar() +
+  labs(x = "Number of Cylinders", y = "Count")
+  # Set the fill color scale
+  scale_fill_manual("Transmission", values = palette)
+```
+
+<div class="exercise--instructions__content"><p>Modify the code to set the <code>position</code> to <code>dodge</code> so that the bars for transmissions are displayed side by side.</p></div>
+```{r}
+palette <- c(automatic = "#377EB8", manual = "#E41A1C")
+
+# Set the position
+ggplot(mtcars, aes(fcyl, fill = fam)) +
+  geom_bar(position = 'dodge') +
+  labs(x = "Number of Cylinders", y = "Count")
+  scale_fill_manual("Transmission", values = palette)
+```
+
+<p class="">Premier positioning! Choosing the right <code>position</code> argument is an important part of making a good plot.
+</p>
+
+##### Setting a dummy aesthetic {.unnumbered}
+
+
+<div class>
+<p>In the last chapter you saw that all the visible aesthetics can serve as attributes and aesthetics, but I very conveniently left out x and y. That's because although you can make univariate plots (such as histograms, which you'll get to in the next chapter), a y-axis will always be provided, even if you didn't ask for it.</p>
+<p>You can make univariate plots in <code>ggplot2</code>, but you will need to add a fake y axis by mapping <code>y</code> to zero.</p>
+<p>When using setting y-axis limits, you can specify the limits as separate arguments, or as a single numeric vector. That is, <code>ylim(lo, hi)</code> or <code>ylim(c(lo, hi))</code>.</p>
+</div>
+
+
+<li>Using <code>mtcars</code>, plot <code>0</code> vs. <code>mpg</code>.</li>
+<li>Make a scatter plot and add <code>"jitter"</code> to it.</li>
+```{r}
+# Plot 0 vs. mpg
+ggplot(mtcars, aes(mpg, 0)) +
+  # Add jitter
+  geom_point(position="jitter")
+```
+
+
+<div class="exercise--instructions__content"><p>Use <code>ylim()</code> to set the limits on the y-axis from <code>-2</code> to <code>2</code>.</p></div>
+```{r}
+ggplot(mtcars, aes(mpg, 0)) +
+  geom_jitter() +
+  # Set the y-axis limits from -2 to 2
+  ylim(-2, 2)
+```
+
+<p class="">Great work! The best way to make your plot depends on a lot of different factors and sometimes <code>ggplot2</code> might not be the best choice.
+</p>
+
+#### Aesthetics best practices {.unnumbered}
+
+
+
+##### Appropriate mappings {.unnumbered}
+
+
+<div class>
+<p>Incorrect aesthetic mapping causes confusion or misleads the audience.</p>
+<p>Typically, the <strong>dependent</strong> variable is mapped onto the the <strong>y</strong>-axis and the <strong>independent</strong> variable is mapped onto the <strong>x</strong>-axis.</p>
+<p>In the <code>ToothGrowth</code> data set, we have three variables:</p>
+<table>
+<thead><tr>
+<th>Variable</th>
+<th>Description</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><code>len</code></td>
+<td>Tooth length</td>
+</tr>
+<tr>
+<td><code>supp</code></td>
+<td>Supplement type (VC or OJ)</td>
+</tr>
+<tr>
+<td><code>dose</code></td>
+<td>Dose in milligrams/day</td>
+</tr>
+</tbody>
+</table>
+<p>From the six possible ways to map three variables, one solution is shown in the viewer. Which of the remaining five would actually be a better solution?</p>
+</div>
+
+- [x] <code>x = supp, y = len, color = dose</code>
+- [ ] <code>x = dose, y = supp, color = len</code>
+- [ ] <code>x = len, y = dose, color = supp</code>
+- [ ] <code>x = len, y = supp, color = dose</code>
+- [ ] <code>x = supp, y = dose, color = len</code>
+
+<p class="">That's correct!
+</p>
+
+### Geometries {.unnumbered}
+
+<p class="chapter__description">
+    A plot’s geometry dictates what visual elements will be used. In this chapter, we’ll familiarize you with the geometries used in the three most common plot types you’ll encounter - scatter plots, bar charts and line plots. We’ll look at a variety of different ways to construct these plots.
+  </p>
+  
+#### Scatter plots {.unnumbered}
+
+
+
+##### Overplotting 1: large datasets {.unnumbered}
+
+
+<div class>
+<p>Scatter plots (using <code>geom_point()</code>) are intuitive, easily understood, and very common, but we must <em>always</em> consider <strong>overplotting</strong>, particularly in the following four situations:</p>
+<ol>
+<li>Large datasets</li>
+<li>Aligned values on a single axis</li>
+<li>Low-precision data</li>
+<li>Integer data</li>
+</ol>
+<p>Typically, <em>alpha</em> blending (i.e. adding transparency) is recommended when using solid shapes. Alternatively, you can use opaque, hollow shapes.</p>
+<p>Small points are suitable for large datasets with regions of high density (lots of overlapping).</p>
+<p>Let's use the <code>diamonds</code> dataset to practice dealing with the large dataset case.</p>
+</div>
+<div class="exercise--instructions__content">
+<p>Add a points layer to the base plot.</p>
+
+<li>Set the point transparency to <code>0.5</code>.</li>
+<li>Set <code>shape = "."</code>, the point size of 1 pixel.</li>
+
+</div>
+```{r}
+# Plot price vs. carat, colored by clarity
+plt_price_vs_carat_by_clarity <- ggplot(diamonds, aes(carat, price, color = clarity))
+
+# Add a point layer with tiny points
+plt_price_vs_carat_by_clarity + geom_point(alpha = 0.5, shape = ".")
+```
+
+<div class="exercise--instructions__content"><p>Update the point shape to remove the line outlines by setting <code>shape</code> to <code>16</code>.</p></div>
+```{r}
+# Plot price vs. carat, colored by clarity
+plt_price_vs_carat_by_clarity <- ggplot(diamonds, aes(carat, price, color = clarity))
+
+# Set transparency to 0.5
+plt_price_vs_carat_by_clarity + geom_point(alpha = 0.5, shape = 16)
+```
+
+<p class="">Well done!
+</p>
+
+##### Overplotting 2: Aligned values {.unnumbered}
+
+
+<div class>
+<p>Let's take a look at another case where we should be aware of overplotting: Aligning values on a single axis.</p>
+<p>This occurs when one axis is continuous and the other is categorical, which can be overcome with some form of jittering.</p>
+<p>In the <code>mtcars</code> data set, <code>fam</code> and <code>fcyl</code> are categorical variants of <code>cyl</code> and <code>am</code>.</p>
+</div>
+
+
+<li>Create a base plot <code>plt_mpg_vs_fcyl_by_fam</code> of <code>fcyl</code> by <code>mpg</code>, colored by <code>fam</code>.</li>
+<li>Add a points layer to the base plot.</li>
+```{r}
+# Plot base
+plt_mpg_vs_fcyl_by_fam <- ggplot(mtcars, aes(fcyl, mpg, color = fam))
+
+# Default points are shown for comparison
+plt_mpg_vs_fcyl_by_fam + geom_point()
+```
+
+
+<div class="exercise--instructions__content"><p>Add some jittering by using <code>position_jitter()</code>, setting the <code>width</code> to <code>0.3</code>.</p></div>
+```{r}
+# Alter the point positions by jittering, width 0.3
+plt_mpg_vs_fcyl_by_fam + geom_point(position = position_jitter(width = 0.3))
+```
+
+<div class="exercise--instructions__content"><p>Alternatively, use <code>position_jitterdodge()</code>. Set <code>jitter.width</code> and <code>dodge.width</code> to <code>0.3</code> to separate subgroups further.</p></div>
+```{r}
+# Now jitter and dodge the point positions
+plt_mpg_vs_fcyl_by_fam + geom_point(position = position_jitterdodge(jitter.width = 0.3, dodge.width = 0.3))
+```
+
+<p class="">Jubilant jitters! These are some simple ways of dealing with overplotting, but you'll encounter more ideas througout the <code>ggplot2</code> courses when we encounter atypical geoms.
+</p>
+
+##### Overplotting 3: Low-precision data {.unnumbered}
+
+
+<div class>
+<p>You already saw how to deal with overplotting when using <a href="http://www.rdocumentation.org/packages/ggplot2/functions/geom_point"><code>geom_point()</code></a> in two cases:</p>
+<ol>
+<li>Large datasets</li>
+<li>Aligned values on a single axis</li>
+</ol>
+<p>We used <code>position = 'jitter'</code> inside <a href="http://www.rdocumentation.org/packages/ggplot2/functions/geom_point"><code>geom_point()</code></a> or <a href="http://www.rdocumentation.org/packages/ggplot2/functions/geom_jitter"><code>geom_jitter()</code></a>.</p>
+<p>Let's take a look at another case:</p>
+<ol>
+<li>Low-precision data</li>
+</ol>
+<p>This results from low-resolution measurements like in the iris dataset, which is measured to 1mm precision (see viewer). It's similar to case 2, but in this case we can jitter on both the x and y axis.</p>
+</div>
+
+
+<li>Change the points layer into a jitter layer.</li>
+<li>Reduce the jitter layer's width by setting the <code>width</code> argument to <code>0.1</code>.</li>
+```{r}
+ggplot(iris, aes(Sepal.Length, Sepal.Width, color = Species)) +
+  # Swap for jitter layer with width 0.1
+  geom_jitter(alpha = 0.5, width = 0.1)
+```
+
+
+<div class="exercise--instructions__content">
+<p>Let's use a different approach:</p>
+
+<li>Within <code>geom_point()</code>, set <code>position</code> to <code>"jitter"</code>.</li>
+
+</div>
+```{r}
+ggplot(iris, aes(Sepal.Length, Sepal.Width, color = Species)) +
+  # Set the position to jitter
+  geom_point(alpha = 0.5, position = "jitter")
+```
+
+<div class="exercise--instructions__content">
+<p>Provide an alternative specification: </p>
+
+<li>Have the <code>position</code> argument call <code>position_jitter()</code> with a <code>width</code> of <code>0.1</code>.</li>
+
+</div>
+```{r}
+ggplot(iris, aes(Sepal.Length, Sepal.Width, color = Species)) +
+  # Use a jitter position function with width 0.1
+  geom_point(alpha = 0.5, position = position_jitter(width = 0.1))
+```
+
+<p class="">Good job! Notice that <code>jitter</code> can be a geom itself (i.e. <code>geom_jitter()</code>), an argument in <code>geom_point()</code> (i.e. <code>position = "jitter"</code>), or a position function, (i.e. <code>position_jitter()</code>).
+</p>
+
+##### Overplotting 4: Integer data {.unnumbered}
+
+
+<div class>
+<p>Let's take a look at the last case of dealing with overplotting:</p>
+<ol>
+<li>Integer data</li>
+</ol>
+<p>This can be type <code>integer</code> (i.e. 1 ,2, 3…) or categorical (i.e. class <code>factor</code>) variables. <code>factor</code> is just a special class of type <code>integer</code>.</p>
+<p>You'll typically have a small, defined number of intersections between two variables, which is similar to case 3, but you may miss it if you don't realize that integer and factor data are the same as low precision data.</p>
+<p>The <code>Vocab</code> dataset provided contains the years of education and vocabulary test scores from respondents to US General Social Surveys from 1972-2004.</p>
+</div>
+
+```{r}
+# edited/added
+library(carData)
+Vocab = Vocab %>% 
+  mutate(vocabulary = as.factor(vocabulary))
+```
+<li>Examine the <code>Vocab</code> dataset using <code>str()</code>.</li>
+<li>Using <code>Vocab</code>, draw a plot of <code>vocabulary</code> vs <code>education</code>.</li>
+<li>Add a point layer.</li>
+```{r}
+# Examine the structure of Vocab
+str(Vocab)
+
+# Plot vocabulary vs. education
+ggplot(Vocab, aes(education, vocabulary)) +
+  # Add a point layer
+  geom_point()
+```
+
+
+
+
+<li>Replace the point layer with a jitter layer.</li>
+```{r}
+ggplot(Vocab, aes(education, vocabulary)) +
+  # Change to a jitter layer
+  geom_jitter()
+```
+
+
+
+<li>Set the jitter transparency to <code>0.2</code>.</li>
+```{r}
+ggplot(Vocab, aes(education, vocabulary)) +
+  # Set the transparency to 0.2
+  geom_jitter(alpha = 0.2)
+```
+
+
+
+<li>Set the shape of the jittered points to hollow circles, (shape <code>1</code>).</li>
+```{r}
+ggplot(Vocab, aes(education, vocabulary)) +
+  # Set the shape to 1
+  geom_jitter(alpha = 0.2, shape = 1)
+```
+
+<p class="">Good job! Notice how jittering and alpha blending serves as a great solution to the overplotting problem here. Setting the <code>shape</code> to <code>1</code> didn't really help, but it was useful in the previous exercises when you had less data. You need to consider each plot individually. You'll encounter this dataset again when you look at bar plots.
+</p>
+
+#### Histograms {.unnumbered}
+
+
+
+##### Drawing histograms {.unnumbered}
+
+
+<div class><p>Recall that histograms cut up a continuous variable into discrete bins and, by default, maps the internally calculated <code>count</code> variable (the number of observations in each bin) onto the y aesthetic. An internal variable called <code>density</code> can be accessed by using the <code>..</code> notation, i.e. <code>..density..</code>. Plotting this variable will show the relative frequency, which is the height times the width of each bin.</p></div>
+
+
+<li>Using <code>mtcars</code>, map <code>mpg</code> onto the x aesthetic.</li>
+<li>Add a histogram layer using <code>geom_histogram()</code>.</li>
+```{r}
+# Plot mpg
+ggplot(mtcars, aes(mpg)) +
+  # Add a histogram layer
+  geom_histogram()
+```
+
+
+
+
+<li>Set the histogram <code>binwidth</code> to <code>1</code>.</li>
+```{r}
+ggplot(mtcars, aes(mpg)) +
+  # Set the binwidth to 1
+  geom_histogram(binwidth = 1)
+```
+
+
+
+<li>Map <code>y</code> to the internal variable <code>..density..</code> to show frequency densities.</li>
+```{r}
+# Map y to ..density..
+ggplot(mtcars, aes(mpg, ..density..)) +
+  geom_histogram(binwidth = 1)
+```
+
+
+
+<li>Set the <code>fill</code> color of the histogram bars to <code>datacamp_light_blue</code>.</li>
+```{r}
+datacamp_light_blue <- "#51A8C9"
+
+ggplot(mtcars, aes(mpg, ..density..)) +
+  # Set the fill color to datacamp_light_blue
+  geom_histogram(binwidth = 1, fill = datacamp_light_blue)
+```
+
+<p class="">Good job! Histograms are one of the most common exploratory plots for continuous data. If you want to use density on the y-axis be sure to set your binwidth to an intuitive value.
+</p>
+
+##### Positions in histograms {.unnumbered}
+
+
+<div class>
+<p>Here, we'll examine the various ways of applying positions to histograms. <a href="http://www.rdocumentation.org/packages/ggplot2/functions/geom_histogram"><code>geom_histogram()</code></a>, a special case of <a href="http://www.rdocumentation.org/packages/ggplot2/functions/geom_bar"><code>geom_bar()</code></a>, has a <code>position</code> argument that can take on the following values:</p>
+
+<li>
+<code>stack</code> (the default): Bars for different groups are stacked on top of each other.</li>
+<li>
+<code>dodge</code>: Bars for different groups are placed side by side.</li>
+<li>
+<code>fill</code>: Bars for different groups are shown as proportions.</li>
+<li>
+<code>identity</code>: Plot the values as they appear in the dataset.</li>
+
+</div>
+<div class="exercise--instructions__content"><p>Update the aesthetics so that the fill color of the bars is determined by <code>fam</code>.</p></div>
+```{r}
+# Update the aesthetics so the fill color is by fam
+ggplot(mtcars, aes(mpg, fill = fam)) +
+  geom_histogram(binwidth = 1)
+```
+
+<div class="exercise--instructions__content"><p>Update the histogram layer to position the bars side-by-side, that is, <code>"dodge"</code>.</p></div>
+```{r}
+ggplot(mtcars, aes(mpg, fill = fam)) +
+  # Change the position to dodge
+  geom_histogram(binwidth = 1, position = "dodge")
+```
+
+<div class="exercise--instructions__content"><p>Update the histogram layer so the bars' positions <code>"fill"</code> the y-axis.</p></div>
+```{r}
+ggplot(mtcars, aes(mpg, fill = fam)) +
+  # Change the position to fill
+  geom_histogram(binwidth = 1, position = "fill")
+```
+
+<div class="exercise--instructions__content"><p>Update the histogram layer so bars are top of each other, using the <code>"identity"</code> position. So each bar can be seen, set <code>alpha</code> to <code>0.4</code>.</p></div>
+```{r}
+ggplot(mtcars, aes(mpg, fill = fam)) +
+  # Change the position to identity, with transparency 0.4
+  geom_histogram(binwidth = 1, position = "identity", alpha = 0.4)
+```
+
+<p class="">Good job! Now proceed with line plots!
+</p>
+
+#### Bar plots {.unnumbered}
+
+
+
+##### Position in bar and col plots {.unnumbered}
+
+
+<div class>
+<p>Let's see how the <code>position</code> argument changes <a href="http://www.rdocumentation.org/packages/ggplot2/functions/geom_bar"><code>geom_bar()</code></a>.</p>
+<p>We have three position options:</p>
+
+<li>
+<code>stack</code>: The default</li>
+<li>
+<code>dodge</code>: Preferred</li>
+<li>
+<code>fill</code>: To show proportions</li>
+
+<p>While we will be using <code>geom_bar()</code> here, note that the function <a href="http://www.rdocumentation.org/packages/ggplot2/functions/geom_col"><code>geom_col()</code></a> is just <code>geom_bar()</code> where both the <code>position</code> and <code>stat</code> arguments are set to <code>"identity"</code>. It is used when we want the heights of the bars to represent the exact values in the data.</p>
+<p>In this exercise, you'll draw the total count of cars having a given number of cylinders (<code>fcyl</code>), according to manual or automatic transmission type (<code>fam</code>).</p>
+</div>
+
+
+<li>Using <code>mtcars</code>, plot <code>fcyl</code>, filled by <code>fam</code>.</li>
+<li>Add a bar layer using <code>geom_bar()</code>.</li>
+```{r}
+# Plot fcyl, filled by fam
+ggplot(mtcars, aes(fcyl, fill = fam)) +
+  # Add a bar layer
+  geom_bar()
+```
+
+
+<div class="exercise--instructions__content"><p>Set the bar <code>position</code> argument to <code>"fill"</code>.</p></div>
+```{r}
+ggplot(mtcars, aes(fcyl, fill = fam)) +
+  # Set the position to "fill"
+  geom_bar(position = "fill")
+```
+
+<div class="exercise--instructions__content"><p>Change the bar <code>position</code> argument to <code>"dodge"</code>.</p></div>
+```{r}
+ggplot(mtcars, aes(fcyl, fill = fam)) +
+  # Change the position to "dodge"
+  geom_bar(position = "dodge")
+```
+
+<p class="">Good job! Different kinds of plots need different <code>position</code> arguments, so it's important to be familiar with this attribute.
+</p>
+
+##### Overlapping bar plots {.unnumbered}
+
+
+<div class>
+<p>You can customize bar plots further by adjusting the dodging so that your bars partially overlap each other. Instead of using <code>position = "dodge"</code>, you're going to use <code>position_dodge()</code>, like you did with <code>position_jitter()</code> in the the previous exercises. Here, you'll save this as an object, <code>posn_d</code>, so that you can easily reuse it.</p>
+<p>Remember, the reason you want to use <code>position_dodge()</code> (and <code>position_jitter()</code>) is to specify <em>how much</em> dodging (or jittering) you want.</p>
+<p>For this example, you'll use the <code>mtcars</code> dataset.</p>
+</div>
+
+
+<li>Use the functional form of the bar position: replace <code>"dodge"</code> with a call to <code>position_dodge()</code>.</li>
+<li>Set its <code>width</code> to <code>0.2</code>.</li>
+```{r}
+ggplot(mtcars, aes(cyl, fill = fam)) +
+  # Change position to use the functional form, with width 0.2
+  geom_bar(position = position_dodge(width = 0.2))
+```
+
+
+
+
+<li>Set the bar transparency level of the bars to <code>0.6</code>.</li>
+```{r}
+ggplot(mtcars, aes(cyl, fill = fam)) +
+  # Set the transparency to 0.6
+  geom_bar(position = position_dodge(width = 0.2), alpha = 0.6)
+```
+
+<p class="">Good job! By using these position functions, you can customize your plot to suit your needs.
+</p>
+
+##### Bar plots: sequential color palette {.unnumbered}
+
+
+<div class>
+<p>In this bar plot, we'll fill each segment according to an ordinal variable. The best way to do that is with a sequential color palette.</p>
+<p>Here's an example of using a sequential color palette with the <code>mtcars</code> dataset:</p>
+<pre><code>ggplot(mtcars, aes(fcyl, fill = fam)) +
+  geom_bar() +
+  scale_fill_brewer(palette = "Set1")
+</code></pre>
+<p>In the exercise, you'll use similar code on the the <code>Vocab</code> dataset. Both datasets are <strong>ordinal</strong>.</p>
+</div>
+
+
+<li>Plot the <code>Vocab</code> dataset, mapping <code>education</code> onto <code>x</code> and <code>vocabulary</code> onto <code>fill</code>.</li>
+
+<li>Add a bar layer, setting <code>position</code> to <code>"fill"</code>.</li>
+
+<li>Add a brewer fill scale, using the default palette (don't pass any arguments). Notice how this generates a warning message and an incomplete plot.</li>
+```{r}
+# Plot education, filled by vocabulary
+ggplot(Vocab, aes(education, fill = vocabulary)) +
+  # Add a bar layer with position "fill"
+  geom_bar(position = "fill") +
+  # Add a brewer fill scale with default palette
+  scale_fill_brewer()
+```
+
+<p class="">Good job! However, the plot is not complete! Let's fix this in the next exercise.
+</p>
+
+#### Line plots {.unnumbered}
+
+
+
+##### Basic line plots {.unnumbered}
+
+
+<div class>
+<p>Here, we'll use the <code>economics</code> dataset to make some line plots. The dataset contains a time series for unemployment and population statistics from the Federal Reserve Bank of St. Louis in the United States. The data is contained in the <code>ggplot2</code> package.</p>
+<p>To begin with, you can look at how the median unemployment time and the unemployment rate (the number of unemployed people as a proportion of the population) change over time.</p>
+</div>
+
+
+<li>Print the head of the <code>economics</code> dataset.</li>
+<li>Plot <code>unemploy</code> vs. <code>date</code> as a line plot.</li>
+```{r}
+# Print the head of economics
+head(economics)
+
+# Using economics, plot unemploy vs. date
+ggplot(economics, aes(date, unemploy)) +
+  # Make it a line plot
+  geom_line()
+```
+
+
+
+
+<li>Adjust the y-axis aesthetic of the plot so that it represents the proportion of the <code>pop</code>ulation that is <code>unemploy</code>ed.</li>
+```{r}
+# Change the y-axis to the proportion of the population that is unemployed
+ggplot(economics, aes(date, unemploy / pop)) +
+  geom_line()
+```
+
+<p class="">Good job! In the next exercise, we'll make more complicated line plots.
+</p>
+
+##### Multiple time series {.unnumbered}
+
+
+<div class>
+<p>We already saw how the form of your data affects how you can plot it. Let's explore that further with multiple time series. Here, it's important that all lines are on the same scale, and if possible, on the same plot.</p>
+<p><code>fish.species</code> contains the global capture rates of seven salmon species from 1950–2010. Each variable (column) is a Salmon species and each observation (row) is one year. <code>fish.tidy</code> contains the same data, but in three columns: <code>Species</code>, <code>Year</code>, and <code>Capture</code> (i.e. one variable per column).</p>
+</div>
+
+```{r}
+# edited/added
+fish.species = read.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vSXh7oJMgHdIaloTcI-2WyQXEo1iXpxhCWdIltVMNKX6XfpCGlZULyrPDLrLGYIRz0Dqg0BoUQuKNIA/pub?gid=328649785&single=true&output=csv") %>% select(-no)
+fish.tidy =fish.species %>% pivot_longer(!Year, names_to = "Species", values_to = "Capture") %>% select(Species, Year, Capture)
+```
+<li>Use <code>str()</code> in the console to examine the structure of both <code>fish.species</code> and <code>fish.tidy</code>.</li>
+<li>Plot only the <code>Rainbow</code> salmon time series with <code>geom_line()</code>.</li>
+```{r}
+# Plot the Rainbow Salmon time series
+ggplot(fish.species, aes(x = Year, y = Rainbow)) +
+  geom_line()
+```
+
+<li>Plot only the <code>Pink</code> salmon time series with <code>geom_line()</code>.</li>
+```{r}
+# Plot the Pink Salmon time series
+ggplot(fish.species, aes(x = Year, y = Pink)) +
+  geom_line()
+```
+
+<div class="exercise--instructions__content"><p>Now try and plot all time series in a single plot.</p>
+<ul>
+<li>Plot the <code>fish.tidy</code> dataset, mapping <code>Year</code> to <code>x</code> and <code>Capture</code> to <code>y</code>.</li>
+<li><code>group</code> by fish species within the aesthetics of <code>geom_line()</code>.</li>
+</ul></div>
+```{r}
+# Plot multiple time-series by grouping by species
+ggplot(fish.tidy, aes(Year, Capture)) +
+  geom_line(aes(group = Species))
+```
+
+<div class="exercise--instructions__content"><p>Let's add color to the previous plot to distinguish between the different time series.</p>
+<ul>
+<li>Plot the <code>fish.tidy</code> dataset again, this time making sure to <code>color</code> by <code>Species</code>.</li>
+</ul></div>
+```{r}
+# Plot multiple time-series by coloring by species
+ggplot(fish.tidy, aes(Year, Capture, color = Species)) +
+  geom_line()
+```
+
+<p class="">Good job! As you can see in the the last couple of plots, a grouping aesthetic was vital here. If you don't specify <code>color = Species</code>, you'll get a mess of lines.
+</p>
+
+### Themes {.unnumbered}
+
+<p class="chapter__description">
+    In this chapter, we’ll explore how understanding the structure of your data makes data visualization much easier. Plus, it’s time to make our plots pretty. This is the last step in the data viz process. The Themes layer will enable you to make publication quality plots directly in R. In the next course we'll look at some extra layers to add more variables to your plots.
+  </p>
+  
+#### Themes from scratch {.unnumbered}
+
+
+
+##### Moving the legend {.unnumbered}
+
+
+<div class>
+<p>Let's wrap up this course by making a publication-ready plot communicating a clear message.</p>
+<p>To change stylistic elements of a plot, call <a href="http://www.rdocumentation.org/packages/ggplot2/functions/theme"><code>theme()</code></a> and set plot properties to a new value. For example, the following changes the legend position.</p>
+<pre><code>p + theme(legend.position = new_value)
+</code></pre>
+<p>Here, the new value can be</p>
+
+<li>
+<code>"top"</code>, <code>"bottom"</code>, <code>"left"</code>, or <code>"right'"</code>: place it at that side of the plot.</li>
+<li>
+<code>"none"</code>: don't draw it.</li>
+<li>
+<code>c(x, y)</code>: <code>c(0, 0)</code> means the bottom-left and <code>c(1, 1)</code> means the top-right.</li>
+
+<p>Let's revisit the recession period line plot (assigned to <code>plt_prop_unemployed_over_time</code>).</p>
+</div>
+
+```{r}
+# edited/added
+recess <- data.frame(
+  begin = c("1969-12-01","1973-11-01","1980-01-01","1981-07-01","1990-07-01","2001-03-01", "2007-12-01"), 
+  end = c("1970-11-01","1975-03-01","1980-07-01","1982-11-01","1991-03-01","2001-11-01", "2009-07-30"),
+  event = c("Fiscal & Monetary\ntightening", "1973 Oil crisis", "Double dip I","Double dip II", "Oil price shock", "Dot-com bubble", "Sub-prime\nmortgage crisis"),
+  y =  c(.01415981, 0.02067402, 0.02951190,  0.03419201,  0.02767339, 0.02159662,0.02520715),
+  stringsAsFactors = F
+  )
+
+library(lubridate)
+
+recess$begin <- ymd (recess$begin)
+recess$end <- ymd (recess$end)
+
+plt_prop_unemployed_over_time = ggplot(economics, aes(x = date, y = unemploy/pop)) +
+  ggtitle(c("The percentage of unemployed Americans \n increases sharply during recessions")) +
+  geom_line() +
+  geom_rect(data = recess, 
+            aes(xmin = begin, xmax = end, ymin = -Inf, ymax = +Inf, fill = "Recession"), 
+            inherit.aes = FALSE, alpha = 0.2) +
+  geom_label(data = recess, aes(x = end, y = y, label=event), size = 3) + 
+    scale_fill_manual(name = "", values="red", label="Recessions")
+```
+<li>Update the plot to remove the legend.</li>
+<li><em>Look at the changes in the plot.</em></li>
+```{r}
+# View the default plot
+plt_prop_unemployed_over_time
+
+# Remove legend entirely
+plt_prop_unemployed_over_time +
+  theme(legend.position = "none")
+```
+
+
+
+
+<li>Update the plot to position the legend at the bottom of the plot.</li>
+<li><em>Look at the changes in the plot.</em></li>
+```{r}
+# Position the legend at the bottom of the plot
+plt_prop_unemployed_over_time +
+  theme(legend.position = "bottom")
+```
+
+
+
+<li>Position the legend inside the plot, with x-position <code>0.6</code> and y-position <code>0.1</code>.</li>
+<li><em>Look at the changes in the plot.</em></li>
+```{r}
+# Position the legend inside the plot at (0.6, 0.1)
+plt_prop_unemployed_over_time +
+  theme(legend.position = c(0.6, 0.1))
+```
+
+<p class="">Nice! But be careful when placing a legend inside your plotting space. You could end up obscuring data.
+</p>
+
+##### Modifying theme elements {.unnumbered}
+
+
+<div class>
+<p>Many plot elements have multiple properties that can be set. For example, line elements in the plot such as axes and gridlines have a color, a thickness (<code>size</code>), and a line type (solid line, dashed, or dotted). To set the style of a line, you use <a href="https://www.rdocumentation.org/packages/ggplot2/topics/margin"><code>element_line()</code></a>. For example, to make the axis lines into red, dashed lines, you would use the following.</p>
+<pre><code>p + theme(axis.line = element_line(color = "red", linetype = "dashed"))
+</code></pre>
+<p>Similarly, <code>element_rect()</code> changes rectangles and <code>element_text()</code> changes text. You can remove a plot element using <code>element_blank()</code>.</p>
+<p><code>plt_prop_unemployed_over_time</code> is available.</p>
+</div>
+
+
+<li>Give all rectangles in the plot, (the <code>rect</code> element) a <code>fill</code> color of <code>"grey92"</code> (very pale grey).</li>
+<li>Remove the <code>legend.key</code>'s outline by setting its <code>color</code> to be missing.</li>
+<li><em>Look at the changes in the plot.</em></li>
+```{r}
+plt_prop_unemployed_over_time +
+  theme(
+    # For all rectangles, set the fill color to grey92
+    rect = element_rect(fill = "grey92"),
+    # For the legend key, turn off the outline
+    legend.key = element_rect(color = NA)
+  )
+
+```
+
+
+<li>Remove the axis ticks, <code>axis.ticks</code> by making them a blank element.</li>
+<li>Remove the panel gridlines, <code>panel.grid</code> in the same way.</li>
+<li><em>Look at the changes in the plot.</em></li>
+
+
+<div class="exercise--instructions__content"><ul>
+<li>Add the major horizontal grid lines back to the plot using <code>panel.grid.major.y</code>.<ul>
+<li>Set the line <code>color</code> to <code>"white"</code>, <code>size</code> to <code>0.5</code>, and <code>linetype</code> to <code>"dotted"</code>.</li></ul></li>
+<li><em>Look at the changes in the plot.</em></li>
+</ul></div>
+
+<div class="exercise--instructions__content"><ul>
+<li>Make the axis tick labels' text, <code>axis.text</code>, less prominent by changing the <code>color</code> to <code>"grey25"</code>.</li>
+<li>Increase the <code>plot.title</code>'s, <code>size</code> to <code>16</code> and change its font <code>face</code> to <code>"italic"</code>.</li>
+<li><em>Look at the changes in the plot.</em></li>
+</ul></div>
+```{r}
+plt_prop_unemployed_over_time +
+  theme(
+    rect = element_rect(fill = "grey92"),
+    legend.key = element_rect(color = NA),
+    # Turn off axis ticks
+    axis.ticks = element_blank(),
+    # Turn off the panel grid
+    panel.grid = element_blank(),
+    # Add major y-axis panel grid lines back
+    panel.grid.major.y = element_line(
+      # Set the color to white
+      color = "white",
+      # Set the size to 0.5
+      size = 0.5,
+      # Set the line type to dotted
+      linetype = "dotted"
+    ),
+    # Set the axis text color to grey25
+    axis.text = element_text(color = "grey25"),
+    # Set the plot title font face to italic and font size to 16
+    plot.title = element_text(face = "italic", size = 16)
+  )
+```
+
+<p class="">Excellent Explanatory Plot! This plot is ready for prime time – it's pretty AND informative. Make sure that all your text is legible for the context in which it will be viewed.
+</p>
+
+##### Modifying whitespace {.unnumbered}
+
+
+<div class>
+<p><strong>Whitespace</strong> means all the non-visible margins and spacing in the plot.</p>
+<p>To set a single whitespace value, use <a href="https://www.rdocumentation.org/packages/grid/topics/unit"><code>unit(x, unit)</code></a>, where <code>x</code> is the amount and <code>unit</code> is the unit of measure.</p>
+<p>Borders require you to set 4 positions, so use <a href="https://www.rdocumentation.org/packages/ggplot2/topics/margin"><code>margin(top, right, bottom, left, unit)</code></a>. To remember the margin order, think <strong>TRouBLe</strong>.</p>
+<p>The default unit is <code>"pt"</code> (points), which scales well with text. Other options include  "cm", "in" (inches) and "lines" (of text).</p>
+<p><code>plt_mpg_vs_wt_by_cyl</code> is available. The panel and legend are wrapped in blue boxes so you can see how they change.</p>
+</div>
+
+```{r}
+# edited/added
+plt_mpg_vs_wt_by_cyl <- ggplot(mtcars, aes(wt, mpg, color = fcyl)) +
+  ylab("Miels per gallon") + 
+  xlab("weight (1000/lbs)") +
+  geom_point()
+
+# View the original plot
+plt_mpg_vs_wt_by_cyl
+```
+<li>Give the axis tick length, <code>axis.ticks.length</code>, a unit of <code>2</code> <code>"lines"</code>.</li>
+```{r}
+plt_mpg_vs_wt_by_cyl +
+  theme(
+    # Set the axis tick length to 2 lines
+    axis.ticks.length = unit(2, "lines")
+  )
+```
+
+
+
+
+<li>Give the legend key size, <code>legend.key.size</code>, a unit of <code>3</code> centimeters (<code>"cm"</code>).</li>
+```{r}
+plt_mpg_vs_wt_by_cyl +
+  theme(
+    # Set the legend key size to 3 centimeters
+    legend.key.size = unit(3, "cm")
+  )
+```
+
+
+
+<li>Set the <code>legend.margin</code> to <code>20</code> points (<code>"pt"</code>) on the top, <code>30</code> pts on the right, <code>40</code> pts on the bottom, and <code>50</code> pts on the left.</li>
+```{r}
+plt_mpg_vs_wt_by_cyl +
+  theme(
+    # Set the legend margin to (20, 30, 40, 50) points
+    legend.margin = margin(20, 30, 40, 50, "pt")
+  )
+```
+
+
+
+<li>Set the plot margin, <code>plot.margin</code>, to <code>10</code>, <code>30</code>, <code>50</code>, and <code>70</code> millimeters (<code>"mm"</code>).</li>
+```{r}
+plt_mpg_vs_wt_by_cyl +
+  theme(
+    # Set the plot margin to (10, 30, 50, 70) millimeters
+    plot.margin = margin(10, 30, 50, 70, "mm")
+  )
+```
+
+<p class="">Wonderful whitespace widening! Changing the whitespace can be useful if you need to make your plot more compact, or if you want to create more space to reduce “business”.
+</p>
+
+#### Theme flexibility {.unnumbered}
+
+
+
+##### Built-in themes {.unnumbered}
+
+
+<div class>
+<p>In addition to making your own themes, there are several <a href="https://ggplot2.tidyverse.org/reference/ggtheme.html">out-of-the-box solutions</a> that may save you lots of time.</p>
+
+<li>
+<a href="http://www.rdocumentation.org/packages/ggplot2/functions/ggtheme"><code>theme_gray()</code></a> is the default.</li>
+<li>
+<a href="http://www.rdocumentation.org/packages/ggplot2/functions/ggtheme"><code>theme_bw()</code></a> is useful when you use transparency.</li>
+<li>
+<a href="http://www.rdocumentation.org/packages/ggplot2/functions/ggtheme"><code>theme_classic()</code></a> is more traditional.</li>
+<li>
+<a href="http://www.rdocumentation.org/packages/ggplot2/functions/ggtheme"><code>theme_void()</code></a> removes everything but the data. </li>
+
+<p><code>plt_prop_unemployed_over_time</code> is available.</p>
+</div>
+
+
+<li>Add a black and white theme, <code>theme_bw()</code>, to the plot.</li>
+<li><em>What changed in the plot?</em></li>
+```{r}
+# Add a black and white theme
+plt_prop_unemployed_over_time +
+  theme_bw()
+```
+
+
+
+
+<li>Add a classic theme, <code>theme_classic()</code>, to the plot.</li>
+<li><em>What changed in the plot?</em></li>
+```{r}
+# Add a classic theme
+plt_prop_unemployed_over_time +
+  theme_classic()
+```
+
+
+
+<li>Add a void theme, <code>theme_void()</code>, to the plot.</li>
+<li><em>What changed in the plot?</em></li>
+```{r}
+# Add a void theme
+plt_prop_unemployed_over_time +
+  theme_void()
+```
+
+<p class="">Thrilling theming! The black and white theme works really well if you use transparency in your plot.
+</p>
+
+##### Exploring ggthemes {.unnumbered}
+
+
+<div class>
+<p>Outside of <code>ggplot2</code>, another source of built-in themes is the <code>ggthemes</code> package. The workspace already contains the <code>plt_prop_unemployed_over_time</code>, the line plot from before. Let's explore some of the ready-made <code>ggthemes</code> themes.</p>
+<p><code>plt_prop_unemployed_over_time</code> is available.</p>
+</div>
+
+```{r}
+# edited/added
+library(ggthemes)
+```
+<li>Add a <a href="https://fivethirtyeight.com">fivethirtyeight.com</a> theme, <code>theme_fivethirtyeight()</code>, to the plot.</li>
+<li><em>What changed in the plot?</em></li>
+```{r}
+# Use the fivethirtyeight theme
+plt_prop_unemployed_over_time +
+  theme_fivethirtyeight()
+```
+
+
+
+
+<li>Add an <a href="https://www.edwardtufte.com/tufte">Edward Tufte</a> theme, <code>theme_tufte()</code>, to the plot.</li>
+<li><em>What changed in the plot?</em></li>
+```{r}
+# Use Tufte's theme
+plt_prop_unemployed_over_time +
+  theme_tufte()
+```
+
+
+
+<li>Add a <a href="https://www.wsj.com/">Wall Street Journal</a> theme, <code>theme_wsj()</code>, to the plot.</li>
+<li><em>What changed in the plot?</em></li>
+```{r}
+# Use the Wall Street Journal theme
+plt_prop_unemployed_over_time +
+  theme_wsj()
+```
+
+<p class="">Excellent use of extra themes! <code>ggthemes</code> has over 20 themes for you to try.
+</p>
+
+##### Setting themes {.unnumbered}
+
+
+<div class>
+<p>Reusing a theme across many plots helps to provide a consistent style. You have several options for this.</p>
+<ol>
+<li>Assign the theme to a variable, and add it to each plot.</li>
+<li>Set your theme as the default using <a href="https://www.rdocumentation.org/packages/ggplot2/topics/theme_get"><code>theme_set()</code></a>.</li>
+</ol>
+<p>A good strategy that you'll use here is to begin with a built-in theme then modify it.</p>
+<p><code>plt_prop_unemployed_over_time</code> is available. The theme you made earlier is shown in the sample code.</p>
+</div>
+
+
+<li>Assign the theme to <code>theme_recession</code>.</li>
+<li>Add the Tufte theme and <code>theme_recession</code> together.</li>
+<li>Use the Tufte recession theme by adding it to the plot.</li>
+```{r}
+# Theme layer saved as an object, theme_recession
+theme_recession <- theme(
+  rect = element_rect(fill = "grey92"),
+  legend.key = element_rect(color = NA),
+  axis.ticks = element_blank(),
+  panel.grid = element_blank(),
+  panel.grid.major.y = element_line(color = "white", size = 0.5, linetype = "dotted"),
+  axis.text = element_text(color = "grey25"),
+  plot.title = element_text(face = "italic", size = 16),
+  legend.position = c(0.6, 0.1)
+)
+
+# Combine the Tufte theme with theme_recession
+theme_tufte_recession <- theme_tufte() + theme_recession
+
+# Add the recession theme to the plot
+plt_prop_unemployed_over_time + theme_tufte_recession
+```
+
+
+<li>Use <code>theme_set()</code> to set <code>theme_tufte_recession</code> as the default theme.</li>
+<li>Draw the plot, <code>plt_prop_unemployed_over_time</code>, without explicitly adding a theme.</li>
+<li><em>Look at the plot. Was it styled with the default theme or the new theme?</em>*</li>
+```{r}
+theme_recession <- theme(
+  rect = element_rect(fill = "grey92"),
+  legend.key = element_rect(color = NA),
+  axis.ticks = element_blank(),
+  panel.grid = element_blank(),
+  panel.grid.major.y = element_line(color = "white", size = 0.5, linetype = "dotted"),
+  axis.text = element_text(color = "grey25"),
+  plot.title = element_text(face = "italic", size = 16),
+  legend.position = c(0.6, 0.1)
+)
+theme_tufte_recession <- theme_tufte() + theme_recession
+
+# Set theme_tufte_recession as the default theme
+theme_set(theme_tufte_recession)
+
+# Draw the plot (without explicitly adding a theme)
+plt_prop_unemployed_over_time
+```
+
+<p class="">Great work!
+</p>
+
+##### Publication-quality plots {.unnumbered}
+
+
+<div class>
+<p>We've seen many examples of beautiful, publication-quality plots. Let's take a final look and put all the pieces together.</p>
+<p><code>plt_prop_unemployed_over_time</code> is available.</p>
+</div>
+<div class="exercise--instructions__content"><p>Add Tufte's theme.</p></div>
+```{r}
+plt_prop_unemployed_over_time +
+  # Add Tufte's theme
+  theme_tufte()
+```
+
+<p>Call the function to add individual theme elements. Turn off the legend and the axis ticks.</p>
+
+
+<p>Set the axis title and axis text's text color to <code>grey60</code>.</p>
+
+
+<p>Set the panel gridlines major y values. Set the color to <code>grey60</code>, the size to <code>0.25</code>, and the line type to <code>dotted</code>.</p>
+
+```{r}
+plt_prop_unemployed_over_time +
+  theme_tufte() +
+  # Add individual theme elements
+  theme(
+    # Turn off the legend
+    legend.position = "none",
+    # Turn off the axis ticks
+    axis.ticks = element_blank(),
+    # Set the axis title's text color to grey60
+    axis.title = element_text(color = "grey60"),
+    # Set the axis text's text color to grey60
+    axis.text = element_text(color = "grey60"),
+    # Set the panel gridlines major y values
+    panel.grid.major.y = element_line(
+      # Set the color to grey60
+      color = "grey60",
+      # Set the size to 0.25
+      size = 0.25,
+      # Set the linetype to dotted
+      linetype = "dotted"
+    )
+  )
+```
+
+<p class="">Perfect plotting! That will look great in a publication!
+</p>
+
+#### Effective explanatory plots {.unnumbered}
+
+
+
+##### Using geoms for explanatory plots {.unnumbered}
+
+
+<div class>
+<p>Let's focus on producing beautiful and effective explanatory plots. In the next couple of exercises, you'll create a plot that is similar to the one shown in the video using <code>gm2007</code>, a filtered subset of the <code>gapminder</code> dataset.</p>
+<p>This type of plot will be in an info-viz style, meaning that it would be similar to something you'd see in a magazine or website for a mostly lay audience.</p>
+<p>A scatterplot of <code>lifeExp</code> by <code>country</code>, colored by <code>lifeExp</code>, with points of size <code>4</code>, is provided.</p>
+</div>
+
+```{r}
+# edited/added
+library(RColorBrewer)
+library(gapminder)
+
+# Set the color scale
+palette <- brewer.pal(5, "RdYlBu")[-(2:4)]
+gm2007 <- gapminder %>% 
+  filter(year == 2007) %>% 
+  select(country, lifeExp, continent) %>% 
+filter(lifeExp > 80.6 | lifeExp <46) %>% 
+  arrange(lifeExp)
+```
+
+<div class="exercise--instructions__content"><p><code>geom_segment()</code> adds line segments and requires two additional aesthetics: <code>xend</code> and <code>yend</code>. To draw a horizontal line for each point, map <code>30</code> onto <code>xend</code> and <code>country</code> onto <code>yend</code>.</p></div>
+
+
+<p><code>geom_text</code> also needs an additional aesthetic: <code>label</code>. Map <code>lifeExp</code> onto <code>label</code>, and set the attributes <code>color</code> to <code>"white"</code> and <code>size</code> to <code>1.5</code>.</p>
+
+
+<li>The color scale has been set for you, but you need to clean up the scales. For the x scale:<ul>
+<li>Set <code>expand</code> to <code>c(0, 0)</code> and  <code>limits</code> to <code>c(30, 90)</code>.</li>
+<li>Place the axis on the top of the plot with the <code>position</code> argument.</li></ul></li>
+
+
+<div class="exercise--instructions__content"><p>Make sure to label the plot appropriately using <code>labs()</code>:</p>
+<ul>
+<li>Make the title <code>"Highest and lowest life expectancies, 2007"</code>.</li>
+<li>Add a reference by setting <code>caption</code> to <code>"Source: gapminder"</code>.</li>
+</ul></div>
+```{r}
+# Set the color scale
+palette <- brewer.pal(5, "RdYlBu")[-(2:4)]
+
+
+ggplot(gm2007, aes(x = lifeExp, y = country, color = lifeExp)) +
+  geom_point(size = 4) +
+  # Add a geom_segment() layer
+  geom_segment(aes(xend = 30, yend = country), size = 2) +
+  # Add a geom_text() layer
+  geom_text(aes(label = round(lifeExp,1)), color = "white", size = 1.5) +
+  # Modify the scales
+  scale_x_continuous("", expand = c(0,0), limits = c(30,90), position = "top") +
+  scale_color_gradientn(colors = palette) +
+  # Add a title and caption
+  labs(title = "Highest and lowest life expectancies, 2007", caption = "Source: gapminder")
+```
+
+<p class="">Great job! Let's continue adding to this plot in the next exercise.
+</p>
+
+##### Using annotate() for embellishments {.unnumbered}
+
+
+<div class>
+<p>In the previous exercise, we completed our basic plot. Now let's polish it by playing with the theme and adding annotations. In this exercise, you'll use <code>annotate()</code> to add text and a curve to the plot. </p>
+<p>The following values have been calculated for you to assist with adding embellishments to the plot:</p>
+<pre><code>global_mean &lt;- mean(gm2007_full$lifeExp)
+x_start &lt;- global_mean + 4
+y_start &lt;- 5.5
+x_end &lt;- global_mean
+y_end &lt;- 7.5
+</code></pre>
+<p>Our previous plot has been assigned to <code>plt_country_vs_lifeExp</code>.</p>
+</div>
+
+```{r}
+# edited/added
+gm2007_full <- gapminder %>% 
+  filter(year == 2007) %>% 
+  select(country, lifeExp, continent)
+
+global_mean <- mean(gm2007_full$lifeExp)
+x_start <- global_mean + 4
+y_start <- 5.5
+x_end <- global_mean
+y_end <- 7.5
+
+plt_country_vs_lifeExp <- ggplot(gm2007, aes(x = lifeExp, y = country, color = lifeExp)) +
+  geom_point(size = 4) +
+  geom_segment(aes(xend = 30, yend = country), size = 2) +
+  geom_text(aes(label = round(lifeExp,1)), color = "white", size = 1.5) +
+  scale_x_continuous("", expand = c(0,0), limits = c(30,90), position = "top") +
+  scale_color_gradientn(colors = palette) +
+  labs(title = "Highest and lowest life expectancies, 2007", caption = "Source: gapminder") +
+  theme(legend.position="right")
+```
+
+<div class="exercise--instructions__content">
+<p>Clean up the theme:</p>
+
+<li>Add a classic theme to the plot with <code>theme_classic()</code>.</li>
+<li>Set <code>axis.line.y</code>, <code>axis.ticks.y</code>, and <code>axis.title</code> to <code>element_blank()</code>.</li>
+<li>Set the <code>axis.text</code> color to <code>"black"</code>.</li>
+<li>Remove the legend by setting <code>legend.position</code> to <code>"none"</code>.</li>
+
+</div>
+
+<p>Use <code>geom_vline()</code> to add a vertical line. Set <code>xintercept</code> to <code>global_mean</code>, specify the color to be <code>"grey40"</code>, and set <code>linetype</code> to <code>3</code>.</p>
+
+<div class="exercise--instructions__content"><p><code>x_start</code> and <code>y_start</code> will be used as positions to place text and have been calculated for you.</p>
+<ul>
+<li>Add a <code>"text"</code> geom as an annotation.</li>
+<li>For the annotation, set <code>x</code> to <code>x_start</code>, <code>y</code> to <code>y_start</code>, and <code>label</code> to <code>"The\nglobal\naverage"</code>.</li>
+</ul></div>
+
+<div class="exercise--instructions__content"><p>Annotate the plot with an arrow connecting your text to the line.</p>
+<ul>
+<li>Use a <code>"curve"</code> geom.</li>
+<li>Set the arrow ends <code>xend</code> to <code>x_end</code> and <code>yend</code> to <code>y_end</code>.</li>
+<li>Set the <code>length</code> of the arrowhead to 0.2 cm and the <code>type</code> to <code>"closed"</code>.</li>
+</ul></div>
+```{r}
+# Define the theme
+plt_country_vs_lifeExp +
+  theme_classic() +
+  theme(axis.line.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.text = element_text(color = "black"),
+        axis.title = element_blank(),
+        legend.position = "none") +
+  # Add a vertical line
+  geom_vline(xintercept = global_mean, color = "grey40", linetype = 3) +
+  # Add text
+  annotate(
+    "text",
+    x = x_start, y = y_start,
+    label = "The\nglobal\naverage",
+    vjust = 1, size = 3, color = "grey40"
+  )
+  # Add a curve
+  annotate(
+    "curve",
+    x = x_start, y = y_start,
+    xend = x_end, yend = y_end,
+    arrow = arrow(length = unit(0.2, "cm"), type = "closed"),
+    color = "grey40"
+  )
+```
+
+<p class="">Awesome! Your explanatory plot clearly shows the countries with the highest and lowest life expectancy and would be great for a lay audience. <br>
+<br>
+Congratulations on finishing the course! Continue learning more in Intermediate Data Visualization with ggplot2!
+</p>

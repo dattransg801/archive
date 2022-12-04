@@ -1,0 +1,1019 @@
+---
+title: "Modeling with Data in the Tidyverse"
+subtitle: "Albert Y. Kim - DataCamp"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+author:
+  - name: "Tran Thanh Dat - International University"
+output:
+  rmdformats::robobook:
+    thumbnails: true
+    lightbox: true
+    gallery: true
+    highlight: tango
+    use_bookdown: true
+---
+
+***
+
+<style>
+
+h1,h2,h3,h4,h5,h6,h {
+  font-family: Futura;
+}
+
+body {
+  font-family: "Georgia";
+  text-align: justify;
+}
+
+p {
+  font-family: "Georgia";
+  text-indent: 30px;
+  color: black;
+  font-style: normal;
+}
+</style>
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(qrmdata)
+```
+
+**Course Description**
+
+<p class="course__description">In this course, you will learn to model with data. Models attempt to capture the relationship between an outcome variable of interest and a series of explanatory/predictor variables. Such models can be used for both explanatory purposes, e.g. "Does knowing professors' ages help explain their teaching evaluation scores?", and predictive purposes, e.g., "How well can we predict a house's price based on its size and condition?" You will leverage your tidyverse skills to construct and interpret such models. This course centers around the use of linear regression, one of the most commonly-used and easy to understand approaches to modeling. Such modeling and thinking is used in a wide variety of fields, including statistics, causal inference, machine learning, and artificial intelligence.</p>
+
+# Introduction to Modeling
+
+<p class="chapter__description">
+    This chapter will introduce you to some background theory and terminology for modeling, in particular, the general modeling framework, the difference between modeling for explanation and modeling for prediction, and the modeling problem. Furthermore, you'll start performing your first exploratory data analysis, a crucial first step before any formal modeling.
+  </p>
+  
+## Modeling for explanation
+
+
+
+### Exploratory visualization of age
+
+
+<div class><p>Let's perform an exploratory data analysis (EDA) of the numerical explanatory variable <code>age</code>. You should always perform an exploratory analysis of your variables before any formal modeling. This will give you a sense of your variable's distributions, any outliers, and any patterns that might be useful when constructing your eventual model.</p></div>
+<div class="exercise--instructions__content"><ul>
+<li>Using the <code>ggplot2</code> package, create a histogram of <code>age</code> with bins in 5 year increments.</li>
+<li>Label the <code>x</code> axis with <code>"age"</code> and the <code>y</code> axis with <code>"count"</code>.</li>
+</ul></div>
+```{r}
+# Load packages
+library(moderndive)
+library(ggplot2)
+
+# Plot the histogram
+ggplot(evals, aes(x = age)) +
+  geom_histogram(binwidth = 5) +
+  labs(x = "age", y = "count")
+```
+
+<p class="">Nice! The 463 instructors' ages are centered roughly at age 50. You'll now compute notions of center numerically!
+</p>
+
+### Numerical summaries of age
+
+
+<div class><p>Let's continue our exploratory data analysis of the numerical explanatory variable <code>age</code> by computing <strong>summary statistics</strong>. Summary statistics take many values and summarize them with a single value. Let's compute three such values using <code>dplyr</code> data wrangling: mean (AKA the average), the median (the middle value), and the standard deviation (a measure of spread/variation).</p></div>
+<div class="exercise--instructions__content"><p>Calculate the mean, median, and standard deviation of <code>age</code>.</p></div>
+```{r}
+# Load packages
+library(moderndive)
+library(dplyr)
+
+# Compute summary stats
+evals %>%
+  summarize(mean_age = mean(age),
+            median_age = median(age),
+            sd_age = sd(age))
+```
+
+<p class="">Great! As suggested in the previous histogram for age, the center of the distribution as quantified by the mean and median is around 48 years old!
+</p>
+
+## Modeling for prediction
+
+
+
+### Exploratory visualization of house size
+
+
+<div class>
+<p>Let's create an exploratory visualization of the predictor variable reflecting the size of houses: <code>sqft_living</code> the square footage of living space where 1 sq.foot ≈ 0.1 sq.meter. </p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Create a histogram of <code>sqft_living</code>.</li>
+<li>Label the <code>x</code> axis with <code>"Size (sq.feet)"</code> and the <code>y</code> axis with <code>"count"</code>.</li>
+</ul></div>
+```{r}
+# Load packages
+library(moderndive)
+library(ggplot2)
+
+# Plot the histogram
+ggplot(house_prices, aes(x = sqft_living)) +
+  geom_histogram() +
+  labs(x = "Size (sq.feet)", y = "count")
+```
+
+<p>After plotting the histogram, what can you say about the distribution of the variable <code>sqft_living</code>?</p>
+<ul>
+<li><div class="dc-input-radio__text">There is no skew.</div></li>
+<strong><li><div class="dc-input-radio__text"><code>sqft_living</code> is right-skewed.</div></li></strong>
+<li><div class="dc-input-radio__text"><code>sqft_living</code> is left-skewed.</div></li>
+</ul>
+
+<p class="">Correct! A variable is right-skewed if it has a long tail to the right.
+</p>
+
+### Log10 transformation of house size
+
+
+<div class><p>You just saw that the predictor variable <code>sqft_living</code> is <em>right</em>-skewed and hence a log base 10 transformation is warranted to unskew it. Just as we transformed the outcome variable <code>price</code> to create <code>log10_price</code> in the video, let's do the same for <code>sqft_living</code>.</p></div>
+<div class="exercise--instructions__content"><ul>
+<li>Using the <code>mutate()</code> function from <code>dplyr</code>, create a new column <code>log10_size</code> and assign it to <code>house_prices_2</code> by applying a <code>log10()</code> transformation to <code>sqft_living</code>.</li>
+</ul></div>
+```{r}
+# Load packages
+library(moderndive)
+library(dplyr)
+library(ggplot2)
+
+# Add log10_size
+house_prices_2 <- house_prices %>%
+  mutate(log10_size = log10(sqft_living))
+```
+
+<div class="exercise--instructions__content"><p>Visualize the effect of the <code>log10()</code> transformation by creating a histogram of the new variable <code>log10_size</code>.</p></div>
+```{r}
+# Plot the histogram  
+ggplot(house_prices_2, aes(x = log10_size)) +
+  geom_histogram() +
+  labs(x = "log10 size", y = "count")
+```
+
+<p class="">Huzzah! Notice how the distribution is much less skewed. Going forward, you'll use this new transformed variable to represent the size of houses.
+</p>
+
+## Problem for explanation
+
+
+
+### EDA of relationship of teaching &amp; &quot;beauty&quot; scores
+
+
+<div class>
+<p>The researchers in the UT Austin created a "beauty score" by asking a panel of 6 students to rate the "beauty" of all 463 instructors. They were interested in studying any possible impact of "beauty" of teaching evaluation scores. Let's do an EDA of this variable and its relationship with teaching <code>score</code>.</p>
+<p>From now on, assume that <code>ggplot2</code>, <code>dplyr</code>, and <code>moderndive</code> are all available in your workspace unless you're told otherwise.</p>
+</div>
+<div class="exercise--instructions__content"><p>Create a histogram of <code>bty_avg</code> "beauty scores" with bins of size 0.5.</p></div>
+```{r}
+# Plot the histogram
+ggplot(evals, aes(x = bty_avg)) +
+  geom_histogram(binwidth = 0.5) +
+  labs(x = "Beauty score", y = "count")
+```
+
+<div class="exercise--instructions__content"><p>Create a scatterplot with the outcome variable <code>score</code> on the y-axis and the explanatory variable <code>bty_avg</code> on the x-axis.</p></div>
+```{r}
+# Scatterplot
+ggplot(evals, aes(x = bty_avg, y = score)) +
+  geom_point() +
+  labs(x = "beauty score", y = "teaching score")
+```
+
+<div class="exercise--instructions__content"><p>Let's now investigate if this plot suffers from <em>overplotting</em>, whereby points are stacked perfectly on top of each other, obscuring the number of points involved. You can do this by <code>jitter</code>ing the points. Update the code accordingly!</p></div>
+```{r}
+# Jitter plot
+ggplot(evals, aes(x = bty_avg, y = score)) +
+  geom_jitter() +
+  labs(x = "beauty score", y = "teaching score")
+```
+
+<p class="">“Beauty”-ful! It seems the original scatterplot did suffer from overplotting since the jittered scatterplot reveals many originally hidden points. Most <code>bty_avg</code> scores range from 2-8, with 5 being about the center.
+</p>
+
+### Correlation between teaching and &quot;beauty&quot; scores
+
+
+<div class><p>Let's numerically summarize the relationship between teaching <code>score</code> and beauty score <code>bty_avg</code> using the correlation coefficient. </p></div>
+<div class="exercise--instructions__content"><p>Compute the correlation coefficient of <code>score</code> and <code>bty_avg</code>.</p></div>
+```{r}
+# Compute correlation
+evals %>%
+  summarize(correlation = cor(score, bty_avg))
+```
+
+<p>Based on this, what can you say about the relationship between these two variables?</p>
+
+<ul>
+<li><div class="dc-input-radio__text"><code>score</code> and <code>bty_avg</code> are strongly negatively associated.</div></li>
+<li><div class="dc-input-radio__text"><code>score</code> and <code>bty_avg</code> are weakly negatively associated.</div></li>
+<strong><li><div class="dc-input-radio__text"><code>score</code> and <code>bty_avg</code> are weakly positively associated.</div></li></strong>
+<li><div class="dc-input-radio__text"><code>score</code> and <code>bty_avg</code> are strongly positively associated.</div>2</li>
+</ul>
+
+<p class="">Correct! While there seems to be a positive relationship, +0.187 is still a long ways from +1, so the correlation is only weakly positive.
+</p>
+
+## Problem for prediction
+
+
+
+### EDA of relationship of house price and waterfront
+
+
+<div class>
+<p>Let's now perform an exploratory data analysis of the relationship between <code>log10_price</code>, the log base 10 house price, and the binary variable <code>waterfront</code>. Let's look at the raw values of <code>waterfront</code> and then visualize their relationship.</p>
+<p>The column <code>log10_price</code> has been added for you in the <code>house_prices</code> dataset.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Use <code>glimpse()</code> to view the structure of only two columns: <code>log10_price</code> and <code>waterfront</code>.</li>
+</ul></div>
+```{r}
+house_prices=house_prices %>% mutate(log10_price=log10(price),log10_size=log10(sqft_living))
+# View the structure of log10_price and waterfront
+house_prices %>%
+  select(log10_price, waterfront) %>%
+  glimpse()
+```
+
+<div class="exercise--instructions__content"><p>Visualize the relationship between <code>waterfront</code> and <code>log10_price</code> using an appropriate <code>geom_*</code> function. Remember that <code>waterfront</code> is categorical.</p></div>
+```{r}
+# Plot
+ggplot(house_prices, aes(x = waterfront, y = log10_price)) +
+  geom_boxplot() +
+  labs(x = "waterfront", y = "log10 price")
+```
+
+<p class="">A+! Look at that boxplot! Houses that have a view of the waterfront tend to be MUCH more expensive as evidenced by the much higher log10 prices!
+</p>
+
+### Predicting house price with waterfront
+
+
+<div class>
+<p>You just saw that houses with a view of the <code>waterfront</code> tend to be much more expensive. But by how much? Let's compute group means of <code>log10_price</code>, convert them back to dollar units, and compare!</p>
+<p>The variable <code>log10_price</code> has already been added to <code>house_prices</code> for you.</p>
+</div>
+<div class="exercise--instructions__content"><p>Return both the mean of <code>log10_price</code> and the count of houses in each level of <code>waterfront</code>.</p></div>
+```{r}
+# Calculate stats
+house_prices %>%
+  group_by(waterfront) %>%
+  summarize(mean_log10_price = mean(log10_price), n = n())
+  
+```
+
+<div class="exercise--instructions__content"><p>Using these group means for <code>log10_price</code>, return "good" predicted house prices in the original units of US dollars.</p></div>
+```{r}
+# Prediction of price for houses without view of waterfront
+10^(5.66)
+
+# Prediction of price for houses with view of waterfront
+10^(6.12)
+```
+
+<p class="">100%! Most houses don't have a view of the <code>waterfront</code> (n = 21,450), but those that do (n = 163) have a MUCH higher predicted price. Look at that difference! \$457,088 versus \$1,318,257! In the upcoming Chapter 2 on basic regression, we'll build on such intuition and construct our first formal explanatory and predictive models using basic regression!
+</p>
+
+# Modeling with Basic Regression
+
+<p class="chapter__description">
+    Equipped with your understanding of the general modeling framework, in this chapter, we'll cover basic linear regression where you'll keep things simple and model the outcome variable y as a function of a single explanatory/ predictor variable x. We'll use both numerical and categorical x variables. The outcome variable of interest in this chapter will be teaching evaluation scores of instructors at the University of Texas, Austin.
+  </p>
+  
+## Teaching score with age
+
+
+
+### Plotting a &quot;best-fitting&quot; regression line
+
+
+<div class><p>Previously you visualized the relationship of teaching score and "beauty score" via a scatterplot. Now let's add the "best-fitting" regression line to provide a sense of any overall trends. Even though you know this plot suffers from overplotting, you'll stick to the non-<code>jitter</code> version.</p></div>
+<div class="exercise--instructions__content"><p>Add a regression line without the error bars to the scatterplot.</p></div>
+```{r}
+# Load packages
+library(ggplot2)
+library(dplyr)
+library(moderndive)
+
+# Plot
+ggplot(evals, aes(x = bty_avg, y = score)) +
+  geom_point() +
+  labs(x = "beauty score", y = "score") +
+  geom_smooth(method = "lm", se = FALSE)
+```
+
+<p class="">Fantastic! The overall trend seems to be positive! As instructors have higher “beauty” scores, so also do they tend to have higher teaching scores.
+</p>
+
+### Fitting a regression with a numerical x
+
+
+<div class><p>Let's now explicity quantify the linear relationship between <code>score</code> and <code>bty_avg</code> using linear regression. You will do this by first "fitting" the model. Then you will get the <em>regression table</em>, a standard output in many statistical software packages.</p></div>
+<div class="exercise--instructions__content"><p>Fit a linear regression model between score and average beauty using the <code>lm()</code> function and save this model to <code>model_score_2</code>.</p></div>
+```{r}
+# Load package
+library(moderndive)
+
+# Fit model
+model_score_2 <- lm(score ~ bty_avg, data = evals)
+
+# Output content
+model_score_2
+```
+
+<div class="exercise--instructions__content"><p>Given the sparsity of the output, let's get the <em>regression table</em> using the <code>get_regression_table()</code> wrapper function.</p></div>
+```{r}
+# Output regression table
+get_regression_table(model_score_2)
+```
+
+<p>Based on the output of <code>get_regression_table()</code>, which interpretation of the slope coefficient is correct?</p>
+
+<ul>
+<li><div class="dc-input-radio__text">For every person who has a beauty score of one, their teaching score will be 0.0670.</div></li>
+<strong><li><div class="dc-input-radio__text">For every increase of one in beauty score, you should observe an associated increase of on average 0.0670 units in teaching score.</div></li></strong>
+<li><div class="dc-input-radio__text">Less "beautiful" instructors tend to get higher teaching evaluation scores.</div></li>
+</ul>
+
+<p class="">Correct! As suggested by your exploratory visualization, there is a positive relationship between “beauty” and teaching score.
+</p>
+
+## Predicting teaching score ~ age
+
+
+
+### Making predictions using &quot;beauty score&quot;
+
+
+<div class>
+<p>Say there is an instructor at UT Austin and you know nothing about them except that their beauty score is 5. What is your prediction \(\hat{y}\) 
+of their teaching score \(y\)? </p>
+<pre><code>get_regression_table(model_score_2)
+  term      estimate std_error statistic p_value lower_ci upper_ci
+  &lt;chr&gt;        &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;   &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;
+1 intercept    3.88      0.076     51.0        0    3.73     4.03 
+2 bty_avg      0.067     0.016      4.09       0    0.035    0.099
+</code></pre>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Using the values of the intercept and slope from above, predict this instructor's score.</li>
+</ul></div>
+```{r}
+# Use fitted intercept and slope to get a prediction
+y_hat <- 3.88 + 5 * 0.0670
+y_hat
+```
+
+<div class="exercise--instructions__content"><p>Say it's revealed that the instructor's score is 4.7. Compute the residual for this prediction, i.e., the <em>residual</em> <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" role="presentation" tabindex="0" ctxtmenu_counter="5" style="font-size: 116.7%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D466 TEX-I"></mjx-c></mjx-mi><mjx-mo class="mjx-n" space="3"><mjx-c class="mjx-c2212"></mjx-c></mjx-mo><mjx-texatom space="3" texclass="ORD"><mjx-mover><mjx-over style="padding-bottom: 0.06em; padding-left: 0.056em; margin-bottom: -0.531em;"><mjx-mo class="mjx-n"><mjx-c class="mjx-c5E"></mjx-c></mjx-mo></mjx-over><mjx-base style="padding-left: 0.005em;"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D466 TEX-I"></mjx-c></mjx-mi></mjx-base></mjx-mover></mjx-texatom></mjx-math><mjx-assistive-mml role="presentation" unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>y</mi><mo>−</mo><mrow><mover><mi>y</mi><mo stretchy="false">^</mo></mover></mrow></math></mjx-assistive-mml></mjx-container>.</p></div>
+```{r}
+# Compute residual y - y_hat
+4.7 - 4.215
+```
+
+<p class="">Awesome! Was your visual guess close to the predicted teaching score of 4.215? Also, note that this prediction is off by about 0.485 units in teaching score.
+</p>
+
+### Computing fitted/predicted values &amp; residuals
+
+
+<div class>
+<p>Now say you want to repeat this for all 463 instructors in <code>evals</code>. Doing this manually as you just did would be long and tedious, so as seen in the video, let's automate this using the <code>get_regression_points()</code> function. </p>
+<p>Furthemore, let's unpack its output.</p>
+</div>
+<div class="exercise--instructions__content">
+<li>Let's once again get the regression table for <code>model_score_2</code>.  </li>
+```{r}
+# Fit regression model
+model_score_2 <- lm(score ~ bty_avg, data = evals)
+
+# Get regression table
+get_regression_table(model_score_2)
+```
+<li>Apply <code>get_regression_points()</code> from the <code>moderndive</code> package to automate making predictions and computing residuals.</li>
+```{r}
+# Get all fitted/predicted values and residuals
+get_regression_points(model_score_2)
+```
+</div>
+
+<div class="exercise--instructions__content"><ul>
+<li>Let's unpack the contents of the <code>score_hat</code> column. First, run the code that fits the model and outputs the regression table.</li>
+<li>Add a new column <code>score_hat_2</code> which <em>replicates</em> how <code>score_hat</code> is computed using the table's values.</li>
+</ul></div>
+```{r}
+# Get all fitted/predicted values and residuals
+get_regression_points(model_score_2) %>% 
+  mutate(score_hat_2 = 3.88 + 0.067 * bty_avg)
+```
+
+<div class="exercise--instructions__content"><ul>
+<li>Now let's unpack the contents of the <code>residual</code> column. First, run the code that fits the model and outputs the regression table.</li>
+<li>Add a new column <code>residual_2</code> which <em>replicates</em> how <code>residual</code> is computed using the table's values.</li>
+</ul></div>
+```{r}
+# Get all fitted/predicted values and residuals
+get_regression_points(model_score_2) %>% 
+  mutate(residual_2 = score - score_hat)
+```
+
+<p class="">Bingo! You'll see later that the residuals can provide useful information about the quality of your regression models. Stay tuned!
+</p>
+
+## Teaching score with gender
+
+
+
+### EDA of relationship of score and rank
+
+
+<div class><p>Let's perform an EDA of the relationship between an instructor's score and their rank in the <code>evals</code> dataset. You'll both visualize this relationship and compute summary statistics for each level of <code>rank</code>: <code>teaching</code>, <code>tenure track</code>, and <code>tenured</code>.</p></div>
+<div class="exercise--instructions__content"><p>Write the code to create a boxplot of the relationship between teaching score and rank.</p></div>
+```{r}
+ggplot(evals, aes(x = rank, y = score)) +
+  geom_boxplot() +
+  labs(x = "rank", y = "score")
+```
+
+<div class="exercise--instructions__content"><ul>
+<li>For each unique value in <code>rank</code>: <ul>
+<li>Count the number of observations in each group</li>
+<li>Find the mean and standard deviation of <code>score</code></li></ul></li>
+</ul></div>
+```{r}
+evals %>%
+  group_by(rank) %>%
+  summarize(n = n(), mean_score = mean(score), sd_score = sd(score))
+```
+
+<p class="">Cool! The boxplot and summary statistics suggest that teaching get the highest scores while tenured professors get the lowest. However, there is clearly variation around the respective means.
+</p>
+
+### Fitting a regression with a categorical x
+
+
+<div class><p>You'll now fit a regression model with the categorical variable <code>rank</code> as the explanatory variable and interpret the values in the resulting regression table. Note here the rank "teaching" is treated as the <em>baseline for comparison group</em> for the "tenure track" and "tenured" groups.</p></div>
+<div class="exercise--instructions__content"><p>Fit a linear regression model between score and rank, and then apply the wrapper function to <code>model_score_4</code> that returns the regression table.</p></div>
+```{r}
+# Fit regression model
+model_score_4 <- lm(score ~ rank, data = evals)
+
+# Get regression table
+get_regression_table(model_score_4)
+```
+
+<div class="exercise--instructions__content"><p>Based on the regression table, compute the 3 possible fitted values <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" role="presentation" tabindex="0" ctxtmenu_counter="32" style="font-size: 116.9%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-texatom texclass="ORD"><mjx-mover><mjx-over style="padding-bottom: 0.06em; padding-left: 0.056em; margin-bottom: -0.531em;"><mjx-mo class="mjx-n"><mjx-c class="mjx-c5E"></mjx-c></mjx-mo></mjx-over><mjx-base style="padding-left: 0.005em;"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D466 TEX-I"></mjx-c></mjx-mi></mjx-base></mjx-mover></mjx-texatom></mjx-math><mjx-assistive-mml role="presentation" unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mover><mi>y</mi><mo stretchy="false">^</mo></mover></mrow></math></mjx-assistive-mml></mjx-container>, which are the group means. Since "teaching" is the <em>baseline for comparison</em> group, the <code>intercept</code> is the mean score for the "teaching" group and <code>ranktenure track</code>/<code>ranktenured</code> are relative offsets to this baseline for the "tenure track"/"tenured" groups.</p></div>
+```{r}
+# teaching mean
+teaching_mean <- 4.28
+
+# tenure track mean
+tenure_track_mean <- 4.28 - 0.130
+
+# tenured mean
+tenured_mean <- 4.28 - 0.145
+```
+
+<p class="">Kudos! Remember that regressions with a categorical variable return group means expressed relative to a baseline for comparison!
+</p>
+
+## Predicting teaching score using gender
+
+
+
+### Making predictions using rank
+
+
+<div class><p>Run <code>get_regression_table(model_score_4)</code> in the console to regenerate the regression table where you modeled <code>score</code> as a function of <code>rank</code>. Now say using this table you want to predict the teaching <code>score</code> of an instructor about whom you know nothing except that they are a <code>tenured</code> professor. Which of these statements is true?</p></div>
+
+<ul>
+<strong><li><div class="dc-input-radio__text">A good prediction of their <code>score</code> would be <code>4.28 - 0.145 = 4.135</code>.</div></li></strong>
+<li><div class="dc-input-radio__text">A good prediction of their <code>score</code> would be <code>-0.145</code>.</div></li>
+<li><div class="dc-input-radio__text">There is no information in the table that can aid your prediction.</div></li>
+</ul>
+
+<p class="">Yay! Regression tables for categorical explanatory variables show differences in means relative to a baseline.
+</p>
+
+### Visualizing the distribution of residuals
+
+
+<div class>
+<p>Let's now compute both the predicted score \(\hat{y}\) and the residual \(y - \hat{y}\) for all \(n = 463\) instructors in the <code>evals</code> dataset. Furthermore, you'll plot a histogram of the residuals and see if there are any patterns to the residuals, i.e. your predictive errors. </p>
+<p><code>model_score_4</code> from the previous exercise is available in your workspace.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Apply the function that automates making predictions and computing residuals, and save these values to the dataframe <code>model_score_4_points</code>.</li>
+</ul></div>
+```{r}
+# Calculate predictions and residuals
+model_score_4_points <- get_regression_points(model_score_4)
+model_score_4_points
+```
+
+
+<div class="exercise--instructions__content"><p>Now take the <code>model_score_4_points</code> dataframe to plot a histogram of the <code>residual</code> column so you can see the distribution of the residuals, i.e., the prediction errors.</p></div>
+```{r}
+# Plot residuals
+ggplot(model_score_4_points, aes(x = residual)) +
+  geom_histogram() +
+  labs(x = "residuals", title = "Residuals from score ~ rank model")
+```
+
+<p class="">Congrats! Look at the distribution of the residuals. While it seems there are fewer negative residuals corresponding to overpredictions of score, the magnitude of the error seems to be larger (ranging all the way to -2).
+</p>
+
+# Modeling with Multiple Regression
+
+<p class="chapter__description">
+    In the previous chapter, you learned about basic regression using either a single numerical or a categorical predictor. But why limit ourselves to using only one variable to inform your explanations/predictions? You will now extend basic regression to multiple regression, which allows for incorporation of more than one explanatory or one predictor variable in your models. You'll be modeling house prices using a dataset of houses in the Seattle, WA metropolitan area. 
+  </p>
+  
+## House price with year &amp; size
+
+
+
+### EDA of relationship
+
+
+<div class>
+<p>Unfortunately, making 3D scatterplots to perform an EDA is beyond the scope of this course. So instead let's focus on making standard 2D scatterplots of the relationship between price and the number of bedrooms, keeping an eye out for outliers.</p>
+<p>The log10 transformations have been made for you and are saved in <code>house_prices</code>.</p>
+</div>
+<div class="exercise--instructions__content"><p>Complete the <code>ggplot()</code> code to create a scatterplot of <code>log10_price</code> over <code>bedrooms</code> along with the best-fitting regression line.</p></div>
+```{r}
+# Create scatterplot with regression line
+ggplot(house_prices, aes(x = bedrooms, y = log10_price)) +
+  geom_point() +
+  labs(x = "Number of bedrooms", y = "log10 price") +
+  geom_smooth(method = "lm", se = FALSE)
+```
+
+<div class="exercise--instructions__content"><ul>
+<li>There is one house that has 33 bedrooms. While this could truly be the case, given the number of bedrooms in the other houses, this is probably an outlier.</li>
+<li>Remove this outlier using <code>filter()</code> to recreate the plot.</li>
+</ul></div>
+```{r}
+# Remove outlier
+house_prices_transform <- house_prices %>% 
+  filter(bedrooms < 33)
+
+# Create scatterplot with regression line
+ggplot(house_prices_transform, aes(x = bedrooms, y = log10_price)) +
+  geom_point() +
+  labs(x = "Number of bedrooms", y = "log10 price") +
+  geom_smooth(method = "lm", se = FALSE)
+```
+
+<p class="">Excellent! Another important reason to perform EDA is to discard any potential outliers that are likely data entry errors. In our case, after removing an outlier, you can see a clear positive relationship between the number of bedrooms and price, as one would expect.
+</p>
+
+### Fitting a regression
+
+
+<div class>
+<p><code>house_prices</code>, which is available in your environment, has the log base 10 transformed variables included and the outlier house with 33 bedrooms removed. Let's fit a multiple regression model of price as a function of size and the number of bedrooms and generate the regression table. In this exercise, you will first fit the model, and based on the regression table, in the second part, you will answer the following question:</p>
+</div>
+<div class="exercise--instructions__content">
+<li>Fit a linear model <code>lm</code> with <code>log10_price</code> as a function of <code>log10_size</code> and <code>bedrooms</code>.</li>
+```{r}
+# Fit model
+model_price_2 <- lm(log10_price ~ log10_size + bedrooms, 
+                    data = house_prices)
+```
+<li>Print the regression table.</li>
+```{r}
+# Get regression table
+get_regression_table(model_price_2)
+```
+</div>
+
+<p>Which of these interpretations of the slope coefficent for bedrooms is correct?</p>
+
+<ul>
+<li><div class="dc-input-radio__text">Every extra bedroom is associated with a decrease of on average 0.033 in <code>log10_price</code>.</div></li>
+<strong><li><div class="dc-input-radio__text">Accounting for <code>log10_size</code>, every extra bedroom is associated with a decrease of on average 0.033 in <code>log10_price</code>.</div></li></strong>
+</ul>
+
+<p class="">Splendid! In this multiple regression setting, the associated effect of any variable must be viewed in light of the other variables in the model. In our case, accounting for the size of the house reverses the relationship of the number of bedrooms and price from positive to negative!
+</p>
+
+## House price using year &amp; size
+
+
+
+### Making predictions using size and bedrooms
+
+
+<div class>
+<p>Say you want to predict the price of a house using this model and you know it has: </p>
+<ul>
+<li>1000 square feet of living space, and </li>
+<li>3 bedrooms </li>
+</ul>
+<p>What is your prediction both in log10 dollars and then dollars?</p>
+<p>The regression model from the previous exercise is available in your workspace as <code>model_price_2</code>. </p>
+<pre><code>get_regression_table(model_price_2)
+# A tibble: 3 x 7
+  term       estimate std_error statistic p_value lower_ci upper_ci
+  &lt;chr&gt;         &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;   &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;
+1 intercept     2.69      0.023     116.        0    2.65     2.74 
+2 log10_size    0.941     0.008     118.        0    0.925    0.957
+3 bedrooms     -0.033     0.002     -20.5       0   -0.036   -0.03 
+</code></pre>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Using the fitted values of the intercept and slopes from the regression table on the left to predict this house's price in log10 dollars.</li>
+</ul></div>
+```{r}
+# Make prediction in log10 dollars
+2.69 + 0.941 * log10(1000) - 0.033 * 3
+```
+
+<div class="exercise--instructions__content"><p>Now predict this house's price in dollars.</p></div>
+```{r}
+# Make prediction dollars
+10^(2.69 + 0.941 * log10(1000) - 0.033 * 3)
+```
+
+<p class="">Spot on! Using the values in the regression table you can make predictions of house prices! In this case, your prediction is about $260,000. Let's now apply this procedure to all 21k houses!
+</p>
+
+### Interpreting residuals
+
+
+<div class>
+<p>Let's automate this process for all 21K rows in <code>house_prices</code> to obtain residuals, which you'll use to compute the <em>sum of squared residuals</em>: a measure of the lack of fit of a model. After computing the sum of squared residuals, you will answer the following question:</p>
+</div>
+<div class="exercise--instructions__content"><p>Apply the relevant wrapper function to automate computation of fitted/predicted values and hence also residuals for all 21K houses using <code>model_price_2</code>.</p></div>
+```{r}
+# Automate prediction and residual computation
+get_regression_points(model_price_2)
+```
+
+<div class="exercise--instructions__content"><p>Compute the sum of squared residuals using <code>dplyr</code> commands.</p></div>
+```{r}
+# Automate prediction and residual computation
+get_regression_points(model_price_2) %>%
+  mutate(sq_residuals = residual^2) %>%
+  summarize(sum_sq_residuals = sum(sq_residuals))
+```
+
+<p>Which of these statements about residuals is <em>incorrect</em>?</p>
+<ul>
+<li><div class="dc-input-radio__text">The residual is the observed outcome variable minus the predicted variable.</div></li>
+<strong><li><div class="dc-input-radio__text">Residuals are leftover points not accounted for in the our regression model.</div></li></strong>
+<li><div class="dc-input-radio__text">They can be thought of as prediction errors.</div></li>
+<li><div class="dc-input-radio__text">They can be thought of as the lack-of-fit of the predictions to truth.</div></li>
+</ul>
+
+<p class="">Good job! Residual does suggest 'leftovers', but not in the sense that they are leftover points.
+</p>
+
+## House price with size &amp; condition
+
+
+
+### Parallel slopes model
+
+
+<div class>
+<p>Let's now fit a "parallel slopes" model with the numerical explanatory/predictor variable <code>log10_size</code> and the categorical, in this case binary, variable <code>waterfront</code>. The visualization corresponding to this model is below:</p>
+<p>
+  <img src="https://assets.datacamp.com/production/repositories/1575/datasets/8916d665b69b702b19e74c673dd75eb3b8ec4a99/03-03-slides-parallel_slopes_2.png" width="400"></p>
+</div>
+<div class="exercise--instructions__content"><p>Fit a multiple regression of <code>log10_price</code> using <code>log10_size</code> and <code>waterfront</code> as the predictors. Recall that the data frame that contains these variables is <code>house_prices</code>.</p></div>
+```{r}
+# Fit model
+model_price_4 <- lm(log10_price ~ log10_size + waterfront,
+                    data = house_prices)
+
+# Get regression table
+get_regression_table(model_price_4)
+```
+
+<p class="">Success! Notice how the regression table has three rows: intercept, the slope for log10_size, and an offset for houses that do have a waterfront.
+</p>
+
+### Interpreting the parallel slopes model
+
+
+<div class>
+<p>Let's interpret the values in the regression table for the parallel slopes model you just fit. Run <code>get_regression_table(model_price_4)</code> in the console to view the regression table again. The visualization for this model is below. Which of these interpretations is <em>incorrect</em>?</p>
+<p>
+  <img src="https://assets.datacamp.com/production/repositories/1575/datasets/8916d665b69b702b19e74c673dd75eb3b8ec4a99/03-03-slides-parallel_slopes_2.png" width="400"></p>
+</div>
+
+```{r}
+get_regression_table(model_price_4)
+```
+
+<ul>
+<li><div class="dc-input-radio__text">The intercept for houses with a view of the waterfront is 3.282.</div></li>
+<li><div class="dc-input-radio__text">All houses are assumed to have the same slope between <code>log10_price</code> &amp; <code>log10_size</code>.</div></li>
+<li><div class="dc-input-radio__text">The intercept for houses without a view of the waterfront is 2.96.</div></li>
+<strong><li><div class="dc-input-radio__text">The intercept for houses with a view of the waterfront is 0.322.</div></li></strong>
+</ul>
+
+<p class="">Right! 0.322 is the offset in the intercept for houses with a view of the waterfront relative to those which don't.
+</p>
+
+## House price using size &amp; condition
+
+
+
+### Making predictions using size and waterfront
+
+
+<div class>
+<p>Using your model for <code>log10_price</code> as a function of <code>log10_size</code> and the binary variable <code>waterfront</code>, let's make some predictions! Say you have the two following "new" houses, what would you predict their prices to be <em>in dollars</em>?</p>
+<ul>
+<li>House A: <code>log10_size = 2.9</code> that has a view of the waterfront</li>
+<li>House B: <code>log10_size = 3.1</code> that does not have a view of the waterfront</li>
+</ul>
+<p>We make the corresponding visual predictions below:</p>
+<p>
+  <img src="https://assets.datacamp.com/production/repositories/1575/datasets/23ebd6a1575db2a343a530dc419ed5e1c067685b/03-04-slides-parallel_slopes_predictions_points_2.png" width="400"></p>
+</div>
+<div class="exercise--instructions__content"><p>After running the code on line 2 to get the regression table based on <code>model_price_4</code>, compute the predicted prices for both houses. First you'll use an equation based on values in this regression table to get a predicted value in log10 dollars, then raise 10 to this predicted value to get a predicted value in dollars.</p></div>
+```{r}
+# Get regression table
+get_regression_table(model_price_4)
+
+# Prediction for House A
+10^(2.96 + 0.825 * 2.9 + 0.322)
+
+# Prediction for House B
+10^(2.96 + 0.825 * 3.1)
+```
+
+<p class="">Yay! Your modeling toolbox is getting quite extensive! Let's now automate this!
+</p>
+
+## Automating predictions
+
+
+<div class>
+<p>Let's now repeat what you did in the last exercise, but in an automated fashion assuming the information on these "new" houses is saved in a dataframe. </p>
+<p>Your model for <code>log10_price</code> as a function of <code>log10_size</code> and the binary variable <code>waterfront</code> (<code>model_price_4</code>) is available in your workspace, and so is <code>new_houses_2</code>, a dataframe with data on 2 new houses.
+While not so beneficial with only 2 "new" houses, this will save a lot of work if you had 2000 "new" houses.</p>
+</div>
+<div class="exercise--instructions__content"><p>Apply <code>get_regression_points()</code> as you would normally, but with the <code>newdata</code> argument set to our two "new" houses. This returns predicted values for just those houses.</p></div>
+```{r}
+new_houses_2=tibble(log10_size=c(2.9,3.1),waterfront=c(TRUE,FALSE))
+# View the "new" houses
+new_houses_2
+
+# Get predictions on "new" houses
+get_regression_points(model_price_4, newdata = new_houses_2)
+```
+
+<p>Now take these two predictions in <code>log10_price_hat</code> and return a new column, <code>price_hat</code>, consisting of fitted price in dollars.</p>
+```{r}
+# Get predictions price_hat in dollars on "new" houses
+get_regression_points(model_price_4, newdata = new_houses_2) %>% 
+  mutate(price_hat = 10^log10_price_hat)
+```
+
+<p class="">Predictions of $472,000 and $328,000! Exceptional! You're done with the multiple regression chapter, and now you're onto model assessment and selection!
+</p>
+
+# Model Assessment and Selection
+
+<p class="chapter__description">
+    In the previous chapters, you fit various models to explain or predict an outcome variable of interest. However, how do we know which models to choose? Model assessment measures allow you to assess how well an explanatory model "fits" a set of data or how accurate a predictive model is. Based on these measures, you'll learn about criteria for determining which models are "best". 
+  </p>
+  
+## Model selection and assessment
+
+
+
+### Refresher: sum of squared residuals
+
+
+<div class><p>Let's remind you how to compute the sum of squared residuals. You'll do this for two models.</p></div>
+<div class="exercise--instructions__content">
+<li>Use the appropriate function to get a dataframe with the residuals for <code>model_price_2</code>. </li>
+```{r}
+# Model 2
+model_price_2 <- lm(log10_price ~ log10_size + bedrooms, 
+                    data = house_prices)
+```
+<li>Add a new column of squared residuals called <code>sq_residuals</code>. </li>
+<li>Then summarize <code>sq_residuals</code> with their sum. Call this sum <code>sum_sq_residuals</code>.</li>
+```{r}
+# Calculate squared residuals
+get_regression_points(model_price_2) %>%
+  mutate(sq_residuals = residual^2) %>%
+  summarize(sum_sq_residuals = sum(sq_residuals))
+```
+</div>
+
+<div class="exercise--instructions__content"><p>Compute the sum of squared residuals for <code>model_price_4</code> which uses the categorical variable <code>waterfront</code> instead of the numerical variable <code>bedrooms</code>.</p></div>
+```{r}
+# Model 4
+model_price_4 <- lm(log10_price ~ log10_size + waterfront, 
+                    data = house_prices)
+
+# Calculate squared residuals
+get_regression_points(model_price_4) %>%
+  mutate(sq_residuals = residual^2) %>%
+  summarize(sum_sq_residuals = sum(sq_residuals))
+```
+
+<p class="">Wonderful! Let's use these two measures of model assessment to choose between these two models, or in other words, perform model selection!
+</p>
+
+### Which model to select?
+
+<div class=""><p>Based on these two values of the sum of squared residuals, which of these two models do you think is "better", and hence which would you select?</p>
+<ul>
+<li><code>model_price_2</code> that uses <code>log10_size</code> and <code>bedrooms</code>?</li>
+<strong><li><code>model_price_4</code> that uses <code>log10_size</code> and <code>waterfront</code>?</li></strong>
+</ul><div class="">No information about which is better is provided whatsoever.</div></div>
+
+<ul>
+<li><div class="">Since <code>model_price_2</code>'s value was 605, select this one.</div></li>
+<li><div class="">Since <code>model_price_4</code>'s value was 599, select this one.</div></li>
+<li></li>
+</ul>
+
+<p class="dc-completion-pane__message dc-u-maxw-100pc">Correct! Given the choice of just these two models, the evidence suggests using size and waterfront yield a better fit, so you should choose this one!</p>
+
+## Model fit with R-squared
+
+
+
+### Computing the R-squared of a model
+
+
+<div class>
+<p>Let's compute the \(R^2\) summary value for the two numerical explanatory/predictor variable model you fit in the Chapter 3, price as a function of size and the number of bedrooms. </p>
+<p>Recall that \(R^2\) can be calculated as: </p>
+<p>$$1 - \frac{\text{Var}(\text{residuals})}{\text{Var}(y)}$$</p>
+</div>
+<div class="exercise--instructions__content"><p>Compute \(R^2\) by summarizing the <code>residual</code> and <code>log10_price</code> columns.</p></div>
+```{r}
+# Fit model
+model_price_2 <- lm(log10_price ~ log10_size + bedrooms,
+                    data = house_prices)
+                    
+# Get fitted/values & residuals, compute R^2 using residuals
+get_regression_points(model_price_2) %>%
+  summarize(r_squared = 1 - var(residual) / var(log10_price))
+```
+
+<p class="">Nice job! You observed an R-squared value of 0.465, which means that 46.5% of the total variability of the outcome variable log base 10 price can be explained by this model.
+</p>
+
+### Comparing the R-squared of two models
+
+
+<div class><p>Let's now compute \(R^2\) for the one numerical and one categorical explanatory/predictor variable model you fit in the Chapter 3, price as a function of size and whether the house had a view of the <code>waterfront</code>.</p></div>
+<div class="exercise--instructions__content"><p>Compute \(R^2\) for <code>model_price_4</code>.</p></div>
+```{r}
+# Fit model
+model_price_4 <- lm(log10_price ~ log10_size + waterfront,
+                    data = house_prices)
+
+# Get fitted/values & residuals, compute R^2 using residuals
+get_regression_points(model_price_4) %>%
+  summarize(r_squared = 1 - var(residual) / var(log10_price))
+```
+
+<p>And compare its \(R^2\) with the one you just computed</p>
+
+<ul>
+<li><div class="dc-input-radio__text">Since <code>model_price_2</code> had a lower <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" role="presentation" tabindex="0" ctxtmenu_counter="47" style="font-size: 116.7%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-msup><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D445 TEX-I"></mjx-c></mjx-mi><mjx-script style="vertical-align: 0.363em;"><mjx-mn class="mjx-n" size="s"><mjx-c class="mjx-c32"></mjx-c></mjx-mn></mjx-script></mjx-msup></mjx-math><mjx-assistive-mml role="presentation" unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><msup><mi>R</mi><mn>2</mn></msup></math></mjx-assistive-mml></mjx-container> of 0.465, it "fit" the data better.</div></li>
+<strong><li><div class="dc-input-radio__text">Since <code>model_price_4</code> had a higher <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" role="presentation" tabindex="0" ctxtmenu_counter="48" style="font-size: 116.7%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-msup><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D445 TEX-I"></mjx-c></mjx-mi><mjx-script style="vertical-align: 0.363em;"><mjx-mn class="mjx-n" size="s"><mjx-c class="mjx-c32"></mjx-c></mjx-mn></mjx-script></mjx-msup></mjx-math><mjx-assistive-mml role="presentation" unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><msup><mi>R</mi><mn>2</mn></msup></math></mjx-assistive-mml></mjx-container> of 0.470, it "fit" the data better.</div></li></strong>
+<li><div class="dc-input-radio__text"><mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" role="presentation" tabindex="0" ctxtmenu_counter="49" style="font-size: 116.7%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-msup><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D445 TEX-I"></mjx-c></mjx-mi><mjx-script style="vertical-align: 0.363em;"><mjx-mn class="mjx-n" size="s"><mjx-c class="mjx-c32"></mjx-c></mjx-mn></mjx-script></mjx-msup></mjx-math><mjx-assistive-mml role="presentation" unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><msup><mi>R</mi><mn>2</mn></msup></math></mjx-assistive-mml></mjx-container> doesn't tell us anything about quality of model "fit".</div></li>
+</ul>
+
+<p class="">Correct! Since using waterfront explained a higher proportion of the total variance of the outcome variable than using the number of bedrooms, using waterfront in our model is preferred.
+</p>
+## Predictions with RMSE
+
+
+
+### Computing the MSE &amp; RMSE of a model
+
+
+<div class>
+<p>Just as you did earlier with \(R^2\), which is a measure of model fit, let's now compute the root mean square error (RMSE) of our models, which is a commonly used measure of preditive error. Let's use the model of price as a function of size and number of bedrooms.</p>
+<p>The model is available in your workspace as <code>model_price_2</code>.</p>
+</div>
+<div class="exercise--instructions__content"><p>Let's start by computing the mean squared error (<code>mse</code>), which is the <code>mean</code> of the squared <code>residual</code>.</p></div>
+```{r}
+# Get all residuals, square them, and take mean                    
+get_regression_points(model_price_2) %>%
+  mutate(sq_residuals = residual^2) %>%
+  summarize(mse = mean(sq_residuals))
+```
+
+<div class="exercise--instructions__content"><p>Now that you've computed the mean squared error, let's compute the root mean squared error.</p></div>
+```{r}
+# Get all residuals, square them, take the mean and square root               
+get_regression_points(model_price_2) %>%
+  mutate(sq_residuals = residual^2) %>%
+  summarize(mse = mean(sq_residuals)) %>%
+  mutate(rmse = sqrt(mse))
+```
+
+<p class="">Woo hoo! The RMSE is 0.167. You can think of this as the “typical” prediction error this model makes.
+</p>
+
+### Comparing the RMSE of two models
+
+
+<div class>
+<p>As you did using the sum of squared residuals and \(R^2\), let's once again assess. Note that RMSE is more typically used in prediction settings than explanatory settings. </p>
+<p><code>model_price_2</code> and <code>model_price_4</code> are available in your workspace.</p>
+</div>
+<div class="exercise--instructions__content"><p>Based on the code provided that computes MSE and RMSE for <code>model_price_2</code>, compute the MSE and RMSE for <code>model_price_4</code>.</p></div>
+```{r}
+# MSE and RMSE for model_price_2
+get_regression_points(model_price_2) %>%
+  mutate(sq_residuals = residual^2) %>%
+  summarize(mse = mean(sq_residuals), rmse = sqrt(mean(sq_residuals)))
+
+# MSE and RMSE for model_price_4
+get_regression_points(model_price_4) %>%
+  mutate(sq_residuals = residual^2) %>%
+  summarize(mse = mean(sq_residuals), rmse = sqrt(mean(sq_residuals)))
+```
+
+<p>And compare the quality of your two models using the root mean squared error (RMSE)</p>
+<ul>
+<li><div class="dc-input-radio__text">Since <code>model_price_2</code> had a higher <code>rmse</code> of 0.167, this is suggestive that this model has better preditive power.</div></li>
+<li><div class="dc-input-radio__text"><code>rmse</code> doesn't tell us anything about predictive power.</div></li>
+<strong><li><div class="dc-input-radio__text">Since <code>model_price_4</code> had a lower <code>rmse</code> of 0.166, this is suggestive that this model has better preditive power.</div></li></strong>
+</ul>
+
+<div class="dc-input-radio__text">Since <code>model_price_4</code> had a lower <code>rmse</code> of 0.166, this is suggestive that this model has better preditive power.</div>
+
+## Validation framework
+
+
+
+### Fitting model to training data
+
+
+<div class><p>It's time to split your data into a <em>training</em> set to fit a model and a separate <em>test</em> set to evaluate the predictive power of the model. Before making this split however, we first sample 100% of the rows of <code>house_prices</code> <em>without</em> replacement and assign this to <code>house_prices_shuffled</code>. This has the effect of "shuffling" the rows, thereby ensuring that the training and test sets are <em>randomly</em> sampled.</p></div>
+<div class="exercise--instructions__content"><ul>
+<li>Use <code>slice()</code> to set <code>train</code> to the first 10,000 rows of <code>house_prices_shuffled</code> and <code>test</code> to the remainder of the 21,613 rows.</li>
+</ul></div>
+```{r}
+# Set random number generator seed value for reproducibility
+set.seed(76)
+
+# Randomly reorder the rows
+house_prices_shuffled <- house_prices %>% 
+  sample_frac(size = 1, replace = FALSE)
+
+# Train/test split
+train <- house_prices_shuffled %>%
+  slice(1:10000)
+test <- house_prices_shuffled %>%
+  slice(10001:21613)
+```
+
+<div class="exercise--instructions__content"><p>Now fit a linear regression to predict <code>log10_price</code> using <code>log10_size</code> and <code>bedrooms</code> using just the training data.</p></div>
+```{r}
+# Fit model to training set
+train_model_2 <- lm(log10_price ~ log10_size + bedrooms, data = train)
+```
+
+<p class="">Fabulous! Since you've fit/trained the predictive model on the training set, let's now apply it to the test set to make predictions!
+</p>
+
+### Predicting on test data
+
+
+<div class>
+<p>Now that you've trained the model on the <code>train</code> set, let's apply the model to the <code>test</code> data, make predictions, and evaluate the predictions. Recall that having a separate <code>test</code> set here simulates the gathering of a "new" independent dataset to test our model's predictive performance on. </p>
+<p>The datasets <code>train</code> and <code>test</code>, and the trained model, <code>train_model_2</code> are available in your workspace.</p>
+</div>
+<div class="exercise--instructions__content"><ul>
+<li>Use the <code>get_regression_points()</code> function to apply <code>train_model_2</code> on your new dataset: <code>test</code>.</li>
+</ul></div>
+```{r}
+# Make predictions on test set
+get_regression_points(train_model_2, newdata = test)
+```
+
+<div class="exercise--instructions__content"><p>Compute the root mean square error using this output.</p></div>
+```{r}
+# Compute RMSE
+get_regression_points(train_model_2, newdata = test) %>% 
+  mutate(sq_residuals = residual^2) %>%
+  summarize(rmse = sqrt(mean(sq_residuals)))
+```
+
+<p class="">Magnificent! Your RMSE using size and condition as predictor variables is 0.167, which is higher than 0.165 when you used size and year built! It seems the latter is marginally better!
+</p>

@@ -1,0 +1,1622 @@
+---
+title: "Data Manipulation with pandas"
+subtitle: "Maggie Matsui - DataCamp"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+author:
+  - name: "Dat Tran"
+output:
+  rmdformats::robobook:
+    keep_md: true
+    thumbnails: true
+    lightbox: true
+    gallery: true
+    use_bookdown: true
+---
+***
+
+<a href="https://colab.research.google.com/drive/1JXgQKL8VA-8SQrC7QpWdcyRcssr-Dc99?usp=sharing" target="_blank"><h3>Open in Colab</h3></a>
+
+<a href="https://github.com/mclix8/DataCamp/tree/master/Data%20Manipulation%20with%20Python/Data%20Manipulation%20with%20pandas" target="_blank"><h3>Open in Github</h3></a>
+
+<h3 class="course__description-title">Course Description</h3>
+<p class="course__description">pandas is the world's most popular Python library, used for everything from data manipulation to data analysis. In this course, you'll learn how to manipulate DataFrames, as you extract, filter, and transform real-world datasets for analysis. Using pandas you’ll explore all the core data science concepts. Using real-world data, including Walmart sales figures and global temperature time series, you’ll learn how to import, clean, calculate statistics, and create visualizations—using pandas to add to the power of Python!</p>
+
+<style>
+
+h1,h2,h3,h4,h5,h6,h {
+  font-family: Futura;
+}
+
+body {
+  font-family: "Georgia";
+  text-align: justify;
+}
+
+p {
+  font-family: "Georgia";
+  color: black;
+  font-style: normal;
+}
+</style>
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE,message=F,warning=F)
+library(reticulate)
+```
+
+# Transforming DataFrames
+
+<p class="chapter__description">
+    Let’s master the pandas basics. Learn how to inspect DataFrames and perform fundamental manipulations, including sorting rows, subsetting, and adding new columns.
+  </p>
+  
+## Introducing DataFrames
+
+
+
+### Inspecting a DataFrame
+
+
+<div class>
+<p>When you get a new DataFrame to work with, the first thing you need to do is explore it and see what it contains. There are several useful methods and attributes for this.</p>
+<ul>
+<li>
+<code>.head()</code> returns the first few rows (the “head” of the DataFrame).</li>
+<li>
+<code>.info()</code> shows information on each of the columns, such as the data type and number of missing values.</li>
+<li>
+<code>.shape</code> returns the number of rows and columns of the DataFrame.</li>
+<li>
+<code>.describe()</code> calculates a few summary statistics for each column.</li>
+</ul>
+<p><code>homelessness</code> is a DataFrame containing estimates of homelessness in each U.S. state in 2018. The <code>individual</code> column is the number of homeless individuals not part of a family with children. The <code>family_members</code> column is the number of homeless individuals part of a family with children. The <code>state_pop</code> column is the state's total population.</p>
+<p><code>pandas</code> is imported for you.</p>
+</div>
+```{python,warning=F,message=F}
+# edited by mclix8
+import pandas as pd
+homelessness = pd.read_csv('https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Data%20Manipulation%20with%20pandas/datasets/homelessness.csv', index_col = 0)
+```
+
+<li>Print the head of the <code>homelessness</code> DataFrame.</li>
+```{python,warning=F,message=F}
+# Print the head of the homelessness data
+print(homelessness.head())
+```
+
+<li>Print information about the column types and missing values in <code>homelessness</code>.</li>
+```{python,warning=F,message=F}
+# Print information about homelessness
+print(homelessness.info())
+```
+
+<li>Print the number of rows and columns in <code>homelessness</code>.</li>
+```{python,warning=F,message=F}
+# Print the shape of homelessness
+print(homelessness.shape)
+```
+
+<li>Print some summary statistics that describe the <code>homelessness</code> DataFrame.</li>
+```{python,warning=F,message=F}
+# Print a description of homelessness
+print(homelessness.describe())
+```
+
+<p class="">Insightful inspecting! You can see that the average number of homeless individuals in each state is about 7226. Let's explore the DataFrame further.</p>
+
+### Parts of a DataFrame
+
+
+<div class>
+<p>To better understand DataFrame objects, it's useful to know that they consist of three components, stored as attributes:</p>
+<ul>
+<li>
+<code>.values</code>: A two-dimensional NumPy array of values.</li>
+<li>
+<code>.columns</code>: An index of columns: the column names.</li>
+<li>
+<code>.index</code>: An index for the rows: either row numbers or row names.</li>
+</ul>
+<p>You can usually think of indexes as a list of strings or numbers, though the pandas <code>Index</code> data type allows for more sophisticated options. (These will be covered later in the course.)</p>
+<p><code>homelessness</code> is available.</p>
+</div>
+
+<li>Import <code>pandas</code> using the alias <code>pd</code>.</li>
+```{python,warning=F,message=F}
+# Import pandas using the alias pd
+import pandas as pd
+```
+<li>Print a 2D NumPy array of the values in <code>homelessness</code>.</li>
+```{python,warning=F,message=F}
+# Print the values of homelessness
+print(homelessness.values)
+```
+<li>Print the column names of <code>homelessness</code>.</li>
+```{python,warning=F,message=F}
+# Print the column index of homelessness
+print(homelessness.columns)
+```
+<li>Print the index of <code>homelessness</code>.</li>
+```{python,warning=F,message=F}
+# Print the row index of homelessness
+print(homelessness.index)
+```
+
+<p class="">Dynamite <code>DataFrame</code> dissection! <code>DataFrame</code>s have three components: values, a column index, and a row index.</p>
+
+## Sorting and subsetting
+
+
+
+### Sorting rows
+
+
+<div class>
+<p>Finding interesting bits of data in a DataFrame is often easier if you change the order of the rows. You can sort the rows by passing a column name to <code>.sort_values()</code>.</p>
+<p>In cases where rows have the same value (this is common if you sort on a categorical variable), you may wish to break the ties by sorting on another column. You can sort on multiple columns in this way by passing a list of column names.</p>
+<table>
+<thead><tr>
+<th>Sort on …</th>
+<th>Syntax</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>one column</td>
+<td><code>df.sort_values("breed")</code></td>
+</tr>
+<tr>
+<td>multiple columns</td>
+<td><code>df.sort_values(["breed", "weight_kg"])</code></td>
+</tr>
+</tbody>
+</table>
+<p>By combining <code>.sort_values()</code> with <code>.head()</code>, you can answer questions in the form, "What are the top cases where…?".</p>
+<p><code>homelessness</code> is available and <code>pandas</code> is loaded as <code>pd</code>.</p>
+</div>
+
+<li>Sort <code>homelessness</code> by the number of homeless individuals, from smallest to largest, and save this as <code>homelessness_ind</code>.</li>
+```{python,warning=F,message=F}
+# Sort homelessness by individuals
+homelessness_ind = homelessness.sort_values("individuals")
+```
+<li>Print the head of the sorted DataFrame.</li>
+```{python,warning=F,message=F}
+# Print the top few rows
+print(homelessness_ind.head())
+```
+
+
+
+<li>Sort <code>homelessness</code> by the number of homeless <code>family_members</code> in descending order, and save this as <code>homelessness_fam</code>.</li>
+```{python,warning=F,message=F}
+# Sort homelessness by descending family members
+homelessness_fam = homelessness.sort_values("family_members", ascending=False)
+```
+<li>Print the head of the sorted DataFrame.</li>
+```{python,warning=F,message=F}
+# Print the top few rows
+print(homelessness_fam.head())
+```
+
+
+<li>Sort <code>homelessness</code> first by region (ascending), and then by number of family members (descending). Save this as <code>homelessness_reg_fam</code>.</li>
+```{python,warning=F,message=F}
+# Sort homelessness by region, then descending family members
+homelessness_reg_fam = homelessness.sort_values(["region", "family_members"], ascending=[True, False])
+```
+<li>Print the head of the sorted DataFrame.</li>
+```{python,warning=F,message=F}
+# Print the top few rows
+print(homelessness_reg_fam.head())
+```
+
+<p class="">Your head is sorted! Using <code>.sort_values()</code> and <code>.head()</code> form a powerful pair.</p>
+
+### Subsetting columns
+
+
+<div class>
+<p>When working with data, you may not need all of the variables in your dataset. Square brackets (<code>[]</code>) can be used to select only the columns that matter to you in an order that makes sense to you.
+To select only <code>"col_a"</code> of the DataFrame <code>df</code>, use</p>
+<pre><code>df["col_a"]
+</code></pre>
+<p>To select <code>"col_a"</code> and <code>"col_b"</code> of <code>df</code>, use</p>
+<pre><code>df[["col_a", "col_b"]]
+</code></pre>
+<p><code>homelessness</code> is available and <code>pandas</code> is loaded as <code>pd</code>.</p>
+</div>
+
+<li>Create a DataFrame called <code>individuals</code> that contains only the <code>individuals</code> column of <code>homelessness</code>.</li>
+```{python,warning=F,message=F}
+# Select the individuals column
+homelessness.head()
+individuals = homelessness["individuals"]
+```
+<li>Print the head of the result.</li>
+```{python,warning=F,message=F}
+# Print the head of the result
+print(individuals.head())
+```
+
+
+
+<li>Create a DataFrame called <code>state_fam</code> that contains only the <code>state</code> and <code>family_members</code> columns of <code>homelessness</code>, in that order.</li>
+```{python,warning=F,message=F}
+# Select the state and family_members columns
+state_fam = homelessness[["state", "family_members"]]
+```
+<li>Print the head of the result.</li>
+```{python,warning=F,message=F}
+# Print the head of the result
+print(state_fam.head())
+```
+
+
+<li>Create a DataFrame called <code>ind_state</code> that contains the <code>individuals</code> and <code>state</code> columns of <code>homelessness</code>, in that order.</li>
+```{python,warning=F,message=F}
+# Select only the individuals and state columns, in that order
+ind_state = homelessness[["individuals", "state"]]
+```
+<li>Print the head of the result.</li>
+```{python,warning=F,message=F}
+# Print the head of the result
+print(ind_state.head())
+```
+
+<p class="">Radical reordering! Selecting and reordering columns can make data easier to work with.</p>
+
+### Subsetting rows
+
+
+<div class>
+<p>A large part of data science is about finding which bits of your dataset are interesting. One of the simplest techniques for this is to find a subset of rows that match some criteria. This is sometimes known as <em>filtering rows</em> or <em>selecting rows</em>.</p>
+<p>There are many ways to subset a DataFrame, perhaps the most common is to use relational operators to return <code>True</code> or <code>False</code> for each row, then pass that inside square brackets.</p>
+<pre><code>dogs[dogs["height_cm"] &gt; 60]
+dogs[dogs["color"] == "tan"]
+</code></pre>
+<p>You can filter for multiple conditions at once by using the "bitwise and" operator, <code>&amp;</code>.</p>
+<pre><code>dogs[(dogs["height_cm"] &gt; 60) &amp; (dogs["color"] == "tan")]
+</code></pre>
+<p><code>homelessness</code> is available and <code>pandas</code> is loaded as <code>pd</code>.</p>
+</div>
+<div class="exercise--instructions__content"><p>Filter <code>homelessness</code> for cases where the number of individuals is greater than ten thousand, assigning to <code>ind_gt_10k</code>. <em>View the printed result.</em></p></div>
+```{python,warning=F,message=F}
+# Filter for rows where individuals is greater than 10000
+ind_gt_10k = homelessness[homelessness["individuals"]>10000]
+
+# See the result
+print(ind_gt_10k)
+```
+
+<div class="exercise--instructions__content"><p>Filter <code>homelessness</code> for cases where the USA Census region is <code>"Mountain"</code>, assigning to <code>mountain_reg</code>. <em>View the printed result.</em></p></div>
+```{python,warning=F,message=F}
+# Filter for rows where region is Mountain
+mountain_reg = homelessness[homelessness["region"] == "Mountain"]
+
+# See the result
+print(mountain_reg)
+```
+
+<div class="exercise--instructions__content"><p>Filter <code>homelessness</code> for cases where the number of <code>family_members</code> is less than one thousand and the <code>region</code> is "Pacific", assigning to <code>fam_lt_1k_pac</code>. <em>View the printed result.</em></p></div>
+```{python,warning=F,message=F}
+# Filter for rows where family_members is less than 1000 
+# and region is Pacific
+fam_lt_1k_pac = homelessness[(homelessness["family_members"] < 1000) & (homelessness["region"] == "Pacific")]
+
+# See the result
+print(fam_lt_1k_pac)
+```
+
+<p class="">Superb subsetting! Using square brackets plus logical conditions is often the most powerful way of identifying interesting rows of data.</p>
+
+### Subsetting rows by categorical variables
+
+
+<div class>
+<p>Subsetting data based on a categorical variable often involves using the "or" operator (<code>|</code>) to select rows from multiple categories. This can get tedious when you want all states in one of three different regions, for example. 
+Instead, use the <code>.isin()</code> method, which will allow you to tackle this problem by writing one condition instead of three separate ones.</p>
+<pre><code>colors = ["brown", "black", "tan"]
+condition = dogs["color"].isin(colors)
+dogs[condition]
+</code></pre>
+<p><code>homelessness</code> is available and <code>pandas</code> is loaded as <code>pd</code>.</p>
+</div>
+<div class="exercise--instructions__content"><p>Filter <code>homelessness</code> for cases where the USA census region is "South Atlantic" or it is "Mid-Atlantic", assigning to <code>south_mid_atlantic</code>. <em>View the printed result.</em></p></div>
+```{python,warning=F,message=F}
+# Subset for rows in South Atlantic or Mid-Atlantic regions
+regions=[]
+south_mid_atlantic = homelessness[(homelessness["region"]=="South Atlantic") |(homelessness["region"]=="Mid-Atlantic")]
+
+# See the result
+print(south_mid_atlantic)
+```
+
+<div class="exercise--instructions__content"><p>Filter <code>homelessness</code> for cases where the USA census <code>state</code> is in the list of Mojave states, <code>canu</code>, assigning to <code>mojave_homelessness</code>. <em>View the printed result.</em></p></div>
+```{python,warning=F,message=F}
+# The Mojave Desert states
+canu = ["California", "Arizona", "Nevada", "Utah"]
+
+# Filter for rows in the Mojave Desert states
+mojave_homelessness = homelessness[homelessness["state"].isin(canu)]
+
+# See the result
+print(mojave_homelessness)
+```
+
+<p class="">Success <em>is in</em> the air! Using <code>.isin()</code> makes subsetting categorical variables a breeze.</p>
+
+## New columns
+
+
+
+### Adding new columns
+
+
+<div class>
+<p>You aren't stuck with just the data you are given. Instead, you can add new columns to a DataFrame. This has many names, such as <em>transforming</em>, <em>mutating</em>, and <em>feature engineering</em>.</p>
+<p>You can create new columns from scratch, but it is also common to derive them from other columns, for example, by adding columns together or by changing their units. </p>
+<p><code>homelessness</code> is available and <code>pandas</code> is loaded as <code>pd</code>.</p>
+</div>
+
+<li>Add a new column to <code>homelessness</code>, named <code>total</code>, containing the sum of the <code>individuals</code> and <code>family_members</code> columns.</li>
+```{python,warning=F,message=F}
+# Add total col as sum of individuals and family_members
+homelessness["total"] = homelessness["individuals"] + homelessness["family_members"]
+```
+<li>Add another column to <code>homelessness</code>, named <code>p_individuals</code>, containing the proportion of homeless people in each state who are individuals.</li>
+```{python,warning=F,message=F}
+# Add p_individuals col as proportion of total that are individuals
+homelessness["p_individuals"] = homelessness["individuals"] / homelessness["total"]
+
+# See the result
+print(homelessness)
+```
+
+<p class="">Astounding column assignment! If your dataset doesn't have the exact columns you need, you can often make your own from what you have.</p>
+
+### Combo-attack!
+
+
+<div class>
+<p>You've seen the four most common types of data manipulation: sorting rows, subsetting columns, subsetting rows, and adding new columns. In a real-life data analysis, you can mix and match these four manipulations to answer a multitude of questions.</p>
+<p>In this exercise, you'll answer the question, "Which state has the highest number of homeless individuals per 10,000 people in the state?" Combine your new <code>pandas</code> skills to find out.</p>
+</div>
+
+<li>Add a column to <code>homelessness</code>, <code>indiv_per_10k</code>, containing the number of homeless individuals per ten thousand people in each state.</li>
+```{python,warning=F,message=F}
+# Create indiv_per_10k col as homeless individuals per 10k state pop
+homelessness["indiv_per_10k"] = 10000 * homelessness["individuals"] / homelessness["state_pop"] 
+
+```
+<li>Subset rows where <code>indiv_per_10k</code> is higher than <code>20</code>, assigning to <code>high_homelessness</code>.</li>
+```{python,warning=F,message=F}
+# Subset rows for indiv_per_10k greater than 20
+high_homelessness = homelessness[homelessness["indiv_per_10k"] > 20]
+```
+<li>Sort <code>high_homelessness</code> by descending <code>indiv_per_10k</code>, assigning to <code>high_homelessness_srt</code>.</li>
+```{python,warning=F,message=F}
+# Sort high_homelessness by descending indiv_per_10k
+high_homelessness_srt = high_homelessness.sort_values("indiv_per_10k", ascending=False)
+```
+<li>Select only the <code>state</code> and <code>indiv_per_10k</code> columns of <code>high_homelessness_srt</code> and save as <code>result</code>. <em>Look at the <code>result</code>.</em>
+</li>
+```{python,warning=F,message=F}
+# From high_homelessness_srt, select the state and indiv_per_10k cols
+result = high_homelessness_srt[["state", "indiv_per_10k"]]
+
+# See the result
+print(result)
+```
+
+<p class="">Cool combination! District of Columbia has the highest number of homeless individuals - almost 54 per ten thousand people. This is almost double the number of the next-highest state, Hawaii. If you combine new column addition, row subsetting, sorting, and column selection, you can answer lots of questions like this.</p>
+
+# Aggregating DataFrames
+
+<p class="chapter__description">
+    In this chapter, you’ll calculate summary statistics on DataFrame columns, and master grouped summary statistics and pivot tables.
+  </p>
+
+## Summary statistics
+
+
+
+### Mean and median
+
+
+<div class>
+<p>Summary statistics are exactly what they sound like - they summarize many numbers in one statistic. For example, mean, median, minimum, maximum, and standard deviation are summary statistics. Calculating summary statistics allows you to get a better sense of your data, even if there's a lot of it. </p>
+<p><code>sales</code> is available and <code>pandas</code> is loaded as <code>pd</code>.</p>
+</div>
+```{python,warning=F,message=F}
+# edited by mclix8
+sales = pd.read_csv('https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Data%20Manipulation%20with%20pandas/datasets/sales.csv', index_col = 0)
+```
+
+<li>Explore your new DataFrame first by printing the first few rows of the <code>sales</code> DataFrame.</li>
+```{python,warning=F,message=F}
+# Print the head of the sales DataFrame
+print(sales.head())
+```
+<li>Print information about the columns in <code>sales</code>.</li>
+```{python,warning=F,message=F}
+# Print the info about the sales DataFrame
+print(sales.info())
+```
+<li>Print the mean of the <code>weekly_sales</code> column.</li>
+```{python,warning=F,message=F}
+# Print the mean of weekly_sales
+print(sales["weekly_sales"].mean())
+```
+<li>Print the median of the <code>weekly_sales</code> column.</li>
+```{python,warning=F,message=F}
+# Print the median of weekly_sales
+print(sales["weekly_sales"].median())
+```
+
+<p class="">The mean weekly sales amount is almost double the median weekly sales amount! This can tell you that there are a few very high sales weeks that are making the mean so much higher than the median.</p>
+
+### Summarizing dates
+
+
+<div class>
+<p>Summary statistics can also be calculated on date columns that have values with the data type <code>datetime64</code>. Some summary statistics — like mean — don't make a ton of sense on dates, but others are super helpful, for example, minimum and maximum, which allow you to see what time range your data covers.</p>
+<p><code>sales</code> is available and <code>pandas</code> is loaded as <code>pd</code>.</p>
+</div>
+
+<li>Print the maximum of the <code>date</code> column.</li>
+```{python,warning=F,message=F}
+# Print the maximum of the date column
+print(sales["date"].max())
+```
+<li>Print the minimum of the <code>date</code> column.</li>
+```{python,warning=F,message=F}
+# Print the minimum of the date column
+print(sales["date"].min())
+```
+
+<p class="">Super summarizing! Taking the minimum and maximum of a column of dates is handy for figuring out what time period your data covers. In this case, there are data from February of 2010 to October of 2012.</p>
+
+### Efficient summaries
+
+
+<div class>
+<p>While pandas and NumPy have tons of functions, sometimes, you may need a different function to summarize your data.</p>
+<p>The <code>.agg()</code> method allows you to apply your own custom functions to a DataFrame, as well as apply functions to more than one column of a DataFrame at once, making your aggregations super-efficient. For example, </p>
+<pre><code>df['column'].agg(function)
+</code></pre>
+<p>In the custom function for this exercise, "IQR" is short for inter-quartile range, which is the 75th percentile minus the 25th percentile. It's an alternative to standard deviation that is helpful if your data contains outliers.</p>
+<p><code>sales</code> is available and <code>pandas</code> is loaded as <code>pd</code>.</p>
+</div>
+
+<li>Use the custom <code>iqr</code> function defined for you along with <code>.agg()</code> to print the IQR of the <code>temperature_c</code> column of <code>sales</code>.</li>
+```{python,warning=F,message=F}
+# A custom IQR function
+def iqr(column):
+    return column.quantile(0.75) - column.quantile(0.25)
+    
+# Print IQR of the temperature_c column
+print(sales["temperature_c"].agg(iqr))
+```
+
+
+
+<li>Update the column selection to use the custom <code>iqr</code> function with <code>.agg()</code> to print the IQR of <code>temperature_c</code>, <code>fuel_price_usd_per_l</code>, and <code>unemployment</code>, in that order.</li>
+```{python,warning=F,message=F}
+# A custom IQR function
+def iqr(column):
+    return column.quantile(0.75) - column.quantile(0.25)
+
+# Update to print IQR of temperature_c, fuel_price_usd_per_l, & unemployment
+print(sales[["temperature_c", "fuel_price_usd_per_l", "unemployment"]].agg(iqr))
+```
+
+
+<li>Update the aggregation functions called by <code>.agg()</code>: include <code>iqr</code> and <code>np.median</code> in that order.</li>
+```{python,warning=F,message=F}
+# Import NumPy and create custom IQR function
+import numpy as np
+def iqr(column):
+    return column.quantile(0.75) - column.quantile(0.25)
+
+# Update to print IQR and median of temperature_c, fuel_price_usd_per_l, & unemployment
+print(sales[["temperature_c", "fuel_price_usd_per_l", "unemployment"]].agg([iqr, np.median]))
+```
+
+<p class="">Excellent efficiency! The <code>.agg()</code> method makes it easy to compute multiple statistics on multiple columns, all in just one line of code.</p>
+
+### Cumulative statistics
+
+
+<div class>
+<p>Cumulative statistics can also be helpful in tracking summary statistics over time. In this exercise, you'll calculate the cumulative sum and cumulative max of a department's weekly sales, which will allow you to identify what the total sales were so far as well as what the highest weekly sales were so far. </p>
+<p>A DataFrame called <code>sales_1_1</code> has been created for you, which contains the sales data for department 1 of store 1. <code>pandas</code> is loaded as <code>pd</code>.</p>
+</div>
+```{python,warning=F,message=F}
+# edited by mclix8
+sales_1_1 = sales[(sales["department"] == 1) & (sales["store"] == 1)]
+```
+
+<li>Sort the rows of <code>sales_1_1</code> by the <code>date</code> column in ascending order.</li>
+```{python,warning=F,message=F}
+# Sort sales_1_1 by date
+sales_1_1 = sales_1_1.sort_values("date")
+```
+<li>Get the cumulative sum of <code>weekly_sales</code> and add it as a new column of <code>sales_1_1</code> called <code>cum_weekly_sales</code>.</li>
+```{python,warning=F,message=F}
+# Get the cumulative sum of weekly_sales, add as cum_weekly_sales col
+sales_1_1["cum_weekly_sales"] = sales["weekly_sales"].cumsum()
+```
+<li>Get the cumulative maximum of <code>weekly_sales</code>, and add it as a column called <code>cum_max_sales</code>.</li>
+```{python,warning=F,message=F}
+# Get the cumulative max of weekly_sales, add as cum_max_sales col
+sales_1_1["cum_max_sales"] = sales["weekly_sales"].cummax()
+```
+<li>Print the <code>date</code>, <code>weekly_sales</code>, <code>cum_weekly_sales</code>, and <code>cum_max_sales</code> columns.</li>
+```{python,warning=F,message=F}
+# See the columns you calculated
+print(sales_1_1[["date", "weekly_sales", "cum_weekly_sales", "cum_max_sales"]])
+```
+
+<p class="">You've accumulated success! Not all functions that calculate on columns return a single number. Some, like the cumulative statistic functions, return a whole column.</p>
+
+## Counting
+
+
+
+### Dropping duplicates
+
+
+<div class>
+<p>Removing duplicates is an essential skill to get accurate counts because often, you don't want to count the same thing multiple times. In this exercise, you'll create some new DataFrames using unique values from <code>sales</code>.</p>
+<p><code>sales</code> is available and <code>pandas</code> is imported as <code>pd</code>.</p>
+</div>
+
+<li>Remove rows of <code>sales</code> with duplicate pairs of <code>store</code> and <code>type</code> and save as <code>store_types</code> and print the head.</li>
+```{python,warning=F,message=F}
+# Drop duplicate store/type combinations
+store_types = sales.drop_duplicates(subset=["store", "type"])
+print(store_types.head())
+```
+<li>Remove rows of <code>sales</code> with duplicate pairs of <code>store</code> and <code>department</code> and save as <code>store_depts</code> and print the head.</li>
+```{python,warning=F,message=F}
+# Drop duplicate store/department combinations
+store_depts = sales.drop_duplicates(subset=["store", "department"])
+print(store_depts.head())
+```
+<li>Subset the rows that are holiday weeks using the <code>is_holiday</code> column, and drop the duplicate <code>date</code>s, saving as <code>holiday_dates</code>.</li>
+```{python,warning=F,message=F}
+# Subset the rows where is_holiday is True and drop duplicate dates
+holiday_dates = sales[sales["is_holiday"]].drop_duplicates(subset="date")
+```
+<li>Select the <code>date</code> column of <code>holiday_dates</code>, and print.</li>
+```{python,warning=F,message=F}
+# Print date col of holiday_dates
+print(holiday_dates["date"])
+```
+
+<p class="">Dazzling duplicate dropping! The holiday weeks correspond to the Superbowl in February, Labor Day in September, Thanksgiving in November, and Christmas in December. Now that the duplicates are removed, it's time to do some counting.</p>
+
+### Counting categorical variables
+
+
+<div class>
+<p>Counting is a great way to get an overview of your data and to spot curiosities that you might not notice otherwise. In this exercise, you'll count the number of each type of store and the number of each department number using the DataFrames you created in the previous exercise:</p>
+<pre><code># Drop duplicate store/type combinations
+store_types = sales.drop_duplicates(subset=["store", "type"])</code>
+
+<code># Drop duplicate store/department combinations
+store_depts = sales.drop_duplicates(subset=["store", "department"])
+</code></pre>
+<p>The <code>store_types</code> and <code>store_depts</code> DataFrames you created in the last exercise are available, and <code>pandas</code> is imported as <code>pd</code>.</p>
+</div>
+
+<li>Count the number of stores of each store <code>type</code> in <code>store_types</code>.</li>
+```{python,warning=F,message=F}
+# Count the number of stores of each type
+store_counts = store_types["type"].value_counts()
+print(store_counts)
+```
+<li>Count the proportion of stores of each store <code>type</code> in <code>store_types</code>.</li>
+```{python,warning=F,message=F}
+# Get the proportion of stores of each type
+store_props = store_types["type"].value_counts(normalize=True)
+print(store_props)
+```
+<li>Count the number of different <code>department</code>s in <code>store_depts</code>, sorting the counts in descending order.</li>
+```{python,warning=F,message=F}
+# Count the number of each department number and sort
+dept_counts_sorted = store_depts["department"].value_counts(sort=True)
+print(dept_counts_sorted)
+```
+<li>Count the proportion of different <code>department</code>s in <code>store_depts</code>, sorting the proportions in descending order.</li>
+```{python,warning=F,message=F}
+# Get the proportion of departments of each number and sort
+dept_props_sorted = store_depts["department"].value_counts(sort=True, normalize=True)
+print(dept_props_sorted)
+```
+
+<p class="">Great counting! It looks like department 43 only exists in two stores.</p>
+
+## Grouped summary statistics
+
+
+
+### What percent of sales occurred at each store type?
+
+
+<div class>
+<p>While <code>.groupby()</code> is useful, you can calculate grouped summary statistics without it. </p>
+<p>Walmart distinguishes three types of stores: "supercenters," "discount stores," and "neighborhood markets," encoded in this dataset as type "A," "B," and "C." In this exercise, you'll calculate the total sales made at each store type, without using <code>.groupby()</code>. You can then use these numbers to see what proportion of Walmart's total sales were made at each type.</p>
+<p><code>sales</code> is available and <code>pandas</code> is imported as <code>pd</code>.</p>
+</div>
+
+<li>Calculate the total <code>weekly_sales</code> over the whole dataset.</li>
+```{python,warning=F,message=F}
+# Calc total weekly sales
+sales_all = sales["weekly_sales"].sum()
+```
+<li>Subset for <code>type</code> <code>"A"</code> stores, and calculate their total weekly sales.</li>
+```{python,warning=F,message=F}
+# Subset for type A stores, calc total weekly sales
+sales_A = sales[sales["type"] == "A"]["weekly_sales"].sum()
+```
+<li>Do the same for <code>type</code> <code>"B"</code> and <code>type</code> <code>"C"</code> stores.</li>
+```{python,warning=F,message=F}
+# Subset for type B stores, calc total weekly sales
+sales_B = sales[sales["type"] == "B"]["weekly_sales"].sum()
+
+# Subset for type C stores, calc total weekly sales
+sales_C = sales[sales["type"] == "C"]["weekly_sales"].sum()
+```
+<li>Combine the A/B/C results into a list, and divide by <code>sales_all</code> to get the proportion of sales by type.</li>
+```{python,warning=F,message=F}
+# Get proportion for each type
+sales_propn_by_type = [sales_A, sales_B, sales_C] / sales_all
+print(sales_propn_by_type)
+```
+
+<p class="">Marvelous mathematics! About 91% of sales occurred in stores of type A', 9% in stores of type B, and there are no sales records for stores of type C. Now see if you can do this calculation using <code>.groupby()</code>.</p>
+
+### Calculations with .groupby()
+
+
+<div class>
+<p>The <code>.groupby()</code> method makes life much easier. In this exercise, you'll perform the same calculations as last time, except you'll use the <code>.groupby()</code> method. You'll also perform calculations on data grouped by two variables to see if sales differ by store type depending on if it's a holiday week or not. </p>
+<p><code>sales</code> is available and <code>pandas</code> is loaded as <code>pd</code>.</p>
+</div>
+
+<li>Group <code>sales</code> by <code>"type"</code>, take the sum of <code>"weekly_sales"</code>, and store as <code>sales_by_type</code>.</li>
+```{python,warning=F,message=F}
+# Group by type; calc total weekly sales
+sales_by_type = sales.groupby("type")["weekly_sales"].sum()
+```
+<li>Calculate the proportion of sales at each store type by dividing by the sum of <code>sales_by_type</code>. Assign to <code>sales_propn_by_type</code>.</li>
+```{python,warning=F,message=F}
+# Get proportion for each type
+sales_propn_by_type = sales_by_type / sum(sales_by_type)
+print(sales_propn_by_type)
+```
+
+<li>Group <code>sales</code> by <code>"type"</code> and "<code>is_holiday</code>", take the sum of <code>weekly_sales</code>, and store as <code>sales_by_type_is_holiday</code>.</li>
+```{python,warning=F,message=F}
+# Group by type and is_holiday; calc total weekly sales
+sales_by_type_is_holiday = sales.groupby(["type", "is_holiday"])["weekly_sales"].sum()
+print(sales_by_type_is_holiday)
+```
+
+<p class="">Great grouping! You were able to do the same calculation as in the previous exercise while writing much less code.</p>
+
+### Multiple grouped summaries
+
+
+<div class>
+<p>Earlier in this chapter, you saw that the <code>.agg()</code> method is useful to compute multiple statistics on multiple variables. It also works with grouped data. NumPy, which is imported as <code>np</code>, has many different summary statistics functions, including: <code>np.min</code>, <code>np.max</code>, <code>np.mean</code>, and <code>np.median</code>.</p>
+<p><code>sales</code> is available and <code>pandas</code> is imported as <code>pd</code>.</p>
+</div>
+
+<li>Import <code>numpy</code> with the alias <code>np</code>.</li>
+```{python,warning=F,message=F}
+# Import numpy with the alias np
+import numpy as np
+```
+<li>Get the min, max, mean, and median of <code>weekly_sales</code> for each store type using <code>.groupby()</code> and <code>.agg()</code>. Store this as <code>sales_stats</code>. Make sure to use <code>numpy</code> functions!</li>
+```{python,warning=F,message=F}
+# For each store type, aggregate weekly_sales: get min, max, mean, and median
+sales_stats = sales.groupby("type")["weekly_sales"].agg([np.min, np.max, np.mean, np.median])
+
+# Print sales_stats
+print(sales_stats)
+```
+<li>Get the min, max, mean, and median of <code>unemployment</code> and <code>fuel_price_usd_per_l</code> for each store type. Store this as <code>unemp_fuel_stats</code>.</li>
+```{python,warning=F,message=F}
+# For each store type, aggregate unemployment and fuel_price_usd_per_l: get min, max, mean, and median
+unemp_fuel_stats = sales.groupby("type")[["unemployment", "fuel_price_usd_per_l"]].agg([np.min, np.max, np.mean, np.median])
+
+# Print unemp_fuel_stats
+print(unemp_fuel_stats)
+```
+
+<p class="">Awesome aggregating! Notice that the minimum <code>weekly_sales</code> is negative because some stores had more returns than sales.</p>
+
+## Pivot tables
+
+
+
+### Pivoting on one variable
+
+
+<div class>
+<p>Pivot tables are the standard way of aggregating data in spreadsheets. In pandas, pivot tables are essentially just another way of performing grouped calculations. That is, the <code>.pivot_table()</code> method is just an alternative to <code>.groupby()</code>. </p>
+<p>In this exercise, you'll perform calculations using <code>.pivot_table()</code> to replicate the calculations you performed in the last lesson using <code>.groupby()</code>.</p>
+<p><code>sales</code> is available and <code>pandas</code> is imported as <code>pd</code>.</p>
+</div>
+
+<li>Get the mean <code>weekly_sales</code> by <code>type</code> using <code>.pivot_table()</code> and store as <code>mean_sales_by_type</code>.</li>
+```{python,warning=F,message=F}
+# Pivot for mean weekly_sales for each store type
+mean_sales_by_type = sales.pivot_table(values="weekly_sales", index="type")
+
+# Print mean_sales_by_type
+print(mean_sales_by_type)
+```
+
+
+
+<li>Get the mean and median (using NumPy functions) of <code>weekly_sales</code> by <code>type</code> using <code>.pivot_table()</code> and store as <code>mean_med_sales_by_type</code>.</li>
+```{python,warning=F,message=F}
+# Import NumPy as np
+import numpy as np
+
+# Pivot for mean and median weekly_sales for each store type
+mean_med_sales_by_type = sales.pivot_table("weekly_sales", "type", aggfunc = [np.mean, np.median])
+
+# Print mean_med_sales_by_type
+print(mean_med_sales_by_type)
+```
+
+
+<li>Get the mean of <code>weekly_sales</code> by <code>type</code> and <code>is_holiday</code> using <code>.pivot_table()</code> and store as <code>mean_sales_by_type_holiday</code>.</li>
+```{python,warning=F,message=F}
+# Pivot for mean weekly_sales by store type and holiday 
+mean_sales_by_type_holiday = sales.pivot_table("weekly_sales", "type", "is_holiday")
+
+# Print mean_sales_by_type_holiday
+print(mean_sales_by_type_holiday)
+```
+
+<p class="">Perfect pivoting! Pivot tables are another way to do the same thing as a group-by-then-summarize.</p>
+
+### Fill in missing values and sum values with pivot tables
+
+
+<div class>
+<p>The <code>.pivot_table()</code> method has several useful arguments, including <code>fill_value</code> and <code>margins</code>. </p>
+<ul>
+<li>
+<code>fill_value</code> replaces missing values with a real value (known as <em>imputation</em>). What to replace missing values with is a topic big enough to have its own course (<a href="https://www.datacamp.com/courses/dealing-with-missing-data-in-python">Dealing with Missing Data in Python</a>), but the simplest thing to do is to substitute a dummy value.</li>
+<li>
+<code>margins</code> is a shortcut for when you pivoted by two variables, but also wanted to pivot by each of those variables separately: it gives the row and column totals of the pivot table contents.</li>
+</ul>
+<p>In this exercise, you'll practice using these arguments to up your pivot table skills, which will help you crunch numbers more efficiently!</p>
+<p><code>sales</code> is available and <code>pandas</code> is imported as <code>pd</code>.</p>
+</div>
+
+<li>Print the mean <code>weekly_sales</code> by <code>department</code> and <code>type</code>, filling in any missing values with <code>0</code>.</li>
+```{python,warning=F,message=F}
+# Print mean weekly_sales by department and type; fill missing values with 0
+print(sales.pivot_table(values="weekly_sales", index="department", columns="type", fill_value=0))
+```
+
+
+
+<li>Print the mean <code>weekly_sales</code> by <code>department</code> and <code>type</code>, filling in any missing values with <code>0</code> and summing all rows and columns.</li>
+```{python,warning=F,message=F}
+# Print the mean weekly_sales by department and type; fill missing values with 0s; sum all rows and cols
+print(sales.pivot_table(values="weekly_sales", index="department", columns="type", fill_value=0, margins =True))
+```
+
+<p class="">Magnificent margin making! You are now armed with pivot table skills that can help you compute summaries at multiple grouped levels in one line of code.</p>
+
+# Slicing and Indexing DataFrames
+
+<p class="chapter__description">
+    Indexes are supercharged row and column names. Learn how they can be combined with slicing for powerful DataFrame subsetting.
+  </p>
+  
+## Explicit indexes
+
+
+
+### Setting and removing indexes
+
+
+<div class>
+<p>pandas allows you to designate columns as an <em>index</em>. This enables cleaner code when taking subsets (as well as providing more efficient lookup under some circumstances).</p>
+<p>In this chapter, you'll be exploring <code>temperatures</code>, a DataFrame of average temperatures in cities around the world. <code>pandas</code> is loaded as <code>pd</code>.</p>
+</div>
+```{python,warning=F,message=F}
+# edited by mclix8
+temperatures = pd.read_csv('https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Data%20Manipulation%20with%20pandas/datasets/temperatures.csv', index_col = 0)
+temperatures['date'] =  pd.to_datetime(temperatures['date'], infer_datetime_format=True)
+
+```
+
+<li>
+<em>Look at <code>temperatures</code></em>.</li>
+```{python,warning=F,message=F}
+# Look at temperatures
+print(temperatures)
+```
+<li>Set the index of <code>temperatures</code> to <code>"city"</code>, assigning to <code>temperatures_ind</code>.</li>
+```{python,warning=F,message=F}
+# Index temperatures by city
+temperatures_ind = temperatures.set_index("city")
+```
+<li><em>Look at <code>temperatures_ind</code>. How is it different from <code>temperatures</code>?</em></li>
+```{python,warning=F,message=F}
+# Look at temperatures_ind
+print(temperatures_ind)
+```
+<li>Reset the index of <code>temperatures_ind</code>, keeping its contents.</li>
+```{python,warning=F,message=F}
+# Reset the index, keeping its contents
+print(temperatures_ind.reset_index())
+```
+<li>Reset the index of <code>temperatures_ind</code>, dropping its contents.</li>
+```{python,warning=F,message=F}
+# Reset the index, dropping its contents
+print(temperatures_ind.reset_index(drop=True))
+```
+
+<p class="">Incredible indexing! Setting an index allows more concise code for subsetting for rows of a categorical variable via <code>.loc[]</code>.</p>
+
+### Subsetting with .loc[]
+
+
+<div class>
+<p>The killer feature for indexes is <code>.loc[]</code>: a subsetting method that accepts index values. When you pass it a single argument, it will take a subset of rows.</p>
+<p>The code for subsetting using <code>.loc[]</code> can be easier to read than standard square bracket subsetting, which can make your code less burdensome to maintain.</p>
+<p><code>pandas</code> is loaded as <code>pd</code>. <code>temperatures</code> and <code>temperatures_ind</code> are available; the latter is indexed by <code>city</code>.</p>
+</div>
+
+<li>Create a list called <code>cities</code> that contains "Moscow" and "Saint Petersburg".</li>
+```{python,warning=F,message=F}
+# Make a list of cities to subset on
+cities = ["Moscow", "Saint Petersburg"]
+```
+<li>Use <code>[]</code> subsetting to filter <code>temperatures</code> for rows where the <code>city</code> column takes a value in the <code>cities</code> list.</li>
+```{python,warning=F,message=F}
+# Subset temperatures using square brackets
+print(temperatures[temperatures["city"].isin(cities)])
+```
+<li>Use <code>.loc[]</code> subsetting to filter <code>temperatures_ind</code> for rows where the city is in the <code>cities</code> list.</li>
+```{python,warning=F,message=F}
+# Subset temperatures_ind using .loc[]
+print(temperatures_ind.loc[cities])
+```
+
+<p class=""><code>.loc[]</code> is used by all the best folk! Setting an index allows more concise code for subsetting rows via <code>.loc[]</code>.</p>
+
+### Setting multi-level indexes
+
+
+<div class>
+<p>Indexes can also be made out of multiple columns, forming a <em>multi-level index</em> (sometimes called a <em>hierarchical index</em>). There is a trade-off to using these. </p>
+<p>The benefit is that multi-level indexes make it more natural to reason about nested categorical variables. For example, in a clinical trial, you might have control and treatment groups. Then each test subject belongs to one or another group, and we can say that a test subject is nested inside the treatment group. Similarly, in the temperature dataset, the city is located in the country, so we can say a city is nested inside the country. </p>
+<p>The main downside is that the code for manipulating indexes is different from the code for manipulating columns, so you have to learn two syntaxes and keep track of how your data is represented.</p>
+<p><code>pandas</code> is loaded as <code>pd</code>. <code>temperatures</code> is available.</p>
+</div>
+
+<li>Set the index of <code>temperatures</code> to the <code>"country"</code> and <code>"city"</code> columns, and assign this to <code>temperatures_ind</code>.</li>
+```{python,warning=F,message=F}
+# Index temperatures by country & city
+temperatures_ind = temperatures.set_index(["country", "city"])
+```
+<li>Specify two country/city pairs to keep: <code>"Brazil"</code>/<code>"Rio De Janeiro"</code> and <code>"Pakistan"</code>/<code>"Lahore"</code>, assigning to <code>rows_to_keep</code>.</li>
+```{python,warning=F,message=F}
+# List of tuples: Brazil, Rio De Janeiro & Pakistan, Lahore
+rows_to_keep = [("Brazil", "Rio De Janeiro"), ("Pakistan", "Lahore")]
+```
+<li>Print and subset <code>temperatures_ind</code> for <code>rows_to_keep</code> using <code>.loc[]</code>.</li>
+```{python,warning=F,message=F}
+# Subset for rows to keep
+print(temperatures_ind.loc[rows_to_keep])
+```
+
+<p class="">Magnificent multi-level indexing! Multi-level indexes can make it easy to comprehend your dataset when one category is nested inside another category.</p>
+
+### Sorting by index values
+
+
+<div class>
+<p>Previously, you changed the order of the rows in a DataFrame by calling <code>.sort_values()</code>. It's also useful to be able to sort by elements in the index. For this, you need to use <code>.sort_index()</code>.</p>
+<p><code>pandas</code> is loaded as <code>pd</code>. <code>temperatures_ind</code> has a multi-level index of <code>country</code> and <code>city</code>, and is available.</p>
+</div>
+
+<li>Sort <code>temperatures_ind</code> by the index values.</li>
+```{python,warning=F,message=F}
+# Sort temperatures_ind by index values
+print(temperatures_ind.sort_index())
+```
+<li>Sort <code>temperatures_ind</code> by the index values at the <code>"city"</code> level.</li>
+```{python,warning=F,message=F}
+# Sort temperatures_ind by index values at the city level
+print(temperatures_ind.sort_index(level="city"))
+```
+<li>Sort <code>temperatures_ind</code> by ascending country then descending city.</li>
+```{python,warning=F,message=F}
+# Sort temperatures_ind by country then descending city
+print(temperatures_ind.sort_index(level=["country", "city"], ascending = [True, False]))
+```
+
+<p class="">Sorted! Sorting index values is similar to sorting values in columns, except that you call <code>.sort_index()</code> instead of <code>.sort_values()</code>.</p>
+
+## Slicing and subsetting
+
+
+
+### Slicing index values
+
+
+<div class>
+<p>Slicing lets you select consecutive elements of an object using <code>first:last</code> syntax. DataFrames can be sliced by index values or by row/column number; we'll start with the first case. This involves slicing inside the <code>.loc[]</code> method.</p>
+<p>Compared to slicing lists, there are a few things to remember.</p>
+<ul>
+<li>You can only slice an index if the index is sorted (using <code>.sort_index()</code>).</li>
+<li>To slice at the outer level, <code>first</code> and <code>last</code> can be strings.</li>
+<li>To slice at inner levels, <code>first</code> and <code>last</code> should be tuples.</li>
+<li>If you pass a single slice to <code>.loc[]</code>, it will slice the rows.</li>
+</ul>
+<p><code>pandas</code> is loaded as <code>pd</code>. <code>temperatures_ind</code> has country and city in the index, and is available.</p>
+</div>
+
+<li>Sort the index of <code>temperatures_ind</code>.</li>
+```{python,warning=F,message=F}
+# Sort the index of temperatures_ind
+temperatures_srt = temperatures_ind.sort_index()
+```
+<li>Use slicing with <code>.loc[]</code> to get these subsets:
+<li>from Pakistan to Russia.</li>
+```{python,warning=F,message=F}
+# Subset rows from Pakistan to Russia
+print(temperatures_srt.loc["Pakistan":"Russia"])
+```
+<li>from Lahore to Moscow. (<em>This will return nonsense.</em>)</li>
+```{python,warning=F,message=F}
+# Try to subset rows from Lahore to Moscow
+print(temperatures_srt.loc["Lahore":"Moscow"])
+```
+<li>from Pakistan, Lahore to Russia, Moscow.</li>
+```{python,warning=F,message=F}
+# Subset rows from Pakistan, Lahore to Russia, Moscow
+print(temperatures_srt.loc[("Pakistan", "Lahore"):("Russia", "Moscow")])
+```
+
+</li>
+
+<p class="">That's a nice slice! Combining slicing with <code>.loc[]</code> provides a concise syntax for subsetting.</p>
+
+### Slicing in both directions
+
+
+<div class>
+<p>You've seen slicing DataFrames by rows and by columns, but since DataFrames are two-dimensional objects, it is often natural to slice both dimensions at once. That is, by passing two arguments to <code>.loc[]</code>, you can subset by rows and columns in one go.</p>
+<p><code>pandas</code> is loaded as <code>pd</code>. <code>temperatures_srt</code> is indexed by country and city, has a sorted index, and is available.</p>
+</div>
+
+<li>Use <code>.loc[]</code> slicing to subset rows from India, Hyderabad to Iraq, Baghdad.</li>
+```{python,warning=F,message=F}
+# Subset rows from India, Hyderabad to Iraq, Baghdad
+print(temperatures_srt.loc[("India", "Hyderabad"):("Iraq", "Baghdad")])
+```
+<li>Use <code>.loc[]</code> slicing to subset columns from <code>date</code> to <code>avg_temp_c</code>.</li>
+```{python,warning=F,message=F}
+# Subset columns from date to avg_temp_c
+print(temperatures_srt.loc[:, "date":"avg_temp_c"])
+```
+<li>Slice in both directions at once from Hyderabad to Baghdad, and <code>date</code> to <code>avg_temp_c</code>.</li>
+```{python,warning=F,message=F}
+# Subset in both directions at once
+print(temperatures_srt.loc[("India", "Hyderabad"):("Iraq", "Baghdad"), "date":"avg_temp_c"])
+```
+
+<p class="">Brilliant bidirectional slicing! Slicing with <code>.loc[]</code> lets you take subsets in both directions at once.</p>
+
+### Slicing time series
+
+
+<div class>
+<p>Slicing is particularly useful for time series since it's a common thing to want to filter for data within a date range. Add the <code>date</code> column to the index, then use <code>.loc[]</code> to perform the subsetting. The important thing to remember is to keep your dates in ISO 8601 format, that is, <code>"yyyy-mm-dd"</code> for year-month-day, <code>"yyyy-mm"</code> for year-month, and <code>"yyyy"</code> for year.</p>
+<p>Recall from Chapter 1 that you can combine multiple Boolean conditions using logical operators, such as <code>&amp;</code>. To do so in one line of code, you'll need to add parentheses <code>()</code> around each condition. </p>
+<p><code>pandas</code> is loaded as <code>pd</code> and <code>temperatures</code>, with no index, is available.</p>
+</div>
+
+<li>Use Boolean conditions, not <code>.isin()</code> or <code>.loc[]</code>, and the full date <code>"yyyy-mm-dd"</code>, to subset <code>temperatures</code> for rows in 2010 and 2011 and print the results.</li>
+```{python,warning=F,message=F}
+# Use Boolean conditions to subset temperatures for rows in 2010 and 2011
+temperatures_bool = temperatures[(temperatures["date"] >= "2010-01-01") & (temperatures["date"] <= "2011-12-31")]
+print(temperatures_bool)
+```
+<li>Set the index of <code>temperatures</code> to the <code>date</code> column and sort it.</li>
+```{python,warning=F,message=F}
+# Set date as the index and sort the index
+temperatures_ind = temperatures.set_index("date").sort_index()
+```
+<li>Use <code>.loc[]</code> to subset <code>temperatures_ind</code> for rows in 2010 and 2011.</li>
+```{python,warning=F,message=F}
+# Use .loc[] to subset temperatures_ind for rows in 2010 and 2011
+print(temperatures_ind.loc["2010":"2011"])
+```
+<li>Use <code>.loc[]</code> to subset <code>temperatures_ind</code> for rows from Aug 2010 to Feb 2011.</li>
+```{python,warning=F,message=F}
+# Use .loc[] to subset temperatures_ind for rows from Aug 2010 to Feb 2011
+print(temperatures_ind.loc["2010-08":"2011-02"])
+```
+
+<p class="">Delightful data range slicing! Using <code>.loc[]</code> in conjunction with a date index provides an easy way to subset for rows before or after some date.</p>
+
+### Subsetting by row/column number
+
+
+<div class>
+<p>The most common ways to subset rows are the ways we've previously discussed: using a Boolean condition or by index labels. However, it is also occasionally useful to pass row numbers.</p>
+<p>This is done using <code>.iloc[]</code>, and like <code>.loc[]</code>, it can take two arguments to let you subset by rows and columns.</p>
+<p><code>pandas</code> is loaded as <code>pd</code>. <code>temperatures</code> (without an index) is available.</p>
+</div>
+<div class="exercise--instructions__content">
+<p>Use <code>.iloc[]</code> on <code>temperatures</code> to take subsets.</p>
+
+<li>Get the 23rd row, 2nd column (index positions 22 and 1).</li>
+```{python,warning=F,message=F}
+# Get 23rd row, 2nd column (index 22, 1)
+print(temperatures.iloc[22, 1])
+```
+<li>Get the first 5 rows (index positions 0 to 5).</li>
+```{python,warning=F,message=F}
+# Use slicing to get the first 5 rows
+print(temperatures.iloc[:5])
+```
+<li>Get all rows, columns 3 and 4 (index positions 2 to 4).</li>
+```{python,warning=F,message=F}
+# Use slicing to get columns 3 to 4
+print(temperatures.iloc[:, 2:4])
+```
+<li>Get the first 5 rows, columns 3 and 4.</li>
+```{python,warning=F,message=F}
+# Use slicing in both directions at once
+print(temperatures.iloc[:5, 2:4])
+```
+
+</div>
+
+<p class="">Insightful use of <code>.iloc[]</code>! Use <code>.iloc[]</code> to specify a subset using the row or column numbers.</p>
+
+## Working with pivot tables
+
+
+
+### Pivot temperature by city and year
+
+
+<div class>
+<p>It's interesting to see how temperatures for each city change over time—looking at every month results in a big table, which can be tricky to reason about. Instead, let's look at how temperatures change by year.</p>
+<p>You can access the components of a date (year, month and day) using code of the form <code>dataframe["column"].dt.component</code>. For example, the month component is <code>dataframe["column"].dt.month</code>, and the year component is <code>dataframe["column"].dt.year</code>.</p>
+<p>Once you have the year column, you can create a pivot table with the data aggregated by city and year, which you'll explore in the coming exercises.</p>
+<p><code>pandas</code> is loaded as <code>pd</code>. <code>temperatures</code> is available.</p>
+</div>
+
+<li>Add a <code>year</code> column to <code>temperatures</code>, from the <code>year</code> component of the <code>date</code> column.</li>
+```{python,warning=F,message=F}
+# Add a year column to temperatures
+temperatures["year"] = (temperatures["date"].dt).year
+```
+<li>Make a pivot table of the <code>avg_temp_c</code> column, with <code>country</code> and <code>city</code> as rows, and <code>year</code> as columns. Assign to <code>temp_by_country_city_vs_year</code>, and <em>look at the result</em>.</li>
+```{python,warning=F,message=F}
+# Pivot avg_temp_c by country and city vs year
+temp_by_country_city_vs_year = temperatures.pivot_table("avg_temp_c", index = ["country", "city"], columns = "year")
+
+# See the result
+print(temp_by_country_city_vs_year)
+```
+
+<p class="">Powerful pivoting! Now you have the pivot table, let's manipulate it.</p>
+
+### Subsetting pivot tables
+
+
+<div class>
+<p>A pivot table is just a DataFrame with sorted indexes, so the techniques you have learned already can be used to subset them. In particular, the <code>.loc[]</code> + slicing combination is often helpful.</p>
+<p><code>pandas</code> is loaded as <code>pd</code>. <code>temp_by_country_city_vs_year</code> is available.</p>
+</div>
+<div class="exercise--instructions__content">
+<p>Use <code>.loc[]</code> on <code>temp_by_country_city_vs_year</code> to take subsets.</p>
+
+<li>From Egypt to India.</li>
+```{python,warning=F,message=F}
+# Subset for Egypt to India
+temp_by_country_city_vs_year.loc["Egypt":"India"]
+```
+<li>From Egypt, Cairo to India, Delhi.</li>
+```{python,warning=F,message=F}
+# Subset for Egypt, Cairo to India, Delhi
+temp_by_country_city_vs_year.loc[("Egypt", "Cairo"):("India", "Delhi")]
+```
+<li>From Egypt, Cairo to India, Delhi, and 2005 to 2010.</li>
+```{python,warning=F,message=F}
+# Subset for Egypt, Cairo to India, Delhi, and 2005 to 2010
+temp_by_country_city_vs_year.loc[("Egypt", "Cairo"):("India", "Delhi"), "2005":"2010"]
+```
+
+</div>
+
+<p class="">Super pivot table subsetting! Slicing is especially helpful for subsetting pivot tables.</p>
+
+### Calculating on a pivot table
+
+
+<div class>
+<p>Pivot tables are filled with summary statistics, but they are only a first step to finding something insightful. Often you'll need to perform further calculations on them. A common thing to do is to find the rows or columns where the highest or lowest value occurs. </p>
+<p>Recall from Chapter 1 that you can easily subset a Series or DataFrame to find rows of interest using a logical condition inside of square brackets. For example: <code>series[series &gt; value]</code>.</p>
+<p><code>pandas</code> is loaded as <code>pd</code> and the DataFrame <code>temp_by_country_city_vs_year</code> is available.</p>
+</div>
+
+<li>Calculate the mean temperature for each year, assigning to <code>mean_temp_by_year</code>.</li>
+```{python,warning=F,message=F}
+# Get the worldwide mean temp by year
+mean_temp_by_year = temp_by_country_city_vs_year.mean()
+```
+<li>Filter <code>mean_temp_by_year</code> for the year that had the highest mean temperature.</li>
+```{python,warning=F,message=F}
+# Filter for the year that had the highest mean temp
+print(mean_temp_by_year[mean_temp_by_year == mean_temp_by_year.max()])
+```
+<li>Calculate the mean temperature for each city (across columns), assigning to <code>mean_temp_by_city</code>.</li>
+```{python,warning=F,message=F}
+# Get the mean temp by city
+mean_temp_by_city = temp_by_country_city_vs_year.mean(axis="columns")
+```
+<li>Filter <code>mean_temp_by_city</code> for the city that had the lowest mean temperature.</li>
+```{python,warning=F,message=F}
+# Filter for the city that had the lowest mean temp
+print(mean_temp_by_city[mean_temp_by_city == mean_temp_by_city.min()])
+```
+
+<p class="">Classy calculating! With an average temperature just above freezing, Harbin is famous for its ice sculpture festival.</p>
+
+# Creating and Visualizing DataFrames
+
+<p class="chapter__description">
+    Learn to visualize the contents of your DataFrames, handle missing data values, and import data from and export data to CSV files.
+  </p>
+  
+## Visualizing your data
+
+
+
+### Which avocado size is most popular?
+
+
+<div class>
+<p>Avocados are increasingly popular and delicious in guacamole and on toast. The Hass Avocado Board keeps track of avocado supply and demand across the USA, including the sales of three different sizes of avocado. In this exercise, you'll use a bar plot to figure out which size is the most popular.</p>
+<p>Bar plots are great for revealing relationships between categorical (size) and numeric (number sold) variables, but you'll often have to manipulate your data first in order to get the numbers you need for plotting. </p>
+<p><code>pandas</code> has been imported as <code>pd</code>, and <code>avocados</code> is available.</p>
+</div>
+```{python,warning=F,message=F}
+# edited by mclix8
+import urllib.request
+import pickle
+
+avocados = pd.read_pickle("https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Data%20Manipulation%20with%20pandas/datasets/avoplotto.pkl")
+```
+
+<li>Print the head of the <code>avocados</code> dataset. <em>What columns are available?</em>
+</li>
+```{python,warning=F,message=F}
+# Import matplotlib.pyplot with alias plt
+import matplotlib.pyplot as plt
+
+# Look at the first few rows of data
+print(avocados.head())
+
+```
+<li>For each avocado size group, calculate the total number sold, storing as <code>nb_sold_by_size</code>.</li>
+```{python,warning=F,message=F}
+# Get the total number of avocados sold of each size
+nb_sold_by_size = avocados.groupby("size")["nb_sold"].sum()
+```
+<li>Create a bar plot of the number of avocados sold by size.</li>
+<li>Show the plot.</li>
+```{python,warning=F,message=F}
+# Create a bar plot of the number of avocados sold by size
+nb_sold_by_size.plot(kind="bar")
+
+# Show the plot
+plt.show()
+```
+
+<p class="">Bedazzling bar plot! It looks like small avocados were the most-purchased size, but large avocados were a close second.</p>
+
+### Changes in sales over time
+
+
+<div class>
+<p>Line plots are designed to visualize the relationship between two numeric variables, where each data values is connected to the next one. They are especially useful for visualizing the change in a number over time since each time point is naturally connected to the next time point. In this exercise, you'll visualize the change in avocado sales over three years.</p>
+<p><code>pandas</code> has been imported as <code>pd</code>, and <code>avocados</code> is available.</p>
+</div>
+
+<li>Get the total number of avocados sold on each date. <em>The DataFrame has two rows for each date—one for organic, and one for conventional</em>. Save this as <code>nb_sold_by_date</code>.</li>
+```{python,warning=F,message=F}
+# Import matplotlib.pyplot with alias plt
+import matplotlib.pyplot as plt
+
+# Get the total number of avocados sold on each date
+nb_sold_by_date = avocados.groupby("date")["nb_sold"].sum()
+```
+<li>Create a line plot of the number of avocados sold.</li>
+<li>Show the plot.</li>
+```{python,warning=F,message=F}
+# Create a line plot of the number of avocados sold by date
+nb_sold_by_date.plot(kind="line")
+
+# Show the plot
+plt.show()
+```
+
+<p class="">Lovely line plot! Line plots are great for visualizing something over time. Here, it looks like the number of avocados spikes around the same time each year.</p>
+
+### Avocado supply and demand
+
+
+<div class>
+<p>Scatter plots are ideal for visualizing relationships between numerical variables. In this exercise, you'll compare the number of avocados sold to average price and see if they're at all related. If they're related, you may be able to use one number to predict the other.</p>
+<p><code>matplotlib.pyplot</code> has been imported as <code>plt</code>, <code>pandas</code> has been imported as <code>pd</code>, and <code>avocados</code> is available.</p>
+</div>
+
+<li>Create a scatter plot with <code>nb_sold</code> on the x-axis and <code>avg_price</code> on the y-axis. Title it <code>"Number of avocados sold vs. average price"</code>.</li>
+<li>Show the plot.</li>
+```{python,warning=F,message=F}
+# Scatter plot of avg_price vs. nb_sold with title
+avocados.plot(x="nb_sold", y="avg_price", kind="scatter", title="Number of avocados sold vs. average price")
+
+# Show the plot
+plt.show()
+```
+
+<p class="">Super scatter plot! It looks like when more avocados are sold, prices go down. However, this doesn't mean that fewer sales <em>causes</em> higher prices - we can only tell that they're correlated with each other.</p>
+
+### Price of conventional vs. organic avocados
+
+
+<div class>
+<p>Creating multiple plots for different subsets of data allows you to compare groups. In this exercise, you'll create multiple histograms to compare the prices of conventional and organic avocados.</p>
+<p><code>matplotlib.pyplot</code> has been imported as <code>plt</code> and <code>pandas</code> has been imported as <code>pd</code>.</p>
+</div>
+
+<li>Subset <code>avocados</code> for the conventional type, and the average price column. Create a histogram.</li>
+<li>Create a histogram of <code>avg_price</code> for organic type avocados.</li>
+<li>Add a legend to your plot, with the names "conventional" and "organic".</li>
+<li>Show your plot.</li>
+```{python,warning=F,message=F}
+# Histogram of conventional avg_price 
+avocados[avocados["type"] == "conventional"]["avg_price"].hist()
+
+# Histogram of organic avg_price
+avocados[avocados["type"] == "organic"]["avg_price"].hist()
+
+# Add a legend
+plt.legend(["conventional", "organic"])
+
+# Show the plot
+plt.show()
+```
+
+<li>Modify your code to adjust the transparency of both histograms to <code>0.5</code> to see how much overlap there is between the two distributions.</li>
+```{python,warning=F,message=F}
+# Modify histogram transparency to 0.5 
+avocados[avocados["type"] == "conventional"]["avg_price"].hist(alpha=0.5)
+
+# Modify histogram transparency to 0.5
+avocados[avocados["type"] == "organic"]["avg_price"].hist(alpha=0.5)
+
+# Add a legend
+plt.legend(["conventional", "organic"])
+
+# Show the plot
+plt.show()
+```
+
+<li>Modify your code to use 20 bins in both histograms.</li>
+```{python,warning=F,message=F}
+# Modify bins to 20
+avocados[avocados["type"] == "conventional"]["avg_price"].hist(bins=20, alpha=0.5)
+
+# Modify bins to 20
+avocados[avocados["type"] == "organic"]["avg_price"].hist(bins= 20, alpha=0.5)
+
+# Add a legend
+plt.legend(["conventional", "organic"])
+
+# Show the plot
+plt.show()
+```
+
+<p class="">Great layering! We can see that on average, organic avocados are more expensive than conventional ones, but their price distributions have some overlap.</p>
+
+## Missing values
+
+
+
+### Finding missing values
+
+
+<div class>
+<p>Missing values are everywhere, and you don't want them interfering with your work. Some functions ignore missing data by default, but that's not always the behavior you might want. Some functions can't handle missing values at all, so these values need to be taken care of before you can use them. If you don't know where your missing values are, or if they exist, you could make mistakes in your analysis. In this exercise, you'll determine if there are missing values in the dataset, and if so, how many.</p>
+<p><code>pandas</code> has been imported as <code>pd</code> and <code>avocados_2016</code>, a subset of <code>avocados</code> that contains only sales from 2016, is available.</p>
+</div>
+```{python,warning=F,message=F}
+# edited by mclix8
+avocados_2016 = pd.read_csv('https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Data%20Manipulation%20with%20pandas/datasets/avocados_2016.csv')
+cols_with_missing = ['small_sold', 'large_sold', 'xl_sold']
+```
+
+<li>Print a DataFrame that shows whether each value in <code>avocados_2016</code> is missing or not.</li>
+```{python,warning=F,message=F}
+# Import matplotlib.pyplot with alias plt
+import matplotlib.pyplot as plt
+
+# Check individual values for missing values
+print(avocados_2016.isna())
+```
+<li>Print a summary that shows whether <em>any</em> value in each column is missing or not.</li>
+```{python,warning=F,message=F}
+# Check each column for missing values
+print(avocados_2016.isna().any())
+```
+<li>Create a bar plot of the total number of missing values in each column.</li>
+```{python,warning=F,message=F}
+# Bar plot of missing values by variable
+avocados_2016.isna().sum().plot(kind="bar")
+
+# Show plot
+plt.show()
+```
+
+<p class="">Marvelous missing value detection! It looks like there are missing values in the <code>small_sold</code>, <code>large_sold</code>, and <code>xl_sold</code> columns.</p>
+
+### Removing missing values
+
+
+<div class>
+<p>Now that you know there are some missing values in your DataFrame, you have a few options to deal with them. One way is to remove them from the dataset completely. In this exercise, you'll remove missing values by removing all rows that contain missing values.</p>
+<p><code>pandas</code> has been imported as <code>pd</code> and <code>avocados_2016</code> is available.</p>
+</div>
+
+<li>Remove the rows of <code>avocados_2016</code> that contain missing values and store the remaining rows in <code>avocados_complete</code>.</li>
+```{python,warning=F,message=F}
+# Remove rows with missing values
+avocados_complete = avocados_2016.dropna()
+```
+<li>Verify that all missing values have been removed from <code>avocados_complete</code>. Calculate each column that has NAs and print.</li>
+```{python,warning=F,message=F}
+# Check if any columns contain missing values
+print(avocados_complete.isna().any())
+```
+
+<p class="">Delightful dropping! Removing observations with missing values is a quick and dirty way to deal with missing data, but this can introduce bias to your data if the values are not missing at random.</p>
+
+### Replacing missing values
+
+
+<div class>
+<p>Another way of handling missing values is to replace them all with the same value. For numerical variables, one option is to replace values with 0— you'll do this here. However, when you replace missing values, you make assumptions about what a missing value means. In this case, you will assume that a missing number sold means that no sales for that avocado type were made that week. </p>
+<p>In this exercise, you'll see how replacing missing values can affect the distribution of a variable using histograms. You can plot histograms for multiple variables at a time as follows:</p>
+<pre><code>dogs[["height_cm", "weight_kg"]].hist()
+</code></pre>
+<p><code>pandas</code> has been imported as <code>pd</code> and <code>matplotlib.pyplot</code> has been imported as <code>plt</code>. The <code>avocados_2016</code> dataset is available.</p>
+</div>
+
+<li>A list has been created, <code>cols_with_missing</code>, containing the names of columns with missing values: <code>"small_sold"</code>, <code>"large_sold"</code>, and <code>"xl_sold"</code>.</li>
+```{python,warning=F,message=F}
+# List the columns with missing values
+cols_with_missing = ["small_sold", "large_sold", "xl_sold"]
+```
+<li>Create a histogram of those columns.</li>
+<li>Show the plot.</li>
+```{python,warning=F,message=F}
+# Create histograms showing the distributions cols_with_missing
+avocados_2016[cols_with_missing].hist()
+
+# Show the plot
+plt.show()
+```
+
+
+<li>Replace the missing values of <code>avocados_2016</code> with <code>0</code>s and store the result as <code>avocados_filled</code>.</li>
+```{python,warning=F,message=F}
+# Fill in missing values with 0
+avocados_filled = avocados_2016.fillna(0)
+```
+
+<li>Create a histogram of the <code>cols_with_missing</code> columns of <code>avocados_filled</code>.</li>
+```{python,warning=F,message=F}
+# Create histograms of the filled columns
+avocados_filled[cols_with_missing].hist()
+
+# Show the plot
+plt.show()
+```
+
+<p class="">Fabulous filling! Notice how the distribution has changed shape after replacing missing values with zeros.</p>
+
+## Creating DataFrames
+
+
+
+### List of dictionaries
+
+
+<div class>
+<p>You recently got some new avocado data from 2019 that you'd like to put in a DataFrame using the list of dictionaries method. Remember that with this method, you go through the data row by row.</p>
+<table>
+<thead><tr>
+<th>date</th>
+<th>small_sold</th>
+<th>large_sold</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>"2019-11-03"</td>
+<td>10376832</td>
+<td>7835071</td>
+</tr>
+<tr>
+<td>"2019-11-10"</td>
+<td>10717154</td>
+<td>8561348</td>
+</tr>
+</tbody>
+</table>
+<p><code>pandas</code> as <code>pd</code> is imported.</p>
+</div>
+
+<li>Create a list of dictionaries with the new data called <code>avocados_list</code>.</li>
+```{python,warning=F,message=F}
+# Create a list of dictionaries with new data
+avocados_list = [
+    {"date": "2019-11-03", "small_sold": 10376832, "large_sold": 7835071},
+    {"date": "2019-11-10", "small_sold": 10717154, "large_sold": 8561348},
+]
+```
+<li>Convert the list into a DataFrame called <code>avocados_2019</code>.</li>
+```{python,warning=F,message=F}
+# Convert list into DataFrame
+avocados_2019 = pd.DataFrame(avocados_list)
+```
+<li>Print your new DataFrame.</li>
+```{python,warning=F,message=F}
+# Print the new DataFrame
+print(avocados_2019)
+```
+
+<p class="">Lovely work with the list-of-dictionaries! The list-of-dictionaries method creates DataFrames row-by-row.</p>
+
+### Dictionary of lists
+
+
+<div class>
+<p>Some more data just came in! This time, you'll use the dictionary of lists method, parsing the data column by column.</p>
+<table>
+<thead><tr>
+<th>date</th>
+<th>small_sold</th>
+<th>large_sold</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>"2019-11-17"</td>
+<td>10859987</td>
+<td>7674135</td>
+</tr>
+<tr>
+<td>"2019-12-01"</td>
+<td>9291631</td>
+<td>6238096</td>
+</tr>
+</tbody>
+</table>
+<p><code>pandas</code> as <code>pd</code> is imported.</p>
+</div>
+
+<li>Create a dictionary of lists with the new data called <code>avocados_dict</code>.</li>
+```{python,warning=F,message=F}
+# Create a dictionary of lists with new data
+avocados_dict = {
+  "date": ["2019-11-17", "2019-12-01"],
+  "small_sold": [10859987, 9291631],
+  "large_sold": [7674135, 6238096]
+}
+```
+<li>Convert the dictionary to a DataFrame called <code>avocados_2019</code>.</li>
+```{python,warning=F,message=F}
+# Convert dictionary into DataFrame
+avocados_2019 = pd.DataFrame(avocados_dict)
+```
+<li>Print your new DataFrame.</li>
+```{python,warning=F,message=F}
+# Print the new DataFrame
+print(avocados_2019)
+```
+
+<p class="">Delightful dictionary-of-lists usage! The list-of-dictionaries method creates DataFrames column-by-column.</p>
+
+## Reading and writing CSVs
+
+
+
+### CSV to DataFrame
+
+
+<div class>
+<p>You work for an airline, and your manager has asked you to do a competitive analysis and see how often passengers flying on other airlines are involuntarily bumped from their flights.
+You got a CSV file (<code>airline_bumping.csv</code>) from the Department of Transportation containing data on passengers that were involuntarily denied boarding in 2016 and 2017, but it doesn't have the exact numbers you want. In order to figure this out, you'll need to get the CSV into a pandas DataFrame and do some manipulation!</p>
+<p><code>pandas</code> is imported for you as <code>pd</code>. <code>"airline_bumping.csv"</code> is in your working directory.</p>
+</div>
+
+<li>Read the CSV file <code>"airline_bumping.csv"</code> and store it as a DataFrame called <code>airline_bumping</code>.</li>
+```{python,warning=F,message=F}
+# Read CSV as DataFrame called airline_bumping
+airline_bumping = pd.read_csv('https://raw.githubusercontent.com/mclix8/DataCamp/master/Data%20Manipulation%20with%20Python/Data%20Manipulation%20with%20pandas/datasets/airline_bumping.csv')
+```
+<li>Print the first few rows of <code>airline_bumping</code>.</li>
+```{python,warning=F,message=F}
+# Take a look at the DataFrame
+print(airline_bumping.head())
+```
+
+<li>For each airline group, select the <code>nb_bumped</code>, and <code>total_passengers</code> columns, and calculate the sum (for both years). Store this as <code>airline_totals</code>.</li>
+```{python,warning=F,message=F}
+# For each airline, select nb_bumped and total_passengers and sum
+airline_totals = airline_bumping.groupby("airline")[["nb_bumped", "total_passengers"]].sum()
+```
+
+<li>Create a new column of <code>airline_totals</code> called <code>bumps_per_10k</code>, which is the number of passengers bumped per 10,000 passengers in 2016 and 2017.</li>
+```{python,warning=F,message=F}
+# Create new col, bumps_per_10k: no. of bumps per 10k passengers for each airline
+airline_totals["bumps_per_10k"] = airline_totals["nb_bumped"] / airline_totals["total_passengers"] * 10000
+
+# Print airline_totals
+print(airline_totals)
+```
+<li>Print <code>airline_totals</code> to see the results of your manipulations.</li>
+```{python,warning=F,message=F}
+# Print airline_totals
+print(airline_totals)
+```
+
+<p class="">Masterful manipulation! Now you'll need to export this so you can share it with others.</p>
+
+### DataFrame to CSV
+
+
+<div class>
+<p>You're almost there! To make things easier to read, you'll need to sort the data and export it to CSV so that your colleagues can read it.</p>
+<p><code>pandas</code> as <code>pd</code> has been imported for you.</p>
+</div>
+
+<li>Sort <code>airline_totals</code> by the values of <code>bumps_per_10k</code> from highest to lowest, storing as <code>airline_totals_sorted</code>.</li>
+```{python,warning=F,message=F}
+# Create airline_totals_sorted
+airline_totals_sorted = airline_totals.sort_values("bumps_per_10k", ascending=False)
+```
+<li>Print your sorted DataFrame.</li>
+```{python,warning=F,message=F}
+# Print airline_totals_sorted
+print(airline_totals_sorted)
+```
+<li>Save the sorted DataFrame as a CSV called <code>"airline_totals_sorted.csv"</code>.</li>
+```{python,warning=F,message=F}
+# Save as airline_totals_sorted.csv
+airline_totals_sorted.to_csv("airline_totals_sorted.csv")
+```
+
+<p class="">Excellent exporting! Now you can share these insights about your competitors with your team.</p>

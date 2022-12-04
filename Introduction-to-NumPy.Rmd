@@ -1,0 +1,1253 @@
+## Introduction to Numpy {.unnumbered}
+
+<h3 class="course__description-title">Izzy Weber</h3>
+<p class="course__instructor-description display-none-mobile-course-page-experiment">
+    Izzy is a Curriculum Manager at DataCamp. She discovered a love for data during her seven years as an accounting professor at the University of Washington. She holds a masters degree in Taxation and is a Certified Public Accountant. Her passion is making learning technical topics fun.
+  </p>
+
+**Course Description**
+
+<p class="course__description">In  Introduction to R, you will master the basics of this widely used open source language, including factors, lists, and data frames. With the knowledge gained in this course, you will be ready to undertake your first very own data analysis. Oracle estimated over 2 million R users worldwide in 2012, cementing R as a leading programming language in statistics and data science. Every year, the number of R users grows by about 40%, and an increasing number of organizations are using it in their day-to-day activities. Begin your journey to learn R with us today!</p>
+
+
+### Understanding NumPy Arrays {.unnumbered}
+
+<p class="chapter__description">
+    Meet the incredible NumPy array! Learn how to create and change array shapes to suit your needs. Finally, discover NumPy's many data types and how they contribute to speedy array operations.
+  </p>
+  
+#### Introducing arrays {.unnumbered}
+
+
+
+##### Your first NumPy array {.unnumbered}
+
+
+<div class>
+<p>Once you're comfortable with NumPy, you'll find yourself converting Python lists into NumPy arrays all the time for increased speed and access to NumPy's excellent array methods.</p>
+<p><code>sudoku_list</code> is a Python list containing a sudoku game: </p>
+<pre><code>[[0, 0, 4, 3, 0, 0, 2, 0, 9],
+ [0, 0, 5, 0, 0, 9, 0, 0, 1],
+ [0, 7, 0, 0, 6, 0, 0, 4, 3],
+ [0, 0, 6, 0, 0, 2, 0, 8, 7],
+ [1, 9, 0, 0, 0, 7, 4, 0, 0],
+ [0, 5, 0, 0, 8, 3, 0, 0, 0],
+ [6, 0, 0, 0, 0, 0, 1, 0, 5],
+ [0, 0, 3, 5, 0, 8, 6, 9, 0],
+ [0, 4, 2, 9, 1, 0, 3, 0, 0]]
+</code></pre>
+<p>You're going to change <code>sudoku_list</code> into a NumPy array so you can practice with it in later lessons, for example by creating a 4D array of sudoku games along with their solutions!</p>
+</div>
+
+
+<li>Import NumPy using its generally accepted alias.</li>
+
+<li>Convert <code>sudoku_list</code> into a NumPy array called <code>sudoku_array</code>.</li>
+
+<li>Print the class <code>type()</code> of <code>sudoku_array</code> to check that your code has worked properly.</li>
+```{python}
+# edited/added
+import numpy as np
+sudoku_list = np.load("archive/Introduction-to-NumPy/datasets/sudoku_game.npy")
+
+# Import NumPy
+import numpy as np
+
+# Convert sudoku_list into an array
+sudoku_array = np.array(sudoku_list)
+
+# Print the type of sudoku_array 
+print(type(sudoku_array))
+```
+
+<p class="">Hip hip h-array! Notice that the class of <code>sudoku_array</code> is <code>numpy.ndarray</code>. <code>ndarray</code> is short for N-dimensional array, so-called because a NumPy array can have any number of dimensions.</p>
+
+##### Creating arrays from scratch {.unnumbered}
+
+
+<div class>
+<p>It can be helpful to know how to create quick NumPy arrays from scratch in order to test your code. For example, when you are doing math with large multi-dimensional arrays, it's nice to check whether the math works as expected on small test arrays before applying your code to the larger arrays. NumPy has many options for creating smaller synthetic arrays.</p>
+<p>With this in mind, it's time for you to create some arrays from scratch! <code>numpy</code> is imported for you as <code>np</code>.</p>
+</div>
+
+<li>Create and print an array filled with zeros called <code>zero_array</code>, which has two rows and four columns.</li>
+
+
+
+
+<li>Create and print an array of random floats between <code>0</code> and <code>1</code> called <code>random_array</code>, which has three rows and six columns.</li>
+```{python}
+# Create an array of zeros which has four columns and two rows
+zero_array = np.zeros((2, 4))
+print(zero_array)
+
+# Create an array of random floats which has six columns and three rows
+random_array = np.random.random((3, 6))
+print(random_array)
+```
+
+<p class="">Looks like you had <em>zero</em> issues with these arrays! Well done. You also got some practice with array shapes, which are very important!</p>
+
+##### A range array {.unnumbered}
+
+
+<div class>
+<p><code>np.arange()</code> has especially useful applications in graphing. Your task is to create a scatter plot with the values from <code>doubling_array</code> on the y-axis. </p>
+<pre><code>doubling_array = [1, 2, 4, 8, 16, 32, 64, 128, 256, 512]
+</code></pre>
+<p>Recall that a scatter plot can be created using the following code:</p>
+<pre><code>plt.scatter(x_values, y_values)
+plt.show()
+plt.close() # edited/added
+</code></pre>
+<p>With <code>doubling_array</code> on the y-axis, you now need values for the x-axis, which you can create with <code>np.arange()</code>! </p>
+<p><code>numpy</code> is loaded for you as <code>np</code>, and <code>matplotlib.pyplot</code> is imported as <code>plt</code>.</p>
+</div>
+
+
+<li>Using <code>np.arange()</code>, create a 1D array called <code>one_to_ten</code> which holds all integers from one to ten (inclusive).</li>
+
+<li>Create a scatterplot with <code>doubling_array</code> as the y values and <code>one_to_ten</code> as the x values.</li>
+```{python}
+# edited/added
+from matplotlib import pyplot as plt
+doubling_array = [1, 2, 4, 8, 16, 32, 64, 128, 256, 512]
+
+# Create an array of integers from one to ten
+one_to_ten = np.arange(1, 11)
+
+# Create your scatterplot
+plt.scatter(one_to_ten, doubling_array)
+plt.show()
+plt.close() # edited/added
+```
+
+<p class="">Awesome—now you know how to make quite a <em>range</em> of arrays! You've also discovered that Pyplot accepts arrays as inputs, which makes sense since Matplotlib is built on top of NumPy.</p>
+
+#### Array dimensionality {.unnumbered}
+
+
+
+##### 3D array creation {.unnumbered}
+
+
+<div class>
+<p>In the first lesson, you created a <code>sudoku_game</code> two-dimensional NumPy array. Perhaps you have hundreds of sudoku game arrays, and you'd like to save the solution for this one, <code>sudoku_solution</code>, as part of the same array as its corresponding game in order to organize your sudoku data better. You could accomplish this by stacking the two 2D arrays on top of each other to create a 3D array.</p>
+<p><code>numpy</code> is loaded as <code>np</code>, and the <code>sudoku_game</code> and <code>sudoku_solution</code> arrays are available.</p>
+</div>
+
+
+<li>Create a 3D array called <code>game_and_solution</code> by stacking the two 2D arrays, <code>sudoku_game</code> and <code>sudoku_solution</code>, on top of one another; in the final array, <code>sudoku_game</code> should appear before <code>sudoku_solution</code>.</li>
+
+<li>Print <code>game_and_solution</code>.</li>
+```{python}
+# edited/added
+sudoku_solution = np.load("archive/Introduction-to-NumPy/datasets/sudoku_solution.npy")
+sudoku_list = np.load("archive/Introduction-to-NumPy/datasets/sudoku_game.npy")
+sudoku_array = np.array(sudoku_list)
+sudoku_game = np.array(sudoku_list)
+
+# Create the game_and_solution 3D array
+game_and_solution = np.array([sudoku_game, sudoku_solution])
+
+# Print game_and_solution
+print(game_and_solution) 
+```
+
+<p class="">Nice work! Notice how storing <code>sudoku_game</code> and <code>sudoku_solution</code> in three dimensions makes more sense than adding the data from both to one 2D array.</p>
+
+##### The fourth dimension {.unnumbered}
+
+
+<div class>
+<p>Printing arrays is a good way to check code output for small arrays like <code>sudoku_game_and_solution</code>, but it becomes unwieldy when dealing with bigger arrays and those with higher dimensions. Another important check is to look at the array's <code>.shape</code>.</p>
+<p>Now, you'll create a 4D array that contains two sudoku games and their solutions. <code>numpy</code> is loaded as <code>np</code>. The <code>game_and_solution</code> 3D array you created in the previous example is available, along with <code>new_sudoku_game</code> and <code>new_sudoku_solution</code>.</p>
+</div>
+
+
+<li>Create another 3D array called <code>new_game_and_solution</code> with a different 2D game and 2D solution pair: <code>new_sudoku_game</code> and <code>new_sudoku_solution</code>. <code>new_sudoku_game</code> should appear before <code>new_sudoku_solution</code>.</li>
+
+<li>Create a 4D array called <code>games_and_solutions</code> by making an array out of the two 3D arrays: <code>game_and_solution</code> and <code>new_game_and_solution</code>, in that order.</li>
+
+<li>Print the shape of <code>games_and_solutions</code>.</li>
+```{python}
+# edited/added
+new_sudoku_game = np.array([[0, 0, 4, 3, 0, 0, 0, 0, 0],
+       [8, 9, 0, 2, 0, 0, 6, 7, 0],
+       [7, 0, 0, 9, 0, 0, 0, 5, 0],
+       [5, 0, 0, 0, 0, 8, 1, 4, 0],
+       [0, 7, 0, 0, 3, 2, 0, 6, 0],
+       [6, 0, 0, 0, 0, 1, 3, 0, 8],
+       [0, 0, 1, 7, 5, 0, 9, 0, 0],
+       [0, 0, 5, 0, 4, 0, 0, 1, 2],
+       [9, 8, 0, 0, 0, 6, 0, 0, 5]])
+new_sudoku_solution = np.array([[2, 5, 4, 3, 6, 7, 8, 9, 1],
+       [8, 9, 3, 2, 1, 5, 6, 7, 4],
+       [7, 1, 6, 9, 8, 4, 2, 5, 3],
+       [5, 3, 2, 6, 9, 8, 1, 4, 7],
+       [1, 7, 8, 4, 3, 2, 5, 6, 9],
+       [6, 4, 9, 5, 7, 1, 3, 2, 8],
+       [4, 2, 1, 7, 5, 3, 9, 8, 6],
+       [3, 6, 5, 8, 4, 9, 7, 1, 2],
+       [9, 8, 7, 1, 2, 6, 4, 3, 5]])
+game_and_solution = np.array([[[0, 0, 4, 3, 0, 0, 2, 0, 9],
+        [0, 0, 5, 0, 0, 9, 0, 0, 1],
+        [0, 7, 0, 0, 6, 0, 0, 4, 3],
+        [0, 0, 6, 0, 0, 2, 0, 8, 7],
+        [1, 9, 0, 0, 0, 7, 4, 0, 0],
+        [0, 5, 0, 0, 8, 3, 0, 0, 0],
+        [6, 0, 0, 0, 0, 0, 1, 0, 5],
+        [0, 0, 3, 5, 0, 8, 6, 9, 0],
+        [0, 4, 2, 9, 1, 0, 3, 0, 0]],
+       [[8, 6, 4, 3, 7, 1, 2, 5, 9],
+        [3, 2, 5, 8, 4, 9, 7, 6, 1],
+        [9, 7, 1, 2, 6, 5, 8, 4, 3],
+        [4, 3, 6, 1, 9, 2, 5, 8, 7],
+        [1, 9, 8, 6, 5, 7, 4, 3, 2],
+        [2, 5, 7, 4, 8, 3, 9, 1, 6],
+        [6, 8, 9, 7, 3, 4, 1, 2, 5],
+        [7, 1, 3, 5, 2, 8, 6, 9, 4],
+        [5, 4, 2, 9, 1, 6, 3, 7, 8]]])
+        
+# Create a second 3D array of another game and its solution 
+new_game_and_solution = np.array([new_sudoku_game, new_sudoku_solution])
+
+# Create a 4D array of both game and solution 3D arrays
+games_and_solutions = np.array([game_and_solution, new_game_and_solution])
+
+# Print the shape of your 4D array
+print(games_and_solutions.shape)
+```
+
+<p class="">Fabulous 4D array! The <code>.shape</code> of <code>(2, 2, 9, 9)</code> means that there are two sets of game/solution pairs. Within each game/solution pair, all arrays have nine rows and nine columns. That's exactly right! If there were ten game/solution pairs, the <code>.shape</code> would be <code>(10, 2, 9, 9)</code>.</p>
+
+##### Flattening and reshaping {.unnumbered}
+
+
+<div class>
+<p>You've learned to change not only array shape but also the number of dimensions that an array has. To test these skills, you'll change <code>sudoku_game</code> from a 2D array to a 1D array and back again. Can we trust NumPy to keep the array elements in the same order after being flattened and reshaped? Time to find out.</p>
+<p><code>numpy</code> is imported as <code>np</code>, and <code>sudoku_game</code> is loaded for you.</p>
+</div>
+
+
+<li>Flatten <code>sudoku_game</code> so that it is a 1D array, and save it as <code>flattened_game</code>.</li>
+
+<li>Print the <code>.shape</code> of <code>flattened_game</code>.</li>
+
+
+<li>Reshape the <code>flattened_game</code> back to its original shape of nine rows and nine columns; save the new array as <code>reshaped_game</code>.</li>
+```{python}
+# edited/added
+sudoku_game = np.array([[0, 0, 4, 3, 0, 0, 2, 0, 9],
+       [0, 0, 5, 0, 0, 9, 0, 0, 1],
+       [0, 7, 0, 0, 6, 0, 0, 4, 3],
+       [0, 0, 6, 0, 0, 2, 0, 8, 7],
+       [1, 9, 0, 0, 0, 7, 4, 0, 0],
+       [0, 5, 0, 0, 8, 3, 0, 0, 0],
+       [6, 0, 0, 0, 0, 0, 1, 0, 5],
+       [0, 0, 3, 5, 0, 8, 6, 9, 0],
+       [0, 4, 2, 9, 1, 0, 3, 0, 0]])
+       
+# Flatten sudoku_game
+flattened_game = sudoku_game.flatten()
+
+# Print the shape of flattened_game
+print(flattened_game.shape)
+
+# Reshape flattened_game back to a nine by nine array
+reshaped_game = flattened_game.reshape((9, 9))
+
+# Print sudoku_game and reshaped_game
+print(sudoku_game)
+print(reshaped_game)
+```
+
+<p class="">Phew! Nice work resurrecting that sudoku game. Notice that <code>.flatten()</code> preserves the order of array elements—when the array is reshaped back to its original shape, the numbers are in the exact same places as they were before flattening.</p>
+
+#### NumPy data types {.unnumbered}
+
+
+
+##### The dtype argument {.unnumbered}
+
+
+<div class>
+<p>One way to control the data type of a NumPy array is to declare it when the array is created using the <code>dtype</code> keyword argument. Take a look at the data type NumPy uses by default when creating an array with <code>np.zeros()</code>. Could it be updated?</p>
+<p><code>numpy</code> is loaded as <code>np</code>.</p>
+</div>
+
+<li>Using <code>np.zeros()</code>, create an array of zeros that has three rows and two columns; call it <code>zero_array</code>.</li>
+
+<li>Print the data type of <code>zero_array</code>.</li>
+
+
+
+<li>Create a new array of zeros called <code>zero_int_array</code>, which will also have three rows and two columns, but the data type should be <code>np.int32</code>.</li>
+
+
+<li>Print the data type of <code>zero_int_array</code>.</li>
+```{python}
+# Create an array of zeros with three rows and two columns
+zero_array = np.zeros((3, 2))
+
+# Print the data type of zero_array
+print(zero_array.dtype)
+
+# Create a new array of int32 zeros with three rows and two columns
+zero_int_array = np.zeros((3, 2), dtype=np.int32)
+
+# Print the data type of zero_int_array
+print(zero_int_array.dtype)
+```
+
+<p class="">Nice! Since your original <code>zero_array</code> did not have any information following the decimal places of the floats, it makes sense to change the array's data type to an integer with a smaller bitsize.</p>
+
+##### Anticipating data types {.unnumbered}
+
+<p>Anticipating what data type an array will have is very important since some NumPy functionality only works with certain data types. Let's see what you've got.</p>
+
+<li>For each of the given code snippets, determine which data type the resulting array will have by dragging the snippet to the proper box.</li>
+
+<h5 class="dc-u-ta-center">A string data type</h5>
+<p><code>np.array([78.988, "NumPy", True])</code></p>
+<p><code>np.array([9, 1.12, True]).astype("&lt;U5")</code></p>
+
+<h5 class="dc-u-ta-center">An integer data type</h5>
+<p><code>np.array([34.62, 70.13, 9]).astype(np.int64)</code></p>
+<p><code>np.array([45.67, True], dtype=np.int8)</code></p>
+
+<h5 class="dc-u-ta-center">A float data type</h5>
+<p><code>np.array([[6, 15.7], [True, False]])</code></p>
+<p><code>np.random.random((4, 5))</code></p>
+
+<p>You've got data types down! If you run into a NumPy <code>TypeError</code>, fall back on these skills to debug it!</p>
+
+##### A smaller sudoku game {.unnumbered}
+
+
+<div class>
+<p>NumPy data types, which emphasize speed, are more specific than Python data types, which emphasize flexibility. When working with large amounts of data in NumPy, it's good practice to check the data type and consider whether a smaller data type is large enough for your data, since smaller data types use less memory.</p>
+<p>It's time to make your sudoku game more memory-efficient using your knowledge of data types! <code>sudoku_game</code> has been loaded for you as a NumPy array. <code>numpy</code> is imported as <code>np</code>.</p>
+</div>
+
+<li>Print the data type of the elements in <code>sudoku_game</code>.</li>
+```{python}
+# Print the data type of sudoku_game
+print(sudoku_game.dtype)
+```
+
+<p>The current data type of <code>sudoku_game</code> is <code>int64</code>. Which of the following NumPy integers is the smallest bitsize that is still large enough to hold the data in <code>sudoku_game</code>? If you have never played sudoku, know that sudoku games only ever store integers from one to nine.</p>
+
+- [ ] <code>np.int64</code>
+- [ ] <code>np.int32</code>
+- [ ] <code>np.int16</code>
+- [x] <code>np.int8</code>
+
+
+<li>Change the data type of <code>sudoku_game</code> to be <code>int8</code>, an 8-bit integer; name the new array <code>small_sudoku_game</code>.</li>
+
+
+<li>Print the data type of <code>small_sudoku_game</code> to be sure that your change to <code>int8</code> is reflected.</li>
+```{python}
+# Change the data type of sudoku_game to int8
+small_sudoku_game = sudoku_game.astype(np.int8)
+
+# Print the data type of small_sudoku_game
+print(small_sudoku_game.dtype)
+```
+
+<p class="">Int-credible! Gr8 data type casting! <code>int8</code> is one of the smallest data types in NumPy since 8 bits is only a single byte.</p>
+
+### Selecting and Updating Data {.unnumbered}
+
+<p class="chapter__description">
+    Sharpen your NumPy data wrangling skills by slicing, filtering, and sorting New York City’s tree census data. Create new arrays by pulling data based on conditional statements, and add and remove data along any dimension to suit your purpose. Along the way, you’ll learn the shape and dimension compatibility principles to prepare for super-fast array math.
+  </p>
+  
+#### Indexing and slicing arrays {.unnumbered}
+
+
+
+##### Slicing and indexing trees {.unnumbered}
+
+
+<div class>
+<p>Imagine you are a researcher working with data from New York City's tree census. Each row of the <code>tree_census</code> 2D array lists information for a different tree: the tree ID, block ID, trunk diameter, and stump diameter in that order. Living trees do not have stump diameters, which explains why there are so many zeros in that column. Column order is important because NumPy does not have column names! The first and last three rows of <code>tree_census</code> are shown below.</p>
+<pre><code>array([[     3, 501451,     24,      0],
+       [     4, 501451,     20,      0],
+       [     7, 501911,      3,      0],
+       ...,
+       [  1198, 227387,     11,      0],
+       [  1199, 227387,     11,      0],
+       [  1210, 227386,      6,      0]])
+</code></pre>
+<p>In this exercise, you'll be working specifically with the second column, representing block IDs: your research requires you to select specific city blocks for further analysis using NumPy slicing and indexing.  <code>numpy</code> is loaded as <code>np</code>, and the <code>tree_census</code> 2D array is available.</p>
+</div>
+
+
+<li>Select all rows of data from the second column, representing block IDs; save the resulting array as <code>block_ids</code>.</li>
+
+<li>Print the first five block IDs from <code>block_ids</code>.</li>
+
+
+
+
+<li>Select the tenth block ID from <code>block_ids</code>, saving the result as <code>tenth_block_id</code>.</li>
+
+
+
+<li>Select five consecutive block IDs from <code>block_ids</code>, starting with the tenth ID, and save as <code>block_id_slice</code>
+</li>
+```{python}
+# edited/added
+tree_census = np.load("archive/Introduction-to-NumPy/datasets/tree_census.npy")
+
+# Select all rows of block ID data from the second column
+block_ids = tree_census[:, 1]
+
+# Print the first five block_ids
+print(block_ids[:5])
+
+# Select the tenth block ID from block_ids
+tenth_block_id = block_ids[9]
+print(tenth_block_id)
+
+# Select five block IDs from block_ids starting with the tenth ID
+block_id_slice = block_ids[9:14]
+print(block_id_slice)
+```
+
+<p class="">No mental <em>block</em> for you! Well done. Notice how the slicing and indexing syntax for a 1D array is exactly as it would be if you were working with a Python list!</p>
+
+##### Stepping into 2D {.unnumbered}
+
+
+<div class>
+<p>Now assume that your research requires you to take an admittedly unrepresentative sample of trunk diameters, which are located in the third column of <code>tree_census</code>. Getting just a selection of trunk diameters can be done with NumPy's slicing and stepping functionality. </p>
+<p><code>numpy</code> is loaded as <code>np</code>, and the <code>tree_census</code> 2D array is available.</p>
+</div>
+
+<li>Create an array called <code>hundred_diameters</code> which contains the first 100 trunk diameters in <code>tree_census</code>.</li>
+
+
+
+
+<li>Create an array,<code>every_other_diameter</code>, which contains only <em>every other</em> trunk diameter for trees with row <em>indices</em> from 50 to 100, inclusive.</li>
+```{python}
+# Create an array of the first 100 trunk diameters from tree_census
+hundred_diameters = tree_census[:100, 2]
+print(hundred_diameters)
+
+# Create an array of trunk diameters with even row indices from 50 to 100 inclusive
+every_other_diameter = tree_census[50:101:2, 2]
+print(every_other_diameter)
+```
+
+<p class="">Look at that slicing! Great work. Notice how you only sliced the rows. In terms of columns, you just indicated that you were working with the column at index two: trunk diameter.</p>
+
+##### Sorting trees {.unnumbered}
+
+
+<div class>
+<p>Sometimes it's easiest to understand data when it is sorted according to the value you are most interested in. Your new research task is to create an array containing the trunk diameters in the New York City tree census, sorted in order from smallest to largest.</p>
+<p><code>numpy</code> is loaded as <code>np</code>, and the <code>tree_census</code> 2D array is available.</p>
+</div>
+
+<li>Create an array called <code>sorted_trunk_diameters</code> which selects only the trunk diameter column from <code>tree_census</code> and sorts it so that the smallest trunk diameters are at the top of the array and the largest at the bottom.</li>
+```{python}
+# Extract trunk diameters information and sort from smallest to largest
+sorted_trunk_diameters = np.sort(tree_census[:, 2])
+print(sorted_trunk_diameters)
+```
+
+<p class="">Way to get to the <em>root</em> of that tree problem! Notice that the <code>np.sort()</code> function doesn't include an option to sort ascending or descending.</p>
+
+#### Filtering arrays {.unnumbered}
+
+
+
+##### Filtering with masks {.unnumbered}
+
+
+<div class>
+<p>In the last lesson, you sorted trees from smallest to largest. Now, you'll use fancy indexing to return the row of data representing the largest tree in <code>tree_census</code>. You'll also examine other trees located on the same block as the largest tree: are they also large? </p>
+<p><code>numpy</code> is loaded as <code>np</code>, and the <code>tree_census</code> array is available. As a reminder, the <code>tree_census</code> columns in order refer to a tree's ID, its block ID, its trunk diameter, and its stump diameter.</p>
+</div>
+
+<li>Using Boolean indexing, create an array, <code>largest_tree_data</code>, which contains the row of data on the largest tree in <code>tree_census</code> corresponding to the tree with a diameter of <code>51</code>.</li>
+
+
+<li>Slice <code>largest_tree_data</code> to retrieve only the block id of the block the largest tree is located on; save this block id as <code>largest_tree_block_id</code>.</li>
+
+
+<li>Using fancy indexing, create an array called <code>trees_on_largest_tree_block</code> which contains data on all trees with the same block ID as the largest tree.</li>
+```{python}
+# Create an array which contains row data on the largest tree in tree_census
+largest_tree_data = tree_census[tree_census[:, 2] == 51]
+print(largest_tree_data)
+
+# Slice largest_tree_data to get only the block id
+largest_tree_block_id = largest_tree_data[:, 1]
+print(largest_tree_block_id)
+
+# Create an array which contains row data on all trees with largest_tree_block_id
+trees_on_largest_tree_block = tree_census[tree_census[:, 1] == largest_tree_block_id]
+print(trees_on_largest_tree_block)
+```
+
+<p class="">So fancy! Great job. Based on your work, it looks like the largest tree on the <code>tree_census</code> is the only really big tree on its block.</p>
+
+##### Fancy indexing vs. np.where() {.unnumbered}
+
+
+<p class="">So fancy! Great job. Based on your work, it looks like the largest tree on the <code>tree_census</code> is the only really big tree on its block.</p>
+
+<div class>
+<p>You and your tree research team are double-checking collection data by visiting a few trees in person to confirm their measurements. You've been assigned to check the data for trees on block 313879, and you'd like to make a small array of just the tree data that relates to your work.</p>
+<p><code>numpy</code> is loaded as <code>np</code>, and the <code>tree_census</code> array is available. As a reminder, the <code>tree_census</code> columns in order refer to a tree's ID, its block ID, its trunk diameter, and its stump diameter.</p>
+</div>
+
+<li>Using fancy indexing, create an array called <code>block_313879</code> which only contains data for trees with a block ID of 313879.</li>
+
+
+
+
+<li>Using <code>np.where()</code>, create an array of <code>row_indices</code> for trees with a block ID of 313879.</li>
+
+<li>Using <code>row_indices</code>, create <code>block_313879</code>, which contains data for trees on block 313879.</li>
+```{python}
+# Create the block_313879 array containing trees on block 313879
+block_313879 = tree_census[tree_census[:, 1] == 313879]
+print(block_313879)
+
+# Create an array of row_indices for trees on block 313879
+row_indices = np.where(tree_census[:, 1] == 313879)
+
+# Create an array which only contains data for trees on block 313879
+block_313879 = tree_census[row_indices]
+print(block_313879)
+```
+
+<p class="">Where'd you get those <code>np.where()</code> skills!? Great filtering. You probably noticed that fancy indexing is more elegant than <code>np.where()</code> in this example. That's because we haven't really tapped into the power of <code>np.where()</code> yet. It's most useful for finding indices and then using that location information to <em>update</em> an array. We'll see an example of this in the next exercise, and also in the next lesson, where one of the functions takes indices as arguments!</p>
+
+##### Creating arrays from conditions {.unnumbered}
+
+
+<div class>
+<p>Currently, the stump diameter and trunk diameter values in <code>tree_census</code> are in two different columns. Living trees have a stump diameter of zero while stumps have a trunk diameter of zero. If you'd like to include both living trees and stumps in certain research calculations, it might be useful to have their diameters together in just one column.</p>
+<p><code>numpy</code> is loaded as <code>np</code>, and the <code>tree_census</code> array is available. As a reminder, the tree census columns in order refer to a tree's ID, its block ID, its trunk diameter, and its stump diameter.</p>
+</div>
+
+<li>Create and print a 1D array called <code>trunk_stump_diameters</code>, which replaces a tree's trunk diameter with its stump diameter if the trunk diameter is zero.</li>
+```{python}
+# Create and print a 1D array of tree and stump diameters
+trunk_stump_diameters = np.where(tree_census[:, 2] == 0, tree_census[:, 3], tree_census[:, 2])
+print(trunk_stump_diameters)
+```
+
+<p class="">Looks fantastic! But this is just a 1D array without any tree or block ID information. How do we add this information back to the <code>tree_census</code> array? That's the subject of our next lesson!</p>
+
+#### Adding and removing data {.unnumbered}
+
+
+
+##### Compatible or not? {.unnumbered}
+
+<p>Before concatenating, it's important to check whether two arrays <em>can</em> be concatenated together. If not, the array may need to be reshaped before concatenation.</p>
+
+<li>Each card lists two array shapes: determine whether they are compatible for concatenation, and if so, along which axis.</li>
+
+<h5 class="dc-u-ta-center">Compatible along the first axis</h5>
+<p><code>(4, 2)</code> and <code>(6, 2)</code></p>
+<p><code>(15, 5)</code> and <code>(100, 5)</code></p>
+
+<h5 class="dc-u-ta-center">Compatible along the second axis</h5>
+<p><code>(4, 2)</code> and <code>(4, 3)</code></p>
+
+<h5 class="dc-u-ta-center">Not compatible</h5>
+<p><code>(5, 2)</code> and <code>(7, 4)</code></p>
+<p><code>(4, 2)</code> and <code>(4,)</code></p>
+<p><code>(4, 2)</code> and <code>(2,)</code></p>
+
+<p>Nice work! You've mastered the important skill of checking whether arrays are compatible. We'll see many more applications of this skill in later chapters.</p>
+
+##### Adding rows {.unnumbered}
+
+
+<div class>
+<p>The research team has discovered two trees that were left off the <code>tree_census</code>. Your task is to add rows containing the data for these new trees to the end of the <code>tree_census</code> array. The new trees' data is saved in a 2D array called <code>new_trees</code>:</p>
+<pre><code>new_trees = np.array([[1211, 227386, 20, 0], [1212, 227386, 8, 0]])
+</code></pre>
+<p><code>numpy</code> is loaded as <code>np</code>, and the <code>tree_census</code> and <code>new_trees</code> arrays are available.</p>
+</div>
+
+
+<li>Print the shapes of <code>tree_census</code> and <code>new_trees</code> to confirm they are compatible to concatenate.</li>
+
+
+
+<li>Add rows to the end of <code>tree_census</code> containing data for the new trees from the <code>new_trees</code> 2D array; save the new array as <code>updated_tree_census</code>.</li>
+```{python}
+# edited/added
+new_trees = np.array([[1211, 227386, 20, 0], [1212, 227386, 8, 0]])
+
+# Print the shapes of tree_census and new_trees
+print(tree_census.shape, new_trees.shape)
+
+# Add rows to tree_census which contain data for the new trees
+updated_tree_census = np.concatenate((tree_census, new_trees))
+print(updated_tree_census)
+```
+
+<p class="">Excellent concatenation work! Notice that this concatenation task was easier because the array shapes and dimensions were already compatible. Let's take a look at an example where the arrays to be concatenated are not compatible.</p>
+
+##### Adding columns {.unnumbered}
+
+
+<div class>
+<p>You finished the last set of exercises by creating an array called <code>trunk_stump_diameters</code>, which combined data from the trunk diameter and stump diameter columns into a 1D array. Now, you'll add that 1D array as a column to the <code>tree_census</code> array.</p>
+<p><code>numpy</code> is loaded as <code>np</code>, and both the <code>tree_census</code> and <code>trunk_stump_diameters</code> arrays are available.</p>
+</div>
+
+<li>Print the shapes of both <code>tree_census</code> and <code>trunk_stump_diameters</code>.</li>
+
+
+<li>Reshape <code>trunk_stump_diameters</code> so that it can be appended as the last column in <code>tree_census</code>; call the reshaped array <code>reshaped_diameters</code>.</li>
+
+
+<li>Concatenate <code>reshaped_diameters</code> to the end of <code>tree_census</code> so that it becomes the last column; call the new array <code>concatenated_tree_census</code>.</li>
+```{python}
+# Print the shapes of tree_census and trunk_stump_diameters
+print(trunk_stump_diameters.shape, tree_census.shape)
+
+# Reshape trunk_stump_diameters
+reshaped_diameters = trunk_stump_diameters.reshape((1000, 1))
+
+# Concatenate reshaped_diameters to tree_census as the last column
+concatenated_tree_census = np.concatenate((tree_census, reshaped_diameters), axis=1)
+print(concatenated_tree_census)
+```
+
+<p class="">That's right! Adding a 1D array to an existing 2D array requires you to reshape the 1D array into a 2D array first. We'll dive into shape compatibility issues like this even further in the next chapter on array mathematics!</p>
+
+##### Deleting with np.delete() {.unnumbered}
+
+
+<div class>
+<p>What if your tree research focuses only on living trees on publicly-owned city blocks? It might be helpful to delete some unneeded data like the stump diameter column and some trees located on private blocks. </p>
+<p>You've learned that NumPy's <code>np.delete()</code> function takes three arguments: the original array, the index or indices to be deleted, and the axis to delete along.  If you don't know the index or indices of the array you'd like to delete, recall that when it is only passed one argument,<code>np.where()</code> returns an array of indices where a condition is met!</p>
+<p><code>numpy</code> is loaded as <code>np</code>, and the <code>tree_census</code> 2D array is available. The columns in order refer to a tree's ID, block number, trunk diameter, and stump diameter.</p>
+</div>
+
+<li>Delete the stump diameter column from <code>tree_census</code>, and save the new 2D array as <code>tree_census_no_stumps</code>.</li>
+
+<li>Using <code>np.where()</code>, find the indices of any trees on block 313879, a private block. Save the indices in an array called <code>private_block_indices</code>.</li>
+
+
+
+<li>Using the indices you just found using <code>np.where()</code>, delete the rows for trees on block 313879 from <code>tree_census_no_stumps</code>, saving the new 2D array as <code>tree_census_clean</code>.</li>
+
+
+<li>Print the shape of <code>tree_census_clean</code>.</li>
+```{python}
+# Delete the stump diameter column from tree_census
+tree_census_no_stumps = np.delete(tree_census, 3, axis=1)
+
+# Save the indices of the trees on block 313879
+private_block_indices = np.where(tree_census[:, 1] == 313879)
+
+# Delete the rows for trees on block 313879 from tree_census_no_stumps
+tree_census_clean = np.delete(tree_census_no_stumps, private_block_indices, axis=0)
+
+# Print the shape of tree_census_clean
+print(tree_census_clean.shape)
+```
+
+<p class="">We can't <em>stump</em> you! Notice that the new shape reflects two fewer rows and one fewer column than <code>tree_census</code> started with because of your deletions: just as expected.</p>
+
+### Array Mathematics! {.unnumbered}
+
+<p class="chapter__description">
+    Leverage NumPy’s speedy vectorized operations to gather summary insights on sales data for American liquor stores, restaurants, and department stores. Vectorize Python functions for use in your NumPy code. Finally, use broadcasting logic to perform mathematical operations between arrays of different sizes.
+  </p>
+
+#### Summarizing data {.unnumbered}
+
+
+
+##### Sales totals {.unnumbered}
+
+
+<div class>
+<p>The dataset you'll be working with during this chapter is one year's sales data by month for three different industries. Each row in this <code>monthly_sales</code> array represents a month from January to December. The first column has monthly sales data for liquor stores, the second column has data for restaurants, and the last column tracks sales for department stores.</p>
+<pre><code>array([[ 4134, 23925,  8657],
+       [ 4116, 23875,  9142],
+       [ 4673, 27197, 10645],
+       [ 4580, 25637, 10456],
+       [ 5109, 27995, 11299],
+       [ 5011, 27419, 10625],
+       [ 5245, 27305, 10630],
+       [ 5270, 27760, 11550],
+       [ 4680, 24988,  9762],
+       [ 4913, 25802, 10456],
+       [ 5312, 25405, 13401],
+       [ 6630, 27797, 18403]])
+</code></pre>
+<p>Your task is to create an array with all the information from <code>monthly_sales</code> as well as a fourth column which totals the monthly sales across industries for each month. </p>
+<p><code>numpy</code> is loaded for you as <code>np</code>, and the <code>monthly_sales</code> array is available.</p>
+</div>
+
+
+<li>Create a <em>2D</em> array which contains a single column of total monthly sales across industries; call it <code>monthly_industry_sales</code>.</li>
+
+
+<li>Concatenate <code>monthly_industry_sales</code> with <code>monthly_sales</code> into a new array called <code>monthly_sales_with_total</code>, with the monthly cross-industry sales information in the final column.</li>
+```{python}
+# edited/added
+monthly_sales = np.load("archive/Introduction-to-NumPy/datasets/monthly_sales.npy")
+
+# Create a 2D array of total monthly sales across industries
+monthly_industry_sales = monthly_sales.sum(axis=1, keepdims=True)
+print(monthly_industry_sales)
+
+# Add this column as the last column in monthly_sales
+monthly_sales_with_total = np.concatenate((monthly_sales, monthly_industry_sales), axis=1)
+print(monthly_sales_with_total)
+```
+
+<p class="">Those are <em>sum</em> good-looking arrays! Notice how using the <code>keepdims</code> keyword is helpful not only for dimension compatibility but also for visualizing which axis your aggregating data originates from!</p>
+
+##### Plotting averages {.unnumbered}
+
+
+<div class>
+<p>Perhaps you have a hunch that department stores see greater increased sales than average during the end of the year as people rush to buy gifts. You'd like to test this theory by comparing monthly department store sales to average sales across all three industries. </p>
+<p><code>numpy</code> is loaded for you as <code>np</code>, and the <code>monthly_sales</code> array is available. The <code>monthly_sales</code> columns in order refer to liquor store, restaurant, and department store sales.</p>
+</div>
+
+<li>Create a 1D array called <code>avg_monthly_sales</code>, which contains an average sales amount for each month across the three industries.</li>
+
+
+
+<li>Plot an <em>array</em> of the numbers one through twelve (representing each month) on the x-axis and <code>avg_monthly_sales</code> on the y-axis.</li>
+
+
+<li>Plot an <em>array</em> of the numbers one through twelve on the x-axis and the department store sales column of <code>monthly_sales</code> on the y-axis.</li>
+```{python}
+# Create the 1D array avg_monthly_sales
+avg_monthly_sales = monthly_sales.mean(axis=1)
+print(avg_monthly_sales)
+
+# Plot avg_monthly_sales by month
+plt.plot(np.arange(1, 13), avg_monthly_sales, label="Average sales across industries")
+
+# Plot department store sales by month
+plt.plot(np.arange(1, 13), monthly_sales[:, 2], label="Department store sales")
+plt.legend()
+plt.show()
+plt.close() # edited/added
+```
+
+<p class="">Great plot! Based on your work, it does look like department store sales are even greater than the average sales across three industries with heavy end-of-year sales—at least in December!</p>
+
+##### Cumulative sales {.unnumbered}
+
+
+<div class>
+<p>In the last exercise, you established that December is a big month for department stores. Are there other months where sales increase or decrease significantly? </p>
+<p>Your task now is to look at monthly cumulative sales for each industry. The slope of the cumulative sales line will explain a lot about how steady sales are over time: a straight line will indicate steady growth, and changes in slope will indicate relative increases or decreases in sales.</p>
+<p><code>numpy</code> is loaded for you as <code>np</code>, and the <code>monthly_sales</code> array is available. The <code>monthly_sales</code> columns in order refer to liquor store, restaurant, and department store sales.</p>
+</div>
+
+<li>Find cumulative monthly sales for each industry, saving this data in an array called <code>cumulative_monthly_industry_sales</code>.</li>
+
+
+<li>Plot each industry's cumulative sales by month as separate lines, with cumulative sales on the y-axis and month number on the x-axis.</li>
+```{python}
+# Find cumulative monthly sales for each industry
+cumulative_monthly_industry_sales = monthly_sales.cumsum(axis=0)
+print(cumulative_monthly_industry_sales)
+
+# Plot each industry's cumulative sales by month as separate lines
+plt.plot(np.arange(1, 13), cumulative_monthly_industry_sales[:, 0], label="Liquor Stores")
+plt.plot(np.arange(1, 13), cumulative_monthly_industry_sales[:, 1], label="Restaurants")
+plt.plot(np.arange(1, 13), cumulative_monthly_industry_sales[:, 2], label="Department stores")
+plt.legend()
+plt.show()
+plt.close() # edited/added
+```
+
+<p class="">Nice work! Your graph indicates that sales for both restaurants and liquor stores are fairly steady throughout the year. The biggest sales growth is the growth you identified in the previous task: department store sales increase towards the end of the year.</p>
+
+#### Vectorized operations {.unnumbered}
+
+
+
+##### Tax calculations {.unnumbered}
+
+
+<div class>
+<p>It's possible to use vectorized operations to calculate taxes for the liquor, restaurant, and department store industries! We'll simplify the tax calculation process here and assume that government collects 5% of all sales across these industries as tax revenue. </p>
+<p>Your task is to calculate the tax owed by each industry related to each month's sales. <code>numpy</code> is loaded for you as <code>np</code>, and the <code>monthly_sales</code> array is available.</p>
+</div>
+
+<li>Create an array called <code>tax_collected</code> which calculates tax collected by industry and month by multiplying each element in <code>monthly_sales</code> by 0.05.</li>
+
+
+<li>Create an array that keeps track of <code>total_tax_and_revenue</code> collected by each industry and month by adding each element in <code>tax_collected</code> with its corresponding element in <code>monthly_sales</code>.</li>
+```{python}
+# Create an array of tax collected by industry and month
+tax_collected = monthly_sales * 0.05
+print(tax_collected)
+
+# Create an array of sales revenue plus tax collected by industry and month
+total_tax_and_revenue = tax_collected + monthly_sales
+print(total_tax_and_revenue)
+```
+
+<p class="">Hope that wasn't too <em>taxing</em>! Your code looks great, and you've probably noticed that doing mathematical operations with scalars or arrays of the same shape is pretty straightforward. We'll build on this in the next chapter when we explore how NumPy approaches math between two arrays of <em>different</em> shapes!</p>
+
+##### Projecting sales {.unnumbered}
+
+
+<div class>
+<p>You'd like to be able to plan for next year's operations by projecting what sales will be, and you've gathered multipliers specific to each month and industry. These multipliers are saved in an array called <code>monthly_industry_multipliers</code>. For example, the multiplier at <code>monthly_industry_multipliers[0, 0]</code> of <code>0.98</code> means that the liquor store industry is projected to have 98% of this January's sales in January of next year.</p>
+<pre><code>array([[0.98, 1.02, 1.  ],
+       [1.00, 1.01, 0.97],
+       [1.06, 1.03, 0.98],
+       [1.08, 1.01, 0.98],
+       [1.08, 0.98, 0.98],
+       [1.1 , 0.99, 0.99],
+       [1.12, 1.01, 1.  ],
+       [1.1 , 1.02, 1.  ],
+       [1.11, 1.01, 1.01],
+       [1.08, 0.99, 0.97],
+       [1.09, 1.  , 1.02],
+       [1.13, 1.03, 1.02]])
+</code></pre>
+<p><code>numpy</code> is loaded for you as <code>np</code>, and the <code>monthly_sales</code> and <code>monthly_industry_multipliers</code> arrays are available. The <code>monthly_sales</code> columns in order refer to liquor store, restaurant, and department store sales.</p>
+</div>
+
+
+<li>Create an array called <code>projected_monthly_sales</code> which contains projected sales for all three industries based on the multipliers you have gathered.</li>
+
+
+<li>Create a graph that plots two lines: current liquor store sales by month and projected liquor store sales by month; months will be represented by an array of the numbers one through twelve.</li>
+```{python}
+# edited/added
+monthly_industry_multipliers = np.array([[0.98, 1.02, 1.  ],
+       [1.00, 1.01, 0.97],
+       [1.06, 1.03, 0.98],
+       [1.08, 1.01, 0.98],
+       [1.08, 0.98, 0.98],
+       [1.1 , 0.99, 0.99],
+       [1.12, 1.01, 1.  ],
+       [1.1 , 1.02, 1.  ],
+       [1.11, 1.01, 1.01],
+       [1.08, 0.99, 0.97],
+       [1.09, 1.  , 1.02],
+       [1.13, 1.03, 1.02]])
+       
+# Create an array of monthly projected sales for all industries
+projected_monthly_sales = monthly_sales * monthly_industry_multipliers
+print(projected_monthly_sales)
+
+# Graph current liquor store sales and projected liquor store sales by month
+plt.plot(np.arange(1, 13), monthly_sales[:, 0], label="Current liquor store sales")
+plt.plot(np.arange(1, 13), projected_monthly_sales[:, 0], label="Projected liquor store sales")
+plt.legend()
+plt.show()
+plt.close() # edited/added
+```
+
+<p class="">Well done! It looks like the liquor industry is projected to have a tough January next year. After that, though, projected sales are looking just fine.</p>
+
+##### Vectorizing .upper() {.unnumbered}
+
+
+<div class>
+<p>There are many situations where you might want to use Python methods and functions on array elements in NumPy. You can always write a <code>for</code> loop to do this, but vectorized operations are much faster and more efficient, so consider using <code>np.vectorize()</code>! </p>
+<p>You've got an array called <code>names</code> which contains first and last names:</p>
+<pre><code>names = np.array([["Izzy", "Monica", "Marvin"],
+                  ["Weber", "Patel", "Hernandez"]])
+</code></pre>
+<p>You'd like to use one of the Python methods you learned on DataCamp, <code>.upper()</code>, to make all the letters of every name in the array uppercase. As a reminder, <code>.upper()</code> is a <em>string method</em>, meaning that it must be called on an instance of a string: <code>str.upper()</code>.</p>
+<p>Your task is to vectorize this Python method. <code>numpy</code> is loaded for you as <code>np</code>, and the <code>names</code> array is available.</p>
+</div>
+
+
+<li>Create a vectorized function called <code>vectorized_upper</code> from the Python <code>.upper()</code> string method.</li>
+
+<li>Apply <code>vectorized_upper()</code> to the <code>names</code> array and save the resulting array as <code>uppercase_names</code>.</li>
+```{python}
+# edited/added
+names = np.array([["Izzy", "Monica", "Marvin"],
+                  ["Weber", "Patel", "Hernandez"]])
+                  
+# Vectorize the .upper() string method
+vectorized_upper = np.vectorize(str.upper)
+
+# Apply vectorized_upper to the names array
+uppercase_names = vectorized_upper(names)
+print(uppercase_names)
+```
+
+<p class="">Awesome—you can now brag to your friends about how you can vectorize Python functions! You also just harnessed the power of C in your Python code to make it more efficient. Don't forget about <code>np.vectorize()</code> once you've learned to write your own Python functions—you can vectorize those, too!</p>
+
+#### Broadcasting {.unnumbered}
+
+
+
+##### Broadcastable or not? {.unnumbered}
+
+<p>Broadcasting takes the power of vectorized operations in NumPy one step further, saving memory and computing power. But before broadcasting, you'll need to check whether it's even <em>possible</em> to use broadcasting in your mathematical operations!</p>
+
+<li>Determine whether or not the array shapes given are broadcastable without reshaping.</li>
+
+<h5 class="dc-u-ta-center">Broadcastable</h5>
+<p><code>(3, 4)</code> and <code>(1, 4)</code></p>
+<p><code>(3, 4)</code> and <code>(4, )</code></p>
+<p><code>(3, 4)</code> and <code>(3, 1)</code></p>
+
+<h5 class="dc-u-ta-center">Not Broadcastable</h5>
+<p><code>(3, 4)</code> and <code>(1, 2)</code></p>
+<p><code>(3, 4)</code> and <code>(4, 1)</code></p>
+<p><code>(3, 4)</code> and <code>(3, )</code></p>
+
+<p>Your broadcasting skills are in great <code>.shape</code>! You're ready to use broadcasting on the <code>monthly_sales</code> dataset.</p>
+
+##### Broadcasting across columns {.unnumbered}
+
+
+<div class>
+<p>Recall that when broadcasting across columns, NumPy requires you to be explicit that it should broadcast a <em>vertical</em> array, and horizontal and vertical 1D arrays do not exist in NumPy. Instead, you must first create a 2D array to declare that you have vertical data. Then, NumPy creates a copy of this 2D vertical array for each column and applies the desired operation.</p>
+<p>A Python list called <code>monthly_growth_rate</code> with <code>len()</code> of <code>12</code> is available. This list represents monthly year-over-year expected growth for the economy; your task is to use broadcasting to multiply this list by each column in the <code>monthly_sales</code> array. The <code>monthly_sales</code> array is loaded, along with <code>numpy</code> as <code>np</code>.</p>
+</div>
+
+
+<li>Convert <code>monthly_growth_rate</code>, currently a Python list, into a one-dimensional NumPy array called <code>monthly_growth_1D</code>.</li>
+
+<li>Reshape <code>monthly_growth_1D</code> so that it is broadcastable column-wise across <code>monthly_sales</code>; call the new array <code>monthly_growth_2D</code>.</li>
+
+<li>Using broadcasting, multiply each column in <code>monthly_sales</code> by <code>monthly_growth_2D</code>.</li>
+```{python}
+# edited/added
+monthly_growth_rate = [1.01, 1.03, 1.03, 1.02, 1.05, 1.03, 1.06, 1.04, 1.03, 1.04, 1.02, 1.01]
+
+# Convert monthly_growth_rate into a NumPy array
+monthly_growth_1D = np.array(monthly_growth_rate)
+
+# Reshape monthly_growth_1D
+monthly_growth_2D = monthly_growth_1D.reshape((12, 1))
+
+# Multiply each column in monthly_sales by monthly_growth_2D
+print(monthly_growth_2D * monthly_sales)
+```
+
+<p class="">You've now harnessed the power of broadcasting! Notice how <code>.reshape()</code> was critical here for helping NumPy understand what you wanted it to do. We don't just reshape data for the sake of it!</p>
+
+##### Broadcasting across rows {.unnumbered}
+
+
+<div class>
+<p>In the last set of exercises, you used <code>monthly_industry_multipliers</code>, to create sales predictions. Recall that <code>monthly_industry_multipliers</code> looks like this:</p>
+<pre><code>array([[0.98, 1.02, 1.  ],
+       [1.00, 1.01, 0.97],
+       [1.06, 1.03, 0.98],
+       [1.08, 1.01, 0.98],
+       [1.08, 0.98, 0.98],
+       [1.1 , 0.99, 0.99],
+       [1.12, 1.01, 1.  ],
+       [1.1 , 1.02, 1.  ],
+       [1.11, 1.01, 1.01],
+       [1.08, 0.99, 0.97],
+       [1.09, 1.  , 1.02],
+       [1.13, 1.03, 1.02]])
+</code></pre>
+<p>Assume you're not comfortable being so specific with your estimates. Rather, you'd like to use <code>monthly_industry_multipliers</code> to find a single average multiplier for each industry. Then you'll use that multiplier to project next year's sales. </p>
+<p><code>numpy</code> is loaded for you as <code>np</code>, and the <code>monthly_sales</code> and <code>monthly_industry_multipliers</code> arrays are available. The <code>monthly_sales</code> columns in order refer to liquor store, restaurant, and department store sales.</p>
+</div>
+
+
+<li>Find the mean sales projection multiplier for each industry; save in an array called <code>mean_multipliers</code>.</li>
+
+
+<li>Print the shapes of <code>mean_multipliers</code> and <code>monthly_sales</code> to ensure they are suitable for broadcasting.</li>
+
+
+<li>Multiply each monthly sales value by the mean multiplier you found for that industry; save in an array called <code>projected_sales</code>.</li>
+```{python}
+# edited/added
+monthly_industry_multipliers = np.array([[0.98, 1.02, 1.  ],
+       [1.00, 1.01, 0.97],
+       [1.06, 1.03, 0.98],
+       [1.08, 1.01, 0.98],
+       [1.08, 0.98, 0.98],
+       [1.1 , 0.99, 0.99],
+       [1.12, 1.01, 1.  ],
+       [1.1 , 1.02, 1.  ],
+       [1.11, 1.01, 1.01],
+       [1.08, 0.99, 0.97],
+       [1.09, 1.  , 1.02],
+       [1.13, 1.03, 1.02]])
+       
+# Find the mean sales projection multiplier for each industry
+mean_multipliers = monthly_industry_multipliers.mean(axis=0)
+print(mean_multipliers)
+
+# Print the shapes of mean_multipliers and monthly_sales
+print(mean_multipliers.shape, monthly_sales.shape)
+
+# Multiply each value by the multiplier for that industry
+projected_sales = monthly_sales * mean_multipliers
+print(projected_sales)
+```
+
+<p class="">Stellar work! Think about how much code you'd have had to write to perform the same operations on a Python list! Broadcasting is a huge advantage of working with NumPy.</p>
+
+### Array Transformations {.unnumbered}
+
+<p class="chapter__description">
+    NumPy meets the art world in this final chapter as we use image data from a Monet masterpiece to explore how you can use to augment image data. You’ll use flipping and transposing functionality to quickly transform our masterpiece. Next, you’ll pull the Monet array apart, make changes, and reconstruct it using array stacking to see the results.
+  </p>
+
+#### Saving and loading arrays {.unnumbered}
+
+
+
+##### Loading .npy files {.unnumbered}
+
+
+<div class>
+<p>The exercises for this chapter will use a NumPy array holding an image in RGB format. Which image? You'll have to load the array from the <code>mystery_image.npy</code> file to find out! </p>
+<p><code>numpy</code> is loaded as <code>np</code>, and <code>mystery_image.npy</code> is available.</p>
+</div>
+
+<li>Load the <code>mystery_image.npy</code> file using the alias <code>f</code>, saving the contents as an array called <code>rgb_array</code>.</li>
+
+<p class="">Way to load! This image data was created from a Monet painting called "Cliff Walk at Pourville." Working with image data saved in <code>.npy</code> files is a great skill to have before embarking on any machine learning project involving images!</p>
+
+
+##### Getting help {.unnumbered}
+
+
+<div class>
+<p>You'll need to use the <code>.astype()</code> array method we covered in the first chapter of this course for the next exercise. If you forget exactly how <code>.astype()</code> works, you could check out the course slides or NumPy's documentation on <a href="https://numpy.org">numpy.org</a>. There is, however, an even faster way to jog your memory…</p>
+<p><code>numpy</code> is loaded as <code>np</code>.</p>
+</div>
+
+<li>Return NumPy's documentation text for <code>.astype()</code>.</li>
+```{python}
+# Display the documentation for .astype()
+help(np.ndarray.astype)
+```
+
+<p class="">Nice work! Armed with that <code>help()</code>, we can move on! Fun fact: if you forget how to use <code>help()</code>, you can always call it with no arguments for a tutorial on how <code>help()</code> itself works.</p>
+
+##### Update and save {.unnumbered}
+
+
+<div class>
+<p>Perhaps you are training a machine learning model to recognize ocean scenes. You'd like the model to understand that oceans are not only associated with bright, summery colors, so you're careful to include images of oceans in bad whether or evening light as well. You may have to manually transform some images in order to balance the data, so your task is to darken the Monet ocean scene <code>rgb_array</code>.</p>
+<p>Recall from the video that white is associated with the maximum RGB value of 255, while darker colors are associated with lower values. <code>numpy</code> is loaded as <code>np</code>, and the 3D Monet <code>rgb_array</code> that you loaded in the last exercise is available.</p>
+</div>
+
+
+<li>Reduce every value in <code>rgb_array</code> by 50 percent, saving the resulting array as <code>darker_rgb_array</code>.</li>
+
+
+<li>Since RGB values must be integers, convert <code>darker_rgb_array</code> into an array of integers called <code>darker_rgb_int_array</code> so that it can be plotted.</li>
+```{python}
+# edited/added
+rgb_array = np.load("archive/Introduction-to-NumPy/datasets/rgb_array.npy")
+
+# Reduce every value in rgb_array by 50 percent
+darker_rgb_array = rgb_array * 0.5
+
+# Convert darker_rgb_array into an array of integers
+darker_rgb_int_array = darker_rgb_array.astype(np.int8)
+plt.imshow(darker_rgb_int_array)
+plt.show()
+plt.close() # edited/added
+```
+
+<li>Save <code>darker_rgb_int_array</code> as an <code>.npy</code> file called <code>darker_monet.npy</code> using the alias <code>f</code>.</li>
+```{python}
+# Save darker_rgb_int_array to an .npy file called darker_monet.npy
+with open("archive/Introduction-to-NumPy/datasets/darker_monet.npy", "wb") as f:
+    np.save(f, darker_rgb_int_array)
+```
+
+<p class="">Great work—now you've got two different versions of an ocean scene to feed your model! This type of small change can be helpful when the training data you have access to is limited.</p>
+
+#### Array acrobatics {.unnumbered}
+
+
+
+##### Augmenting Monet {.unnumbered}
+
+
+<div class>
+<p>Perhaps you're still working on that machine learning model that identifies ocean scenes in paintings. You'd like to generate a few extra images to augment your existing data. After all, a human can tell that a painting is of an ocean even if the painting is upside-down: why shouldn't your machine learning model?</p>
+<p><code>numpy</code> is loaded as <code>np</code>, and the 3D Monet <code>rgb_array</code> is available.</p>
+</div>
+
+<li>Flip <code>rgb_array</code> so that it is the mirror image of the original, with the ocean on the right and grassy knoll on the left.</li>
+```{python}
+# Flip rgb_array so that it is the mirror image of the original
+mirrored_monet = np.flip(rgb_array, axis=1)
+plt.imshow(mirrored_monet)
+plt.show()
+plt.close() # edited/added
+```
+
+<li>Flip <code>rgb_array</code> so that it is upside down but otherwise remains the same.</li>
+```{python}
+# Flip rgb_array so that it is upside down
+upside_down_monet = np.flip(rgb_array, axis=(0, 1))
+plt.imshow(upside_down_monet)
+plt.show()
+plt.close() # edited/added
+```
+
+<p class="">Flipping awesome! The hardest part about flipping arrays is getting the <code>axis</code> right. Checking your work by visualizing your data is always a good idea, even when your data isn't RGB data.</p>
+
+##### Transposing your masterpiece {.unnumbered}
+
+
+<div class>
+<p>You've learned that transposing an array reverses the order of the array's axes. To transpose the axes in a different order, you can pass the desired axes order as arguments. You'll practice with the 3D Monet <code>rgb_array</code>, loaded for you. <code>numpy</code> has been imported as <code>np</code>.</p>
+</div>
+
+<li>Transpose the 3-D <code>rgb_array</code> so that the image appears rotated 90 degrees left and as a mirror image of itself.</li>
+```{python}
+# Transpose rgb_array
+transposed_rgb = np.transpose(rgb_array, axes=(1, 0, 2))
+plt.imshow(transposed_rgb)
+plt.show()
+plt.close() # edited/added
+```
+
+<p class="">Great work with tricky 3D data! Even on its side, humans can easily tell that this is a picture of the seaside, despite the unusual placement of the sea, sky, and land. Therefore, this transposed image could be helpful to teach a machine learning model what defines a seaside picture aside from the basic location of the sea, land, and sky.</p>
+
+#### Stacking and splitting {.unnumbered}
+
+
+
+##### 2D split and stack {.unnumbered}
+
+
+<div class>
+<p>Splitting and stacking skills aren't just useful with 3D RGB arrays: they are excellent for subsetting and organizing data of any type and dimension!</p>
+<p>You'll now take a quick trip down memory lane to reorganize the <code>monthly_sales</code> array as a 3D array. Recall that the first dimension of <code>monthly_sales</code> is rows of a single  month's sales across three industries, and the second dimension is columns of monthly sales data for a single industry. </p>
+<p>Your task is to split this data into quarterly sales data and stack the quarterly sales data so that the new third dimension represents the four 2D arrays of quarterly sales.<code>numpy</code> is loaded as <code>np</code>, and the <code>monthly_sales</code> array is available.</p>
+</div>
+
+<li>Split <code>monthly_sales</code> into four arrays representing quarterly data across industries; print <code>q1_sales</code>.</li>
+
+
+<li>Stack the four quarterly sales arrays to create a 3D array, <code>quarterly_sales</code>, made up of the four quarterly 2D arrays in order from the first to last quarter.</li>
+```{python}
+# Split monthly_sales into quarterly data
+q1_sales, q2_sales, q3_sales, q4_sales = np.split(monthly_sales, 4)
+print(q1_sales)
+
+# Stack the four quarterly sales arrays
+quarterly_sales = np.stack([q1_sales, q2_sales, q3_sales, q4_sales])
+print(quarterly_sales)
+```
+
+<p class="">Way to split and stack! Notice that the above technique is a nice way to reorganize 2D data into 3D data if that's the format your task requires. Now you'll test your skills on 3D RGB arrays...</p>
+
+##### Splitting RGB data {.unnumbered}
+
+
+<div class>
+<p>Perhaps you'd like to better understand Monet's use of the color blue. Your task is to create a version of the Monet <code>rgb_array</code> that emphasizes parts of the painting that use lots of blue by making them even bluer! You'll perform the splitting portion of this task in this exercise and the stacking portion in the next.</p>
+<p><code>numpy</code> is loaded as <code>np</code>, and the Monet <code>rgb_array</code> is available.</p>
+</div>
+
+<li>Split the Monet <code>rgb_array</code> into red, green, and blue only pixel data; save the results as as <code>red_array</code>, <code>green_array</code>, and <code>blue_array</code>.</li>
+
+
+
+<li>Create <code>emphasized_blue_array</code>, which replaces <code>blue_array</code> values with 255 if they are higher than the mean value of <code>blue_array</code>; otherwise, the value remains the same.</li>
+
+
+<li>Print the <code>.shape</code> of <code>emphasized_blue_array</code>.</li>
+
+
+<li>Reshape <code>emphasized_blue_array</code> to remove the trailing third dimension; save as <code>emphasized_blue_array_2D</code>.</li>
+```{python}
+# Split rgb_array into red, green, and blue arrays
+red_array, green_array, blue_array = np.split(rgb_array, 3, axis=2)
+
+# Create emphasized_blue_array
+emphasized_blue_array = np.where(blue_array > blue_array.mean(), 255, blue_array)
+
+# Print the shape of emphasized_blue_array
+print(emphasized_blue_array.shape)
+
+# Remove the trailing dimension from emphasized_blue_array
+emphasized_blue_array_2D = emphasized_blue_array.reshape((675, 843))
+```
+
+<p class="">Excellent! Isn't <code>np.where()</code> useful? Now that you've pulled apart this RGB array and made modifications, it's time to put it back together in the next exercise...</p>
+
+##### Stacking RGB data {.unnumbered}
+
+
+<div class>
+<p>Now you'll combine <code>red_array</code>, <code>green_array</code>, and <code>emphasized_blue_array_2D</code> to see what Monet's painting looks like with the blues emphasized!</p>
+<p><code>numpy</code> is loaded as <code>np</code>, and the <code>red_array</code>, <code>green_array</code>, <code>blue_array</code> and <code>emphasized_blue_array_2D</code> objects that you created in the last exercise are available.</p>
+</div>
+
+<li>Print the shapes of <code>blue_array</code> and <code>emphasized_blue_array_2D</code>.</li>
+
+
+<li>Reshape <code>red_array</code> and <code>green_array</code> so that they can be stacked with <code>emphasized_blue_array_2D</code>.</li>
+
+
+<li>Stack <code>red_array_2D</code>, <code>green_array_2D</code>, and <code>emphasized_blue_array_2D</code> together (in that order) into a 3D array called <code>emphasized_blue_monet</code>.</li>
+```{python}
+# Print the shapes of blue_array and emphasized_blue_array_2D
+print(blue_array.shape, emphasized_blue_array_2D.shape)
+
+# Reshape red_array and green_array
+red_array_2D = red_array.reshape((675, 843))
+green_array_2D = green_array.reshape((675, 843))
+
+# Stack red_array_2D, green_array_2D, and emphasized_blue_array_2D
+emphasized_blue_monet = np.stack([red_array_2D, green_array_2D, emphasized_blue_array_2D], axis=2)
+plt.imshow(emphasized_blue_monet)
+plt.show()
+plt.close() # edited/added
+```
+
+<p class="">Your NumPy skills are really <em>stacking</em> up! Your code did exactly what you asked for: the Monet painting renders very blue in areas that already had high levels of blue, like the sky, but doesn't tint the entire picture blue. Great work!</p>
+
+#### Congratulations! {.unnumbered}
+
+##### Congratulations! {.unnumbered}
+
+You made it!
+
+##### Welcome to team NumPy {.unnumbered}
+
+You're now a card-carrying member of Team NumPy. I hope I've convinced you that NumPy is amazing.
+
+##### NumPy is amazing! {.unnumbered}
+
+It leverages the immense calculating power of C while keeping the friendly syntax of Python. In some places, it even makes Python syntax simpler by vectorizing operations!
+
+##### What's next? {.unnumbered}
+
+What's next on your NumPy journey? You could check out one of the many libraries built on top of NumPy's API. Perhaps you'd like to explore data analysis with pandas, data visualization with Seaborn, parallel programming with Dask, machine learning with scikit-learn, or deep learning with TensorFlow. Every one of these libraries is built on top of NumPy, and DataCamp has courses dedicated to all of them.
+
+##### Congratulations {.unnumbered}
+
+No matter where you take your NumPy knowledge, thanks for taking this course all the way to the end. I'm Izzy Weber, and on behalf of all of us at DataCamp, congratulations on your wide new array of NumPy skills!
+
+##### Thank you! {.unnumbered}
+
+Thanks again!
